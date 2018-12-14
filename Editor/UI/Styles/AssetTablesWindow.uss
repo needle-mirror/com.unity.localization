@@ -1,0 +1,60 @@
+
+
+AssetTablesWindowToolbar {
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: flex-start;
+    padding-bottom: 24;
+}
+
+.toolbarTab {
+    flex-grow: 1;
+    margin-top: -1;
+}
+
+.toolbarTab > .textElement {
+    text-alignment: middle-center;
+}
+
+.toolbarTab > .textElement:disabled {
+    opacity:1;
+}
+
+.toolbarTab > .textElement:enabled {
+    opacity: 0.5;
+}
+
+.panel {
+    flex-grow: 1;
+}
+
+.panel:disabled {
+    flex: 0, 0, 0;
+}
+
+#localesListWindow {
+    flex-grow: 0.5;
+}
+
+#localesListWindow > #ContentContainer, #localesList, #localeObjectField, #tableContainer {
+    flex-grow: 1;
+}
+
+#createTableButton {
+    width: 150;
+    align-self: flex-end;
+}
+
+#localesListButtons {
+    flex-direction: row;
+    height: 22;
+    align-self: flex-end;
+}
+
+#detailedPanel {
+    min-height: 250;
+}
+
+.textFieldScrollView {
+    flex-grow: 1;
+}

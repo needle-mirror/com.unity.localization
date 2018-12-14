@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:engine="UnityEngine.Experimental.UIElements"
+    xmlns:editor="UnityEditor.Experimental.UIElements"
+    xmlns:loc="UnityEditor.Localization.UI"
+
+    xsi:noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd"
+    xsi:schemaLocation="
+                        UnityEngine.Experimental.UIElements ../../../../../UIElementsSchema/UnityEngine.Experimental.UIElements.xsd
+                        UnityEditor.Experimental.UIElements ../../../../../UIElementsSchema/UnityEditor.Experimental.UIElements.xsd
+                        UnityEditor.PackageManager.UI ../../../../../UIElementsSchema/UnityEditor.PackageManager.UI.xsd
+"
+>
+  <engine:PopupWindow text="Selected Locales" name="localesListWindow">
+    <engine:ScrollView name="localesList" itemHeight="16"/>
+  </engine:PopupWindow>
+  <engine:VisualElement name="localesListButtons">
+    <engine:Button text="Select All" name="selectAllLocales"/>
+    <engine:Button text="Select None" name="selectNoLocales"/>
+  </engine:VisualElement>
+  <engine:VisualElement class="unity-property-field">
+    <engine:Label text="Table Name" tooltip="The name to use for a set of newly created localization tables." class="unity-property-field-label"/>
+    <engine:TextField name="newTableName" text="[New Table]" class="unity-property-field-input"/>
+  </engine:VisualElement>
+  <engine:VisualElement class="unity-property-field">
+    <engine:Label text="Table Type" class="unity-property-field-label"/>
+    <loc:AssetTableTypeField class="unity-property-field-input"/>
+  </engine:VisualElement>
+  <engine:Button text="Create" name="createTableButton"/>
+  </engine:UXML>

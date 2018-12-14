@@ -1,0 +1,18 @@
+{
+    "name": "Unity.Localization.Editor",
+    "references": [
+        "Unity.Localization",
+        "Unity.Addressables.Editor",
+        "Unity.Addressables"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}

@@ -16,7 +16,13 @@ namespace UnityEditor.Localization.UI
         const string k_EditorPrefValueKey = "Localization-SelectedAssetTable";
         const string k_NoTablesMessage = "No Asset Tables Found. Please Create One";
 
-        internal class NoTables : AssetTableCollection {}
+        internal class NoTables : AssetTableCollection
+        {
+            public override string ToString()
+            {
+                return null;
+            }
+        }
 
         public new class UxmlFactory : UxmlFactory<AssetTablesField> {}
 

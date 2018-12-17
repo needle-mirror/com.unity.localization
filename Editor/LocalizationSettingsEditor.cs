@@ -37,7 +37,7 @@ namespace UnityEditor.Localization
         {
             if (LocalizationPlayerSettings.ActiveLocalizationSettings == null)
             {
-                if (EditorUtility.DisplayDialog("Localization Settings", "You have no active Localization Settings. Would you like to create one?", "OK", "Cancel"))
+                if (EditorUtility.DisplayDialog("Create Localization Settings", "You have no active Localization Settings. Would you like to create one?", "Create", "Cancel"))
                     LocalizationPlayerSettings.ActiveLocalizationSettings = LocalizationSettingsMenuItems.CreateLocalizationAsset();
             }
             else

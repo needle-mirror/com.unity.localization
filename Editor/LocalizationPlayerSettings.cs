@@ -5,8 +5,17 @@ using UnityEngine.Localization;
 
 namespace UnityEditor.Localization
 {
-    public static class LocalizationPlayerSettings
+    public class LocalizationPlayerSettings
     {
+        static LocalizationPlayerSettings s_Instance;
+
+        // Allows for overriding the default behavior, used for testing.
+        internal static LocalizationPlayerSettings Instance
+        {
+            get { return s_Instance ?? (s_Instance = new LocalizationPlayerSettings()); }
+            set { s_Instance = value; }
+        }
+
         /// <summary>
         /// The LocalizationSettings used for this project.
         /// </summary>
@@ -17,6 +26,12 @@ namespace UnityEditor.Localization
         /// Note: This needs to be an asset.
         /// </remarks>
         public static LocalizationSettings ActiveLocalizationSettings
+        {
+            get { return Instance.ActiveLocalizationSettingsInternal; }
+            set { Instance.ActiveLocalizationSettingsInternal = value; }
+        }
+
+        protected virtual LocalizationSettings ActiveLocalizationSettingsInternal
         {
             get
             {
@@ -39,8 +54,13 @@ namespace UnityEditor.Localization
 
         public static List<AssetTableCollection> GetAssetTables<TLocalizedTable>() where TLocalizedTable : LocalizedTable
         {
+            return Instance.GetAssetTablesInternal<TLocalizedTable>();
+        }
+
+        protected virtual List<AssetTableCollection> GetAssetTablesInternal<TLocalizedTable>() where TLocalizedTable : LocalizedTable
+        {
             var foundTables = new List<AssetTableCollection>();
-            
+
             // Find all Table assets and their associated editors
             var tableAssets = AssetDatabase.FindAssets("t:" + typeof(TLocalizedTable).Name);
 
@@ -83,7 +103,7 @@ namespace UnityEditor.Localization
     /// <summary>
     /// Asset tables are collated by their type and table name
     /// </summary>
-    public class AssetTableCollection
+    public class AssetTableCollection : IEquatable<AssetTableCollection>
     {
         LocalizedTableEditor m_Editor;
 
@@ -113,7 +133,7 @@ namespace UnityEditor.Localization
             }
         }
 
-        public string TableName { get { return Tables[0].TableName; } }
+        public virtual string TableName { get { return Tables[0].TableName; } }
 
         public List<LocalizedTable> Tables { get; set; }
 
@@ -135,6 +155,13 @@ namespace UnityEditor.Localization
         public override string ToString()
         {
             return TableName + "("+ TableType.Name  + ")";
+        }
+
+        public bool Equals(AssetTableCollection other)
+        {
+            if (other == null)
+                return false;
+            return TableType == other.TableType && TableName == other.TableName;
         }
     }
 }

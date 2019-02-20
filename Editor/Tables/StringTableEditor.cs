@@ -169,7 +169,7 @@ namespace UnityEditor.Localization
             if (atf != null)
             {
                 // Force the label to update itself.
-                atf.value = atf.value;
+                atf.RefreshLabels();
             }
         }
 

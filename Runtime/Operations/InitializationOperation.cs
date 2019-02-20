@@ -67,7 +67,7 @@ namespace UnityEngine.Localization
             if (obj.HasLoadedSuccessfully())
             {
                 Status = obj.Status;
-                m_error = obj.OperationException;
+                m_Error = obj.OperationException;
             }
 
             Debug.Assert(m_PreloadingOperations >= 0);

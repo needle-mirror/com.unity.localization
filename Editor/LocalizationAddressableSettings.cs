@@ -6,7 +6,7 @@ using Object = UnityEngine.Object;
 
 namespace UnityEditor.Localization
 {
-    public static class LocalizationAddressableSettings
+    public class LocalizationAddressableSettings
     {
         public const string LocaleGroupName = "Localization-Locales";
         public const string AssetTableTypeGroupName = "Localization-Assets-{0}";
@@ -14,18 +14,84 @@ namespace UnityEditor.Localization
         public const string AssetTableGroupName = "Localization-AssetTables";
         public const string StringTableGroupName = "Localization-StringTables";
 
-        static AddressableAssetGroup GetGroup(AddressableAssetSettings settings, string groupName, bool create = false)
+        static LocalizationAddressableSettings s_Instance;
+
+        // Allows for overriding the default behavior, used for testing.
+        internal static LocalizationAddressableSettings Instance
+        {
+            get { return s_Instance ?? (s_Instance = new LocalizationAddressableSettings()); }
+            set { s_Instance = value; }
+        }
+
+        /// <summary>
+        /// Add the Locale to the Addressables system, so that it can be used by the Localization system during runtime.
+        /// </summary>
+        /// <param name="locale"></param>
+        /// <returns>True if the locale was added; false if it was not such as when the locale is already added or the 
+        /// operation was canceled when creating the settings asset.</returns>
+        public static bool AddLocale(Locale locale)
+        {
+            return Instance.AddLocaleInternal(locale);
+        }
+
+        /// <summary>
+        /// Removes the locale from the Addressables system.
+        /// </summary>
+        /// <param name="locale"></param>
+        /// <returns>True if success or false if the locale could not be removed, such as if it was not added.</returns>
+        public static bool RemoveLocale(Locale locale)
+        {
+            return Instance.RemoveLocaleInternal(locale);
+        }
+
+        /// <summary>
+        /// Returns all locales that are part of the Addressables system.
+        /// </summary>
+        /// <returns></returns>
+        public static List<Locale> GetLocales()
+        {
+            return Instance.GetLocalesInternal();
+        }
+
+        /// <summary>
+        /// Add a localized asset to the asset table.
+        /// This function will ensure the localization system adds the asset to the Addressables system and sets the asset up for use.
+        /// </summary>
+        public static void AddAssetToTable<TObject>(AddressableAssetTableT<TObject> table, string key, TObject asset) where TObject : Object
+        {
+            Instance.AddAssetToTableInternal(table, key, asset);
+        }
+
+        /// <summary>
+        /// Remove the asset mapping from the table and also cleanup the Addressables if necessary.
+        /// </summary>
+        public static void RemoveAssetFromTable<TObject>(AddressableAssetTableT<TObject> table, string key, TObject asset) where TObject : Object
+        {
+            Instance.RemoveAssetFromTableInternal(table, key, asset);
+        }
+
+        /// <summary>
+        /// Add or update the Addressables data for the table.
+        /// Ensures the table is in the correct group and has all the required labels.
+        /// </summary>
+        /// <param name="table"></param>
+        public static void AddOrUpdateAssetTable(LocalizedTable table)
+        {
+            Instance.AddOrUpdateAssetTableInternal(table);
+        }
+
+        protected virtual AddressableAssetGroup GetGroup(AddressableAssetSettings settings, string groupName, bool create = false)
         {
             var group = settings.FindGroup(groupName);
             if (group == null && create)
             {
-                group = settings.CreateGroup(groupName, false, false, true);
+                group = settings.CreateGroup(groupName, false, false, true, null, typeof(BundledAssetGroupSchema));
             }
 
             return group;
         }
 
-        static string FindUniqueAssetAddress(string address)
+        protected virtual string FindUniqueAssetAddress(string address)
         {
             var aaSettings = AddressableAssetSettingsDefaultObject.Settings;
             if (aaSettings == null)
@@ -57,13 +123,7 @@ namespace UnityEditor.Localization
             return validAddress;
         }
 
-        /// <summary>
-        /// Add the Locale to the Addressables system, so that it can be used by the Localization system during runtime.
-        /// </summary>
-        /// <param name="locale"></param>
-        /// <returns>True if the locale was added; false if it was not such as when the locale is already added or the 
-        /// operation was canceled when creating the settings asset.</returns>
-        public static bool AddLocale(Locale locale)
+        protected virtual bool AddLocaleInternal(Locale locale)
         {
             if (!EditorUtility.IsPersistent(locale))
             {
@@ -71,7 +131,7 @@ namespace UnityEditor.Localization
                 return false;
             }
 
-            var aaSettings = AddressableAssetSettingsDefaultObject.Settings;
+            var aaSettings = AddressableAssetSettingsDefaultObject.GetSettings(true);
             if (aaSettings == null)
                 return false;
 
@@ -92,12 +152,7 @@ namespace UnityEditor.Localization
             return true;
         }
 
-        /// <summary>
-        /// Removes the locale from the Addressables system.
-        /// </summary>
-        /// <param name="locale"></param>
-        /// <returns>True if success or false if the locale could not be removed, such as if it was not added.</returns>
-        public static bool RemoveLocale(Locale locale)
+        protected virtual bool RemoveLocaleInternal(Locale locale)
         {
             var aaSettings = AddressableAssetSettingsDefaultObject.Settings;
             if (aaSettings == null)
@@ -111,11 +166,7 @@ namespace UnityEditor.Localization
             return true;
         }
 
-        /// <summary>
-        /// Returns all locales that are part of the Addressables system.
-        /// </summary>
-        /// <returns></returns>
-        public static List<Locale> GetLocales()
+        protected virtual List<Locale> GetLocalesInternal()
         {
             var locales = new List<Locale>();
 
@@ -138,29 +189,25 @@ namespace UnityEditor.Localization
             return locales;
         }
 
-        /// <summary>
-        /// Add a localized asset to the asset table.
-        /// This function will ensure the localization system adds the asset to the addressables system and sets the asset up for use.
-        /// </summary>
-        public static void AddAssetToTable<T>(AddressableAssetTableT<T> table, string key, T asset) where T: Object
+        protected virtual void AddAssetToTableInternal<TObject>(AddressableAssetTableT<TObject> table, string key, TObject asset) where TObject : Object
         {
-            if(!EditorUtility.IsPersistent(table))
+            if (!EditorUtility.IsPersistent(table))
             {
                 Debug.LogError("Only persistent assets can be addressable. The asset needs to be saved on disk.");
                 return;
             }
 
             // Add the asset to the addressables system and setup the table with the key to guid mapping.
-            var aaSettings = AddressableAssetSettingsDefaultObject.Settings;
+            var aaSettings = AddressableAssetSettingsDefaultObject.GetSettings(true);
             if (aaSettings == null)
                 return;
 
             // Has the asset already been added? Perhaps it is being used by multiple tables or the user has added it manually.
             var guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(asset));
             var entry = aaSettings.FindAssetEntry(guid);
-            if(entry == null)
+            if (entry == null)
             {
-                var groupName = string.Format(AssetTableTypeGroupName, typeof(T).ToString());
+                var groupName = string.Format(AssetTableTypeGroupName, typeof(TObject).ToString());
                 var group = GetGroup(aaSettings, groupName, true);
                 entry = aaSettings.CreateOrMoveEntry(guid, group, true);
                 entry.address = FindUniqueAssetAddress(asset.name);
@@ -176,10 +223,7 @@ namespace UnityEditor.Localization
             table.AddAsset(key, guid);
         }
 
-        /// <summary>
-        /// Remove the asset mapping from the table and also cleanup the addressables if necessary.
-        /// </summary>
-        public static void RemoveAssetFromTable<T>(AddressableAssetTableT<T> table, string key, T asset) where T : Object
+        protected virtual void RemoveAssetFromTableInternal<TObject>(AddressableAssetTableT<TObject> table, string key, TObject asset) where TObject : Object
         {
             // Clear the asset but keep the key
             table.AddAsset(key, string.Empty);
@@ -193,15 +237,15 @@ namespace UnityEditor.Localization
             var assetGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(asset));
             var tableGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(table));
             var tableGroup = GetGroup(aaSettings, AssetTableGroupName);
-            if(tableGroup != null)
+            if (tableGroup != null)
             {
                 foreach (var tableEntry in tableGroup.entries)
                 {
-                    var tableToCheck = tableEntry.guid == tableGuid ? table : AssetDatabase.LoadAssetAtPath<AddressableAssetTableT<T>>(AssetDatabase.GUIDToAssetPath(tableEntry.guid));
+                    var tableToCheck = tableEntry.guid == tableGuid ? table : AssetDatabase.LoadAssetAtPath<AddressableAssetTableT<TObject>>(AssetDatabase.GUIDToAssetPath(tableEntry.guid));
                     if (tableToCheck != null && tableToCheck.LocaleIdentifier == table.LocaleIdentifier)
                     {
                         var guidHash = Hash128.Parse(assetGuid);
-                        foreach(var item in tableToCheck.AssetMap.Values)
+                        foreach (var item in tableToCheck.AssetMap.Values)
                         {
                             // The asset is referenced elsewhere so we can not remove the label or asset.
                             if (item.GuidHash == guidHash)
@@ -226,12 +270,7 @@ namespace UnityEditor.Localization
             }
         }
 
-        /// <summary>
-        /// Add or update the Addressables data for the table.
-        /// Ensures the table is in the correct group and has all the required labels.
-        /// </summary>
-        /// <param name="table"></param>
-        public static void AddOrUpdateAssetTable(LocalizedTable table)
+        protected virtual void AddOrUpdateAssetTableInternal(LocalizedTable table)
         {
             if (!EditorUtility.IsPersistent(table))
             {
@@ -239,7 +278,7 @@ namespace UnityEditor.Localization
                 return;
             }
 
-            var aaSettings = AddressableAssetSettingsDefaultObject.Settings;
+            var aaSettings = AddressableAssetSettingsDefaultObject.GetSettings(true);
             if (aaSettings == null)
                 return;
 

@@ -2,6 +2,7 @@
 using System.Linq;
 using UnityEditor.AddressableAssets;
 using UnityEditor.Experimental.UIElements;
+using UnityEditor.VersionControl;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Localization;
 using UnityEngine.Experimental.UIElements;
@@ -11,7 +12,7 @@ namespace UnityEditor.Localization.UI
     /// <summary>
     /// Displays all the asset tables for the project collated by type.
     /// </summary>
-    sealed class AssetTablesField : PopupField<AssetTableCollection>
+    internal class AssetTablesField : PopupField<AssetTableCollection>
     {
         const string k_EditorPrefValueKey = "Localization-SelectedAssetTable";
         const string k_NoTablesMessage = "No Asset Tables Found. Please Create One";
@@ -21,6 +22,11 @@ namespace UnityEditor.Localization.UI
             public override string ToString()
             {
                 return null;
+            }
+
+            public override string TableName
+            {
+                get { return null; }
             }
         }
 
@@ -67,6 +73,12 @@ namespace UnityEditor.Localization.UI
                     EditorPrefs.SetString(k_EditorPrefValueKey, value.ToString());
                 base.value = value; 
             }
+        }
+
+        public void RefreshLabels()
+        {
+            GetChoices();
+            SetValueWithoutNotify(value);
         }
 
         static void AddressableSettingsModification(AddressableAssetSettings arg1, AddressableAssetSettings.ModificationEvent arg2, object arg3)

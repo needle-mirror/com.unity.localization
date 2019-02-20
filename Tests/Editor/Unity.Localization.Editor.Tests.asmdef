@@ -1,6 +1,7 @@
 {
     "name": "Unity.Localization.Editor.Tests",
     "references": [
+        "Unity.Localization.Editor",
         "Unity.Localization"
     ],
     "optionalUnityReferences": [

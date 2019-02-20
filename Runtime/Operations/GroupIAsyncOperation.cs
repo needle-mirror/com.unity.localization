@@ -15,7 +15,7 @@ namespace UnityEngine.Localization
         public GroupIAsyncOperation()
         {
             m_InternalOnComplete = OnOperationCompleted;
-            m_result = new List<TObject>();
+            m_Result = new List<TObject>();
         }
 
         /// <inheritdoc />
@@ -37,10 +37,10 @@ namespace UnityEngine.Localization
         /// <inheritdoc />
         public override void ResetStatus()
         {
-            m_releaseToCacheOnCompletion = true;
-            m_status = AsyncOperationStatus.None;
-            m_error = null;
-            m_context = null;
+            m_ReleaseToCacheOnCompletion = true;
+            m_Status = AsyncOperationStatus.None;
+            m_Error = null;
+            m_Context = null;
 
             Result.Clear();
             m_Operations = null;
@@ -53,12 +53,12 @@ namespace UnityEngine.Localization
             get
             {
                 Validate();
-                return m_key;
+                return m_Key;
             }
             set
             {
                 Validate();
-                m_key = value;
+                m_Key = value;
                 if (m_Operations != null)
                 {
                     foreach (var op in m_Operations)
@@ -93,7 +93,7 @@ namespace UnityEngine.Localization
                     if (op.Status != AsyncOperationStatus.Succeeded)
                     {
                         Status = op.Status;
-                        m_error = op.OperationException;
+                        m_Error = op.OperationException;
                     }
                     break;
                 }

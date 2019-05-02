@@ -20,24 +20,16 @@ namespace UnityEditor.Localization
         }
 
         public SerializedProperty Property { get; set; }
-        public SerializedProperty NameProp { get { return GetProperty(k_NamePropertyName); } }
-        public SerializedProperty IdentifierIdProp { get { return GetProperty(k_IdPropertyName); } }
-        public SerializedProperty IdentifierCodeProp { get { return GetProperty(k_CodePropertyName); } }
-        public SerializedProperty FallbackProp { get { return GetProperty(k_FallbackPropertyName); } }
+        public SerializedProperty NameProp => GetProperty(k_NamePropertyName);
+        public SerializedProperty IdentifierIdProp => GetProperty(k_IdPropertyName);
+        public SerializedProperty IdentifierCodeProp => GetProperty(k_CodePropertyName);
+        public SerializedProperty FallbackProp => GetProperty(k_FallbackPropertyName);
 
-        SerializedProperty GetProperty(string propName)
-        {
-            if (SerializedObject == null)
-                return null;
-            return SerializedObject.FindProperty(propName);
-        }
+        SerializedProperty GetProperty(string propName) => SerializedObject?.FindProperty(propName);
 
         public Locale Reference
         {
-            get
-            {
-                return Property.objectReferenceValue as Locale;
-            }
+            get => Property.objectReferenceValue as Locale;
             set
             {
                 if (Property != null)
@@ -57,11 +49,11 @@ namespace UnityEditor.Localization
         const string k_CodePropertyName = "m_Identifier.m_Code";
         const string k_FallbackPropertyName = "m_Fallback";
 
-        public override string displayName { get { return Name + " " + IdentifierCode + " " + id; } }
+        public override string displayName => Name + " " + IdentifierCode + " " + id;
 
         public int IdentifierId
         {
-            get { return IdentifierIdProp != null ? IdentifierIdProp.intValue : 0; }
+            get => IdentifierIdProp?.intValue ?? 0;
             set
             {
                 if (IdentifierIdProp != null)
@@ -71,27 +63,27 @@ namespace UnityEditor.Localization
 
         public string Name
         {
-            get { return NameProp != null ? NameProp.stringValue : string.Empty; }
+            get => NameProp != null ? NameProp.stringValue : string.Empty;
             set
             {
-                if(NameProp != null)
+                if (NameProp != null)
                     NameProp.stringValue = value;
             }
         }
 
         public string IdentifierCode
         {
-            get { return IdentifierCodeProp != null ? IdentifierCodeProp.stringValue : string.Empty; }
+            get => IdentifierCodeProp != null ? IdentifierCodeProp.stringValue : string.Empty;
             set
             {
-                if(IdentifierCodeProp != null)
+                if (IdentifierCodeProp != null)
                     IdentifierCodeProp.stringValue = value;
             }
         }
 
         public Locale Fallback
         {
-            get { return FallbackProp != null ? FallbackProp.objectReferenceValue as Locale : null;  }
+            get => FallbackProp?.objectReferenceValue as Locale;
             set
             {
                 if (FallbackProp != null)

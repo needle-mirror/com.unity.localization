@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using UnityEngine.ResourceManagement;
 
 namespace UnityEngine.Localization
 {
@@ -41,7 +41,7 @@ namespace UnityEngine.Localization
         [SerializeField]
         LocalizedStringDatabase m_StringDatabase;
 
-        InitializationOperation m_InitializingOperation;
+        AsyncOperationHandle<LocalizationSettings>? m_InitializingOperation;
 
         Locale m_SelectedLocale;
 
@@ -68,19 +68,13 @@ namespace UnityEngine.Localization
         /// The localization system may not be immediately ready. Loading Locales, preloading assets etc.
         /// This operation can be used to check when the system is ready. You can yield on this in a coroutine to wait.
         /// </summary>
-        public static InitializationOperation InitializationOperation
-        {
-            get { return Instance.GetInitializationOperation(); }
-        }
+        public static AsyncOperationHandle<LocalizationSettings>? InitializationOperation => Instance.GetInitializationOperation();
 
         /// <summary>
         /// Does the LocalizationSettings exist and contain a string database?
         /// </summary>
         /// <value><c>true</c> if has string database; otherwise, <c>false</c>.</value>
-        public static bool HasStringDatabase
-        {
-            get { return HasSettings && s_Instance.m_StringDatabase != null; }
-        }
+        public static bool HasStringDatabase => HasSettings && s_Instance.m_StringDatabase != null;
 
         /// <summary>
         /// Singleton instance for the Localization Settings.
@@ -93,7 +87,7 @@ namespace UnityEngine.Localization
                     s_Instance = GetOrCreateSettings();
                 return s_Instance;
             }
-            set { s_Instance = value; }
+            set => s_Instance = value;
         }
 
         /// <summary>
@@ -101,8 +95,8 @@ namespace UnityEngine.Localization
         /// </summary>
         public PreloadBehavior PreloadBehavior
         {
-            get { return Instance.GetPreloadBehavior(); }
-            set { Instance.SetPreloadBehavior(value); }
+            get => Instance.GetPreloadBehavior();
+            set => Instance.SetPreloadBehavior(value);
         }
 
         /// <summary>
@@ -110,8 +104,8 @@ namespace UnityEngine.Localization
         /// </summary>
         public static StartupLocaleSelector StartupLocaleSelector
         {
-            get { return Instance.GetStartupLocaleSelector(); }
-            set { Instance.SetStartupLocaleSelector(value); }
+            get => Instance.GetStartupLocaleSelector();
+            set => Instance.SetStartupLocaleSelector(value);
         }
 
         /// <summary>
@@ -119,8 +113,8 @@ namespace UnityEngine.Localization
         /// </summary>
         public static LocalesProvider AvailableLocales
         {
-            get { return Instance.GetAvailableLocales(); }
-            set { Instance.SetAvailableLocales(value); }
+            get => Instance.GetAvailableLocales();
+            set => Instance.SetAvailableLocales(value);
         }
 
         /// <summary>
@@ -128,8 +122,8 @@ namespace UnityEngine.Localization
         /// </summary>
         public static LocalizedAssetDatabase AssetDatabase
         {
-            get { return Instance.GetAssetDatabase(); }
-            set { Instance.SetAssetDatabase(value); }
+            get => Instance.GetAssetDatabase();
+            set => Instance.SetAssetDatabase(value);
         }
 
         /// <summary>
@@ -137,8 +131,8 @@ namespace UnityEngine.Localization
         /// </summary>
         public static LocalizedStringDatabase StringDatabase
         {
-            get { return Instance.GetStringDatabase(); }
-            set { Instance.SetStringDatabase(value); }
+            get => Instance.GetStringDatabase();
+            set => Instance.SetStringDatabase(value);
         }
 
         /// <summary>
@@ -146,8 +140,8 @@ namespace UnityEngine.Localization
         /// </summary>
         public static Locale SelectedLocale
         {
-            get { return Instance.GetSelectedLocale(); }
-            set { Instance.SetSelectedLocale(value); }
+            get => Instance.GetSelectedLocale();
+            set => Instance.SetSelectedLocale(value);
         }
 
         /// <summary>
@@ -155,9 +149,11 @@ namespace UnityEngine.Localization
         /// </summary>
         public static event Action<Locale> SelectedLocaleChanged
         {
-            add { Instance.OnSelectedLocaleChanged += value; }
-            remove { Instance.OnSelectedLocaleChanged -= value; }
+            add => Instance.OnSelectedLocaleChanged += value;
+            remove => Instance.OnSelectedLocaleChanged -= value;
         }
+
+        internal static ResourceManager ResourceManager => AddressableAssets.Addressables.ResourceManager;
 
         void OnEnable()
         {
@@ -171,9 +167,6 @@ namespace UnityEngine.Localization
             m_SelectedLocale = null;
             m_InitializingOperation = null;
             #endif
-
-            if (Application.isPlaying && m_AvailableLocales != null && m_LocaleSelector != null)
-                GetInitializationOperation();
         }
 
         #if UNITY_EDITOR
@@ -189,29 +182,22 @@ namespace UnityEngine.Localization
         /// TODO: DOC
         /// </summary>
         /// <returns></returns>
-        public PreloadBehavior GetPreloadBehavior()
-        {
-            return m_PreloadBehavior;
-        }
+        public PreloadBehavior GetPreloadBehavior() => m_PreloadBehavior;
 
         /// <summary>
         /// TODO: DOC
         /// </summary>
         /// <param name="behavior"></param>
-        public void SetPreloadBehavior(PreloadBehavior behavior)
-        {
-            m_PreloadBehavior = behavior;
-        }
+        public void SetPreloadBehavior(PreloadBehavior behavior) => m_PreloadBehavior = behavior;
 
         /// <summary>
         /// <inheritdoc cref="InitializationOperation"/>
         /// </summary>
-        public InitializationOperation GetInitializationOperation()
+        public AsyncOperationHandle<LocalizationSettings>? GetInitializationOperation()
         {
             if (m_InitializingOperation == null)
             {
-                m_InitializingOperation = new InitializationOperation();
-                m_InitializingOperation.Start(this);
+                m_InitializingOperation = ResourceManager.StartOperation(new InitializationOperation(this), default);
             }
 
             return m_InitializingOperation;
@@ -220,69 +206,45 @@ namespace UnityEngine.Localization
         /// <summary>
         /// <inheritdoc cref="StartupLocaleSelector"/>
         /// </summary>
-        public void SetStartupLocaleSelector(StartupLocaleSelector selector)
-        {
-            m_LocaleSelector = selector;
-        }
+        public void SetStartupLocaleSelector(StartupLocaleSelector selector) => m_LocaleSelector = selector;
 
         /// <summary>
         /// <inheritdoc cref="StartupLocaleSelector"/>
         /// </summary>
-        public StartupLocaleSelector GetStartupLocaleSelector()
-        {
-            return m_LocaleSelector;
-        }
+        public StartupLocaleSelector GetStartupLocaleSelector() => m_LocaleSelector;
 
         /// <summary>
         /// <inheritdoc cref="AvailableLocales"/>
         /// </summary>
-        public void SetAvailableLocales(LocalesProvider available)
-        {
-            m_AvailableLocales = available;
-        }
+        public void SetAvailableLocales(LocalesProvider available) => m_AvailableLocales = available;
 
         /// <summary>
         /// <inheritdoc cref="AvailableLocales"/>
         /// </summary>
-        public LocalesProvider GetAvailableLocales()
-        {
-            return m_AvailableLocales;
-        }
+        public LocalesProvider GetAvailableLocales() => m_AvailableLocales;
 
         /// <summary>
         /// <inheritdoc cref="AssetDatabase"/>
         /// </summary>
         /// <param name="database"></param>
-        public void SetAssetDatabase(LocalizedAssetDatabase database)
-        {
-            m_AssetDatabase = database;
-        }
+        public void SetAssetDatabase(LocalizedAssetDatabase database) => m_AssetDatabase = database;
 
         /// <summary>
         /// <inheritdoc cref="AssetDatabase"/>
         /// </summary>
         /// <returns></returns>
-        public LocalizedAssetDatabase GetAssetDatabase()
-        {
-            return m_AssetDatabase;
-        }
+        public LocalizedAssetDatabase GetAssetDatabase() => m_AssetDatabase;
 
         /// <summary>
         /// Sets the string database to be used for localizing all strings.
         /// </summary>
-        public void SetStringDatabase(LocalizedStringDatabase database)
-        {
-            m_StringDatabase = database;
-        }
+        public void SetStringDatabase(LocalizedStringDatabase database) => m_StringDatabase = database;
 
         /// <summary>
         /// Returns the string database being used to localize all strings.
         /// </summary>
         /// <returns>The string database.</returns>
-        public LocalizedStringDatabase GetStringDatabase()
-        {
-            return m_StringDatabase;
-        }
+        public LocalizedStringDatabase GetStringDatabase() => m_StringDatabase;
 
         /// <summary>
         /// Sends out notifications when the locale has changed. Ensures the the events are sent in the correct order.
@@ -300,19 +262,15 @@ namespace UnityEngine.Localization
             {
                 var initOp = GetInitializationOperation();
 
-                initOp.ResetStatus();
-                initOp.Start(this);
-
-                initOp.Completed += (o) =>
+                initOp.Value.Completed += (o) =>
                 {
                     // Don't send the change event until preloading is completed.
-                    if (OnSelectedLocaleChanged != null)
-                        OnSelectedLocaleChanged(locale);
+                    OnSelectedLocaleChanged?.Invoke(locale);
                 };
             }
-            else if (OnSelectedLocaleChanged != null)
+            else
             {
-                OnSelectedLocaleChanged(locale);
+                OnSelectedLocaleChanged?.Invoke(locale);
             }
         }
 
@@ -427,7 +385,7 @@ namespace UnityEngine.Localization
                 createdDependencies.Add(localesCollection);
                 createdDependencies.Add(assetDb);
                 createdDependencies.Add(resourcesStringDatabase);
-                createdDependencies.AddRange(localeSelectorCollection.StartupSelectors.Cast<ScriptableObject>());
+                createdDependencies.AddRange(localeSelectorCollection.StartupSelectors);
             }
             return localizationSettings;
         }

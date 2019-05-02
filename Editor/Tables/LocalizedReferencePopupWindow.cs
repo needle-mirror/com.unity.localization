@@ -31,7 +31,7 @@ namespace UnityEditor.Localization
 
             if (m_ShouldClose)
             {
-                EditorGUIUtility.hotControl = 0;
+                GUIUtility.hotControl = 0;
                 editorWindow.Close();
             }
 
@@ -41,7 +41,7 @@ namespace UnityEditor.Localization
 
         public override Vector2 GetWindowSize()
         {
-            Vector2 result = base.GetWindowSize();
+            var result = base.GetWindowSize();
             result.x = Width;
             return result;
         }
@@ -52,9 +52,6 @@ namespace UnityEditor.Localization
             base.OnOpen();
         }
 
-        public void ForceClose()
-        {
-            m_ShouldClose = true;
-        }
+        public void ForceClose() => m_ShouldClose = true;
     }
 }

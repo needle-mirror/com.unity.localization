@@ -1,6 +1,6 @@
 namespace UnityEngine.Localization
 {
-    public static class SystemLanguageConverter
+    static class SystemLanguageConverter
     {
         /// <summary>
         /// Converts a SystemLanguage enum into a CultureInfo Code.

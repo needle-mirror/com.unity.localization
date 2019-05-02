@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace UnityEngine.Localization
+﻿namespace UnityEngine.Localization
 {
     public abstract class LocalizedTable : ScriptableObject
     {
@@ -10,13 +8,16 @@ namespace UnityEngine.Localization
         [SerializeField]
         string m_TableName = "Default";
 
+        [SerializeField]
+        KeyDatabase m_KeyDatabase;
+
         /// <summary>
         /// The locale this asset table supports.
         /// </summary>
         public LocaleIdentifier LocaleIdentifier
         {
-            get { return m_LocaleId; }
-            set { m_LocaleId = value; }
+            get => m_LocaleId;
+            set => m_LocaleId = value;
         }
 
         /// <summary>
@@ -24,32 +25,19 @@ namespace UnityEngine.Localization
         /// </summary>
         public string TableName
         {
-            get { return m_TableName; }
-            set { m_TableName = value; }
+            get => m_TableName;
+            set => m_TableName = value;
         }
 
         /// <summary>
-        /// Add a new key to the table. Must be unique or it will be ignored.
+        /// Database of all keys used by this Table.
         /// </summary>
-        /// <param name="key"></param>
-        public abstract void AddKey(string key);
+        public KeyDatabase Keys
+        {
+            get => m_KeyDatabase;
+            set => m_KeyDatabase = value;
+        }
 
-        /// <summary>
-        /// Remove the key if it exists.
-        /// </summary>
-        /// <param name="key"></param>
-        public abstract void RemoveKey(string key);
-
-        /// <summary>
-        /// Replace the old key value with the newKey value.
-        /// </summary>
-        public abstract void ReplaceKey(string key, string newKey);
-
-        /// <summary>
-        /// Populate the HashSet with all keys in this table.
-        /// Allows us to collate the keys from multiple locale for the same table name.
-        /// </summary>
-        /// <param name="keySet"></param>
-        public abstract void GetKeys(HashSet<string> keySet);
+        public override string ToString() => TableName + "(" + LocaleIdentifier + ")";
     }
 }

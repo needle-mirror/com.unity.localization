@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
-using UnityScript.Scripting;
 
 namespace UnityEngine.Localization.Samples
 {
@@ -73,9 +72,9 @@ namespace UnityEngine.Localization.Samples
         void DrawWindowContents(int id)
         {
             // We need to wait for the localization system to initialize
-            if (!LocalizationSettings.InitializationOperation.IsDone)
+            if (!LocalizationSettings.InitializationOperation.Value.IsDone)
             {
-                GUILayout.Label("Initializing Localization: " + LocalizationSettings.InitializationOperation.PercentComplete);
+                GUILayout.Label("Initializing Localization: " + LocalizationSettings.InitializationOperation.Value.PercentComplete);
                 GUI.DragWindow();
                 return;
             }

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization
 {
@@ -8,36 +8,40 @@ namespace UnityEngine.Localization
     {
         int m_PreloadingOperations;
         LocalizedAssetDatabase m_Db;
+        string m_Error;
 
-        /// <inheritdoc />
-        public override void ResetStatus()
-        {
-            base.ResetStatus();
-            m_PreloadingOperations = 0;
-            m_Db = null;
-        }
-
-        public virtual AssetDatabasePreloadOperation Start(LocalizedAssetDatabase db)
+        public AssetDatabasePreloadOperation(LocalizedAssetDatabase db)
         {
             m_Db = db;
+        }
+
+        protected override void Execute()
+        {
             var loadTablesOperation = Addressables.LoadAssets<LocalizedAssetTable>(new object[] { LocalizedAssetDatabase.AssetTableLabel, LocalizationSettings.SelectedLocale.Identifier.Code }, TableLoaded, Addressables.MergeMode.Intersection);
             loadTablesOperation.Completed += PreloadTablesCompleted;
-            return this;
         }
 
-        void TableLoaded(IAsyncOperation<LocalizedAssetTable> asyncOperation)
+        void TableLoaded(LocalizedAssetTable table)
         {
-            if (!asyncOperation.HasLoadedSuccessfully())
+            var tables = m_Db.GetTablesDict(table.SupportedAssetType);
+            Debug.AssertFormat(!tables.ContainsKey(table.TableName), "A table with the same key `{0}` already exists for this type `{1}`. Something went wrong during preloading.", table.TableName, table.SupportedAssetType);
+            tables[table.TableName] = LocalizationSettings.ResourceManager.CreateCompletedOperation(table, string.Empty);
+        }
+
+        void PreloadTablesCompleted(AsyncOperationHandle<IList<LocalizedAssetTable>> asyncOperation)
+        {
+            if (asyncOperation.Status != AsyncOperationStatus.Succeeded)
+            {
+                var error = "Failed to preload table: " + asyncOperation.DebugName + "\n";
+                m_Error += error;
+                Debug.LogError(error);
+                if (asyncOperation.OperationException != null)
+                {
+                    Debug.LogException(asyncOperation.OperationException);
+                    m_Error += asyncOperation.OperationException + "\n";
+                }
                 return;
-            var tables = m_Db.GetTablesDict(asyncOperation.Result.SupportedAssetType);
-            Debug.AssertFormat(!tables.ContainsKey(asyncOperation.Result.TableName), "A table with the same key `{0}` already exists for this type `{1}`. Something went wrong during preloading.", asyncOperation.Result.TableName, asyncOperation.Result.SupportedAssetType);
-            asyncOperation.Retain();
-            tables[asyncOperation.Result.TableName] = asyncOperation;
-        }
-
-        void PreloadTablesCompleted(IAsyncOperation<IList<LocalizedAssetTable>> asyncOperation)
-        {
-            asyncOperation.HasLoadedSuccessfully();
+            }
 
             // Preload table data
             m_PreloadingOperations = 0;
@@ -52,17 +56,18 @@ namespace UnityEngine.Localization
             }
 
             if (m_PreloadingOperations == 0)
-                InvokeCompletionEvent();
+                FinishInitializing();
         }
 
-        private void PreloadOperationCompleted(IAsyncOperation obj)
+        void PreloadOperationCompleted(AsyncOperationHandle obj)
         {
             m_PreloadingOperations--;
 
             if (obj.Status != AsyncOperationStatus.Succeeded)
             {
-                Status = obj.Status;
-                m_Error = obj.OperationException;
+                m_Error += "Failed to preload: " + obj.DebugName + "\n";
+                if (obj.OperationException != null)
+                    m_Error += obj.OperationException + "\n";
             }
 
             Debug.Assert(m_PreloadingOperations >= 0);
@@ -70,11 +75,6 @@ namespace UnityEngine.Localization
                 FinishInitializing();
         }
 
-        void FinishInitializing()
-        {
-            if (Status != AsyncOperationStatus.Failed)
-                Status = AsyncOperationStatus.Succeeded;
-            InvokeCompletionEvent();
-        }
+        void FinishInitializing() => Complete(m_Db, string.IsNullOrEmpty(m_Error), m_Error);
     }
 }

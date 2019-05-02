@@ -17,8 +17,7 @@ namespace UnityEditor.Localization
         {
             var baseType = typeof(T);
 
-            AssemblyScannerCache cache;
-            if (!s_Cache.TryGetValue(baseType, out cache))
+            if (!s_Cache.TryGetValue(baseType, out var cache))
             {
                 cache = new AssemblyScannerCache();
                 s_Cache[baseType] = cache;
@@ -27,7 +26,7 @@ namespace UnityEditor.Localization
                 {
                     foreach (var type in assembly.GetTypes().Where(t => t.IsSubclassOf(baseType) && !t.IsGenericType && !t.IsAbstract))
                     {
-                        string name = nicifyNames ? ObjectNames.NicifyVariableName(type.Name) : type.Name;
+                        var name = nicifyNames ? ObjectNames.NicifyVariableName(type.Name) : type.Name;
                         cache.names.Add(name);
                         cache.types.Add(type);
                     }
@@ -36,8 +35,7 @@ namespace UnityEditor.Localization
 
             types.AddRange(cache.types);
 
-            if(names != null)
-                names.AddRange(cache.names);
+            names?.AddRange(cache.names);
         }
     }
 }

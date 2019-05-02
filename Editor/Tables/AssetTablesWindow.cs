@@ -1,16 +1,22 @@
 ﻿using UnityEngine;
-using UnityEngine.Experimental.UIElements;
 using UnityEngine.Localization;
-using UnityEditor.Experimental.UIElements;
 using UnityEditor.Localization.UI;
 using Resources = UnityEditor.Localization.UI.Resources;
 
-// TODO: Detect if a table is part of addressables. 
+#if UNITY_2019_1_OR_NEWER
+using UnityEngine.UIElements;
+#else
+using UnityEngine.Experimental.UIElements;
+using UnityEditor.Experimental.UIElements;
+#endif
+
+// TODO: Detect if a table is part of Addressables. 
 // TODO: Detect changes to assets/imports etc.
+// TODO: Add event system for rename, add, remove key etc. Then editors can refresh themselves.
 
 namespace UnityEditor.Localization
 {
-    public class AssetTablesWindow : EditorWindow
+    class AssetTablesWindow : EditorWindow
     {
         static readonly Vector2 k_MinWindowSize = new Vector2(850, 450);
         VisualElement m_Root;
@@ -22,7 +28,7 @@ namespace UnityEditor.Localization
         AssetTablesField m_AssetTablesField;
 
         [MenuItem("Window/Localization/Asset Tables")]
-        static void ShowWindow()
+        public static void ShowWindow()
         {
             var window = GetWindow<AssetTablesWindow>(false, "Asset Tables", true);
             window.minSize = k_MinWindowSize;
@@ -43,7 +49,7 @@ namespace UnityEditor.Localization
             toolbar.EditButton.value = true;
             m_AssetTablesField.SetValueFromTable(selectedTable);
 
-            // If EditTable is called during OnEnable then the change event will not be sent.
+            // If the panel is not active yet then then the change event will not have been sent yet.
             if (m_AssetTablesField.panel == null)
             {
                 ShowTableEditor(m_AssetTablesField.value);
@@ -52,8 +58,14 @@ namespace UnityEditor.Localization
 
         void OnEnable()
         {
+            #if UNITY_2019_1_OR_NEWER
+            m_Root = rootVisualElement;
+            m_Root.styleSheets.Add(AssetDatabase.LoadAssetAtPath<StyleSheet>(Resources.GetStyleSheetPath("AssetTablesWindow")));
+            #else
             m_Root = this.GetRootVisualContainer();
             m_Root.AddStyleSheetPath(Resources.GetStyleSheetPath("AssetTablesWindow"));
+            #endif
+
             var template = Resources.GetTemplate("AssetTablesWindow");
             m_Root.Add(template);
             template.StretchToParentSize();
@@ -70,27 +82,23 @@ namespace UnityEditor.Localization
             toolbar.selectionChanged += panel => UpdatePanels();
 
             m_AssetTablesField = m_Root.Q<AssetTablesField>();
-            m_AssetTablesField.OnValueChanged(TableSelected);
-            if (m_AssetTablesField.value != null && !(m_AssetTablesField.value is AssetTablesField.NoTables))
-            {
-                m_ActiveTableEditor = m_AssetTablesField.value.TableEditor.CreateInspectorGUI();
-                m_EditTableContainer.Add(m_ActiveTableEditor);
-                m_ActiveTableEditor.StretchToParentSize();
-            }
+            m_AssetTablesField.RegisterCallback<ChangeEvent<AssetTableCollection>>(TableSelected);
+            ShowTableEditor(m_AssetTablesField.value);
 
             UpdatePanels();
         }
 
-        void TableSelected(ChangeEvent<AssetTableCollection> evt)
-        {
-            ShowTableEditor(evt.newValue);
-        }
+        void TableSelected(ChangeEvent<AssetTableCollection> evt) => ShowTableEditor(evt.newValue);
 
         void ShowTableEditor(AssetTableCollection tableCollection)
         {
             if (m_ActiveTableEditor != null)
                 m_EditTableContainer.Remove(m_ActiveTableEditor);
-            m_ActiveTableEditor = tableCollection.TableEditor.CreateInspectorGUI();
+
+            if (tableCollection == null || tableCollection is AssetTablesField.NoTables)
+                return;
+
+            m_ActiveTableEditor = tableCollection.TableEditor.CreateTableEditorGUI();
             m_EditTableContainer.Add(m_ActiveTableEditor);
             m_ActiveTableEditor.StretchToParentSize();
         }

@@ -1,4 +1,3 @@
-using UnityEngine.AddressableAssets;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.Localization;
@@ -25,7 +24,7 @@ namespace UnityEditor.Localization
         class Texts
         {
             public GUIContent localeDetails = new GUIContent("Locale Details");
-            public GUIContent[] toolbarButtons = new[]
+            public GUIContent[] toolbarButtons =
             {
                 new GUIContent("Locale Generator", "Opens the Locale Generator window."),
                 new GUIContent("Remove Selected"), 
@@ -53,21 +52,11 @@ namespace UnityEditor.Localization
             Undo.undoRedoPerformed += UndoPerformed;
         }
 
-        void UndoPerformed()
-        {
-            m_ListView.Reload();
-        }
+        void UndoPerformed() => m_ListView.Reload();
 
-        void OnDisable()
-        {
-            Undo.undoRedoPerformed -= UndoPerformed;
-        }
+        void OnDisable() => Undo.undoRedoPerformed -= UndoPerformed;
 
-        public void Reset()
-        {
-            if (m_ListView != null)
-                m_ListView.Reload();
-        }
+        public void Reset() => m_ListView?.Reload();
 
         public override void OnInspectorGUI()
         {
@@ -86,18 +75,14 @@ namespace UnityEditor.Localization
 
         void DrawToolbar()
         {
-            string commandName = Event.current.commandName;
-            int controlId = GUIUtility.GetControlID(FocusType.Passive);
+            var commandName = Event.current.commandName;
+            var controlId = GUIUtility.GetControlID(FocusType.Passive);
 
             var selection = (ToolBarChoices)GUILayout.Toolbar(-1, s_Texts.toolbarButtons, EditorStyles.toolbarButton);
             switch (selection)
             {
                 case ToolBarChoices.LocaleGeneratorWindow:
-                    LocaleGeneratorWindow.ShowWindow((locale) =>
-                    {
-                        LocalizationAddressableSettings.AddLocale(locale);
-                        Reset();
-                    });
+                    LocaleGeneratorWindow.ShowWindow();
                     break;
                 case ToolBarChoices.RemoveSelected:
                     {
@@ -105,7 +90,7 @@ namespace UnityEditor.Localization
                         for (int i = selectedLocales.Count - 1; i >= 0; --i)
                         {
                             var item = m_ListView.GetRows()[selectedLocales[i]] as SerializedLocaleItem;
-                            LocalizationAddressableSettings.RemoveLocale(item.SerializedObject.targetObject as Locale);
+                            LocalizationEditorSettings.RemoveLocale(item.SerializedObject.targetObject as Locale);
                         }
                         m_ListView.SetSelection(new int[0]);
                         m_ListView.Reload();
@@ -119,7 +104,7 @@ namespace UnityEditor.Localization
                         var assets = AssetDatabase.FindAssets("t:Locale");
                         for (int i = 0; i < assets.Length; ++i)
                         {
-                            LocalizationAddressableSettings.AddLocale(AssetDatabase.LoadAssetAtPath<Locale>(AssetDatabase.GUIDToAssetPath(assets[i])));
+                            LocalizationEditorSettings.AddLocale(AssetDatabase.LoadAssetAtPath<Locale>(AssetDatabase.GUIDToAssetPath(assets[i])));
                         }
                         m_ListView.Reload();
                     }
@@ -146,7 +131,7 @@ namespace UnityEditor.Localization
 
             if (commandName == "ObjectSelectorClosed" && EditorGUIUtility.GetObjectPickerControlID() == controlId && EditorGUIUtility.GetObjectPickerObject() != null)
             {
-                LocalizationAddressableSettings.AddLocale(EditorGUIUtility.GetObjectPickerObject() as Locale);
+                LocalizationEditorSettings.AddLocale(EditorGUIUtility.GetObjectPickerObject() as Locale);
                 m_ListView.Reload();
             }
         }

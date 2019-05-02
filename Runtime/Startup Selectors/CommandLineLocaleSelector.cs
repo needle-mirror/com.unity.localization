@@ -12,8 +12,8 @@ namespace UnityEngine.Localization
         /// </summary>
         public string CommandLineArgument
         {
-            get { return m_CommandLineArgument; }
-            set { m_CommandLineArgument = value; }
+            get => m_CommandLineArgument;
+            set => m_CommandLineArgument = value;
         }
 
         public override Locale GetStartupLocale(LocalesProvider availableLocales)

@@ -1,41 +1,23 @@
-﻿using UnityEngine.ResourceManagement;
+﻿using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization
 {
     /// <summary>
     /// Performs all initialization work for the LocalizationSettings.
     /// </summary>
-    public class InitializationOperation : AsyncOperationBase<LocalizationSettings>
+    class InitializationOperation : AsyncOperationBase<LocalizationSettings>
     {
         int m_PreloadingOperations;
         LocalizationSettings m_Settings;
+        string m_Error;
 
-        /// <inheritdoc />
-        public override void ResetStatus()
-        {
-            // Remove ourself from any preloading operations or we may have duplicate callbacks.
-            if (m_PreloadingOperations > 0)
-            {
-                var assetOperation = m_Settings.GetAssetDatabase() as IPreloadRequired;
-                if (assetOperation != null)
-                    assetOperation.PreloadOperation.Completed -= PreloadOperationCompleted;
-
-                var stringOperation = m_Settings.GetStringDatabase() as IPreloadRequired;
-
-                if (stringOperation != null)
-                    stringOperation.PreloadOperation.Completed -= PreloadOperationCompleted;
-                
-            }
-
-            base.ResetStatus();
-            m_PreloadingOperations = 0;
-            m_Settings = null;
-        }
-
-        public virtual InitializationOperation Start(LocalizationSettings settings)
+        public InitializationOperation(LocalizationSettings settings)
         {
             m_Settings = settings;
+        }
 
+        protected override void Execute()
+        {
             // First time initialization requires loading locales and selecting the startup locale without sending a locale changed event.
             if (m_Settings.GetSelectedLocale() == null)
             {
@@ -48,26 +30,28 @@ namespace UnityEngine.Localization
                         m_Settings.InitializeSelectedLocale();
                         PreLoadTables();
                     };
-                    return this;
+                    return;
                 }
-                else
-                {
-                    m_Settings.InitializeSelectedLocale();
-                }
+
+                m_Settings.InitializeSelectedLocale();
             }
 
             PreLoadTables();
-            return this;
         }
 
-        private void PreloadOperationCompleted(IAsyncOperation obj)
+        void PreloadOperationCompleted(AsyncOperationHandle asyncOperation)
         {
             m_PreloadingOperations--;
 
-            if (obj.HasLoadedSuccessfully())
+            if (asyncOperation.Status != AsyncOperationStatus.Succeeded)
             {
-                Status = obj.Status;
-                m_Error = obj.OperationException;
+                m_Error = "Failed to preload: " + asyncOperation.DebugName;
+                Debug.LogError(m_Error, m_Settings);
+                if (asyncOperation.OperationException != null)
+                {
+                    Debug.LogException(asyncOperation.OperationException);
+                    m_Error += "\n" + asyncOperation.OperationException;
+                }
             }
 
             Debug.Assert(m_PreloadingOperations >= 0);
@@ -119,11 +103,6 @@ namespace UnityEngine.Localization
                 FinishInitializing();
         }
 
-        void FinishInitializing()
-        {
-            if (Status != AsyncOperationStatus.Failed)
-                Status = AsyncOperationStatus.Succeeded;
-            InvokeCompletionEvent();
-        }
+        void FinishInitializing() => Complete(m_Settings, string.IsNullOrEmpty(m_Error), m_Error);
     }
 }

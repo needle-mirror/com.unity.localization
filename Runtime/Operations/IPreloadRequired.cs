@@ -1,9 +1,7 @@
-﻿using UnityEngine.ResourceManagement;
-
-namespace UnityEngine.Localization
+﻿namespace UnityEngine.Localization
 {
     public interface IPreloadRequired
     {
-        IAsyncOperation PreloadOperation { get; }
+        AsyncOperationHandle PreloadOperation { get; }
     }
 }

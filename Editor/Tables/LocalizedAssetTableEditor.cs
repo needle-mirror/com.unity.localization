@@ -1,24 +1,30 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Experimental.UIElements;
 using UnityEngine.Localization;
-using UnityEditor.Experimental.UIElements;
 using UnityEditor.Localization.UI;
+
+#if UNITY_2019_1_OR_NEWER
+using UnityEngine.UIElements;
+using UnityEditor.UIElements;
+#else
+using UnityEngine.Experimental.UIElements;
+using UnityEditor.Experimental.UIElements;
+#endif
 
 namespace UnityEditor.Localization
 {
     [CanEditMultipleObjects]
     [CustomEditor(typeof(Texture2DAssetTable), true)]
-    public class Texture2DLocalizedAssetTableEditor : LocalizedAssetTableEditor<Texture2D> { }
+    class Texture2DLocalizedAssetTableEditor : LocalizedAssetTableEditor<Texture2D> { }
 
     [CanEditMultipleObjects]
     [CustomEditor(typeof(AudioClipAssetTable), true)]
-    public class AudioClipLocalizedAssetTableEditor : LocalizedAssetTableEditor<AudioClip> { }
+    class AudioClipLocalizedAssetTableEditor : LocalizedAssetTableEditor<AudioClip> { }
 
     [CanEditMultipleObjects]
     [CustomEditor(typeof(SpriteAssetTable), true)]
-    public class SpriteAssetTableEditor : LocalizedAssetTableEditor<Sprite> { }
+    class SpriteAssetTableEditor : LocalizedAssetTableEditor<Sprite> { }
 
     public class LocalizedAssetTableEditor<TObject> : LocalizedTableEditor where TObject : Object
     {
@@ -26,12 +32,12 @@ namespace UnityEditor.Localization
         VisualElement m_Root;
         IMGUIContainer m_IMGUIContainer;
 
-        public override VisualElement CreateInspectorGUI()
+        public override VisualElement CreateTableEditorGUI()
         {
             m_Root = UI.Resources.GetTemplate("LocalizedAssetTableEditor");
             m_Root.Bind(serializedObject);
 
-            m_Root.Q<PropertyField>("m_TableName").Q<TextField>().OnValueChanged(TableNameChanged);
+            m_Root.Q<PropertyField>("m_TableName").Q<TextField>().RegisterCallback<ChangeEvent<string>>(TableNameChanged);
             m_Root.Q<PropertyField>("m_TableName").Q<TextField>().isDelayed = true; // Prevent an undo per char change.
             var tableContainer = m_Root.Q("tableContainer");
             m_IMGUIContainer = new IMGUIContainer(OnIMGUI);
@@ -43,11 +49,9 @@ namespace UnityEditor.Localization
         void TableNameChanged(ChangeEvent<string> evt)
         {
             var atf = m_Root.panel.visualTree.Q<AssetTablesField>();
-            if (atf != null)
-            {
-                // Force the label to update itself.
-                atf.RefreshLabels();
-            }
+
+            // Force the label to update itself.
+            atf?.RefreshLabels();
         }
 
         public override List<LocalizedTable> Tables
@@ -64,8 +68,7 @@ namespace UnityEditor.Localization
         protected override void UndoRedoPerformed()
         {
             base.UndoRedoPerformed();
-            if (m_TreeView != null)
-                m_TreeView.Reload();
+            m_TreeView?.Reload();
         }
 
         void OnIMGUI()

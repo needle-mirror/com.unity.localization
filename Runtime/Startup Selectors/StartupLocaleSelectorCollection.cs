@@ -14,8 +14,8 @@ namespace UnityEngine.Localization
 
         public List<StartupLocaleSelector> StartupSelectors
         {
-            get { return m_StartupSelectors; }
-            set { m_StartupSelectors = value; }
+            get => m_StartupSelectors;
+            set => m_StartupSelectors = value;
         }
 
         public override Locale GetStartupLocale(LocalesProvider availableLocales)

@@ -8,7 +8,7 @@ namespace UnityEngine.Localization.Components
             if (LocalizationSettings.HasSettings)
             {
                 LocalizationSettings.SelectedLocaleChanged += OnLocaleChanged;
-                LocalizationSettings.InitializationOperation.Completed += (o) => OnLocaleChanged(LocalizationSettings.SelectedLocale);
+                LocalizationSettings.InitializationOperation.Value.Completed += (o) => OnLocaleChanged(LocalizationSettings.SelectedLocale);
             }
         }
 
@@ -19,13 +19,6 @@ namespace UnityEngine.Localization.Components
                 LocalizationSettings.SelectedLocaleChanged -= OnLocaleChanged;
             }
         }
-
-        #if UNITY_EDITOR
-        void OnValidate()
-        {
-            ForceUpdate();
-        }
-        #endif
 
         public virtual void ForceUpdate()
         {

@@ -18,9 +18,9 @@
     <loc:AssetTablesGenerator class="panel"/>
   </engine:VisualElement>
   <engine:VisualElement name="editTablePanel" class="panel">
-    <engine:VisualElement class="unity-property-field">
-      <engine:Label text="Table" class="unity-property-field-label"/>
-      <loc:AssetTablesField name="assetTablesField" class="unity-property-field-input"/>
+    <engine:VisualElement class="unity-base-field">
+      <engine:Label text="Table" class="unity-base-field__label"/>
+      <loc:AssetTablesField name="assetTablesField"/>
     </engine:VisualElement>
     <engine:VisualElement name="editTableContainer" class="panel">
     </engine:VisualElement>

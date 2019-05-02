@@ -2,7 +2,8 @@
     "name": "Unity.Localization.Editor.Tests",
     "references": [
         "Unity.Localization.Editor",
-        "Unity.Localization"
+        "Unity.Localization",
+        "Unity.Addressables.Editor"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"

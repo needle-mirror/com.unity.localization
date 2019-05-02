@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine.ResourceManagement;
 
 namespace UnityEngine.Localization
 {
@@ -10,7 +9,7 @@ namespace UnityEngine.Localization
     public class AddressableLocalesProvider : LocalesProvider, IPreloadRequired
     {
         List<Locale> m_Locales;
-        IAsyncOperation<IList<Locale>> m_LoadOperation;
+        AsyncOperationHandle? m_LoadOperation;
 
         public override List<Locale> Locales
         {
@@ -20,39 +19,23 @@ namespace UnityEngine.Localization
                     Debug.LogError("Locales PreloadOperation has not been initialized.");
                 return m_Locales;
             }
-            set
-            {
-                m_Locales = value;
-            }
+            set => m_Locales = value;
         }
 
         /// <summary>
         /// The Locales loading operation. When set to isDone then all locales have been loaded. Can be Null if the operation has not started yet.
         /// </summary>
-        public IAsyncOperation PreloadOperation
+        public AsyncOperationHandle PreloadOperation
         {
             get
             {
                 if (m_LoadOperation == null)
                 {
                     Locales = new List<Locale>();
-                    m_LoadOperation = AddressableAssets.Addressables.LoadAssets<Locale>(LocalizationSettings.LocaleLabel, LocaleLoaded);
-                    m_LoadOperation.Retain();
+                    m_LoadOperation = AddressableAssets.Addressables.LoadAssets<Locale>(LocalizationSettings.LocaleLabel, AddLocale);
                 }
 
-                return m_LoadOperation;
-            }
-        }
-
-        void LocaleLoaded(IAsyncOperation<Locale> obj)
-        {
-            if (obj.Status == AsyncOperationStatus.Succeeded)
-                AddLocale(obj.Result);
-            else
-            {
-                Debug.LogError("Failed to load locale: " + obj.Context);
-                if(obj.OperationException != null)
-                    Debug.LogException(obj.OperationException);
+                return m_LoadOperation.Value;
             }
         }
     }

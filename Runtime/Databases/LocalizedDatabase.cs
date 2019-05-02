@@ -14,12 +14,8 @@ namespace UnityEngine.Localization
 
         public string DefaultTableName
         {
-            get { return m_DefaultTableName; }
-            set
-            {
-                m_DefaultTableName = value;
-                // TODO: Update tables.
-            }
+            get => m_DefaultTableName;
+            set => m_DefaultTableName = value; // TODO: Update tables.
         }
 
         /// <summary>

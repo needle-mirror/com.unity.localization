@@ -29,7 +29,7 @@ namespace UnityEngine.Localization
 
                     if (locale != null)
                     {
-                        Debug.Log(string.Format("Locale '{0}' is not supported, however the parent locale '{1}' is.", CultureInfo.CurrentUICulture, locale.Identifier.CultureInfo));
+                        Debug.Log($"Locale '{CultureInfo.CurrentUICulture}' is not supported, however the parent locale '{locale.Identifier.CultureInfo}' is.");
                     }
                 }
             }

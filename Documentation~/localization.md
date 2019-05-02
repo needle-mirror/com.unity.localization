@@ -5,7 +5,7 @@ The Localization package provides tools for adding support for multiple language
 To install this package, follow the instructions in the [Package Manager documentation](https://docs.unity3d.com/Packages/com.unity.package-manager-ui@latest/index.html). 
 
 # Requirements
-This Localization package version *0.2.0* is compatible with the following versions of the Unity Editor:
+This Localization package version *0.3.1* is compatible with the following versions of the Unity Editor:
 
 * 2018.3 and later (recommended)
 
@@ -37,7 +37,7 @@ By default, Unity stores Localized Assets as AssetBundles. Use the **Preload Beh
 
 ### Available Locales
 **Available Locales** contains the list of locales that the Project supports when built. 
-By default, this uses an *AddressableLocalesProvider*, which uses the Addressable system to fetch Locales. However, you can also create a class that inherits from *LocalesProvider* to completely customise this (see [Scripting Examples](#scripting-examples)).
+By default, this uses an *AddressableLocalesProvider*, which uses the Addressable system to fetch Locales. However, you can also create a class that inherits from *LocalesProvider* to completely customize this (see [Scripting Examples](#scripting-examples)).
 
 ### Locales
 A Locale represents a language and region. It can also contain additional information, such as currency, calendar, and user-added custom data.
@@ -55,7 +55,7 @@ The Locale Generator provides a set of known Locales that you can select and sav
 
 Use the **Locale Source** field to control the source that Unity generates the list of Locales from. These known locales can be gathered from either the CultureInfo class or the Unity SystemLanguage enum.
 
-To select a Locale, tick the checkbox next to its name. Once you have selected the the Locales you want, click the **Create Locales** button. This saves each Locale as an Asset in the Project.
+To select a Locale, tick the check box next to its name. Once you have selected the the Locales you want, click the **Create Locales** button. This saves each Locale as an Asset in the Project.
 These Locale Assets can then be added to the Available Locales by clicking the **Add** button or the **Add All** button to add all Locale Assets in the project automatically.
 
 If you are using a custom Locale,  select the custom class from the **Base Class** field to generate Locales of this type instead of the default. 
@@ -65,21 +65,22 @@ If you are using a custom Locale,  select the custom class from the **Base Class
 ### Locale Selector
 The Locale Selector determines which Locale Unity should use when the application first starts. For example, you might want to use a default Locale, or attempt to use the Locale that the player is using on their device.
 
-By default, Unity uses *StartupLocaleSelectorCollection*. However, you can create a class that inherits from *StartupLocaleSelector* to customise this. 
+By default, Unity uses *StartupLocaleSelectorCollection*. However, you can create a class that inherits from *StartupLocaleSelector* to customize this. 
 
-*StartupLocaleSelectorCollection* allows you to use multiple *StartupLocaleSelectors*. The *StartupLocaleSelectorCollection* queries each selector in the list, starting at the top(index 0). If a selector returns null, then it queries the next, until it finds a valid Locale or it reaches the end of the list. This allows you to create fallback behaviours when Unity is selecting which Locale to use.
+*StartupLocaleSelectorCollection* allows you to use multiple *StartupLocaleSelectors*. The *StartupLocaleSelectorCollection* queries each selector in the list, starting at the top(index 0). If a selector returns null, then it queries the next, until it finds a valid Locale or it reaches the end of the list. This allows you to create fallback behaviors when Unity is selecting which Locale to use.
 
 By default, the *StartupLocaleSelectorCollection* works in the following way:
 ![Default Locale Selector behaviour.](images/StartupLocaleSelectorCollection_Flow.png)
 
 ### Asset Database
-The Asset Database is responsible for retrieving the various Asset Tables. By default, this involves querying and loading through the Addressable Assets system. However, you can fully customise the behaviours by inheriting from the *LocalizedAssetDatabase* class. 
+The Asset Database is responsible for retrieving the various Asset Tables. By default, this involves querying and loading through the Addressable Assets system. However, you can fully customize the behaviors by inheriting from the *LocalizedAssetDatabase* class. 
 
 By default, the Asset Database works in the following way:
 ![Asset Database example.](images/AssetDatabase_Flow.png)
 
 ## Asset Tables
-An Asset Table is responsible for returning an Asset when requested via a **Key** (an identifying name). In an Asset Table, one column contains the **Key**, and the other column or columns contain the Asset (or a reference to the Asset such as the GUID) for a selected Locale.
+An Asset Table is responsible for returning an Asset when requested via a **Key** (an identifying name or unique id). 
+In an Asset Table, one column contains the **Key**, and the other column or columns contain the Asset (or a reference to the Asset such as the GUID) for a selected Locale.
 
 You can create multiple tables per Asset type (for example, you might want to create one table per Scene). It's better to use multiple tables when you need to localize a large number of Assets, but you don't need to access them all at the same time. Using smaller tables can help reduce memory usage, especially when preloading tables.
 
@@ -96,8 +97,9 @@ To create an Asset Table, follow these steps:
 
 + Select the Locales that you want to generate a table for. Unity creates one table per selected Locale.
 + Provide a table name.This is the name you use to refer to the table when querying the Localization Database.
++ Select an existing Key Database to use or leave empty to create a new one. The Key Database is responsible for mapping string keys to unique numeric Id's.
 + Select the Table Type. Each table can only contain one type of Asset (e.g Texture, AudioClip, ScriptableObject).
-+ Click Create. This creates an Asset Table for each Locale.
++ Click Create. This creates an Asset Table Collection, an Asset Table for each Locale.
 
 ![Example Asset Tables. The table name is My Textures, and the type is Texture2D.](images/ProjectView_Generated_AssetTables.png)
 
@@ -132,8 +134,8 @@ public class Example : MonoBehaviour
 
         yield return loadOperation; // Wait for loading.
 
-        // Check the loading was successful.
-        if (loadOperation.HasLoadedSuccessfully())
+        // Check the loading was successful.		
+        if (loadOperation.Status != AsyncOperationStatus.Succeeded)
         {
             Debug.Log("Loaded Texture: " + loadOperation.Result.name);
         }
@@ -182,7 +184,7 @@ String Tables work in a similar way to Asset Tables, but they contain all of the
 
 Each row on a String Table contains a **Key** (the original text), and a string entry for a specified Locale. A string entry supports a translated string, or multiple translated strings when using plurals. The entry also contains an editor-only field for comments. 
 
-![Example of a String Table. To edit the table you can use the panel below it, or click the tab in the toolbar to edit it in-line.](images/StringTable_Example_German.png)
+![Example of a String Table. To edit the table you can use the panel below it, or click the tab in the tool bar to edit it in-line.](images/StringTable_Example_German.png)
 
 ### Localized String Reference 
 
@@ -190,10 +192,10 @@ The *LocalizedStringReference* is a class to provide a simple way to load string
 
 ![The LocalizedStringReference inspector view.](images/LocalizedStringReference_Inspector.png)
 
-### Using the IAsyncOperation class
-The localization system is designed so that Unity does not need to hold all localized Assets in memory ready for use, but can instead load them on demand when it needs them, and unload them when it no longer needs them. Because of this, localized Assets might not be immediately available, and Unity might need to load them from disk or fetch them from a server. To facilitate this, Unity uses the IAsyncOperation as an interface to all requests. 
+### Using AsyncOperationHandle
+The localization system is designed so that Unity does not need to hold all localized Assets in memory ready for use, but can instead load them on demand when it needs them, and unload them when it no longer needs them. Because of this, localized Assets might not be immediately available, and Unity might need to load them from disk or fetch them from a server. To facilitate this, Unity uses the AsyncOperationHandle as an interface to all requests. 
 
-When an Asset is not immediately available, the localization system returns an *IAsyncOperation*. The *IAsyncOperation* provides a Completed event that notifies Unity when the operation has finished. It calls this during *LateUpdate*. If the request has already been completed, such as when the requested data is already loaded from a previous request or during preloading, then the *IsDone* property can be used to check for immediate access, alternative the Completed event still occurs in the LateUpdate, allowing for all code to follow the same path. You can also yield on an *IAsyncOperation* inside of a coroutine.
+When an Asset is not immediately available, the localization system returns an *AsyncOperationHandle*. The *AsyncOperationHandle* provides a Completed event that notifies Unity when the operation has finished. It calls this during *LateUpdate*. If the request has already been completed, such as when the requested data is already loaded from a previous request or during preloading, then the *IsDone* property can be used to check for immediate access through the *Result* property, alternative the Completed event still occurs in the LateUpdate, allowing for all code to follow the same path. You can also yield on an *AsyncOperationHandle* inside of a coroutine.
 
 ### Plural support
 To enable Plural support for a string, tick the **Plural Mode** tick box. The Localization system follows the [gettext](http://docs.translatehouse.org/projects/localization-guide/en/latest/guide/translation/plurals.html) plural form. 
@@ -304,13 +306,13 @@ This walkthrough demonstrates changing an Asset's Texture to the flag of that Lo
 
 First, you need to create a Texture Asset Table. To do this, open the **Asset Tables** window (menu: **Window > Localization > Asset Tables Editor**).
 
-In the Asset Tables window, select the **New Table** tab. Select which Locales you want to generate tables for, give the table a name, and select its type (for this tutorial, select **Texture 2D Asset Table**). 
+In the Asset Tables window, select the **New Table** tab. Select which Locales you want to generate tables for, give the table a name, leave the Key Database field blank and select the table type (for this tutorial, select **Texture 2D Asset Table**). 
 
 Finally select **Create** to generate the Asset Table Assets.
 
 ![Creating Texture2D Asset Tables.](images/TutorialTextureTableCreation.png)
 
-![Unity generates an Asset Table for each selected locale.](images/TutorialTextureTableProjectView.png)
+![Unity generates an Asset Table for each selected locale.](images/ProjectView_Generated_AssetTables.png)
 
 Click **Edit Table** and select the **My Textures** table. 
 
@@ -362,7 +364,7 @@ There are two ways to edit the Key values: By default, when you select a value f
 
 ![Editing a string key and value in the editing panel. Unity displays the selected Locale in bold text in the list.](images/StringTable_DefaultView.png)
 
-The toolbar contains a search field(1), a button to toggle multiline editing(2) and a button to toggle inline editing(3).
+The toolbar contains a search field(1), a button to toggle multi line editing(2) and a button to toggle inline editing(3).
 ![The toolbar contains a search field(1), a button to toggle multiline editing(2) and a button to toggle inline editing(3).](images/StringTable_Toolbar.png)
 
 You can also use the toolbar button to enable in-line editing. This mode is slightly faster, but does not support Plurals.
@@ -375,7 +377,7 @@ Sometimes you might need to display a string of text that is different depending
 
 Some languages have multiple ways of handling plurals, and some have no plural forms at all. 
 
-To enable plural forms, tick the **Plural Mode** checkbox. Once enabled each Locale displays the correct number of plural forms for that language. You can then add a plural, and the format operator **{0}** to provide the plural value during translation.
+To enable plural forms, tick the **Plural Mode** check box. Once enabled each Locale displays the correct number of plural forms for that language. You can then add a plural, and the format operator **{0}** to provide the plural value during translation.
 
 ![Example of a plural form string in English.](images/StringTable_PluralViewEnglish.png)
 
@@ -392,7 +394,9 @@ Right-click the Text component and select the **Localize** option. Unity adds a 
 ![This example Scene contains a Locale drop-down menu, and localized text, audio and textures.](images/ExampleScene.png)
 
 ## 10. Build Preview and configuration
-You can use the Addressables system to pre-build or preview the localization data. Use this to see exactly what data Unity builds and how it packages it. From here you can also configure where Unity builds the the data to and later loads it from (such as local storage or via a remote web server).
+The Addressables player content must be built in order to use the localized assets in the player.
+This can be done through the Addressables window **Window/Asset Management/Addressable Assets** by clicking **Build/Build Player Content**.
+The Addressables window can also be used to control how the assets will be packaged and hosted(such as local storage or via a remote web server).
 
 ![Use the Addressable system to preview and configure localization data.](images/AddressablesBuildOutput.png)
 
@@ -472,7 +476,7 @@ This creates a default editor for the Asset Table. To create custom editors, ove
 
 ## Custom Locales
 
-It is possible to create custom Locales by inheriting from the **Locale** class. For example, a custom Locale could be used to attach additional data specific to each Locale. The Localizarion system fully supports custom Locales and the **Locale Generator Window** can generate Locales using a Custom Locale class by selecting it from the **Base Class** field.
+It is possible to create custom Locales by inheriting from the **Locale** class. For example, a custom Locale could be used to attach additional data specific to each Locale. The Localization system fully supports custom Locales and the **Locale Generator Window** can generate Locales using a Custom Locale class by selecting it from the **Base Class** field.
 
 ```
 namespace UnityEngine.Localization.Samples
@@ -492,5 +496,6 @@ namespace UnityEngine.Localization.Samples
 |Date|Reason|
 |---|---|
 |Jan 15, 2018|Document created. Matches package version 0.1.0|
-|Dec 11, 2018|Documeent updated for 0.2.0, public experimental release|
+|Dec 11, 2018|Document updated for 0.2.0, public preview release|
+|May 01, 2019|Document updated for 0.3.0, public preview release|
 

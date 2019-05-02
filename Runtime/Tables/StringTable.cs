@@ -7,15 +7,15 @@ namespace UnityEngine.Localization
         [SerializeField]
         List<StringTableEntry> m_StringTableEntries = new List<StringTableEntry>();
 
-        Dictionary<string, StringTableEntry> m_StringDict;
+        Dictionary<uint, StringTableEntry> m_StringDict;
 
-        Dictionary<string, StringTableEntry> StringDict
+        Dictionary<uint, StringTableEntry> StringDict
         {
             get
             {
                 if (m_StringDict == null)
                 {
-                    m_StringDict = new Dictionary<string, StringTableEntry>(m_StringTableEntries.Count);
+                    m_StringDict = new Dictionary<uint, StringTableEntry>(m_StringTableEntries.Count);
                     foreach (var stringEntry in m_StringTableEntries)
                     {
                         m_StringDict[stringEntry.Id] = stringEntry;
@@ -26,90 +26,61 @@ namespace UnityEngine.Localization
             }
         }
 
+        public StringTableEntry AddEntry(uint keyId)
+        {
+            var entry = new StringTableEntry(keyId);
+            m_StringTableEntries.Add(entry);
+
+            if (m_StringDict != null)
+                m_StringDict[keyId] = entry;
+
+            return entry;
+        }
+
+        public StringTableEntry AddEntry(string key)
+        {
+            var newKey = Keys.GetId(key, true);
+            return AddEntry(newKey);
+        }
+
+        public StringTableEntry GetEntry(uint keyId)
+        {
+            if (Keys == null)
+            {
+                Debug.LogError("StringTable does not have a KeyDatabase", this);
+                return null;
+            }
+
+            return StringDict.TryGetValue(keyId, out StringTableEntry foundEntry) ? foundEntry : null;
+        }
+
         public StringTableEntry GetEntry(string key)
         {
-            StringTableEntry foundEntry;
-            return StringDict.TryGetValue(key, out foundEntry) ? foundEntry : null;
+            if (Keys == null)
+            {
+                Debug.LogError("StringTable does not have a KeyDatabase", this);
+                return null;
+            }
+
+            uint foundId = Keys.GetId(key);
+            if (foundId == KeyDatabase.EmptyId)
+                return null;
+
+            return StringDict.TryGetValue(foundId, out StringTableEntry foundEntry) ? foundEntry : null;
         }
 
         /// <inheritdoc/>
-        public override string GetLocalizedString(string key)
+        public override string GetLocalizedString(uint keyId)
         {
-            StringTableEntry foundEntry;
-            return StringDict.TryGetValue(key, out foundEntry) ? foundEntry.Translated : null;
+            var foundEntry = GetEntry(keyId);
+            return foundEntry?.Translated;
         }
 
         /// <inheritdoc/>
-        public override string GetLocalizedPluralString(string key, int n)
+        public override string GetLocalizedPluralString(uint keyId, int n)
         {
-            StringTableEntry foundEntry;
-            if (StringDict.TryGetValue(key, out foundEntry))
-            {
-                return string.Format(foundEntry.GetPlural(PluralHandler.Evaluate(n)), n);
-            }
-            return null;
-        }
-
-        /// <inheritdoc/>
-        public override void AddKey(string key)
-        {
-            if((m_StringDict != null && m_StringDict.ContainsKey(key)) || m_StringTableEntries.Exists(te => te.Id == key))
-            {
-                Debug.LogWarningFormat("Can not add duplicate key '{0}' to table {1}.", key, TableName);
-            }
-            else
-            {
-                var ste = new StringTableEntry(key);
-                if (m_StringDict != null)
-                    m_StringDict[key] = ste;
-                m_StringTableEntries.Add(ste);
-            }
-        }
-
-        /// <inheritdoc/>
-        public override void RemoveKey(string key)
-        {
-            if (m_StringDict != null)
-                m_StringDict.Remove(key);
-
-            for(int i = 0; i < m_StringTableEntries.Count; ++i)
-            {
-                if(m_StringTableEntries[i].Id == key)
-                {
-                    m_StringTableEntries.RemoveAt(i);
-                    return;
-                }
-            }
-        }
-
-        /// <inheritdoc/>
-        public override void ReplaceKey(string key, string newKey)
-        {
-            if (m_StringDict != null)
-            {
-                StringTableEntry foundEntry;
-                if(m_StringDict.TryGetValue(key, out foundEntry))
-                {
-                    foundEntry.Id = newKey;
-                    m_StringDict.Remove(key);
-                    m_StringDict[newKey] = foundEntry;
-                }
-            }
-            else
-            {
-                StringTableEntry foundEntry = m_StringTableEntries.Find(ste => ste.Id == key);
-                if(foundEntry != null)
-                    foundEntry.Id = newKey;
-            }
-        }
-
-        /// <inheritdoc/>
-        public override void GetKeys(HashSet<string> keySet)
-        {
-            foreach(var ste in m_StringTableEntries)
-            {
-                keySet.Add(ste.Id);
-            }
+            var foundEntry = GetEntry(keyId);
+            return foundEntry != null ? string.Format(foundEntry.GetPlural(PluralHandler.Evaluate(n)), n) : null;
         }
     }
 }

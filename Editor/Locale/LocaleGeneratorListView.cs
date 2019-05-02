@@ -86,14 +86,14 @@ namespace UnityEditor.Localization
 
             if (multiColumnHeader.sortedColumnIndex >= 0)
             {
-                bool acend = multiColumnHeader.IsSortedAscending(multiColumnHeader.sortedColumnIndex);
+                var ascend = multiColumnHeader.IsSortedAscending(multiColumnHeader.sortedColumnIndex);
                 switch ((Column)multiColumnHeader.sortedColumnIndex)
                 {
                     case Column.Name:
-                        m_Items.Sort((x, y) => acend ? string.Compare(y.displayName, x.displayName) : string.Compare(x.displayName, y.displayName));
+                        m_Items.Sort((x, y) => ascend ? string.Compare(y.displayName, x.displayName) : string.Compare(x.displayName, y.displayName));
                         break;
                     case Column.Code:
-                        m_Items.Sort((x, y) => acend ? string.Compare(y.identifier.Code, x.identifier.Code) : string.Compare(x.identifier.Code, y.identifier.Code));
+                        m_Items.Sort((x, y) => ascend ? string.Compare(y.identifier.Code, x.identifier.Code) : string.Compare(x.identifier.Code, y.identifier.Code));
                         break;
                }
             }
@@ -104,11 +104,11 @@ namespace UnityEditor.Localization
 
         protected override void RowGUI(RowGUIArgs args)
         {
-            var ltci = args.item as LocaleTreeViewItem;
+            var item = args.item as LocaleTreeViewItem;
 
-            for (int i = 0; i < args.GetNumVisibleColumns(); ++i)
+            for (var i = 0; i < args.GetNumVisibleColumns(); ++i)
             {
-                CellGUI(args.GetCellRect(i), ltci, (Column)args.GetColumn(i));
+                CellGUI(args.GetCellRect(i), item, (Column)args.GetColumn(i));
             }
         }
 

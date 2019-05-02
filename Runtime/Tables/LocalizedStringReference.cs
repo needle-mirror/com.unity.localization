@@ -1,5 +1,4 @@
 ﻿using System;
-using UnityEngine.ResourceManagement;
 
 namespace UnityEngine.Localization
 {
@@ -15,9 +14,9 @@ namespace UnityEngine.Localization
         /// string is immediately available.
         /// </summary>
         /// <returns></returns>
-        public IAsyncOperation<string> GetLocalizedString()
+        public AsyncOperationHandle<string> GetLocalizedString()
         {
-            return LocalizationSettings.StringDatabase.GetLocalizedString(TableName, Key);
+            return KeyId == KeyDatabase.EmptyId ? LocalizationSettings.StringDatabase.GetLocalizedString(TableName, Key) : LocalizationSettings.StringDatabase.GetLocalizedString(TableName, KeyId);
         }
 
         /// <summary>
@@ -30,9 +29,9 @@ namespace UnityEngine.Localization
         /// </summary>
         /// <returns></returns>
         /// <param name="plural">A plural value to be used when translating the string.</param>
-        public IAsyncOperation<string> GetLocalizedString(int plural)
+        public AsyncOperationHandle<string> GetLocalizedString(int plural)
         {
-            return LocalizationSettings.StringDatabase.GetLocalizedString(TableName, Key, plural);
+            return KeyId == KeyDatabase.EmptyId ? LocalizationSettings.StringDatabase.GetLocalizedString(TableName, Key, plural) : LocalizationSettings.StringDatabase.GetLocalizedString(TableName, KeyId, plural);
         }
 
         /// <summary>
@@ -44,9 +43,6 @@ namespace UnityEngine.Localization
         /// string is immediately available.
         /// </summary>
         /// <returns></returns>
-        public IAsyncOperation<StringTableBase> GetLocalizedStringTable()
-        {
-            return LocalizationSettings.StringDatabase.GetTable(TableName);
-        }
+        public AsyncOperationHandle<StringTableBase> GetLocalizedStringTable() => LocalizationSettings.StringDatabase.GetTable(TableName);
     }
 }

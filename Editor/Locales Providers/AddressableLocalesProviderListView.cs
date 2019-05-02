@@ -65,10 +65,10 @@ namespace UnityEditor.Localization
 
         protected override TreeViewItem BuildRoot()
         {
-            TreeViewItem root = new TreeViewItem(-1, -1, "root");
+            var root = new TreeViewItem(-1, -1, "root");
 
             var items = new List<TreeViewItem>();
-            foreach(var l in LocalizationAddressableSettings.GetLocales())
+            foreach(var l in LocalizationEditorSettings.GetLocales())
             {
                 items.Add(new SerializedLocaleItem(l));
             }
@@ -88,7 +88,7 @@ namespace UnityEditor.Localization
         {
             if (multiColumnHeader.sortedColumnIndex >= 0)
             {
-                bool acend = multiColumnHeader.IsSortedAscending(multiColumnHeader.sortedColumnIndex);
+                var ascend = multiColumnHeader.IsSortedAscending(multiColumnHeader.sortedColumnIndex);
                 switch ((Column)multiColumnHeader.sortedColumnIndex)
                 {
                     case Column.Name:
@@ -96,7 +96,7 @@ namespace UnityEditor.Localization
                         {
                             var a = (SerializedLocaleItem)x;
                             var b = (SerializedLocaleItem)y;
-                            return acend ? string.Compare(b.Name, a.Name) : string.Compare(a.Name, b.Name);
+                            return ascend ? string.Compare(b.Name, a.Name) : string.Compare(a.Name, b.Name);
                         });
                         break;
                     case Column.Code:
@@ -104,7 +104,7 @@ namespace UnityEditor.Localization
                         {
                             var a = (SerializedLocaleItem)x;
                             var b = (SerializedLocaleItem)y;
-                            return acend ? string.Compare(b.IdentifierCode, a.IdentifierCode) : string.Compare(a.IdentifierCode, b.IdentifierCode);
+                            return ascend ? string.Compare(b.IdentifierCode, a.IdentifierCode) : string.Compare(a.IdentifierCode, b.IdentifierCode);
                         });
                         break;
                     case Column.Id:
@@ -112,7 +112,7 @@ namespace UnityEditor.Localization
                         {
                             var a = (SerializedLocaleItem)x;
                             var b = (SerializedLocaleItem)y;
-                            return acend ? b.IdentifierId - a.IdentifierId : a.IdentifierId - b.IdentifierId;
+                            return ascend ? b.IdentifierId - a.IdentifierId : a.IdentifierId - b.IdentifierId;
                         });
                         break;
                 }
@@ -122,16 +122,14 @@ namespace UnityEditor.Localization
         protected override void RowGUI(RowGUIArgs args)
         {
             var sli = args.item as SerializedLocaleItem;
-            if (sli.SerializedObject != null)
-                sli.SerializedObject.Update();
+            sli.SerializedObject?.Update();
 
             for (int i = 0; i < args.GetNumVisibleColumns(); ++i)
             {
                 CellGUI(args.GetCellRect(i), sli, (Column)args.GetColumn(i));
             }
 
-            if (sli.SerializedObject != null)
-                sli.SerializedObject.ApplyModifiedProperties();
+            sli.SerializedObject?.ApplyModifiedProperties();
         }
 
         protected void CellGUI(Rect cellRect, SerializedLocaleItem item, Column col)

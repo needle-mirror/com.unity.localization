@@ -1,18 +1,20 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using UnityEditor.AddressableAssets;
-using UnityEditor.Experimental.UIElements;
-using UnityEditor.VersionControl;
-using UnityEngine.Experimental.Rendering;
 using UnityEngine.Localization;
+
+#if UNITY_2019_1_OR_NEWER
+using UnityEngine.UIElements;
+using UnityEditor.UIElements;
+#else
 using UnityEngine.Experimental.UIElements;
+using UnityEditor.Experimental.UIElements;
+#endif
 
 namespace UnityEditor.Localization.UI
 {
     /// <summary>
     /// Displays all the asset tables for the project collated by type.
     /// </summary>
-    internal class AssetTablesField : PopupField<AssetTableCollection>
+    class AssetTablesField : PopupField<AssetTableCollection>
     {
         const string k_EditorPrefValueKey = "Localization-SelectedAssetTable";
         const string k_NoTablesMessage = "No Asset Tables Found. Please Create One";
@@ -24,10 +26,7 @@ namespace UnityEditor.Localization.UI
                 return null;
             }
 
-            public override string TableName
-            {
-                get { return null; }
-            }
+            public override string TableName => null;
         }
 
         public new class UxmlFactory : UxmlFactory<AssetTablesField> {}
@@ -40,10 +39,28 @@ namespace UnityEditor.Localization.UI
             formatSelectedValueCallback = FormatSelectedLabel;
             formatListItemCallback = FormatListLabel;
 
-            var settings = AddressableAssetSettingsDefaultObject.Settings;
-            if (settings != null)
+            LocalizationEditorSettings.OnModification += LocalizationSettingsModification;
+        }
+
+        ~AssetTablesField() => LocalizationEditorSettings.OnModification -= LocalizationSettingsModification;
+
+        void LocalizationSettingsModification(LocalizationEditorSettings.ModificationEvent evt, object obj)
+        {
+            if (evt == LocalizationEditorSettings.ModificationEvent.TableAdded)
             {
-                settings.OnModification += AddressableSettingsModification;
+                GetChoices();
+            }
+            else if (evt == LocalizationEditorSettings.ModificationEvent.TableRemoved)
+            {
+                var choices = GetChoices();
+                var table = (LocalizedTable)obj;
+
+                if (value.Tables.Contains(table))
+                {
+                    // Find the new collection
+                    var newValue = choices.Find(o => o.Tables.Contains(table));
+                    value = newValue ?? choices[0];
+                }
             }
         }
 
@@ -64,7 +81,7 @@ namespace UnityEditor.Localization.UI
 
         public override AssetTableCollection value
         {
-            get { return base.value; }
+            get => base.value;
             set
             {
                 if (value == null)
@@ -81,19 +98,8 @@ namespace UnityEditor.Localization.UI
             SetValueWithoutNotify(value);
         }
 
-        static void AddressableSettingsModification(AddressableAssetSettings arg1, AddressableAssetSettings.ModificationEvent arg2, object arg3)
-        {
-            if (arg2 == AddressableAssetSettings.ModificationEvent.EntryAdded ||
-                arg2 == AddressableAssetSettings.ModificationEvent.EntryModified ||
-                arg2 == AddressableAssetSettings.ModificationEvent.EntryRemoved)
-            {
-                // Refresh choices
-                GetChoices();
-            }
-        }
-
         /// <summary>
-        /// Searches for the selectedTable in the AssetTableCollection list, if found it selects this collection and sends the value changeds event.
+        /// Searches for the selectedTable in the AssetTableCollection list, if found it selects this collection and sends the value changed event.
         /// </summary>
         /// <param name="selectedTable">Table to search for.</param>
         public void SetValueFromTable(LocalizedTable selectedTable)
@@ -103,6 +109,7 @@ namespace UnityEditor.Localization.UI
             {
                 if (assetTableCollection.TableType == selectedTable.GetType() && assetTableCollection.TableName == selectedTable.TableName)
                 {
+                    
                     value = assetTableCollection;
                     return;
                 }
@@ -125,7 +132,7 @@ namespace UnityEditor.Localization.UI
                 s_Tables = new List<AssetTableCollection>();
 
             s_Tables.Clear();
-            var choices = LocalizationPlayerSettings.GetAssetTables<LocalizedTable>();
+            var choices = LocalizationEditorSettings.GetAssetTablesCollection<LocalizedTable>();
             if (choices.Count == 0)
                 choices.Add(new NoTables());
             s_Tables.AddRange(choices);

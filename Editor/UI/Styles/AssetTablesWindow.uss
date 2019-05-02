@@ -1,26 +1,38 @@
-
-
 AssetTablesWindowToolbar {
     flex: 0 0 auto;
     flex-direction: row;
     align-items: flex-start;
-    padding-bottom: 24;
+    padding-bottom: 24px;
 }
 
-.toolbarTab {
-    flex-grow: 1;
-    margin-top: -1;
-}
-
+// Required for 2018.3 only
 .toolbarTab > .textElement {
     text-alignment: middle-center;
 }
 
-.toolbarTab > .textElement:disabled {
-    opacity:1;
+AssetTablesGenerator {
+    margin-left: 5px;
+    margin-right: 5px;
 }
 
-.toolbarTab > .textElement:enabled {
+AssetTablesField, AssetTableTypeField {
+    flex-grow: 1;
+}
+
+.toolbarTab {
+    flex-grow: 1;
+    margin-top: -1px;
+}
+
+.toolbarTab .unity-text-element {
+    flex-grow: 1;
+}
+
+.toolbarTab > .unity-text-element:disabled {
+    opacity: 1;
+}
+
+.toolbarTab > .unity-text-element:enabled {
     opacity: 0.5;
 }
 
@@ -29,7 +41,7 @@ AssetTablesWindowToolbar {
 }
 
 .panel:disabled {
-    flex: 0, 0, 0;
+    flex: 0 0 0;
 }
 
 #localesListWindow {
@@ -41,18 +53,21 @@ AssetTablesWindowToolbar {
 }
 
 #createTableButton {
-    width: 150;
+    width: 150px;
     align-self: flex-end;
 }
 
 #localesListButtons {
     flex-direction: row;
-    height: 22;
+    height: 22px;
     align-self: flex-end;
+    margin-bottom: 10px;
+    margin-top: -10px;
+    margin-right: 4px;
 }
 
 #detailedPanel {
-    min-height: 250;
+    min-height: 250px;
 }
 
 .textFieldScrollView {

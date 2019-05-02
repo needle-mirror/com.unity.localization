@@ -35,32 +35,26 @@ namespace UnityEngine.Localization
         /// </summary>
         public StringTableComments Comments
         {
-            get { return m_Comments; }
-            set { m_Comments = value; }
+            get => m_Comments;
+            set => m_Comments = value;
         }
         #endif
 
-        // TODO: Hash128 the key
-        [Multiline]
-        [SerializeField] string m_Id;
+        [SerializeField] uint m_Id;
 
         [Tooltip("Translated text. Item 0 should be used only except when supporting plurals.")]
         [Multiline]
         [SerializeField] List<string> m_Translated;
 
-        public StringTableEntry(string id)
-        {
-            Id = id;
-        }
+        public StringTableEntry(uint id) => Id = id;
 
         /// <summary>
         /// The Key for this table entry. Must be unique for each table.
-        /// The key can be the original untranslated string, for example "My name is {0}" or an Id value such as "PLAYER_NAME".
         /// </summary>
-        public string Id
+        public uint Id
         {
-            get { return m_Id; }
-            set { m_Id = value; }
+            get => m_Id;
+            set => m_Id = value;
         }
 
         /// <summary>
@@ -89,8 +83,8 @@ namespace UnityEngine.Localization
         /// </summary>
         public List<string> TranslatedPlurals
         {
-            get { return m_Translated; }
-            set { m_Translated = value; }
+            get => m_Translated;
+            set => m_Translated = value;
         }
 
         /// <summary>

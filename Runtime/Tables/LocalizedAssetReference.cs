@@ -1,5 +1,4 @@
 ﻿using System;
-using UnityEngine.ResourceManagement;
 
 namespace UnityEngine.Localization
 {
@@ -12,54 +11,56 @@ namespace UnityEngine.Localization
         [SerializeField]
         string m_Key;
 
+        [SerializeField]
+        uint m_KeyId;
+
         public string TableName
         {
-            get { return m_TableName; }
-            set { m_TableName = value; }
+            get => m_TableName;
+            set => m_TableName = value;
+        }
+
+        public uint KeyId
+        {
+            get => m_KeyId;
+            set => m_KeyId = value;
         }
 
         public string Key
         {
-            get { return m_Key; }
-            set { m_Key = value; }
+            get => m_Key;
+            set => m_Key = value;
         }
 
-        public override string ToString()
-        {
-            return "[" + m_TableName + "]" + m_Key;
-        }
+        public override string ToString() => "[" + m_TableName + "]" + (string.IsNullOrEmpty(m_Key) ? m_KeyId.ToString() : m_Key);
     }
 
     [Serializable]
     public class LocalizedAssetReference : LocalizedReference
     {
-        public virtual Type AssetType
-        {
-            get { return null; }
-        }
+        public virtual Type AssetType => null;
 
         // <summary>
         // Load the referenced asset as type TObject.
         // </summary>
         // <returns>The load operation.</returns>
-        public IAsyncOperation<TObject> LoadAsset<TObject>() where TObject : Object
+        public AsyncOperationHandle<TObject> LoadAsset<TObject>() where TObject : Object
         {
-            return LocalizationSettings.AssetDatabase.GetLocalizedAsset<TObject>(TableName, Key);
+            if (KeyId == KeyDatabase.EmptyId)
+                return LocalizationSettings.AssetDatabase.GetLocalizedAsset<TObject>(TableName, Key);
+            return LocalizationSettings.AssetDatabase.GetLocalizedAsset<TObject>(TableName, KeyId);
         }
     }
 
     public class LocalizedAssetReferenceT<TObject> : LocalizedAssetReference where TObject : Object
     {
-        public override Type AssetType
-        {
-            get { return typeof(TObject); }
-        }
+        public override Type AssetType => typeof(TObject);
 
         // <summary>
         // Load the referenced asset as type TObject.
         // </summary>
         // <returns>The load operation.</returns>
-        public IAsyncOperation<TObject> LoadAsset()
+        public AsyncOperationHandle<TObject> LoadAsset()
         {
             return LoadAsset<TObject>();
         }

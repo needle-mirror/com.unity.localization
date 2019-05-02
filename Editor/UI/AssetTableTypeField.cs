@@ -1,8 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEditor.Experimental.UIElements;
 using UnityEngine.Localization;
+
+#if UNITY_2019_1_OR_NEWER
+using UnityEngine.UIElements;
+using UnityEditor.UIElements;
+#else
 using UnityEngine.Experimental.UIElements;
+using UnityEditor.Experimental.UIElements;
+#endif
 
 namespace UnityEditor.Localization.UI
 {
@@ -17,12 +23,9 @@ namespace UnityEditor.Localization.UI
             formatListItemCallback = FormatLabel;
         }
 
-        static string FormatLabel(Type t)
-        {
-            return ObjectNames.NicifyVariableName(t.Name);
-        }
+        static string FormatLabel(Type t) => ObjectNames.NicifyVariableName(t.Name);
 
-        static List<Type> GetChoices()
+        public static List<Type> GetChoices()
         {
             var choices = new List<Type>();
             AssemblyScanner.FindSubclasses<LocalizedTable>(choices);

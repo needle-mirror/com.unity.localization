@@ -1,6 +1,10 @@
-﻿using UnityEngine;
+﻿#if UNITY_2019_1_OR_NEWER
+using UnityEngine.UIElements;
+using UnityEditor.UIElements;
+#else
 using UnityEngine.Experimental.UIElements;
 using UnityEditor.Experimental.UIElements;
+#endif
 
 namespace UnityEditor.Localization.UI
 {
@@ -21,23 +25,28 @@ namespace UnityEditor.Localization.UI
         public delegate void SelectionDelegate(SelectedPanel panel);
         public event SelectionDelegate selectionChanged;
 
-        public ToolbarToggle NewButton { get; private set; }
-        public ToolbarToggle EditButton { get; private set; }
+        public ToolbarToggle NewButton { get; }
+        public ToolbarToggle EditButton { get; }
 
         public AssetTablesWindowToolbar()
         {
+            #if UNITY_2019_1_OR_NEWER
             var root = Resources.GetTemplate("AssetTablesWindowToolbar");
+            #else
+            var root = Resources.GetTemplate("AssetTablesWindowToolbar_2018_3");
+            #endif
+
             Add(root);
             root.StretchToParentSize();
 
             NewButton = root.Q<ToolbarToggle>("toolbarButtonNew");
             EditButton = root.Q<ToolbarToggle>("toolbarButtonEdit");
 
-            NewButton.OnValueChanged(evt =>
+            NewButton.RegisterCallback<ChangeEvent<bool>>(evt =>
             {
                 if (evt.newValue) ShowNewCallback();
             });
-            EditButton.OnValueChanged(evt =>
+            EditButton.RegisterCallback<ChangeEvent<bool>>(evt =>
             {
                 if (evt.newValue) ShowEditCallback();
             });
@@ -63,8 +72,7 @@ namespace UnityEditor.Localization.UI
             NewButton.SetEnabled(true);
             selectedPanel = SelectedPanel.EditTables;
             EditButton.SetEnabled(false);
-            if (selectionChanged != null)
-                selectionChanged(selectedPanel);
+            selectionChanged?.Invoke(selectedPanel);
         }
 
         void ShowNewCallback()
@@ -74,8 +82,7 @@ namespace UnityEditor.Localization.UI
             EditButton.SetEnabled(true);
             selectedPanel = SelectedPanel.NewTables;
             NewButton.SetEnabled(false);
-            if (selectionChanged != null)
-                selectionChanged(selectedPanel);
+            selectionChanged?.Invoke(selectedPanel);
         }
     }
 }

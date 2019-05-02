@@ -15,7 +15,7 @@ namespace UnityEngine.Localization
         /// <summary>
         /// Represents an undefined Local Identifier. One that does not define any language or region.
         /// </summary>
-        public static LocaleIdentifier Undefined { get { return new LocaleIdentifier("undefined"); } }
+        public static LocaleIdentifier Undefined => new LocaleIdentifier("undefined");
 
         /// <summary>
         /// The culture name in the format [language]-[region].
@@ -23,7 +23,7 @@ namespace UnityEngine.Localization
         /// <remarks>
         /// For example, Language English would be 'en', Regional English(UK) would be 'en-GB' and Regional English(US) would be 'en-US'.
         /// </remarks>
-        public string Code { get { return m_Code; } }
+        public string Code => m_Code;
 
         /// <summary>
         /// A <see cref="CultureInfo"/> representation of the Locale.
@@ -41,7 +41,7 @@ namespace UnityEngine.Localization
                     {
                         m_CultureInfo = CultureInfo.GetCultureInfo(m_Code);
                     }
-                    catch (Exception)
+                    catch (CultureNotFoundException)
                     {
                         // If a culture info can not be found then we do not consider this an error. It could be a custom locale.
                     }
@@ -65,7 +65,7 @@ namespace UnityEngine.Localization
         public LocaleIdentifier(CultureInfo culture)
         {
             if (culture == null)
-                throw new ArgumentNullException("culture");
+                throw new ArgumentNullException(nameof(culture));
 
             m_Code = culture.Name;
             m_CultureInfo = culture;
@@ -76,36 +76,21 @@ namespace UnityEngine.Localization
         {
         }
 
-        public static implicit operator LocaleIdentifier(string code)
-        {
-            return new LocaleIdentifier(code);
-        }
+        public static implicit operator LocaleIdentifier(string code) => new LocaleIdentifier(code);
 
-        public static implicit operator LocaleIdentifier(CultureInfo culture)
-        {
-            return new LocaleIdentifier(culture);
-        }
+        public static implicit operator LocaleIdentifier(CultureInfo culture) => new LocaleIdentifier(culture);
 
-        public static implicit operator LocaleIdentifier(SystemLanguage systemLanguage)
-        {
-            return new LocaleIdentifier(systemLanguage);
-        }
+        public static implicit operator LocaleIdentifier(SystemLanguage systemLanguage) => new LocaleIdentifier(systemLanguage);
 
-        public override string ToString()
-        {
-            return string.Format("{0}({1})", CultureInfo != null ? CultureInfo.EnglishName : "Custom" , Code);
-        }
+        public override string ToString() => $"{(CultureInfo != null ? CultureInfo.EnglishName : "Custom")}({Code})";
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is LocaleIdentifier && Equals((LocaleIdentifier)obj);
+            return obj is LocaleIdentifier identifier && Equals(identifier);
         }
 
-        public bool Equals(LocaleIdentifier other)
-        {
-            return Code == other.Code;
-        }
+        public bool Equals(LocaleIdentifier other) => Code == other.Code;
 
         public override int GetHashCode()
         {
@@ -114,15 +99,9 @@ namespace UnityEngine.Localization
             return !string.IsNullOrEmpty(Code) ? Code.GetHashCode() : base.GetHashCode();
         }
 
-        public static bool operator==(LocaleIdentifier l1, LocaleIdentifier l2)
-        {
-            return l1.Equals(l2);
-        }
+        public static bool operator ==(LocaleIdentifier l1, LocaleIdentifier l2) => l1.Equals(l2);
 
-        public static bool operator!=(LocaleIdentifier l1, LocaleIdentifier l2)
-        {
-            return !l1.Equals(l2);
-        }
+        public static bool operator !=(LocaleIdentifier l1, LocaleIdentifier l2) => !l1.Equals(l2);
     }
 
     /// <summary>
@@ -138,8 +117,8 @@ namespace UnityEngine.Localization
         /// </summary>
         public LocaleIdentifier Identifier
         {
-            get { return m_Identifier; }
-            set { m_Identifier = value; }
+            get => m_Identifier;
+            set => m_Identifier = value;
         }
 
         /// <summary>
@@ -153,10 +132,7 @@ namespace UnityEngine.Localization
         /// </remarks>
         public Locale FallbackLocale
         {
-            get
-            {
-                return m_Fallback;
-            }
+            get => m_Fallback;
             set
             {
                 m_Fallback = value;
@@ -164,10 +140,7 @@ namespace UnityEngine.Localization
             }
         }
 
-        protected virtual void OnEnable()
-        {
-            ValidateFallback();
-        }
+        protected virtual void OnEnable() => ValidateFallback();
 
         /// <summary>
         /// Check we don't have a fallback locale chain that leads back to this locale and an infinite loop.
@@ -218,9 +191,6 @@ namespace UnityEngine.Localization
             return CreateLocale(new LocaleIdentifier(cultureInfo));
         }
 
-        public override string ToString()
-        {
-            return name;
-        }
+        public override string ToString() => name;
     }
 }

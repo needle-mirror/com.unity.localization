@@ -1,6 +1,6 @@
 ﻿using System;
 using UnityEngine.Events;
-using UnityEngine.ResourceManagement;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization.Components
 {
@@ -24,40 +24,40 @@ namespace UnityEngine.Localization.Components
         
         public LocalizedStringReference StringReference
         {
-            get { return m_StringReference; }
-            set { m_StringReference = value; }
+            get => m_StringReference;
+            set => m_StringReference = value;
         }
 
         public LocalizationUnityEvent UpdateString
         {
-            get { return m_UpdateString; }
-            set { m_UpdateString = value; }
+            get => m_UpdateString;
+            set => m_UpdateString = value;
         }
 
         public bool IsPlural
         {
-            get { return m_IsPlural; }
+            get => m_IsPlural;
             set
             {
-                if(m_IsPlural == value)
+                if (m_IsPlural == value)
                     return;
 
-                m_IsPlural = value; 
+                m_IsPlural = value;
                 ForceUpdate();
             }
         }
 
         public int PluralValue
         {
-            get { return m_PluralValue; }
+            get => m_PluralValue;
             set
             {
                 if (m_PluralValue == value)
                     return;
 
-                m_PluralValue = value; 
+                m_PluralValue = value;
 
-                if(IsPlural)
+                if (IsPlural)
                     ForceUpdate();
             }
         }
@@ -68,12 +68,19 @@ namespace UnityEngine.Localization.Components
             stringOperation.Completed += StringLoaded;
         }
 
-        protected virtual void StringLoaded(IAsyncOperation<string> stringOp)
+        protected virtual void StringLoaded(AsyncOperationHandle<string> stringOp)
         {
-            if (stringOp.HasLoadedSuccessfully())
+            if (stringOp.Status != AsyncOperationStatus.Succeeded)
             {
-                UpdateString.Invoke(stringOp.Result);
+                var error = "Failed to load string: " + m_StringReference;
+                if (stringOp.OperationException != null)
+                    error += "\n" + stringOp.OperationException;
+
+                Debug.LogError(error, this);
+                return;
             }
+
+            UpdateString.Invoke(stringOp.Result);
         }
     }
 }

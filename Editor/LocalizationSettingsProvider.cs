@@ -1,8 +1,11 @@
-#if UNITY_2018_3_OR_NEWER
-
 using UnityEngine;
-using UnityEngine.Experimental.UIElements;
 using UnityEngine.Localization;
+
+#if UNITY_2019_1_OR_NEWER
+using UnityEngine.UIElements;
+#else
+using UnityEngine.Experimental.UIElements;
+#endif
 
 namespace UnityEditor.Localization
 {
@@ -19,7 +22,7 @@ namespace UnityEditor.Localization
         VisualElement m_RootElement;
 
         public LocalizationSettingsProvider()
-            : base("Project/Localization", () => LocalizationPlayerSettings.ActiveLocalizationSettings)
+            : base("Project/Localization", () => LocalizationEditorSettings.ActiveLocalizationSettings)
         {
         }
 
@@ -34,13 +37,13 @@ namespace UnityEditor.Localization
 
         public override void OnGUI(string searchContext)
         {
-            if (LocalizationPlayerSettings.ActiveLocalizationSettings == null)
+            if (LocalizationEditorSettings.ActiveLocalizationSettings == null)
             {
                 EditorGUI.BeginChangeCheck();
-                var obj = EditorGUILayout.ObjectField(s_Texts.activeSettings, LocalizationPlayerSettings.ActiveLocalizationSettings, typeof(LocalizationSettings), false) as LocalizationSettings;
+                var obj = EditorGUILayout.ObjectField(s_Texts.activeSettings, LocalizationEditorSettings.ActiveLocalizationSettings, typeof(LocalizationSettings), false) as LocalizationSettings;
                 if (EditorGUI.EndChangeCheck())
                 {
-                    LocalizationPlayerSettings.ActiveLocalizationSettings = obj;
+                    LocalizationEditorSettings.ActiveLocalizationSettings = obj;
 
                     // Trigger the activate so it generates a new Editor
                     base.OnActivate(m_SearchContext, m_RootElement);
@@ -52,7 +55,7 @@ namespace UnityEditor.Localization
                     var created = LocalizationSettingsMenuItems.CreateLocalizationAsset();
                     if (created != null)
                     {
-                        LocalizationPlayerSettings.ActiveLocalizationSettings = created;
+                        LocalizationEditorSettings.ActiveLocalizationSettings = created;
                         
                         // Trigger the activate so it generates a new Editor
                         base.OnActivate(m_SearchContext, m_RootElement);
@@ -66,10 +69,6 @@ namespace UnityEditor.Localization
         }
 
         [SettingsProvider]
-        static SettingsProvider CreateProjectSettingsProvider()
-        {
-            return new LocalizationSettingsProvider();
-        }
+        static SettingsProvider CreateProjectSettingsProvider() => new LocalizationSettingsProvider();
     }
 }
-#endif

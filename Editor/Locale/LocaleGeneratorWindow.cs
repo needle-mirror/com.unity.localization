@@ -19,11 +19,10 @@ namespace UnityEditor.Localization
         class Texts
         {
             public GUIContent baseClass = new GUIContent("Base Class", "The base class to generate the Locale assets with. Must inherit from Locale.");
-            public GUIContent generateLocalesAndAddButton = new GUIContent("Generate and Add Locales", "Generates locale assets and assigns them to the Available Locales");
             public GUIContent generateLocalesButton = new GUIContent("Generate Locales");
             public GUIContent localeSource = new GUIContent("Locale Source", "Source data for generating the locales");
-            public readonly string progressTitle = "Generating Locales";
-            public readonly string saveDialog = "Save locales to folder";
+            public const string progressTitle = "Generating Locales";
+            public const string saveDialog = "Save locales to folder";
 
             public GUIContent[] toolbarButtons =
             {
@@ -45,8 +44,6 @@ namespace UnityEditor.Localization
         [SerializeField]
         int m_SelectedClass;
 
-        Action<Locale> m_OnLocaleCreated;
-
         string[] m_LocaleTypesNames;
         Type[] m_LocaleTypes;
 
@@ -54,16 +51,6 @@ namespace UnityEditor.Localization
         public static void ShowWindow()
         {
             var window = (LocaleGeneratorWindow)GetWindow(typeof(LocaleGeneratorWindow));
-            window.m_OnLocaleCreated = null;
-            window.titleContent = new GUIContent("Locale Generator");
-            window.minSize = new Vector2(500, 500);
-            window.ShowUtility();
-        }
-
-        public static void ShowWindow(Action<Locale> onLocaleCreated)
-        {
-            var window = (LocaleGeneratorWindow)GetWindow(typeof(LocaleGeneratorWindow));
-            window.m_OnLocaleCreated = onLocaleCreated;
             window.titleContent = new GUIContent("Locale Generator");
             window.minSize = new Vector2(500, 500);
             window.ShowUtility();
@@ -108,7 +95,7 @@ namespace UnityEditor.Localization
                 EditorGUILayout.Space();
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.FlexibleSpace();
-                if (GUILayout.Button(m_OnLocaleCreated != null ? s_Texts.generateLocalesAndAddButton : s_Texts.generateLocalesButton, GUILayout.Width(180)))
+                if (GUILayout.Button(s_Texts.generateLocalesButton, GUILayout.Width(180)))
                 {
                     ExportSelectedLocales();
                 }
@@ -131,14 +118,14 @@ namespace UnityEditor.Localization
 
         void ExportSelectedLocales()
         {
-            string path = EditorUtility.SaveFolderPanel(s_Texts.saveDialog, "Assets/", "");
+            var path = EditorUtility.SaveFolderPanel(Texts.saveDialog, "Assets/", "");
             if (string.IsNullOrEmpty(path))
                 return;
 
             try
             {
                 // Generate the locale assets
-                EditorUtility.DisplayProgressBar(s_Texts.progressTitle, "Creating Locale Objects", 0);
+                EditorUtility.DisplayProgressBar(Texts.progressTitle, "Creating Locale Objects", 0);
                 var localeDict = new Dictionary<LocaleIdentifier, Locale>(); // Used for quick look up of parents
                 var locales = new List<Locale>();
                 var selectedIdentifiers = m_ListView.GetSelectedLocales();
@@ -162,7 +149,7 @@ namespace UnityEditor.Localization
                 // Set up parents using available locales
                 foreach (var locale in locales)
                 {
-                    CultureInfo localeParentCultureInfo = locale.Identifier.CultureInfo.Parent;
+                    var localeParentCultureInfo = locale.Identifier.CultureInfo.Parent;
                     Locale foundParent = null;
                     while (localeParentCultureInfo != CultureInfo.InvariantCulture && foundParent == null)
                     {
@@ -179,22 +166,13 @@ namespace UnityEditor.Localization
                 for (int i = 0; i < locales.Count; ++i)
                 {
                     var locale = locales[i];
-                    EditorUtility.DisplayProgressBar(s_Texts.progressTitle, "Creating Asset " + locale.name, i / (float)locales.Count);
-                    var assetPath = Path.Combine(relativePath, string.Format("{0} ({1}).asset", locale.name, locale.Identifier.Code));
+                    EditorUtility.DisplayProgressBar(Texts.progressTitle, "Creating Asset " + locale.name, i / (float)locales.Count);
+                    var assetPath = Path.Combine(relativePath, $"{locale.name} ({locale.Identifier.Code}).asset");
                     assetPath = AssetDatabase.GenerateUniqueAssetPath(assetPath);
                     AssetDatabase.CreateAsset(locale, assetPath);
                 }
 
                 AssetDatabase.StopAssetEditing();
-
-                // Assign to AvailableLocales
-                if (m_OnLocaleCreated != null)
-                {
-                    foreach (var locale in locales)
-                    {
-                        m_OnLocaleCreated(locale);
-                    }
-                }
 
                 Close();
             }
@@ -208,7 +186,7 @@ namespace UnityEditor.Localization
         {
             if (path.Contains(Application.dataPath))
             {
-                int length = Application.dataPath.Length - "Assets".Length;
+                var length = Application.dataPath.Length - "Assets".Length;
                 return path.Substring(length, path.Length - length);
             }
 

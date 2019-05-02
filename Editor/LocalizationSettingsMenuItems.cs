@@ -18,7 +18,7 @@ namespace UnityEditor.Localization
                 "Yes",
                 "No"))
             {
-                LocalizationPlayerSettings.ActiveLocalizationSettings = ls;
+                LocalizationEditorSettings.ActiveLocalizationSettings = ls;
             }
         }
 

@@ -13,8 +13,8 @@
 "
 >
   <editor:Toolbar name="toolbarView" >
-    <editor:ToolbarToggle label="New Table" name="toolbarButtonNew" class="toolbarTab"/>
+    <editor:ToolbarToggle text="New Table" name="toolbarButtonNew" class="toolbarTab"/>
     <editor:ToolbarSpacer/>
-    <editor:ToolbarToggle label="Edit Table" name="toolbarButtonEdit" class="toolbarTab"/>
+    <editor:ToolbarToggle text="Edit Table" name="toolbarButtonEdit" class="toolbarTab"/>
   </editor:Toolbar>
   </engine:UXML>

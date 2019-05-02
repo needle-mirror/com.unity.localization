@@ -6,21 +6,18 @@ using UnityEngine.Localization;
 
 namespace UnityEditor.Localization
 {
-    public class StringTableListViewItem : GenericAssetTableTreeViewItem
+    class StringTableListViewItem : GenericAssetTableTreeViewItem
     {
-        public StringTableEntry GetEntry(StringTable table)
-        {
-            return table.GetEntry(Key);
-        }
+        public StringTableEntry GetEntry(StringTable table) => table.GetEntry(KeyEntry.Id) ?? table.AddEntry(KeyEntry.Id);
 
         public void UpdateSearchString(List<StringTable> tables)
         {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine(Key);
+            var sb = new StringBuilder();
+            sb.AppendLine(KeyEntry.Key);
             foreach (var table in tables)
             {
                 var entry = GetEntry(table);
-                if (entry != null && entry.TranslatedPlurals != null)
+                if (entry?.TranslatedPlurals != null)
                 {
                     foreach (var tp in entry.TranslatedPlurals)
                     {
@@ -32,7 +29,7 @@ namespace UnityEditor.Localization
         }
     }
 
-    public class StringTableListView : GenericAssetTableListView<StringTable, StringTableListViewItem>
+    class StringTableListView : GenericAssetTableListView<StringTable, StringTableListViewItem>
     {
         class Styles
         {
@@ -54,18 +51,18 @@ namespace UnityEditor.Localization
         bool m_Init;
         bool m_Multiline;
         bool m_InlineEditing;
-        int m_SelectedColumn = 1;
+        StringTable m_SelectedTable;
 
         StringTableListViewItem m_SelectedItem;
 
-        public int SelectedColumn
+        public StringTable SelectedTable
         {
-            get { return m_SelectedColumn; }
+            get => m_SelectedTable;
             set
             {
-                if (m_SelectedColumn != value)
+                if (m_SelectedTable != value)
                 {
-                    m_SelectedColumn = value;
+                    m_SelectedTable = value;
                     SelectionChanged(GetSelection());
                 }
             }
@@ -76,7 +73,7 @@ namespace UnityEditor.Localization
         /// </summary>
         public bool InlineEditing
         {
-            get { return m_InlineEditing; }
+            get => m_InlineEditing;
             set
             {
                 if (m_InlineEditing == value)
@@ -87,8 +84,8 @@ namespace UnityEditor.Localization
                 Reload();
 
                 // Deselect
-                if (m_InlineEditing && editTargetTable != null)
-                    editTargetTable(null, null);
+                if (m_InlineEditing)
+                    editTargetTable?.Invoke(null, null);
             }
         }
 
@@ -97,7 +94,7 @@ namespace UnityEditor.Localization
         /// </summary>
         public bool Multiline
         {
-            get { return m_Multiline; }
+            get => m_Multiline;
             set
             {
                 if (value != m_Multiline)
@@ -118,8 +115,7 @@ namespace UnityEditor.Localization
                 m_SelectedItem = rows[selectedIds[0]] as StringTableListViewItem;
             }
 
-            if (editTargetTable != null)
-                editTargetTable(m_SelectedItem, Tables[SelectedColumn-1]);
+            editTargetTable?.Invoke(m_SelectedItem, SelectedTable);
 
             base.SelectionChanged(selectedIds);
         }
@@ -129,12 +125,7 @@ namespace UnityEditor.Localization
             return false;
         }
 
-        public void ForceRefreshCustomRowHeights()
-        {
-            RefreshCustomRowHeights();
-        }
-
-        protected override StringTableListViewItem CreateTreeViewItem(int id, string itemKey)
+        protected override StringTableListViewItem CreateTreeViewItem(int id, KeyDatabase.KeyDatabaseEntry itemKey)
         {
             var item = base.CreateTreeViewItem(id, itemKey);
             item.UpdateSearchString(Tables);
@@ -177,9 +168,9 @@ namespace UnityEditor.Localization
                 EditorGUI.LabelField(cellRect, keyItem.Key);
         }
 
-        protected override void DrawItemField(Rect cellRect, int col, StringTableListViewItem item, StringTable table)
+        protected override void DrawItemField(Rect cellRect, int colIdx, TableColumn col, StringTableListViewItem item)
         {
-            var entry = item.GetEntry(table);
+            var entry = item.GetEntry(col.Table);
             var text = entry != null ? entry.Translated : string.Empty;
             if (InlineEditing)
             {
@@ -187,14 +178,11 @@ namespace UnityEditor.Localization
                 var newText = EditorGUI.TextArea(cellRect, text);
                 if (EditorGUI.EndChangeCheck())
                 {
-                    Undo.RecordObject(table, "Change translated text");
+                    Undo.RecordObject(col.Table.Keys, "Add key");
+                    Undo.RecordObject(col.Table, "Change translated text");
 
                     if (entry == null)
-                    {
-                        // TODO: Combine this into one function so we dont need to do the lookup.
-                        table.AddKey(item.Key);
-                        entry = table.GetEntry(item.Key);
-                    }
+                        entry = col.Table.AddEntry(item.KeyEntry.Id);
 
                     entry.Translated = newText;
                     item.UpdateSearchString(Tables);
@@ -203,10 +191,9 @@ namespace UnityEditor.Localization
             }
             else
             {
-                bool selected = SelectedColumn > 0 && SelectedColumn == col && item == m_SelectedItem;
-                if (GUI.Button(cellRect, text, selected ? EditorStyles.boldLabel : EditorStyles.label))
+                if (GUI.Button(cellRect, text, SelectedTable == col.Table ? EditorStyles.boldLabel : EditorStyles.label))
                 {
-                    SelectedColumn = col;
+                    SelectedTable = col.Table;
                     SetSelection(new List<int>(){item.id}, TreeViewSelectionOptions.FireSelectionChanged);
                 }
             }
@@ -221,16 +208,15 @@ namespace UnityEditor.Localization
 
             var stringItem = item as StringTableListViewItem;
             var style = InlineEditing ? EditorStyles.textField : EditorStyles.label;
-            float maxHeight = EditorGUIUtility.singleLineHeight;
+            var maxHeight = EditorGUIUtility.singleLineHeight;
 
             if (stringItem != null)
             {
-                // TODO: Cache the height and only update when a value is changed.
                 maxHeight = Mathf.Max(maxHeight, style.CalcHeight(new GUIContent(stringItem.Key), m_CurrentWidth));
 
                 for (int i = 0; i < Tables.Count; ++i)
                 {
-                    if (multiColumnHeader.IsColumnVisible(i + 1))
+                    if (multiColumnHeader.IsColumnVisible(i + k_InitialColumns))
                     {
                         var entry = stringItem.GetEntry(Tables[i]);
                         if (entry != null)

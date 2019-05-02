@@ -1,30 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization
 {
     public class LocalizedAssetDatabase : LocalizedDatabase, IPreloadRequired
-    {        
-        AssetDatabasePreloadOperation m_PreloadOperation;
+    {
+        AsyncOperationHandle? m_PreloadOperation;
 
         public const string AssetTableLabel = "AssetTable";
         
         // We track all tables either fully loaded or still loading here.
-        Dictionary<Type, Dictionary<string, IAsyncOperation<LocalizedAssetTable>>> m_Tables = new Dictionary<Type, Dictionary<string, IAsyncOperation<LocalizedAssetTable>>>();
+        Dictionary<Type, Dictionary<string, AsyncOperationHandle<LocalizedAssetTable>>> m_Tables = new Dictionary<Type, Dictionary<string, AsyncOperationHandle<LocalizedAssetTable>>>();
 
-        public IAsyncOperation PreloadOperation
+        public AsyncOperationHandle PreloadOperation
         {
             get
             {
                 if(m_PreloadOperation == null)
                 {
-                    m_PreloadOperation = AsyncOperationCache.Instance.Acquire<AssetDatabasePreloadOperation>();
-                    m_PreloadOperation.Retain();
-                    m_PreloadOperation.Start(this);
+                    m_PreloadOperation = LocalizationSettings.ResourceManager.StartOperation(new AssetDatabasePreloadOperation(this), default);
                 }
-                return m_PreloadOperation;
+                return m_PreloadOperation.Value;
             }
         }
 
@@ -47,28 +45,25 @@ namespace UnityEngine.Localization
         /// Returns the loading operation for the selected table. If isDone is true then the table can be used immediately
         /// otherwise yield on the operation or use the callback to wait for it to be completed.
         /// </summary>
-        public virtual IAsyncOperation<LocalizedAssetTable> GetTable<TObject>(string tableName) where TObject : Object
+        public virtual AsyncOperationHandle<LocalizedAssetTable> GetTable<TObject>(string tableName) where TObject : Object
         {
             var tables = GetTablesDict(typeof(TObject));
-            IAsyncOperation<LocalizedAssetTable> operation;
-            if (tables.TryGetValue(tableName, out operation))
+            if (tables.TryGetValue(tableName, out var operation))
             {
                 return operation;
             }
 
-            var tableAddress = string.Format("{0} - {1}", LocalizationSettings.SelectedLocale.Identifier.Code, tableName);
+            var tableAddress = $"{LocalizationSettings.SelectedLocale.Identifier.Code} - {tableName}";
             var asyncOp = Addressables.LoadAsset<LocalizedAssetTable>(tableAddress);
-            asyncOp.Retain();
             tables[tableName] = asyncOp;
             return asyncOp;
         }
 
-        internal Dictionary<string, IAsyncOperation<LocalizedAssetTable>> GetTablesDict(Type assetType)
+        internal Dictionary<string, AsyncOperationHandle<LocalizedAssetTable>> GetTablesDict(Type assetType)
         {
-            Dictionary<string, IAsyncOperation<LocalizedAssetTable>> tables;
-            if (!m_Tables.TryGetValue(assetType, out tables))
+            if (!m_Tables.TryGetValue(assetType, out var tables))
             {
-                tables = new Dictionary<string, IAsyncOperation<LocalizedAssetTable>>();
+                tables = new Dictionary<string, AsyncOperationHandle<LocalizedAssetTable>>();
                 m_Tables[assetType] = tables;
             }
             return tables;
@@ -80,37 +75,79 @@ namespace UnityEngine.Localization
         /// <typeparam name="TObject">Asset type</typeparam>
         /// <param name="tableName"></param>
         /// <param name="key"></param>
-        public virtual IAsyncOperation<TObject> GetLocalizedAsset<TObject>(string tableName, string key) where TObject : Object
+        public virtual AsyncOperationHandle<TObject> GetLocalizedAsset<TObject>(string tableName, string key) where TObject : Object
         {
             if (string.IsNullOrEmpty(tableName))
-                return new CompletedOperation<TObject>().Start("tableName can not be empty or null.", key, null);
+                return LocalizationSettings.ResourceManager.CreateCompletedOperation<TObject>(null, nameof(tableName) + " can not be empty or null.");
 
-            if(string.IsNullOrEmpty(key))
-                return new CompletedOperation<TObject>().Start("key can not be empty or null.", key, null);
+            if (string.IsNullOrEmpty(key))
+                return LocalizationSettings.ResourceManager.CreateCompletedOperation<TObject>(null, nameof(key) + " can not be null or empty.");
 
             var initOp = LocalizationSettings.InitializationOperation;
-            if (!initOp.IsDone)
-                return AsyncOperationCache.Instance.Acquire<ChainOperation<TObject, LocalizationSettings>>().Start(null, key, initOp, (op) => GetLocalizedAsset_LoadTable<TObject>(tableName, key).Retain());
+            if (!initOp.Value.IsDone)
+                return LocalizationSettings.ResourceManager.CreateChainOperation<TObject>(initOp.Value, (op) => GetLocalizedAsset_LoadTable<TObject>(tableName, key));
+
             return GetLocalizedAsset_LoadTable<TObject>(tableName, key);
         }
 
-        protected virtual IAsyncOperation<TObject> GetLocalizedAsset_LoadTable<TObject>(string tableName, string key) where TObject : Object
+        /// <summary>
+        /// Loads the asset found in the table with the key Id, taken from the KeyDatabase.
+        /// </summary>
+        /// <typeparam name="TObject">Asset type</typeparam>
+        /// <param name="tableName"></param>
+        /// <param name="keyId"></param>
+        public virtual AsyncOperationHandle<TObject> GetLocalizedAsset<TObject>(string tableName, uint keyId) where TObject : Object
+        {
+            if (string.IsNullOrEmpty(tableName))
+                return LocalizationSettings.ResourceManager.CreateCompletedOperation<TObject>(null, nameof(tableName) + " can not be empty or null.");
+
+            if (keyId == KeyDatabase.EmptyId)
+                return LocalizationSettings.ResourceManager.CreateCompletedOperation<TObject>(null, nameof(keyId) + " can not be empty.");
+
+            var initOp = LocalizationSettings.InitializationOperation;
+            if (!initOp.Value.IsDone)
+                return LocalizationSettings.ResourceManager.CreateChainOperation<TObject>(initOp.Value, (op) => GetLocalizedAsset_LoadTable<TObject>(tableName, keyId));
+
+            return GetLocalizedAsset_LoadTable<TObject>(tableName, keyId);
+        }
+
+        protected virtual AsyncOperationHandle<TObject> GetLocalizedAsset_LoadTable<TObject>(string tableName, string key) where TObject : Object
         {
             // First get or load the table
             var tableOp = GetTable<TObject>(tableName);
             if (!tableOp.IsDone)
-                return AsyncOperationCache.Instance.Acquire<ChainOperation<TObject, LocalizedAssetTable>>().Start(null, key, tableOp, (op) => GetLocalizedAsset_LoadAsset<TObject>(tableOp, key).Retain());
-            return GetLocalizedAsset_LoadAsset<TObject>(tableOp, key);
+                return LocalizationSettings.ResourceManager.CreateChainOperation<TObject>(tableOp, (op) => GetLocalizedAsset_LoadAsset<TObject>(tableOp, tableOp.Result.Keys.GetId(key)));
+
+            return GetLocalizedAsset_LoadAsset<TObject>(tableOp, tableOp.Result.Keys.GetId(key));
         }
 
-        static IAsyncOperation<TObject> GetLocalizedAsset_LoadAsset<TObject>(IAsyncOperation<LocalizedAssetTable> table, string key) where TObject : Object
+        protected virtual AsyncOperationHandle<TObject> GetLocalizedAsset_LoadTable<TObject>(string tableName, uint keyId) where TObject : Object
         {
-            if (table.HasLoadedSuccessfully())
+            // First get or load the table
+            var tableOp = GetTable<TObject>(tableName);
+            if (!tableOp.IsDone)
+                return LocalizationSettings.ResourceManager.CreateChainOperation<TObject>(tableOp, (op) => GetLocalizedAsset_LoadAsset<TObject>(tableOp, keyId));
+
+            return GetLocalizedAsset_LoadAsset<TObject>(tableOp, keyId);
+        }
+
+        static AsyncOperationHandle<TObject> GetLocalizedAsset_LoadAsset<TObject>(AsyncOperationHandle<LocalizedAssetTable> table, uint key) where TObject : Object
+        {
+            if (table.Status != AsyncOperationStatus.Succeeded)
             {
-                var assetTable = (AddressableAssetTableT<TObject>)table.Result;
-                return assetTable.GetAssetAsync(key);
+                var error = "Failed to load table: " + table.DebugName;
+                Debug.LogError(error);
+                if (table.OperationException != null)
+                {
+                    error += "\n" + table.OperationException;
+                    Debug.LogException(table.OperationException);
+                }
+
+                return LocalizationSettings.ResourceManager.CreateCompletedOperation<TObject>(null, error);
             }
-            return new CompletedOperation<TObject>().Start(table.Context, table.Key, null, table.OperationException);
+
+            var assetTable = (AddressableAssetTableT<TObject>)table.Result;
+            return assetTable.GetAssetAsync(key);
         }
 
         /// <inheritdoc />
@@ -120,17 +157,15 @@ namespace UnityEngine.Localization
             {
                 foreach (var asyncOperation in table.Value)
                 {
-                    Addressables.ReleaseAsset(asyncOperation.Value.Result);
-                    asyncOperation.Value.Release();
+                    LocalizationSettings.ResourceManager.Release(asyncOperation.Value);
                 }
             }
             m_Tables.Clear();
 
             if (m_PreloadOperation != null)
             {
-                // TODO: Cancel loading operation if it is not completed. 
-
-                m_PreloadOperation.Release();
+                // TODO: Cancel loading operation if it is not completed. https://unity.slack.com/archives/C8Z80RV4K/p1556632817070600
+                LocalizationSettings.ResourceManager.Release(m_PreloadOperation.Value);
                 m_PreloadOperation = null;
             }
         }

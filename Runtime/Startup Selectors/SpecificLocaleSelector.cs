@@ -16,13 +16,10 @@ namespace UnityEngine.Localization
         /// </summary>
         public LocaleIdentifier LocaleId
         {
-            get { return m_LocaleId; }
-            set { m_LocaleId = value; }
+            get => m_LocaleId;
+            set => m_LocaleId = value;
         }
 
-        public override Locale GetStartupLocale(LocalesProvider availableLocales)
-        {
-            return availableLocales.GetLocale(LocaleId);
-        }
+        public override Locale GetStartupLocale(LocalesProvider availableLocales) => availableLocales.GetLocale(LocaleId);
     }
 }

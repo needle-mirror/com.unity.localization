@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine.Events;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization.Components
 {
@@ -20,24 +21,35 @@ namespace UnityEngine.Localization.Components
 
         public LocalizationAssetReference AssetReference
         {
-            get { return m_AssetReference; }
-            set { m_AssetReference = value; }
+            get => m_AssetReference;
+            set => m_AssetReference = value;
         }
+
         public LocalizationUnityEvent UpdateAsset
         {
-            get { return m_UpdateAsset; }
-            set { m_UpdateAsset = value; }
+            get => m_UpdateAsset;
+            set => m_UpdateAsset = value;
         }
 
         protected override void OnLocaleChanged(Locale newLocale)
         {
             var loadOp = AssetReference.LoadAsset();
-            loadOp.Completed += (op) => AssetLoaded(op.Result);
+            loadOp.Completed += AssetLoaded;
         }
 
-        protected virtual void AssetLoaded(AudioClip tex)
+        protected virtual void AssetLoaded(AsyncOperationHandle<AudioClip> audioOperation)
         {
-            UpdateAsset.Invoke(tex);
+            if (audioOperation.Status != AsyncOperationStatus.Succeeded)
+            {
+                var error = "Failed to load audio clip: " + m_AssetReference;
+                if (audioOperation.OperationException != null)
+                    error += "\n" + audioOperation.OperationException;
+
+                Debug.LogError(error, this);
+                return;
+            }
+
+            UpdateAsset.Invoke(audioOperation.Result);
         }
     }
 }

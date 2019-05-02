@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.Localization;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEditor.Localization.Samples
 {
@@ -41,7 +42,7 @@ namespace UnityEditor.Localization.Samples
             var loadingOperation = tableRef.GetLocalizedStringTable();
             yield return loadingOperation;
 
-            if (loadingOperation.HasLoadedSuccessfully())
+            if (loadingOperation.Status == AsyncOperationStatus.Succeeded)
             {
                 var stringTable = loadingOperation.Result;
                 m_TranslatedStringThisIsATest = stringTable.GetLocalizedString("This is a test");
@@ -54,7 +55,7 @@ namespace UnityEditor.Localization.Samples
         {
             // We can check if the localization system is ready using the InitializationOperation.
             // Initialization involves loading locales and optionally preloading localized data for the current locale.
-            if (!LocalizationSettings.InitializationOperation.IsDone)
+            if (!LocalizationSettings.InitializationOperation.Value.IsDone)
             {
                 GUILayout.Label("Initializing Localization");
                 return;

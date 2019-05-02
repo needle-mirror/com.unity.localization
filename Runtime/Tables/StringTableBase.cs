@@ -22,22 +22,53 @@
 
                 return m_PluralHandler;
             }
-            set { m_PluralHandler = value; }
+            set => m_PluralHandler = value;
         }
+
+        /// <summary>
+        /// Returns the localized version of the string or null if one can not be found.
+        /// </summary>
+        /// <param name="keyId">The id of the key, taken from the KeyDatabase.</param>
+        /// <returns></returns>
+        public abstract string GetLocalizedString(uint keyId);
 
         /// <summary>
         /// Returns the localized version of the string or null if one can not be found.
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public abstract string GetLocalizedString(string key);
+        public virtual string GetLocalizedString(string key)
+        {
+            if (Keys == null)
+            {
+                Debug.LogError(TableName + " does not have a KeyDatabase.", this);
+                return null;
+            }
+            return GetLocalizedString(Keys.GetId(key));
+        }
 
         /// <summary>
         /// Gets the localized plural string using the <see cref="PluralHandler"/>.
         /// </summary>
         /// <returns>The localized plural string. E.G '{0} files removed' or null if one can not be found.</returns>
-        /// <param name="key">Key or the original singular form.</param>
+        /// <param name="keyId">Key ID from KeyDatabase for the original singular form.</param>
         /// <param name="n">Plural amount</param>
-        public abstract string GetLocalizedPluralString(string key, int n);
+        public abstract string GetLocalizedPluralString(uint keyId, int n);
+
+        /// <summary>
+        /// Gets the localized plural string using the <see cref="PluralHandler"/>.
+        /// </summary>
+        /// <returns>The localized plural string. E.G '{0} files removed' or null if one can not be found.</returns>
+        /// <param name="key">Key from KeyDatabase for the original singular form.</param>
+        /// <param name="n">Plural amount</param>
+        public virtual string GetLocalizedPluralString(string key, int n)
+        {
+            if (Keys == null)
+            {
+                Debug.LogError(TableName + " does not have a KeyDatabase.", this);
+                return null;
+            }
+            return GetLocalizedPluralString(Keys.GetId(key), n);
+        }
     }
 }

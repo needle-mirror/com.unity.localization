@@ -31,22 +31,6 @@ namespace UnityEditor.Localization
         }
         static Texts s_Texts;
 
-        #if !UNITY_2018_3_OR_NEWER
-        [MenuItem("Edit/Project Settings/Localization")]
-        static void ShowActive()
-        {
-            if (LocalizationPlayerSettings.ActiveLocalizationSettings == null)
-            {
-                if (EditorUtility.DisplayDialog("Create Localization Settings", "You have no active Localization Settings. Would you like to create one?", "Create", "Cancel"))
-                    LocalizationPlayerSettings.ActiveLocalizationSettings = LocalizationSettingsMenuItems.CreateLocalizationAsset();
-            }
-            else
-            {
-                Selection.activeObject = LocalizationPlayerSettings.ActiveLocalizationSettings;
-            }
-        }
-        #endif
-
         void OnEnable()
         {
             if (s_Texts == null)
@@ -74,15 +58,15 @@ namespace UnityEditor.Localization
         void DrawActiveSettings()
         {
             EditorGUI.BeginChangeCheck();
-            var obj = EditorGUILayout.ObjectField(s_Texts.activeSettings, LocalizationPlayerSettings.ActiveLocalizationSettings, typeof(LocalizationSettings), false) as LocalizationSettings; 
+            var obj = EditorGUILayout.ObjectField(s_Texts.activeSettings, LocalizationEditorSettings.ActiveLocalizationSettings, typeof(LocalizationSettings), false) as LocalizationSettings; 
             if (EditorGUI.EndChangeCheck())
-                LocalizationPlayerSettings.ActiveLocalizationSettings = obj;
+                LocalizationEditorSettings.ActiveLocalizationSettings = obj;
 
-            if (LocalizationPlayerSettings.ActiveLocalizationSettings != target)
+            if (LocalizationEditorSettings.ActiveLocalizationSettings != target)
             {
                 EditorGUILayout.HelpBox(s_Texts.helpTextNotActive.text, MessageType.Warning, true);
                 if (GUILayout.Button(s_Texts.makeActive, GUILayout.Width(150)))
-                    LocalizationPlayerSettings.ActiveLocalizationSettings = (LocalizationSettings)target;
+                    LocalizationEditorSettings.ActiveLocalizationSettings = (LocalizationSettings)target;
             }
             else
             {

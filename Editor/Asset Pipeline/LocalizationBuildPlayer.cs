@@ -14,12 +14,12 @@ namespace UnityEditor.Localization
 
         bool m_RemoveFromPreloadedAssets;
 
-        public int callbackOrder { get { return 0; } }
+        public int callbackOrder => 0;
 
         public void OnPreprocessBuild(BuildReport report)
         {
             m_RemoveFromPreloadedAssets = false;
-            m_Settings = LocalizationPlayerSettings.ActiveLocalizationSettings;
+            m_Settings = LocalizationEditorSettings.ActiveLocalizationSettings;
             if (m_Settings == null)
                 return;
 

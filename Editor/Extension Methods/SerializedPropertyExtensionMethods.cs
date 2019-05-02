@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace UnityEditor.Localization
 {
-    internal static class SerializedPropertyExtensionMethods
+    static class SerializedPropertyExtensionMethods
     {
         public static TObject GetActualObjectForSerializedProperty<TObject>(this SerializedProperty property, System.Reflection.FieldInfo field) where TObject : class
         {
@@ -25,7 +25,7 @@ namespace UnityEditor.Localization
                 TObject actualObject = null;
                 if (obj.GetType().IsArray)
                 {
-                    var index = Convert.ToInt32(new string(property.propertyPath.Where(c => char.IsDigit(c)).ToArray()));
+                    var index = Convert.ToInt32(new string(property.propertyPath.Where(char.IsDigit).ToArray()));
                     actualObject = ((TObject[])obj)[index];
                 }
                 else

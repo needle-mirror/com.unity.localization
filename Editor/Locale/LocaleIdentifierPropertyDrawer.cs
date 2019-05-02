@@ -5,7 +5,7 @@ using UnityEngine.Localization;
 namespace UnityEditor.Localization
 {
     [CustomPropertyDrawer(typeof(LocaleIdentifier))]
-    public class LocaleIdentifierPropertyDrawer : PropertyDrawer
+    class LocaleIdentifierPropertyDrawer : PropertyDrawer
     {
         class PropertyData
         {
@@ -20,15 +20,9 @@ namespace UnityEditor.Localization
 
         readonly float k_ExpandedHeight = (2.0f * EditorGUIUtility.singleLineHeight) + (2.0f * EditorGUIUtility.standardVerticalSpacing);
 
-        public LocaleIdentifierPropertyDrawer()
-        {
-            Undo.undoRedoPerformed += UndoRedoPerformed;
-        }
+        public LocaleIdentifierPropertyDrawer() => Undo.undoRedoPerformed += UndoRedoPerformed;
 
-        ~LocaleIdentifierPropertyDrawer()
-        {
-            Undo.undoRedoPerformed -= UndoRedoPerformed;
-        }
+        ~LocaleIdentifierPropertyDrawer() => Undo.undoRedoPerformed -= UndoRedoPerformed;
 
         void UndoRedoPerformed()
         {
@@ -46,7 +40,7 @@ namespace UnityEditor.Localization
             if (m_PropertyDataPerPropertyPath.TryGetValue(propertyKey, out m_Property))
                 return;
 
-            m_Property = new PropertyData()
+            m_Property = new PropertyData
             {
                 code = property.FindPropertyRelative("m_Code"),
             };

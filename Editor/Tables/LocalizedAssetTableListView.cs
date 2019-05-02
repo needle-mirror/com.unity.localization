@@ -13,8 +13,7 @@ namespace UnityEditor.Localization
 
         static TObject GetAssetFromCache(string guid)
         {
-            TObject foundAsset;
-            if (s_CachedAssets.TryGetValue(guid, out foundAsset))
+            if (s_CachedAssets.TryGetValue(guid, out var foundAsset))
                 return foundAsset;
 
             var path = AssetDatabase.GUIDToAssetPath(guid);
@@ -32,7 +31,7 @@ namespace UnityEditor.Localization
             var foundIndex = m_Assets.FindIndex(o => o.Key == table.LocaleIdentifier.Code);
             if (foundIndex == -1)
             {
-                var guid = table.GetGuidFromKey(Key);
+                var guid = table.GetGuidFromKey(KeyEntry.Id);
                 TObject asset = null;
                 if (!string.IsNullOrEmpty(guid))
                 {
@@ -49,10 +48,10 @@ namespace UnityEditor.Localization
             var oldAsset = GetAsset(table);
 
             if (oldAsset != null)
-                LocalizationAddressableSettings.RemoveAssetFromTable(table, Key, asset);
+                LocalizationEditorSettings.RemoveAssetFromTable(table, KeyEntry.Id, oldAsset);
 
             if (asset != null)
-                LocalizationAddressableSettings.AddAssetToTable(table, Key, asset as TObject);
+                LocalizationEditorSettings.AddAssetToTable(table, KeyEntry.Id, asset);
 
             // Update cache
             var foundIndex = m_Assets.FindIndex(o => o.Key == table.LocaleIdentifier.Code);
@@ -68,8 +67,8 @@ namespace UnityEditor.Localization
 
         public void UpdateSearchString(List<AddressableAssetTableT<TObject>> tables)
         {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine(Key);
+            var sb = new StringBuilder();
+            sb.AppendLine(KeyEntry.Key);
             foreach(var table in tables)
             {
                 var asset = GetAsset(table);
@@ -120,7 +119,7 @@ namespace UnityEditor.Localization
             }
         }
 
-        protected override LocalizedAssetTableListViewItem<T> CreateTreeViewItem(int id, string itemKey)
+        protected override LocalizedAssetTableListViewItem<T> CreateTreeViewItem(int id, KeyDatabase.KeyDatabaseEntry itemKey)
         {
             var item = base.CreateTreeViewItem(id, itemKey);
             item.UpdateSearchString(Tables);
@@ -176,18 +175,18 @@ namespace UnityEditor.Localization
             base.OnGUI(rect);
         }
 
-        protected override void DrawItemField(Rect cellRect, int col, LocalizedAssetTableListViewItem<T> item, AddressableAssetTableT<T> table)
-        {
-            EditorGUI.BeginChangeCheck();
+    protected override void DrawItemField(Rect cellRect, int colIdx, TableColumn col, LocalizedAssetTableListViewItem<T> item)
+    {
+        EditorGUI.BeginChangeCheck();
 
             if (m_RowSize != RowPreviewSize.Single)
                 cellRect.width = rowHeight;
 
-            var asset = item.GetAsset(table);
+            var asset = item.GetAsset(col.Table);
             var newAsset = EditorGUI.ObjectField(cellRect, asset, typeof(T), false);
             if (EditorGUI.EndChangeCheck())
             {
-                item.SetAsset(newAsset as T, table);
+                item.SetAsset(newAsset as T, col.Table);
                 item.UpdateSearchString(Tables);
             }
         }

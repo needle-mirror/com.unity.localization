@@ -74,7 +74,7 @@ namespace UnityEditor.Localization.Tests
 
         LocalizedTable CreateAndAddTableAsset(Type tableType, string assetName)
         {
-            var assetPath = Path.Combine(k_TestConfigFolder, assetName + tableType + ".asset");
+            var assetPath = Path.Combine(k_TestConfigFolder, $"{assetName}_{tableType}.asset");
             var createdTable = LocalizationEditorSettings.CreateAssetTable(Locale.CreateLocale(SystemLanguage.English), KeyDb, assetName, tableType, assetPath);
             return createdTable;
         }
@@ -82,7 +82,7 @@ namespace UnityEditor.Localization.Tests
         [Test]
         public void AddLocale_SendsEvent()
         {
-            var locale = CreateAndAddLocaleAsset("AddLocale_SendsEvent");
+            var locale = CreateAndAddLocaleAsset(nameof(AddLocale_SendsEvent));
             VerifyEventWasSent(ModificationEvent.LocaleAdded, locale, "Expected LocaleAdded event when calling LocalizationEditorSettings.AddLocale");
             ClearCapturedEvents();
 
@@ -93,7 +93,7 @@ namespace UnityEditor.Localization.Tests
         [Test]
         public void AddLocale_DoesNotSendEvents_WhenLocaleIsAlreadyAdded()
         {
-            var locale = CreateAndAddLocaleAsset("AddLocale_DoesNotSendEvents_WhenLocaleIsAlreadyAdded");
+            var locale = CreateAndAddLocaleAsset(nameof(AddLocale_DoesNotSendEvents_WhenLocaleIsAlreadyAdded));
             ClearCapturedEvents();
 
             LocalizationEditorSettings.AddLocale(locale);
@@ -103,7 +103,7 @@ namespace UnityEditor.Localization.Tests
         [Test]
         public void RemoveLocale_SendsEvent()
         {
-            var locale = CreateAndAddLocaleAsset("RemoveLocale_SendsEvent");
+            var locale = CreateAndAddLocaleAsset(nameof(RemoveLocale_SendsEvent));
             ClearCapturedEvents();
 
             LocalizationEditorSettings.RemoveLocale(locale);
@@ -113,7 +113,7 @@ namespace UnityEditor.Localization.Tests
         [Test]
         public void RemoveLocale_DoesNotSendEvents_WhenLocaleIsNotAdded()
         {
-            var locale = CreateAndAddLocaleAsset("RemoveLocale_DoesNotSendEvents_WhenLocaleIsNotAdded");
+            var locale = CreateAndAddLocaleAsset(nameof(RemoveLocale_DoesNotSendEvents_WhenLocaleIsNotAdded));
             LocalizationEditorSettings.RemoveLocale(locale);
             ClearCapturedEvents();
 
@@ -121,27 +121,27 @@ namespace UnityEditor.Localization.Tests
             VerifyNoEventWasSent("Expected no events to be sent when the Locale has already been removed.");
         }
 
-        [TestCaseSource("AllTableTypes")]
+        [TestCaseSource(nameof(AllTableTypes))]
         public void AddTable_SendsEvent(Type tableType)
         {
-            var createdTable = CreateAndAddTableAsset(tableType, "AddTable_SendsEvent");
+            var createdTable = CreateAndAddTableAsset(tableType, nameof(AddTable_SendsEvent));
             VerifyEventWasSent(ModificationEvent.TableAdded, createdTable, "Expected TableAdded event to be sent when using CreateAssetTable.");
         }
 
-        [TestCaseSource("AllTableTypes")]
+        [TestCaseSource(nameof(AllTableTypes))]
         public void RemoveTable_SendsEvent(Type tableType)
         {
-            var createdTable = CreateAndAddTableAsset(tableType, "AddTable_SendsEvent");
+            var createdTable = CreateAndAddTableAsset(tableType, nameof(AddTable_SendsEvent));
             ClearCapturedEvents();
 
             LocalizationEditorSettings.RemoveTable(createdTable);
             VerifyEventWasSent(ModificationEvent.TableRemoved, createdTable, "Expected TableRemoved event to be sent when using RemoveTable.");
         }
 
-        [TestCaseSource("AllTableTypes")]
+        [TestCaseSource(nameof(AllTableTypes))]
         public void GetAssetTables_DoesNotIncludeRemovedTable_DuringTableRemovedCall(Type tableType)
         {
-            var createdTable = CreateAndAddTableAsset(tableType, "GetAssetTables_DoesNotIncludeRemovedTable_DuringTableRemovedCall");
+            var createdTable = CreateAndAddTableAsset(tableType, nameof(GetAssetTables_DoesNotIncludeRemovedTable_DuringTableRemovedCall));
             ClearCapturedEvents();
             bool onModificationCalled = false;
 

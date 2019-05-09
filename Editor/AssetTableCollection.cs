@@ -29,8 +29,8 @@ namespace UnityEditor.Localization
             {
                 if (m_Editor == null)
                 {
-                    Editor editor = null;
-                    Editor.CreateCachedEditor(Tables.ToArray(), null, ref editor);
+                    UnityEditor.Editor editor = null;
+                    UnityEditor.Editor.CreateCachedEditor(Tables.ToArray(), null, ref editor);
                     Debug.Assert(editor != null);
                     m_Editor = editor as LocalizedTableEditor;
                 }

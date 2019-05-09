@@ -15,7 +15,7 @@ namespace UnityEditor.Localization
     [CustomEditor(typeof(LocalizedTable), true)]
     public abstract class LocalizedTableEditor :
         #if UNITY_2019_1_OR_NEWER
-        Editor
+        UnityEditor.Editor
         #else
         UIElementsEditor
         #endif

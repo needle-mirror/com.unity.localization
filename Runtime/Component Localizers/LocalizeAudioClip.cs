@@ -33,7 +33,7 @@ namespace UnityEngine.Localization.Components
 
         protected override void OnLocaleChanged(Locale newLocale)
         {
-            var loadOp = AssetReference.LoadAsset();
+            var loadOp = AssetReference.LoadAssetAsync();
             loadOp.Completed += AssetLoaded;
         }
 

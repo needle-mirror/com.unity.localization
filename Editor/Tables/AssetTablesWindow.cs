@@ -98,7 +98,11 @@ namespace UnityEditor.Localization
             if (tableCollection == null || tableCollection is AssetTablesField.NoTables)
                 return;
 
-            m_ActiveTableEditor = tableCollection.TableEditor.CreateTableEditorGUI();
+            var tableEditor = tableCollection.TableEditor;
+            if (tableEditor == null)
+                return;
+
+            m_ActiveTableEditor = tableEditor.CreateTableEditorGUI();
             m_EditTableContainer.Add(m_ActiveTableEditor);
             m_ActiveTableEditor.StretchToParentSize();
         }

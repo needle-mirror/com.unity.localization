@@ -1,17 +1,16 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Localization;
 using UnityEditorInternal;
 
 namespace UnityEditor.Localization
 {
     [CustomEditor(typeof(StartupLocaleSelectorCollection))]
-    class StartupLocaleSelectorCollectionEditor : Editor
+    class StartupLocaleSelectorCollectionEditor : UnityEditor.Editor
     {
         SerializedProperty m_StartupSelectors;
 
         ReorderableList m_List;
-        Editor m_SelectedSelectorEditor;
+        UnityEditor.Editor m_SelectedSelectorEditor;
 
         class Texts
         {

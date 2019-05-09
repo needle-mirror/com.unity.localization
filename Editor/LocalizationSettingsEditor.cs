@@ -4,7 +4,7 @@ using UnityEngine.Localization;
 namespace UnityEditor.Localization
 {
     [CustomEditor(typeof(LocalizationSettings))]
-    class LocalizationSettingsEditor : Editor
+    class LocalizationSettingsEditor : UnityEditor.Editor
     {
         SerializedProperty m_PreloadBehavior;
         SerializedProperty m_LocaleSelector;
@@ -12,10 +12,10 @@ namespace UnityEditor.Localization
         SerializedProperty m_AssetDatabase;
         SerializedProperty m_StringDatabase;
 
-        Editor m_LocaleSelectorEditor;
-        Editor m_AvailableLocalesEditor;
-        Editor m_AssetDatabaseEditor;
-        Editor m_StringDatabaseEditor;
+        UnityEditor.Editor m_LocaleSelectorEditor;
+        UnityEditor.Editor m_AvailableLocalesEditor;
+        UnityEditor.Editor m_AssetDatabaseEditor;
+        UnityEditor.Editor m_StringDatabaseEditor;
 
         class Texts
         {
@@ -75,7 +75,7 @@ namespace UnityEditor.Localization
             EditorGUILayout.Space();
         }
 
-        static void ObjectReferenceWithEditorView(SerializedProperty property, GUIContent label, ref Editor editor)
+        static void ObjectReferenceWithEditorView(SerializedProperty property, GUIContent label, ref UnityEditor.Editor editor)
         {
             EditorGUILayout.BeginHorizontal();
             if(property.objectReferenceValue != null)

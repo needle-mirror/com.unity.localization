@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Localization;
+using UnityEngine.TestTools;
 
 namespace UnityEditor.Localization.Tests
 {
@@ -62,10 +64,10 @@ namespace UnityEditor.Localization.Tests
             return false;
         }
 
-        [TestCaseSource("AllTableTypes")]
+        [TestCaseSource(nameof(AllTableTypes))]
         public void CreatedTables_AreAddedToAddressables(Type tableType)
         {
-            var createdTables = LocalizationEditorSettings.CreateAssetTables(GenerateSampleLocales(), null, "CreatedTables_AreAddedToAddressables", tableType, k_TestConfigFolder);
+            var createdTables = LocalizationEditorSettings.CreateAssetTables(GenerateSampleLocales(), null, nameof(CreatedTables_AreAddedToAddressables), tableType, k_TestConfigFolder);
 
             foreach (var table in createdTables)
             {
@@ -73,19 +75,19 @@ namespace UnityEditor.Localization.Tests
             }
         }
 
-        [TestCaseSource("AllTableTypes")]
+        [TestCaseSource(nameof(AllTableTypes))]
         public void CreatedTable_IsAddedToAddressables(Type tableType)
         {
-            var assetPath = Path.Combine(k_TestConfigFolder, "CreatedTable_IsAddedToAddressables_" + tableType + ".asset");
-            var createdTable = LocalizationEditorSettings.CreateAssetTable(Locale.CreateLocale(SystemLanguage.English), KeyDb, "CreatedTable_IsAddedToAddressables", tableType, assetPath);
+            var assetPath = Path.Combine(k_TestConfigFolder,$"{nameof(CreatedTable_IsAddedToAddressables)}_{tableType}.asset");
+            var createdTable = LocalizationEditorSettings.CreateAssetTable(Locale.CreateLocale(SystemLanguage.English), KeyDb, nameof(CreatedTable_IsAddedToAddressables), tableType, assetPath);
             VerifyAssetIsInAddressables(createdTable);
         }
 
-        [TestCaseSource("AllTableTypes")]
+        [TestCaseSource(nameof(AllTableTypes))]
         public void ImportedTable_IsAddedToAddressables(Type tableType)
         {
-            const string tableName = "ImportedTable_IsAddedToAddressables";
-            var assetPath = Path.Combine(k_TestConfigFolder, "ImportedTable_IsAddedToAddressables" + tableType + ".asset");
+            const string tableName = nameof(ImportedTable_IsAddedToAddressables);
+            var assetPath = Path.Combine(k_TestConfigFolder, $"{nameof(ImportedTable_IsAddedToAddressables)}_{tableType}.asset");
 
             var relativePath = LocalizationEditorSettings.MakePathRelative(assetPath);
             var createdTable = (LocalizedTable)ScriptableObject.CreateInstance(tableType);
@@ -98,10 +100,10 @@ namespace UnityEditor.Localization.Tests
             VerifyAssetIsInAddressables(createdTable, "Expected a table that was imported or created externally to be added to Addressables but it was not.");
         }
 
-        [TestCaseSource("AllTableTypes")]
+        [TestCaseSource(nameof(AllTableTypes))]
         public void GetAssetTablesCollectionInternal_UpdatesWhenTableAssetsAreAddedAndRemoved(Type tableType)
         {
-            const string tableName = "GetAssetTablesCollectionInternal_UpdatesWhenTableAssetsAreAddedAndRemoved";
+            const string tableName = nameof(GetAssetTablesCollectionInternal_UpdatesWhenTableAssetsAreAddedAndRemoved);
 
             // Check the table is not already in the collection.
             var tableCollection = LocalizationEditorSettings.GetAssetTablesCollection<LocalizedTable>();
@@ -114,21 +116,19 @@ namespace UnityEditor.Localization.Tests
             Assert.IsTrue(CollectionContainsTables(tableType, tableName, createdTables, tableCollection), "Expected the new tables to have been contained in the AssetTablesCollection.");
 
             // Now delete the table assets and check they are no longer returned.
-            //AssetDatabase.StartAssetEditing();
             foreach (var table in createdTables)
             {
                 DeleteAsset(table);
             }
-            //AssetDatabase.StopAssetEditing();
 
             tableCollection = LocalizationEditorSettings.GetAssetTablesCollection<LocalizedTable>();
             Assert.IsFalse(CollectionContainsEntry(tableType, tableName, tableCollection), "Expected the deleted tables to not have an entry in the AssetTablesCollection.");
         }
 
-        [TestCaseSource("AllTableTypes")]
+        [TestCaseSource(nameof(AllTableTypes))]
         public void GetAssetTablesCollectionInternal_TableEntriesAllHaveTheSameTypeAndName(Type tableType)
         {
-            const string tableName = "GetAssetTablesCollectionInternal_AssetsAreCollatedByTypeAndName";
+            const string tableName = nameof(GetAssetTablesCollectionInternal_TableEntriesAllHaveTheSameTypeAndName);
 
             // Create the new tables and check the entries do all contain the same type and name
             LocalizationEditorSettings.CreateAssetTables(GenerateSampleLocales(), KeyDb, tableName, tableType, k_TestConfigFolder);
@@ -142,20 +142,20 @@ namespace UnityEditor.Localization.Tests
             }
         }
 
-        [TestCaseSource("GenerateSampleLanguages")]
+        [TestCaseSource(nameof(GenerateSampleLanguages))]
         public void AddLocale_IsAddedToAddressables(SystemLanguage lang)
         {
             var locale = Locale.CreateLocale(lang);
-            CreateAsset(locale, "AddLocale_IsAddedToAddressables-" + locale);
+            CreateAsset(locale, $"{nameof(AddLocale_IsAddedToAddressables)}-{locale}");
             LocalizationEditorSettings.AddLocale(locale);
             VerifyAssetIsInAddressables(locale);
         }
 
-        [TestCaseSource("GenerateSampleLanguages")]
+        [TestCaseSource(nameof(GenerateSampleLanguages))]
         public void RemoveLocale_IsRemovedFromAddressables(SystemLanguage lang)
         {
             var locale = Locale.CreateLocale(lang);
-            CreateAsset(locale, "RemoveLocale_IsRemovedFromAddressables-" + locale);
+            CreateAsset(locale, $"{nameof(RemoveLocale_IsRemovedFromAddressables)}-{locale}");
             LocalizationEditorSettings.AddLocale(locale);
             VerifyAssetIsInAddressables(locale);
 
@@ -164,19 +164,44 @@ namespace UnityEditor.Localization.Tests
         }
 
         [Test]
+        public void AddAssetToTable_Texture2DAssetTable_NonPersistentAssetIsRejected()
+        {
+            var keyEntry = KeyDb.AddKey(nameof(AddAssetToTable_Texture2DAssetTable_NonPersistentAssetIsRejected));
+
+            var nonPersistentTexture = new Texture2D(1, 1) { name = "nonPersistentTexture" };
+            LocalizationEditorSettings.AddAssetToTable(Texture2DAssetTables[0], keyEntry.Id, nonPersistentTexture);
+            LogAssert.Expect(LogType.Error, new Regex("Only persistent assets can be addressable"));
+        }
+
+        [Test]
         public void AddAssetToTable_Texture2DAssetTable_AssetIsAddedToAddressables()
         {
-            var keyEntry = KeyDb.AddKey("AddAssetToTable_Texture2DAssetTable_AssetIsAddedToAddressables");
-            var textureAsset = CreateTestTexture("AddAssetToTable_Texture2DAssetTable_AssetIsAddedToAddressables");
+            var keyEntry = KeyDb.AddKey(nameof(AddAssetToTable_Texture2DAssetTable_AssetIsAddedToAddressables));
+            var textureAsset = CreateTestTexture(nameof(AddAssetToTable_Texture2DAssetTable_AssetIsAddedToAddressables));
             LocalizationEditorSettings.AddAssetToTable(Texture2DAssetTables[0], keyEntry.Id, textureAsset);
             VerifyAssetIsInAddressables(textureAsset);
         }
 
         [Test]
+        public void AddAssetToTable_Texture2DAssetTable_TableIsDirtyAfterAddingAsset()
+        {
+            var keyEntry = KeyDb.AddKey(nameof(AddAssetToTable_Texture2DAssetTable_TableIsDirtyAfterAddingAsset));
+            var textureAsset = CreateTestTexture(nameof(AddAssetToTable_Texture2DAssetTable_TableIsDirtyAfterAddingAsset));
+
+            Assert.IsTrue(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(textureAsset, out string guid, out long localid), "Failed to get texture guid");
+            Assert.IsFalse(string.IsNullOrEmpty(guid), "Expected a valid guid for the texture asset.");
+
+            int dirtyCount = EditorUtility.GetDirtyCount(Texture2DAssetTables[0]);
+            LocalizationEditorSettings.AddAssetToTable(Texture2DAssetTables[0], keyEntry.Id, textureAsset);
+            int newDirtyCount = EditorUtility.GetDirtyCount(Texture2DAssetTables[0]);
+            Assert.Greater(newDirtyCount, dirtyCount, "Expected texture table be dirty after adding an asset.");
+        }
+
+        [Test]
         public void AddAssetToTable_Texture2DAssetTable_SharedAssetHasCorrectLabels()
         {
-            var keyEntry = KeyDb.AddKey("AddAssetToTable_Texture2DAssetTable_SharedAssetHasCorrectLabels");
-            var textureAsset = CreateTestTexture("AddAssetToTable_Texture2DAssetTable_SharedAssetHasCorrectLabels_Texture");
+            var keyEntry = KeyDb.AddKey(nameof(AddAssetToTable_Texture2DAssetTable_SharedAssetHasCorrectLabels));
+            var textureAsset = CreateTestTexture($"{nameof(AddAssetToTable_Texture2DAssetTable_SharedAssetHasCorrectLabels)}_Texture");
             Assert.Greater(Texture2DAssetTables.Count, 0);
 
             foreach (var table in Texture2DAssetTables)
@@ -189,15 +214,15 @@ namespace UnityEditor.Localization.Tests
             foreach (var table in Texture2DAssetTables)
             {
                 var label = LocalizationEditorSettings.FormatAssetLabel(table.LocaleIdentifier);
-                Assert.IsTrue(addressableEntry.labels.Contains(label), "Expected the asset to have the locale '" + table.LocaleIdentifier.Code + "' added as a label.");
+                Assert.IsTrue(addressableEntry.labels.Contains(label), $"Expected the asset to have the locale '{table.LocaleIdentifier.Code}' added as a label.");
             }
         }
 
         [Test]
         public void RemoveAssetFromTable_Texture2DAssetTable_IsRemovedFromAddressables()
         {
-            var keyEntry = KeyDb.AddKey("RemoveAssetFromTable_Texture2DAssetTable_IsRemovedFromAddressables");
-            var textureAsset = CreateTestTexture("RemoveAssetFromTable_Texture2DAssetTable_IsRemovedFromAddressables_Texture");
+            var keyEntry = KeyDb.AddKey(nameof(RemoveAssetFromTable_Texture2DAssetTable_IsRemovedFromAddressables));
+            var textureAsset = CreateTestTexture($"{nameof(RemoveAssetFromTable_Texture2DAssetTable_IsRemovedFromAddressables)}_Texture");
 
             LocalizationEditorSettings.AddAssetToTable(Texture2DAssetTables[0], keyEntry.Id, textureAsset);
             LocalizationEditorSettings.AddAssetToTable(Texture2DAssetTables[1], keyEntry.Id, textureAsset);
@@ -213,9 +238,9 @@ namespace UnityEditor.Localization.Tests
         [Test]
         public void RemoveAssetFromTable_Texture2DAssetTable_IsNotRemovedFromAddressables_WhenUsedByAnotherKey()
         {
-            var keyEntry1 = KeyDb.AddKey("1-RemoveAssetFromTable_Texture2DAssetTable_IsNotRemovedFromAddressables_WhenUsedByAnotherKey");
-            var keyEntry2 = KeyDb.AddKey("2-RemoveAssetFromTable_Texture2DAssetTable_IsNotRemovedFromAddressables_WhenUsedByAnotherKey");
-            var textureAsset = CreateTestTexture("RemoveAssetFromTable_Texture2DAssetTable_IsNotRemovedFromAddressables_WhenUsedByAnotherKey_Texture");
+            var keyEntry1 = KeyDb.AddKey($"1-{nameof(RemoveAssetFromTable_Texture2DAssetTable_IsNotRemovedFromAddressables_WhenUsedByAnotherKey)}");
+            var keyEntry2 = KeyDb.AddKey($"2-{nameof(RemoveAssetFromTable_Texture2DAssetTable_IsNotRemovedFromAddressables_WhenUsedByAnotherKey)}");
+            var textureAsset = CreateTestTexture($"{nameof(RemoveAssetFromTable_Texture2DAssetTable_IsNotRemovedFromAddressables_WhenUsedByAnotherKey)}_Texture");
 
             LocalizationEditorSettings.AddAssetToTable(Texture2DAssetTables[0], keyEntry1.Id, textureAsset);
             LocalizationEditorSettings.AddAssetToTable(Texture2DAssetTables[0], keyEntry2.Id, textureAsset);
@@ -231,10 +256,10 @@ namespace UnityEditor.Localization.Tests
         [Test]
         public void AssetTableDeleted_Texture2DAssetTable_UnusedAssetsAreRemovedFromAddressables()
         {
-            var keyEntry = KeyDb.AddKey("AssetTableDeleted_Texture2DAssetTable_UnusedAssetsAreRemovedFromAddressables");
-            var assetPath = Path.Combine(k_TestConfigFolder, "AssetTableDeleted_Texture2DAssetTable_UnusedAssetsAreRemovedFromAddressables_Table.asset");
-            var createdTable = LocalizationEditorSettings.CreateAssetTable(Locale.CreateLocale(SystemLanguage.English), KeyDb, "CreatedTable_IsAddedToAddressables", typeof(Texture2DAssetTable), assetPath) as Texture2DAssetTable;
-            var textureAsset = CreateTestTexture("AssetTableDeleted_Texture2DAssetTable_UnusedAssetsAreRemovedFromAddressables_Texture");
+            var keyEntry = KeyDb.AddKey(nameof(AssetTableDeleted_Texture2DAssetTable_UnusedAssetsAreRemovedFromAddressables));
+            var assetPath = Path.Combine(k_TestConfigFolder, $"{nameof(AssetTableDeleted_Texture2DAssetTable_UnusedAssetsAreRemovedFromAddressables)}_Table.asset");
+            var createdTable = LocalizationEditorSettings.CreateAssetTable(Locale.CreateLocale(SystemLanguage.English), KeyDb, nameof(AssetTableDeleted_Texture2DAssetTable_UnusedAssetsAreRemovedFromAddressables), typeof(Texture2DAssetTable), assetPath) as Texture2DAssetTable;
+            var textureAsset = CreateTestTexture($"{nameof(AssetTableDeleted_Texture2DAssetTable_UnusedAssetsAreRemovedFromAddressables)}_Texture");
 
             LocalizationEditorSettings.AddAssetToTable(createdTable, keyEntry.Id, textureAsset);
             VerifyAssetIsInAddressables(textureAsset);

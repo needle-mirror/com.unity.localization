@@ -4,7 +4,6 @@ using UnityEditor.Localization.UI;
 
 namespace UnityEditor.Localization.Tests.UI
 {
-    [Category("Localization")]
     public class AssetTablesFieldTests
     {
         class EmptyProjectPlayerSettings : LocalizationEditorSettings

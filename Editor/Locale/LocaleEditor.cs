@@ -3,7 +3,7 @@
 namespace UnityEditor.Localization
 {
     [CustomEditor(typeof(Locale))]
-    class LocaleEditor : Editor
+    class LocaleEditor : UnityEditor.Editor
     {
         SerializedProperty m_Name;
 

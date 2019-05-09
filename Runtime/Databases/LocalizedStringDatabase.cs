@@ -36,7 +36,7 @@ namespace UnityEngine.Localization
             {
                 if (m_PreloadOperation == null)
                 {
-                    m_PreloadOperation = Addressables.LoadAssets<StringTableBase>(new object[] { StringTableLabel, LocalizationSettings.SelectedLocale.Identifier.Code }, TableLoaded, Addressables.MergeMode.Intersection);
+                    m_PreloadOperation = Addressables.LoadAssetsAsync<StringTableBase>(new object[] { StringTableLabel, LocalizationSettings.SelectedLocale.Identifier.Code }, TableLoaded, Addressables.MergeMode.Intersection);
                 }
                 return m_PreloadOperation.Value;
             }
@@ -67,7 +67,7 @@ namespace UnityEngine.Localization
             }
 
             var tableAddress = $"{LocalizationSettings.SelectedLocale.Identifier.Code} - {tableName}";
-            asyncOp = Addressables.LoadAsset<StringTableBase>(tableAddress);
+            asyncOp = Addressables.LoadAssetAsync<StringTableBase>(tableAddress);
             m_Tables[tableName] = asyncOp;
             return asyncOp;
         }

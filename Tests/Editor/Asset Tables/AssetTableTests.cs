@@ -59,7 +59,7 @@ namespace UnityEditor.Localization.Tests
             yield return new TestCaseData(typeof(Texture2DAssetTable)).Returns(typeof(Texture2D));
         }
 
-        [TestCaseSource("SupportedAssetTypeCases")]
+        [TestCaseSource(nameof(SupportedAssetTypeCases))]
         public System.Type SupportedAssetType_ReturnsCorrectAssetType(System.Type tableType)
         {
             var table = ScriptableObject.CreateInstance(tableType) as AddressableAssetTable;

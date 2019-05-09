@@ -80,7 +80,12 @@ namespace UnityEngine.Localization
         public override string GetLocalizedPluralString(uint keyId, int n)
         {
             var foundEntry = GetEntry(keyId);
-            return foundEntry != null ? string.Format(foundEntry.GetPlural(PluralHandler.Evaluate(n)), n) : null;
+
+            if (foundEntry == null || PluralHandler == null)
+                return null;
+
+            var pluralText = foundEntry.GetPlural(PluralHandler.Evaluate(n));
+            return string.IsNullOrEmpty(pluralText) ? null : string.Format(pluralText, n);
         }
     }
 }

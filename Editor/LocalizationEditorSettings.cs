@@ -276,7 +276,7 @@ namespace UnityEditor.Localization
         {
             if (!EditorUtility.IsPersistent(locale))
             {
-                Debug.LogError("Only persistent assets can be addressable. The asset needs to be saved on disk.");
+                Debug.LogError($"Only persistent assets can be addressable. The asset '{locale.name}' needs to be saved on disk.");
                 return;
             }
 
@@ -356,9 +356,10 @@ namespace UnityEditor.Localization
 
         protected virtual void AddAssetToTableInternal<TObject>(AddressableAssetTableT<TObject> table, uint keyId, TObject asset) where TObject : Object
         {
-            if (!EditorUtility.IsPersistent(table))
+            if (!EditorUtility.IsPersistent(table) || !EditorUtility.IsPersistent(asset))
             {
-                Debug.LogError("Only persistent assets can be addressable. The asset needs to be saved on disk.");
+                var assetName = !EditorUtility.IsPersistent(table) ? table.name : asset.name;
+                Debug.LogError($"Only persistent assets can be addressable. The asset '{assetName}' needs to be saved on disk.");
                 return;
             }
 
@@ -489,7 +490,7 @@ namespace UnityEditor.Localization
         {
             if (!EditorUtility.IsPersistent(table))
             {
-                Debug.LogError("Only persistent assets can be addressable. The asset needs to be saved on disk.");
+                Debug.LogError($"Only persistent assets can be addressable. The asset '{table.name}' needs to be saved on disk.");
                 return;
             }
 
@@ -605,7 +606,7 @@ namespace UnityEditor.Localization
 
                 if (tableCollection.Keys != table.Keys)
                 {
-                    Debug.LogError("Table " + table.TableName + " does not use the same KeyDatabase as other tables with the same name and type. Tables must share the same KeyDatabase. This table will be ignored.", table);
+                    Debug.LogError($"Table '{table.TableName}' does not use the same KeyDatabase as other tables with the same name and type. Tables must share the same KeyDatabase. This table will be ignored.", table);
                     continue;
                 }
 
@@ -702,7 +703,7 @@ namespace UnityEditor.Localization
                     var tbl = createdTables[i];
 
                     if (showProgressBar)
-                        EditorUtility.DisplayProgressBar(s_Texts.progressTitle, "Saving Table " + tbl.name, i / (float)createdTables.Count);
+                        EditorUtility.DisplayProgressBar(s_Texts.progressTitle, $"Saving Table {tbl.name}", i / (float)createdTables.Count);
 
                     var assetPath = Path.Combine(relativePath, tbl.name + ".asset");
                     assetPath = AssetDatabase.GenerateUniqueAssetPath(assetPath);

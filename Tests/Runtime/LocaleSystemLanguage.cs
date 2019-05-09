@@ -4,7 +4,6 @@ using NUnit.Framework;
 
 namespace UnityEngine.Localization.Tests
 {
-    [Category("Localization")]
     public class LocaleSystemLanguage
     {
         static List<SystemLanguage> GetSystemLanguageWithoutUnknown()
@@ -20,7 +19,7 @@ namespace UnityEngine.Localization.Tests
         }
 
         [Test]
-        [TestCaseSource("GetSystemLanguageWithoutUnknown")]
+        [TestCaseSource(nameof(GetSystemLanguageWithoutUnknown))]
         public void SystemLanguageMapsToLocaleIdentifier(SystemLanguage lang)
         {
             var localeId = new LocaleIdentifier(lang);

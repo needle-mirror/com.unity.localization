@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 // TODO: Unload function for restoring/unloading all assets.
 namespace UnityEngine.Localization
@@ -28,7 +29,7 @@ namespace UnityEngine.Localization
                     {
                         if (item.AsyncOperation == null && !string.IsNullOrEmpty(item.guid))
                         {
-                            var op = Addressables.LoadAsset<TObject>(item.guid);
+                            var op = Addressables.LoadAssetAsync<TObject>(item.guid);
                             item.AsyncOperation = op;
                             operations.Add(op);
                         }
@@ -56,7 +57,7 @@ namespace UnityEngine.Localization
             {
                 if (item.AsyncOperation == null && !string.IsNullOrEmpty(item.guid))
                 {
-                    item.AsyncOperation = Addressables.LoadAsset<TObject>(item.guid);
+                    item.AsyncOperation = Addressables.LoadAssetAsync<TObject>(item.guid);
                 }
             }
         }
@@ -73,7 +74,7 @@ namespace UnityEngine.Localization
             {
                 if (id.AsyncOperation == null)
                 {
-                    id.AsyncOperation = Addressables.LoadAsset<TObject>(id.guid);
+                    id.AsyncOperation = Addressables.LoadAssetAsync<TObject>(id.guid);
                 }
 
                 return id.AsyncOperation.Value.Convert<TObject>();

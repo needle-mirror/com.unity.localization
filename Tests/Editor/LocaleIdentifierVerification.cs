@@ -4,7 +4,6 @@ using UnityEngine.Localization;
 
 namespace UnityEditor.Localization.Tests
 {
-    [Category("Localization")]
     public class LocaleIdentifierVerification
     {
         [Test]

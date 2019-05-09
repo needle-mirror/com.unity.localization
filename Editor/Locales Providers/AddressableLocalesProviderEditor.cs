@@ -5,12 +5,12 @@ using UnityEngine.Localization;
 namespace UnityEditor.Localization
 {
     [CustomEditor(typeof(AddressableLocalesProvider))]
-    class AddressableLocalesProviderEditor : Editor
+    class AddressableLocalesProviderEditor : UnityEditor.Editor
     {
         AddressableLocalesProviderListView m_ListView;
         SearchField m_SearchField;
 
-        Editor m_SelectedLocaleEditor;
+        UnityEditor.Editor m_SelectedLocaleEditor;
         int m_SelectedLocaleIndex = -1;
 
         enum ToolBarChoices

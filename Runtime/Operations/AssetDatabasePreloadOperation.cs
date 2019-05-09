@@ -17,7 +17,7 @@ namespace UnityEngine.Localization
 
         protected override void Execute()
         {
-            var loadTablesOperation = Addressables.LoadAssets<LocalizedAssetTable>(new object[] { LocalizedAssetDatabase.AssetTableLabel, LocalizationSettings.SelectedLocale.Identifier.Code }, TableLoaded, Addressables.MergeMode.Intersection);
+            var loadTablesOperation = Addressables.LoadAssetsAsync<LocalizedAssetTable>(new object[] { LocalizedAssetDatabase.AssetTableLabel, LocalizationSettings.SelectedLocale.Identifier.Code }, TableLoaded, Addressables.MergeMode.Intersection);
             loadTablesOperation.Completed += PreloadTablesCompleted;
         }
 

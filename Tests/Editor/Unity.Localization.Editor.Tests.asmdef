@@ -3,7 +3,8 @@
     "references": [
         "Unity.Localization.Editor",
         "Unity.Localization",
-        "Unity.Addressables.Editor"
+        "Unity.Addressables.Editor",
+		"Unity.ugui"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"
@@ -16,5 +17,12 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": []
+    "defineConstraints": [],
+	"versionDefines": [
+		{
+			"name": "com.unity.ugui",
+			"expression": "1.0.0",
+			"define": "PACKAGE_UGUI"
+		}
+	]
 }

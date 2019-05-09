@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine.Localization;
 using UnityEditor.Localization.UI;
+using UnityEngine;
+using Resources = UnityEditor.Localization.UI.Resources;
 
 #if UNITY_2019_1_OR_NEWER
 using UnityEngine.UIElements;
@@ -53,6 +55,9 @@ namespace UnityEditor.Localization
 
         void TreeViewSelectionChanged(StringTableListViewItem row, StringTable col)
         {
+            if (m_DetailedPanel == null || m_DetailedPanelContainer == null)
+                return;
+
             m_SelectedItem = row;
             m_SelectedTable = col;
 
@@ -65,9 +70,6 @@ namespace UnityEditor.Localization
             {
                 m_DetailedPanelContainer.Add(m_DetailedPanel);
             }
-
-            if (m_DetailedPanel == null || m_DetailedPanelContainer == null)
-                return;
 
             RefreshEditPanel();
         }
@@ -128,8 +130,7 @@ namespace UnityEditor.Localization
                     var translated = new TextField { isDelayed = true, value = entry.Translated };
                     translated.RegisterCallback<ChangeEvent<string>>(evt =>
                     {
-                        Undo.RecordObject(m_SelectedTable, "Change translated text");
-                        entry.Translated = evt.newValue;
+                        TranslatedTextChangedCallback(m_SelectedTable, entry, evt.newValue);
                         m_TreeView.Repaint();
                     });
                     contents.Add(translated);
@@ -146,8 +147,7 @@ namespace UnityEditor.Localization
                             var pluralIndex = i;
                             plural.RegisterCallback<ChangeEvent<string>>(evt =>
                             {
-                                Undo.RecordObject(m_SelectedTable, "Change translated text");
-                                entry.SetPlural(pluralIndex, evt.newValue);
+                                TranslatedPluralTextChangedCallback(m_SelectedTable, entry, pluralIndex, evt.newValue);
                                 m_TreeView.Repaint();
                             });
                             contents.Add(plural);
@@ -157,8 +157,28 @@ namespace UnityEditor.Localization
             }
         }
 
+        internal static void TranslatedTextChangedCallback(StringTable table, StringTableEntry entry, string newText)
+        {
+            Undo.RecordObject(table, "Change translated text");
+            entry.Translated = newText;
+            EditorUtility.SetDirty(table);
+        }
+
+        internal static void TranslatedPluralTextChangedCallback(StringTable table, StringTableEntry entry, int pluralIndex, string newText)
+        {
+            Undo.RecordObject(table, "Change translated text");
+            entry.SetPlural(pluralIndex, newText);
+            EditorUtility.SetDirty(table);
+        }
+
         void SourceTextChanged(ChangeEvent<string> evt)
         {
+            if (Keys == null)
+            {
+                Debug.LogError("Keys is null. Can not change source text.", m_SelectedTable);
+                return;
+            }
+
             Undo.RecordObject(Keys, "Rename key");
             Keys.RenameKey(m_SelectedItem.KeyId, evt.newValue);
             EditorUtility.SetDirty(Keys);

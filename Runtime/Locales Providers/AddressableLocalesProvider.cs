@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization
 {
@@ -32,7 +33,7 @@ namespace UnityEngine.Localization
                 if (m_LoadOperation == null)
                 {
                     Locales = new List<Locale>();
-                    m_LoadOperation = AddressableAssets.Addressables.LoadAssets<Locale>(LocalizationSettings.LocaleLabel, AddLocale);
+                    m_LoadOperation = AddressableAssets.Addressables.LoadAssetsAsync<Locale>(LocalizationSettings.LocaleLabel, AddLocale);
                 }
 
                 return m_LoadOperation.Value;

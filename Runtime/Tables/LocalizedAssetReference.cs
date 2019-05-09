@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization
 {
@@ -44,11 +45,11 @@ namespace UnityEngine.Localization
         // Load the referenced asset as type TObject.
         // </summary>
         // <returns>The load operation.</returns>
-        public AsyncOperationHandle<TObject> LoadAsset<TObject>() where TObject : Object
+        public AsyncOperationHandle<TObject> LoadAssetAsync<TObject>() where TObject : Object
         {
             if (KeyId == KeyDatabase.EmptyId)
-                return LocalizationSettings.AssetDatabase.GetLocalizedAsset<TObject>(TableName, Key);
-            return LocalizationSettings.AssetDatabase.GetLocalizedAsset<TObject>(TableName, KeyId);
+                return LocalizationSettings.AssetDatabase.GetLocalizedAssetAsync<TObject>(TableName, Key);
+            return LocalizationSettings.AssetDatabase.GetLocalizedAssetAsync<TObject>(TableName, KeyId);
         }
     }
 
@@ -60,9 +61,9 @@ namespace UnityEngine.Localization
         // Load the referenced asset as type TObject.
         // </summary>
         // <returns>The load operation.</returns>
-        public AsyncOperationHandle<TObject> LoadAsset()
+        public AsyncOperationHandle<TObject> LoadAssetAsync()
         {
-            return LoadAsset<TObject>();
+            return LoadAssetAsync<TObject>();
         }
     }
 

@@ -3,7 +3,6 @@ using NUnit.Framework;
 
 namespace UnityEngine.Localization.Tests
 {
-    [Category("Localization")]
     public class LocalizationSettingsTests
     {
         LocalizationSettings m_Settings;

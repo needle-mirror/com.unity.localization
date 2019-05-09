@@ -68,7 +68,7 @@ namespace UnityEditor.Localization
             var foundTypes = new List<Type>();
             foundNames.Add("Locale");
             foundTypes.Add(typeof(Locale));
-            AssemblyScanner.FindSubclasses<Locale>(foundTypes, foundNames, true);
+            AssemblyScanner.FindSubclasses<Locale>(foundTypes, foundNames);
             m_LocaleTypesNames = foundNames.ToArray();
             m_LocaleTypes = foundTypes.ToArray();
         }

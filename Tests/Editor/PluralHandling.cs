@@ -179,16 +179,20 @@ namespace UnityEditor.Localization.Tests
             }
         }
 
-        [TestCaseSource("TestCases_HasExpectedNumberOfPlurals")]
+        [TestCaseSource(nameof(TestCases_HasExpectedNumberOfPlurals))]
         public int HasExpectedNumberOfPlurals(string code)
         {
-            return PluralForm.CreatePluralForm(code).NumberOfPlurals;
+            var pluralForm = PluralForm.GetPluralForm(code);
+            Assert.NotNull(pluralForm, "Expected a plural form to be returned for " + code);
+            return pluralForm.NumberOfPlurals;
         }
 
-        [TestCaseSource("TestCases_ReturnsCorrectPluralIndex")]
+        [TestCaseSource(nameof(TestCases_ReturnsCorrectPluralIndex))]
         public int ReturnsCorrectPluralIndex(string code, int value)
         {
-            return PluralForm.GetPluralForm(code).Evaluate(value);
+            var pluralForm = PluralForm.GetPluralForm(code);
+            Assert.NotNull(pluralForm, "Expected a plural form to be returned for " + code);
+            return pluralForm.Evaluate(value);
         }
 
         [Test]

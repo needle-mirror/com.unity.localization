@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Localization;
@@ -48,7 +49,7 @@ namespace UnityEditor.Localization.Tests
             };
         }
 
-        [TestCaseSource("AllTableTypes")]
+        [TestCaseSource(nameof(AllTableTypes))]
         public void CreateTables_WithNullKeyDatabaseArgument_CreatesAndAssignsNewKeyDatabase(Type tableType)
         {
             Assert.IsEmpty(Settings.CreatedKeyDatabases);
@@ -62,7 +63,7 @@ namespace UnityEditor.Localization.Tests
             }
         }
 
-        [TestCaseSource("AllTableTypes")]
+        [TestCaseSource(nameof(AllTableTypes))]
         public void CreateTables_WithKeyDatabaseProvided_DoesNotCreateANewKeyDatabase(Type tableType)
         {
             var createdTables = LocalizationEditorSettings.CreateAssetTables(GenerateSampleLocales(), KeyDb, "Table 123", tableType, "");
@@ -74,11 +75,11 @@ namespace UnityEditor.Localization.Tests
             }
         }
 
-        [TestCaseSource("AllTableTypes")]
+        [TestCaseSource(nameof(AllTableTypes))]
         public void CreateTables_AssignsTableNameToAllNewTables(Type tableType)
         {
             Assert.IsEmpty(Settings.CreatedKeyDatabases);
-            const string tableName = "CreateTables_AssignsTableNameToAllNewTables";
+            const string tableName = nameof(CreateTables_AssignsTableNameToAllNewTables);
             var createdTables = LocalizationEditorSettings.CreateAssetTables(GenerateSampleLocales(), KeyDb, tableName, tableType, "");
 
             foreach (var table in createdTables)
@@ -87,11 +88,12 @@ namespace UnityEditor.Localization.Tests
             }
         }
 
-        [TestCaseSource("GenerateSampleLocales")]
-        public void AddLocale_WithNonPersistentLocale_GeneratesError(Locale locale)
+        [Test]
+        public void AddLocale_WithNonPersistentLocale_GeneratesError()
         {
+            var locale = new Locale();
             LocalizationEditorSettings.AddLocale(locale);
-            LogAssert.Expect(LogType.Error, "Only persistent assets can be addressable. The asset needs to be saved on disk.");
+            LogAssert.Expect(LogType.Error, new Regex("Only persistent assets can be addressable."));
         }
 
         [TestCase("Locale-en", "en")]
@@ -105,14 +107,14 @@ namespace UnityEditor.Localization.Tests
             Assert.AreEqual(expectedCode, localeId.Code, "Failed to convert the Addressables Locale label to the correct LocaleIdentifier");
         }
 
-        [TestCaseSource("GenerateSampleLocales")]
+        [TestCaseSource(nameof(GenerateSampleLocales))]
         public void LocaleLabelToId_WorksWithLabelsGeneratedUsing_FormatAssetLabel(Locale locale)
         {
             var label = LocalizationEditorSettings.FormatAssetLabel(locale.Identifier);
             LocaleLabelToId_CorrectlyConvertsLabel(label, locale.Identifier.Code);
         }
 
-        [TestCaseSource("GenerateSampleLocales")]
+        [TestCaseSource(nameof(GenerateSampleLocales))]
         public void IsLocaleLabel_WorksWithLabelsGeneratedUsing_FormatAssetLabel(Locale locale)
         {
             var label = LocalizationEditorSettings.FormatAssetLabel(locale.Identifier);

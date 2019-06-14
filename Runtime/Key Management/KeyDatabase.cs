@@ -162,6 +162,73 @@ namespace UnityEngine.Localization
                 RenameKeyInternal(foundEntry, newValue);
         }
 
+        /// <summary>
+        /// Returns the KeyDatabaseEntry that is the most similar to the text.
+        /// Uses the Levenshtein distance method.
+        /// </summary>
+        /// <param name="text">The text to match against.</param>
+        /// <param name="distance">The number of edits needed to turn <paramref name="text"/> into the returned KeyDatabaseEntry, 0 being an exact match.</param>
+        /// <returns>The KeyDatabaseEntry that is the most similar to the text or null if one could not be found.</returns>
+        public KeyDatabaseEntry FindSimilarKey(string text, out int distance)
+        {
+            KeyDatabaseEntry foundEntry = null;
+            distance = int.MaxValue;
+            foreach (var entry in Entries)
+            {
+                var d = ComputeLevenshteinDistance(text.ToLower(), entry.Key.ToLower());
+                if (d < distance)
+                {
+                    foundEntry = entry;
+                    distance = d;
+                }
+            }
+
+            return foundEntry;
+        }
+
+        /// <summary>
+        /// Compute the distance between two strings.
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns>The number of edits needed to turn one string into another.</returns>
+        static int ComputeLevenshteinDistance(string a, string b)
+        {
+            // Based on https://www.dotnetperls.com/levenshtein
+            int n = a.Length;
+            int m = b.Length;
+            int[,] d = new int[n + 1, m + 1];
+
+            // Step 1
+            if (n == 0)
+                return m;
+
+            if (m == 0)
+                return n;
+
+            // Step 2
+            for (int i = 0; i <= n; d[i, 0] = i++){}
+
+            for (int j = 0; j <= m; d[0, j] = j++){}
+
+            // Step 3
+            for (int i = 1; i <= n; i++)
+            {
+                //Step 4
+                for (int j = 1; j <= m; j++)
+                {
+                    // Step 5
+                    int cost = (b[j - 1] == a[i - 1]) ? 0 : 1;
+
+                    // Step 6
+                    d[i, j] = Mathf.Min(Mathf.Min(d[i - 1, j] + 1, d[i, j - 1] + 1), d[i - 1, j - 1] + cost);
+                }
+            }
+
+            // Step 7
+            return d[n, m];
+        }
+
         protected virtual uint GenerateUniqueId() => m_NextAvailableId++;
 
         KeyDatabaseEntry AddKeyInternal(string key)

@@ -180,6 +180,7 @@ namespace UnityEditor.Localization
                 {
                     Undo.RecordObject(col.Table.Keys, "Add key");
                     Undo.RecordObject(col.Table, "Change translated text");
+                    EditorUtility.SetDirty(col.Table);
 
                     if (entry == null)
                         entry = col.Table.AddEntry(item.KeyEntry.Id);

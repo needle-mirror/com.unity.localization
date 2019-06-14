@@ -15,19 +15,19 @@ namespace UnityEngine.Localization
         [SerializeField]
         uint m_KeyId;
 
-        public string TableName
+        public virtual string TableName
         {
             get => m_TableName;
             set => m_TableName = value;
         }
 
-        public uint KeyId
+        public virtual uint KeyId
         {
             get => m_KeyId;
             set => m_KeyId = value;
         }
 
-        public string Key
+        public virtual string Key
         {
             get => m_Key;
             set => m_Key = value;

@@ -65,7 +65,10 @@ namespace UnityEngine.Localization.Components
         protected override void OnLocaleChanged(Locale newLocale)
         {
             var stringOperation = m_IsPlural ? StringReference.GetLocalizedString(m_PluralValue) : StringReference.GetLocalizedString();
-            stringOperation.Completed += StringLoaded;
+            if (stringOperation.IsDone)
+                StringLoaded(stringOperation);
+            else
+                stringOperation.Completed += StringLoaded;
         }
 
         protected virtual void StringLoaded(AsyncOperationHandle<string> stringOp)

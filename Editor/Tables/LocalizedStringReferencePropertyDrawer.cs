@@ -38,11 +38,11 @@ namespace UnityEditor.Localization
 
         GUIContent GetDropDownLabel()
         {
-            if (!string.IsNullOrEmpty(m_TableName.stringValue) && (!string.IsNullOrEmpty(m_Key.stringValue) || m_KeyId.intValue != KeyDatabase.EmptyId))
+            if (!string.IsNullOrEmpty(m_TableName.stringValue))
             {
-                if (m_KeyId.intValue == KeyDatabase.EmptyId)
+                if (m_KeyId.intValue == KeyDatabase.EmptyId && !string.IsNullOrEmpty(m_Key.stringValue))
                 {
-                    return new GUIContent(m_TableName.stringValue + "/" + m_Key.stringValue);
+                    return FormatDropDownLabel(m_TableName.stringValue, m_Key.stringValue);
                 }
 
                 if (m_KeyDatabase == null)
@@ -56,10 +56,23 @@ namespace UnityEditor.Localization
                 }
 
                 if (m_KeyDatabase != null)
-                    return new GUIContent(m_TableName.stringValue + "/" + m_KeyDatabase.GetKey((uint)m_KeyId.intValue));
+                {
+                    var foundKey = m_KeyDatabase.GetKey((uint)m_KeyId.intValue);
+                    if (foundKey != null)
+                    {
+                        return FormatDropDownLabel(m_TableName.stringValue, foundKey);
+                    }
+                }
             }
             return new GUIContent("None");
         }
+
+        static GUIContent FormatDropDownLabel(string table, string key)
+        {
+            var newlineIndex = key.IndexOf("\n");
+            var firstline = newlineIndex != -1 ? key.Substring(0, newlineIndex) : key;
+            return new GUIContent($"{table}/{firstline}");
+         }
 
         public void SetValue(string table, KeyDatabase.KeyDatabaseEntry keyEntry)
         {

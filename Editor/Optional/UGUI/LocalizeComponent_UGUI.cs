@@ -15,6 +15,7 @@ namespace UnityEditor.Localization
     {
         public static LocalizationBehaviour SetupForLocalization(Text target)
         {
+            const int kMatchThreshold = 5;
             var comp = Undo.AddComponent(target.gameObject, typeof(LocalizeString)) as LocalizeString;
             var setStringMethod = target.GetType().GetProperty("text").GetSetMethod();
             var methodDelegate = System.Delegate.CreateDelegate(typeof(UnityAction<string>), target, setStringMethod) as UnityAction<string>;
@@ -22,16 +23,28 @@ namespace UnityEditor.Localization
 
             // Check if we can find a matching key to the text value
             var tables = LocalizationEditorSettings.GetAssetTablesCollection<StringTableBase>();
+            int currentMatchDistance = int.MaxValue;
+            KeyDatabase.KeyDatabaseEntry currentEntry = null;
+            string tableName = string.Empty;
             foreach (var assetTableCollection in tables)
             {
                 var keys = assetTableCollection.Keys;
-                if (keys != null && keys.Contains(target.text))
+                var foundKey = keys.FindSimilarKey(target.text, out int distance);
+                if (foundKey != null && distance < currentMatchDistance)
                 {
-                    comp.StringReference.KeyId = keys.GetId(target.text);
-                    comp.StringReference.TableName = assetTableCollection.TableName;
-                    return comp;
+                    currentMatchDistance = distance;
+                    currentEntry = foundKey;
+                    tableName = assetTableCollection.TableName;
                 }
             }
+
+            if (currentEntry != null && currentMatchDistance < kMatchThreshold)
+            {
+                comp.StringReference.KeyId = currentEntry.Id;
+                comp.StringReference.TableName = tableName;
+                return comp;
+            }
+
             return comp;
         }
 

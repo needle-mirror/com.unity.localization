@@ -8,7 +8,11 @@ namespace UnityEngine.Localization.Components
             if (LocalizationSettings.HasSettings)
             {
                 LocalizationSettings.SelectedLocaleChanged += OnLocaleChanged;
-                LocalizationSettings.InitializationOperation.Value.Completed += (o) => OnLocaleChanged(LocalizationSettings.SelectedLocale);
+
+                if (LocalizationSettings.InitializationOperation.Value.IsDone)
+                    OnLocaleChanged(LocalizationSettings.SelectedLocale);
+                else
+                    LocalizationSettings.InitializationOperation.Value.Completed += (o) => OnLocaleChanged(LocalizationSettings.SelectedLocale);
             }
         }
 

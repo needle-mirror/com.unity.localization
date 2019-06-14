@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this package will be documented in this file.
 
+## [0.4.0] - 2019-06-14
+- Added AutoUpdate to LocalizedStringReference class. When enabled, the string will automatically be loaded any time a change is detected and the UpdateString event can be used to update the string. With AutoUpdate enabled calling GetLocalizedString is not necessary. 
+- Fixed StringTableEditor changes being lost when using inline editing.
+- Fixed LocalizationBehaviour not updating the first time when LocalizationSettings are already initialized. 
+- Fixed LocalizationBehaviour not updating correctly if the asset or table has already been loaded.
+- Improved drop down label in LocalizedStringReferencePropertyDrawer. Multi line text is now correctly shown. (LOC-57)
+- Added KeyDatabase.FindSimilarKey. Returns the closest match using a Levenshtein approximation.
+- Improved key matching when using Localize context menu for Text components.
+- Updated to Addressables version '0.8.6-preview'.
+
 ## [0.3.2] - 2019-05-09
 - Added support for ugui package in 2019.2.0a15. ugui support is optional and will be enabled automatically if the ugui package is in the project.
 - Removed support for 2018.3. The ugui support requires optional assemblies which are not supported in 2018.3.

@@ -33,7 +33,10 @@ namespace UnityEngine.Localization.Components
         protected override void OnLocaleChanged(Locale newLocale)
         {
             var loadOp = AssetReference.LoadAssetAsync();
-            loadOp.Completed += AssetLoaded;
+            if (loadOp.IsDone)
+                AssetLoaded(loadOp);
+            else
+                loadOp.Completed += AssetLoaded;
         }
 
         protected virtual void AssetLoaded(AsyncOperationHandle<Texture2D> texOperation)

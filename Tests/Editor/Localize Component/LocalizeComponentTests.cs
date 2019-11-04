@@ -1,11 +1,14 @@
+using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Localization;
+using UnityEngine.Localization.Tables;
+using Object = UnityEngine.Object;
 
 namespace UnityEditor.Localization.Tests
 {
-    public class LocalizeComponentTests
+    public abstract class LocalizeComponentTests
     {
         protected GameObject m_Target;
 
@@ -23,6 +26,7 @@ namespace UnityEditor.Localization.Tests
             Settings = new FakedLocalizationEditorSettings();
             LocalizationEditorSettings.Instance = Settings;
             KeyDb = ScriptableObject.CreateInstance<KeyDatabase>();
+            KeyDb.TableNameGuid = Guid.NewGuid();
             var entry = KeyDb.AddKey(kStringTableKey);
             StringTableKeyId = entry.Id;
             m_Target = new GameObject("LocalizeComponent");
@@ -31,8 +35,16 @@ namespace UnityEditor.Localization.Tests
             stringTable.Keys = KeyDb;
             stringTable.TableName = kStringTableName;
             stringTable.LocaleIdentifier = "en";
-            stringTable.AddEntry(kStringTableKey);
-            LocalizationEditorSettings.AddOrUpdateTable(stringTable);
+            stringTable.AddEntry(kStringTableKey, "");
+            LocalizationEditorSettings.AddOrUpdateTable(stringTable, false);
+
+            var collection = new AssetTableCollection()
+            {
+                Keys = KeyDb,
+                Tables = new List<LocalizedTable>{ stringTable },
+                TableType = typeof(StringTable)
+            };
+            Settings.Collections.Add(collection);
         }
 
         [TearDown]

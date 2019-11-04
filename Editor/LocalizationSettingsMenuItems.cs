@@ -1,6 +1,5 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Localization;
+﻿using UnityEngine;
+using UnityEngine.Localization.Settings;
 
 namespace UnityEditor.Localization
 {
@@ -29,16 +28,14 @@ namespace UnityEditor.Localization
             if (string.IsNullOrEmpty(path))
                 return null;
 
-            var dependencies = new List<ScriptableObject>();
-            var ls = LocalizationSettings.CreateDefault(dependencies);
-            AssetDatabase.CreateAsset(ls, path);
-            foreach (var scriptableObject in dependencies)
-            {
-                AssetDatabase.AddObjectToAsset(scriptableObject, ls);
-            }
+            var settings = ScriptableObject.CreateInstance<LocalizationSettings>();
+            settings.name = "Default Localization Settings";
+
+
+            AssetDatabase.CreateAsset(settings, path);
             AssetDatabase.SaveAssets();
-            Selection.activeObject = ls;
-            return ls;
+            Selection.activeObject = settings;
+            return settings;
         }
     }
 }

@@ -1,10 +1,10 @@
-﻿using NUnit.Framework;
-using UnityEngine;
-using UnityEngine.Localization;
-using UnityEngine.TestTools;
+﻿using System.Collections;
 using System.Text.RegularExpressions;
-using System.Collections;
-
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.Localization.Tables;
+using UnityEngine.TestTools;
+/*
 namespace UnityEditor.Localization.Tests
 {
     public class AssetTableTests
@@ -68,4 +68,4 @@ namespace UnityEditor.Localization.Tests
             return assetType;
         }
     }
-}
+}*/

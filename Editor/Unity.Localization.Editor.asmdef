@@ -4,6 +4,8 @@
         "Unity.Localization",
         "Unity.Addressables.Editor",
         "Unity.Addressables",
+        "Unity.ResourceManager",
+        "Unity.TextMeshPro",
         "Unity.ugui"
     ],
     "includePlatforms": [
@@ -20,6 +22,12 @@
             "name": "com.unity.ugui",
             "expression": "1.0.0",
             "define": "PACKAGE_UGUI"
+        },
+        {
+            "name": "com.unity.textmeshpro",
+            "expression": "1.0.0",
+            "define": "PACKAGE_TMP"
         }
-    ]
+    ],
+    "noEngineReferences": false
 }

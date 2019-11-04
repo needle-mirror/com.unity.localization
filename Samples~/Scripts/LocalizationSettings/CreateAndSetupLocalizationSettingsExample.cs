@@ -1,4 +1,6 @@
-﻿namespace UnityEngine.Localization.Samples
+﻿using UnityEngine.Localization.Settings;
+
+namespace UnityEngine.Localization.Samples
 {
     /// <summary>
     /// This example shows how to create and setup localization support for several languages and make it active.
@@ -8,7 +10,7 @@
         void Start()
         {
             // Create our localization settings
-            var localizationSettings = LocalizationSettings.CreateDefault();
+            var localizationSettings = ScriptableObject.CreateInstance<LocalizationSettings>();
 
             // Add the locales we support
             var supportedLocales = localizationSettings.GetAvailableLocales();

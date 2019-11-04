@@ -1,0 +1,40 @@
+using UnityEngine.Localization.Tables;
+
+namespace UnityEditor.Localization.UI
+{
+    class SerializedTableEntryReference
+    {
+        public SerializedProperty key;
+        public SerializedProperty keyId;
+        TableEntryReference m_Reference;
+
+        public TableEntryReference Reference
+        {
+            get => m_Reference;
+            set
+            {
+                m_Reference = value;
+                key.stringValue = m_Reference.Key;
+                keyId.intValue = (int)m_Reference.KeyId;
+            }
+        }
+
+        public SerializedTableEntryReference(SerializedProperty property)
+        {
+            key = property.FindPropertyRelative("m_Key");
+            keyId = property.FindPropertyRelative("m_KeyId");
+
+            var id = (uint)keyId.intValue;
+            if (id != KeyDatabase.EmptyId)
+            {
+                Reference = id;
+            }
+            else
+            {
+                var keyName = key.stringValue;
+                if (string.IsNullOrEmpty(keyName))
+                    Reference = keyName;
+            }
+        }
+    }
+}

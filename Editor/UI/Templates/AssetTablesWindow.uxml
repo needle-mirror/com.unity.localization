@@ -1,28 +1,9 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<engine:UXML
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:engine="UnityEngine.Experimental.UIElements"
-    xmlns:editor="UnityEditor.Experimental.UIElements"
-    xmlns:loc="UnityEditor.Localization.UI"
-    xmlns:upm="UnityEditor.PackageManager.UI"
-
-    xsi:noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd"
-    xsi:schemaLocation="
-                        UnityEngine.Experimental.UIElements ../../../../../UIElementsSchema/UnityEngine.Experimental.UIElements.xsd
-                        UnityEditor.Experimental.UIElements ../../../../../UIElementsSchema/UnityEditor.Experimental.UIElements.xsd
-                        UnityEditor.PackageManager.UI ../../../../../UIElementsSchema/UnityEditor.PackageManager.UI.xsd
-"
->
-  <loc:AssetTablesWindowToolbar/>
-  <engine:VisualElement name="panelsView" class="panel">
-    <loc:AssetTablesGenerator class="panel"/>
-  </engine:VisualElement>
-  <engine:VisualElement name="editTablePanel" class="panel">
-    <engine:VisualElement class="unity-base-field">
-      <engine:Label text="Table" class="unity-base-field__label"/>
-      <loc:AssetTablesField name="assetTablesField"/>
-    </engine:VisualElement>
-    <engine:VisualElement name="editTableContainer" class="panel">
-    </engine:VisualElement>
-  </engine:VisualElement>
-</engine:UXML>
+<UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <uie:Toolbar style="flex-direction: row;">
+        <uie:ToolbarToggle text="New Table" name="new-table-tab" />
+        <uie:ToolbarToggle text="Edit Table" name="edit-table-tab" />
+        <uie:ToolbarSpacer style="flex-grow: 1;"/>
+    </uie:Toolbar>
+    <UnityEditor.Localization.UI.TableCreator name="new-table-tab-panel" style="flex-grow: 1;"/>
+    <UnityEditor.Localization.UI.EditAssetTables name="edit-table-tab-panel" style="flex-grow: 1;"/>
+</UXML>

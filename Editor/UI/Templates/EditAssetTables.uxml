@@ -1,0 +1,4 @@
+<UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <UnityEditor.Localization.UI.ProjectTablesPopup />
+    <ui:VisualElement name="table-contents" style="flex-grow: 1;" />
+</UXML>

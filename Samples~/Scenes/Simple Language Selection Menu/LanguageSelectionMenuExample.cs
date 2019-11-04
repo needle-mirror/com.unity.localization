@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
-
+using UnityEngine.Localization.Settings;
+/*
 namespace UnityEngine.Localization.Samples
 {
     /// <summary>
@@ -52,7 +53,6 @@ namespace UnityEngine.Localization.Samples
             simpleLocalesProvider.AddLocale(Locale.CreateLocale(new LocaleIdentifier(SystemLanguage.French)));
             simpleLocalesProvider.AddLocale(Locale.CreateLocale(new LocaleIdentifier(SystemLanguage.German)));
             simpleLocalesProvider.AddLocale(Locale.CreateLocale(new LocaleIdentifier(SystemLanguage.Japanese)));
-            simpleLocalesProvider.AddLocale(Locale.CreateLocale(CultureInfo.InvariantCulture));
 
             // Set English to be our default
             localizationSettings.OnSelectedLocaleChanged += OnSelectedLocaleChanged;
@@ -108,4 +108,4 @@ namespace UnityEngine.Localization.Samples
             GUI.DragWindow();
         }
     }
-}
+}*/

@@ -1,7 +1,8 @@
+/*
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Localization;
 using UnityEngine.Localization.Components;
+using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization.Tests
 {
@@ -24,4 +25,4 @@ namespace UnityEditor.Localization.Tests
             CheckEvent(localizedComponent.UpdateAsset, 1, "Play", audioComponent);
         }
     }
-}
+}*/

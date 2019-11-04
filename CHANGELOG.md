@@ -1,12 +1,35 @@
 # Changelog
 All notable changes to this package will be documented in this file.
 
+## [0.5.0] - 2019-11-4
+- Updated to Addressables version *1.2.4-preview*.
+- Removed type specific asset tables. The AssetTable class can now hold mixed types per entry.
+- Removed Custom Locale support from Locale Generator Window. You should use Metadata to modify the Locale instead.
+- Removed Preload behaviour from Localization Settings. Preload behaviour can now be controlled per table through the Asset Tables Window. 
+- Removed Addressable tests. These would cause issues when run in a project already using Addressables. They have been moved to an internal test suite.
+- Removed *Key Database* field from *New Table* panel. Key databases should not be shared now as they act as the Table Name Guid.
+- Added Metadata to Locale, LocalizedTable and TableEntry. Metadata can be used to add additional data that implements the IMetadata interface and is serializable.
+mized with additional sources and formatters. See docs for further details.
+- Added PreloadAssetTable Metadata. Add this to an AssetTable to configure the preload behaviour for individual assets contained in the table. By default the assets will not be preloaded if this is not present.
+- Added PreloadAsset Metadata. Add this to Asset Table entries when using PreloadBehaviour.PreloadSelected to select the entry for preloading.
+- Added Comment Metadata. This can be added to any Metadata to provide comments. In the future these comments will be extracted when exporting to external formats.
+- Added SmartFormat for StringTables. This allows for advanced formatting of strings. Comes with support for named placeholders, lists, pluralization, gender, code reflection support and much more.
+- Added Table Name Guid. Table Names can now be referenced by a Guid so that changes to the name do not break references.
+- Fixed Locale Generator Window button `Generate Locales` staying disabled when using `Select All`.
+- LocaleGeneratorListView now shows Locales that are already in the project.
+- New Locales are now added to Addressables when created.
+- Changed the name format for Tables for Addressables and asset creation to start with the name followed by the locale.
+- Improved LocalizedString editor. It is now possible to modify the selected entry details in the Inspector without opening the Asset Tables Window.
+- Moved Localization Table editor window option to *Window/Asset Management/Localization Tables*.
+## [0.4.1] - 2019-07-09
+- Updated to Addressables version '1.1.4-preview'.
+
 ## [0.4.0] - 2019-06-14
 - Added AutoUpdate to LocalizedStringReference class. When enabled, the string will automatically be loaded any time a change is detected and the UpdateString event can be used to update the string. With AutoUpdate enabled calling GetLocalizedString is not necessary. 
 - Fixed StringTableEditor changes being lost when using inline editing.
 - Fixed LocalizationBehaviour not updating the first time when LocalizationSettings are already initialized. 
 - Fixed LocalizationBehaviour not updating correctly if the asset or table has already been loaded.
-- Improved drop down label in LocalizedStringReferencePropertyDrawer. Multi line text is now correctly shown. (LOC-57)
+- Improved drop down label in LocalizedStringReferencePropertyDrawer. Multi-line text is now correctly shown. (LOC-57)
 - Added KeyDatabase.FindSimilarKey. Returns the closest match using a Levenshtein approximation.
 - Improved key matching when using Localize context menu for Text components.
 - Updated to Addressables version '0.8.6-preview'.

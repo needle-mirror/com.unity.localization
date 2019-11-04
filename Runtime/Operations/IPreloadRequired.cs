@@ -2,7 +2,7 @@
 
 namespace UnityEngine.Localization
 {
-    public interface IPreloadRequired
+    interface IPreloadRequired
     {
         AsyncOperationHandle PreloadOperation { get; }
     }

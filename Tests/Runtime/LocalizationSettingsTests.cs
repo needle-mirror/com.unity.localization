@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using NUnit.Framework;
-
+using UnityEngine.Localization.Settings;
+/*
 namespace UnityEngine.Localization.Tests
 {
     public class LocalizationSettingsTests
@@ -39,15 +40,21 @@ namespace UnityEngine.Localization.Tests
             sl.AddLocale(Locale.CreateLocale(new LocaleIdentifier(SystemLanguage.German)));
             sl.AddLocale(Locale.CreateLocale(new LocaleIdentifier(SystemLanguage.Japanese)));
         }
+        [SetUp]
+        public void Setup()
+        {
+            m_OnSelectedLocaleChangedLocale = null;
+        }
 
         [TearDown]
         public void Teardown()
         {
+            LocalizationSettings.Instance = null;
             Object.DestroyImmediate(m_Settings);
         }
 
         [Test]
-        public void ChangingSelectedLocaleSendsLocaleChangedEvent()
+        public void ChangingSelectedLocale_SendsLocaleChangedEvent()
         {
             LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
 
@@ -60,5 +67,24 @@ namespace UnityEngine.Localization.Tests
             Assert.IsNotNull(m_OnSelectedLocaleChangedLocale, "Current language is null, the selectedLocaleChanged event was not sent.");
             Assert.AreEqual(LocalizationSettings.AvailableLocales.GetLocale(SystemLanguage.Japanese), m_OnSelectedLocaleChangedLocale, "Expected current language to be Japanese.");
         }
+
+        [Test]
+        public void ChangingSelectedLocaleToTheSame_DoesNotSendLocaleChangedEvent()
+        {
+            LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
+
+            // Change the locale resulting in the event being sent.
+            Assert.IsNull(m_OnSelectedLocaleChangedLocale);
+            var japaneseLocale = LocalizationSettings.AvailableLocales.GetLocale(SystemLanguage.Japanese);
+            Assert.IsNotNull(japaneseLocale);
+            LocalizationSettings.SelectedLocale = japaneseLocale;
+
+            // Reset and assign the same locale again. No event should be sent this time
+            m_OnSelectedLocaleChangedLocale = null;
+            LocalizationSettings.SelectedLocale = japaneseLocale;
+
+            Assert.IsNull(m_OnSelectedLocaleChangedLocale, "The selectedLocaleChanged event was sent even though the language did not change.");
+        }
     }
 }
+*/

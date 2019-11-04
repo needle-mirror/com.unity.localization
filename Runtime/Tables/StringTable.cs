@@ -1,91 +1,85 @@
-﻿using System.Collections.Generic;
+﻿using UnityEngine.Localization.Metadata;
+using UnityEngine.Localization.Settings;
+using UnityEngine.Localization.SmartFormat.Core.Formatting;
 
-namespace UnityEngine.Localization
+namespace UnityEngine.Localization.Tables
 {
-    public class StringTable : StringTableBase
+    /// <summary>
+    /// A <see cref="StringTable"/> entry.
+    /// </summary>
+    public class StringTableEntry : TableEntry
     {
-        [SerializeField]
-        List<StringTableEntry> m_StringTableEntries = new List<StringTableEntry>();
+        FormatCache m_FormatCache;
 
-        Dictionary<uint, StringTableEntry> m_StringDict;
+        /// <summary>
+        /// The raw localized value without any formatting applied.
+        /// </summary>
+        public string Value
+        {
+            get => Data.Localized;
+            set => Data.Localized = value;
+        }
 
-        Dictionary<uint, StringTableEntry> StringDict
+        /// <summary>
+        /// Is the entry marked with the <see cref="SmartFormatTag"/>?
+        /// Entries that are smart will use <see cref="SmartFormat"/> to format the localized text.
+        /// </summary>
+        public bool IsSmart
         {
             get
             {
-                if (m_StringDict == null)
+                // TODO: Cache value
+                return Data.Metadata.GetMetadata<SmartFormatTag>() != null;
+            }
+            set
+            {
+                if (value)
                 {
-                    m_StringDict = new Dictionary<uint, StringTableEntry>(m_StringTableEntries.Count);
-                    foreach (var stringEntry in m_StringTableEntries)
-                    {
-                        m_StringDict[stringEntry.Id] = stringEntry;
-                    }
+                    AddTagMetadata<SmartFormatTag>();
                 }
-
-                return m_StringDict;
+                else
+                {
+                    RemoveTagMetadata<SmartFormatTag>();
+                }
             }
         }
 
-        public StringTableEntry AddEntry(uint keyId)
+        /// <summary>
+        /// Returns the raw localized value without any formatting applied.
+        /// </summary>
+        /// <returns></returns>
+        public string GetLocalizedString()
         {
-            var entry = new StringTableEntry(keyId);
-            m_StringTableEntries.Add(entry);
-
-            if (m_StringDict != null)
-                m_StringDict[keyId] = entry;
-
-            return entry;
+            return Data.Localized;
         }
 
-        public StringTableEntry AddEntry(string key)
+        /// <summary>
+        /// Returns the localized text after formatting has been applied.
+        /// Formatting will use SmartFormat is <see cref="IsSmart"/> is true else it will default to String.Format.
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        public string GetLocalizedString(params object[] args)
         {
-            var newKey = Keys.GetId(key, true);
-            return AddEntry(newKey);
-        }
-
-        public StringTableEntry GetEntry(uint keyId)
-        {
-            if (Keys == null)
+            string translatedText = null;
+            
+            if (IsSmart)
             {
-                Debug.LogError("StringTable does not have a KeyDatabase", this);
-                return null;
+                translatedText = LocalizationSettings.StringDatabase.SmartFormatter.FormatWithCache(ref m_FormatCache, Data.Localized, args);
             }
-
-            return StringDict.TryGetValue(keyId, out StringTableEntry foundEntry) ? foundEntry : null;
-        }
-
-        public StringTableEntry GetEntry(string key)
-        {
-            if (Keys == null)
+            else if(!string.IsNullOrEmpty(Data.Localized))
             {
-                Debug.LogError("StringTable does not have a KeyDatabase", this);
-                return null;
+                translatedText = args == null ? Data.Localized : string.Format(Data.Localized, args);
             }
 
-            uint foundId = Keys.GetId(key);
-            if (foundId == KeyDatabase.EmptyId)
-                return null;
-
-            return StringDict.TryGetValue(foundId, out StringTableEntry foundEntry) ? foundEntry : null;
+            return translatedText;
         }
+    }
 
-        /// <inheritdoc/>
-        public override string GetLocalizedString(uint keyId)
-        {
-            var foundEntry = GetEntry(keyId);
-            return foundEntry?.Translated;
-        }
-
-        /// <inheritdoc/>
-        public override string GetLocalizedPluralString(uint keyId, int n)
-        {
-            var foundEntry = GetEntry(keyId);
-
-            if (foundEntry == null || PluralHandler == null)
-                return null;
-
-            var pluralText = foundEntry.GetPlural(PluralHandler.Evaluate(n));
-            return string.IsNullOrEmpty(pluralText) ? null : string.Format(pluralText, n);
-        }
+    /// <summary>
+    /// A table that stores localized strings for a specific <see cref="Locale"/>.
+    /// </summary>
+    public class StringTable : LocalizedTableT<StringTableEntry>
+    {
     }
 }

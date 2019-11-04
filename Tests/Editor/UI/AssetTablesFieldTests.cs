@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
 using System.Collections.Generic;
 using UnityEditor.Localization.UI;
-
+/*
 namespace UnityEditor.Localization.Tests.UI
 {
     public class AssetTablesFieldTests
@@ -24,3 +24,4 @@ namespace UnityEditor.Localization.Tests.UI
         }
     }
 }
+*/

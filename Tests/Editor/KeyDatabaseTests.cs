@@ -1,7 +1,7 @@
-﻿using NUnit.Framework;
+﻿using System.Collections.Generic;
+using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Localization;
-using System.Collections.Generic;
+using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization.Tests
 {

@@ -1,8 +1,8 @@
 {
   "name": "com.unity.localization",
   "displayName": "Localization",
-  "version": "0.4.0-preview",
-  "unity": "2019.1",
+  "version": "0.5.0-preview",
+  "unity": "2019.3",
   "description": "Preview of player localization system. Provides tools for localizing your built application.",
   "keywords": [
     "localization",
@@ -11,12 +11,12 @@
   ],
   "category": "",
   "dependencies": {
-    "com.unity.addressables": "0.8.6-preview"
+    "com.unity.addressables": "1.2.4"
   },
   "repository": {
     "type": "git",
     "url": "git@github.cds.internal.unity3d.com:unity/com.unity.localization.git",
-    "revision": "cc794a05384a86c4c892cacb303106ea63d77d06"
+    "revision": "40e31e8d676ef3235c17913ce5ef00ebedd65b57"
   },
   "samples": [
     {

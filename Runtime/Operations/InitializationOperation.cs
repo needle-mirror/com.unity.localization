@@ -1,4 +1,7 @@
-﻿using UnityEngine.ResourceManagement.AsyncOperations;
+﻿using System.Collections.Generic;
+using UnityEngine.AddressableAssets;
+using UnityEngine.Localization.Settings;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization
 {
@@ -10,20 +13,50 @@ namespace UnityEngine.Localization
         int m_PreloadingOperations;
         LocalizationSettings m_Settings;
         string m_Error;
+        float m_Progress;
+        List<IInitialize> m_PostInitializers;
 
-        public InitializationOperation(LocalizationSettings settings)
+        const float k_LocalesProgress = 0.2f;
+        const float k_DatabaseProgress = 0.4f;
+
+        // TODO: More detailed progress. Take the progress form the sub operations.
+        protected override float Progress => m_Progress;
+
+        protected override string DebugName => "Localization Settings Initialization";
+
+        public void Init(LocalizationSettings settings)
         {
+            // Collect the post initializers?
+            if (m_Settings != settings)
+            {
+                m_PostInitializers = settings.GetInitializers();
+            }
+
             m_Settings = settings;
+            m_Error = null;
+            m_PreloadingOperations = 0;
+            m_Progress = 0;
         }
 
         protected override void Execute()
+        {
+            if (!Addressables.InitializationOperation.IsDone)
+            {
+                Addressables.InitializationOperation.Completed += (async) => LoadLocales();
+            }
+            else
+            {
+                LoadLocales();
+            }
+        }
+
+        void LoadLocales()
         {
             // First time initialization requires loading locales and selecting the startup locale without sending a locale changed event.
             if (m_Settings.GetSelectedLocale() == null)
             {
                 // Load Locales
-                var locales = m_Settings.GetAvailableLocales() as IPreloadRequired;
-                if (locales != null && !locales.PreloadOperation.IsDone)
+                if (m_Settings.GetAvailableLocales() is IPreloadRequired locales && !locales.PreloadOperation.IsDone)
                 {
                     locales.PreloadOperation.Completed += (async) =>
                     {
@@ -41,12 +74,12 @@ namespace UnityEngine.Localization
 
         void PreloadOperationCompleted(AsyncOperationHandle asyncOperation)
         {
+            m_Progress += k_DatabaseProgress;
             m_PreloadingOperations--;
 
             if (asyncOperation.Status != AsyncOperationStatus.Succeeded)
             {
                 m_Error = "Failed to preload: " + asyncOperation.DebugName;
-                Debug.LogError(m_Error, m_Settings);
                 if (asyncOperation.OperationException != null)
                 {
                     Debug.LogException(asyncOperation.OperationException);
@@ -61,48 +94,49 @@ namespace UnityEngine.Localization
 
         void PreLoadTables()
         {
-            if (m_Settings.PreloadBehavior == PreloadBehavior.OnDemand)
-            {
-                FinishInitializing();
-                return;
-            }
-
             Debug.Assert(m_PreloadingOperations == 0);
+            m_Progress = k_LocalesProgress;
             m_PreloadingOperations = 0;
-            var assetOperation = m_Settings.GetAssetDatabase() as IPreloadRequired;
-            if (assetOperation != null)
+
+            if (m_Settings.GetAssetDatabase() is IPreloadRequired assetOperation && !assetOperation.PreloadOperation.IsDone)
             {
-                Debug.Log("Localization: Preloading Asset Tables(" + Time.timeSinceLevelLoad + ")");
-                if (!assetOperation.PreloadOperation.IsDone)
-                {
-                    assetOperation.PreloadOperation.Completed += (async) =>
-                    {
-                        Debug.Log("Localization: Finished Preloading Asset Tables(" + Time.timeSinceLevelLoad + ")");
-                        PreloadOperationCompleted(async);
-                    };
-                    m_PreloadingOperations++;
-                }
+                assetOperation.PreloadOperation.Completed += PreloadOperationCompleted;
+                m_PreloadingOperations++;
+            }
+            else
+            {
+                m_Progress += k_DatabaseProgress;
             }
 
-            var stringOperation = m_Settings.GetStringDatabase() as IPreloadRequired;
-            if (stringOperation != null)
+            if (m_Settings.GetStringDatabase() is IPreloadRequired stringOperation && !stringOperation.PreloadOperation.IsDone)
             {
-                Debug.Log("Localization: Preloading String Tables(" + Time.timeSinceLevelLoad + ")");
-                if (!stringOperation.PreloadOperation.IsDone)
-                {
-                    stringOperation.PreloadOperation.Completed += (async) =>
-                    {
-                        Debug.Log("Localization: Finished Preloading String Tables(" + Time.timeSinceLevelLoad + ")");
-                        PreloadOperationCompleted(async);
-                    };
-                    m_PreloadingOperations++;
-                }
+                stringOperation.PreloadOperation.Completed += PreloadOperationCompleted;
+                m_PreloadingOperations++;
+            }
+            else
+            {
+                m_Progress += k_DatabaseProgress;
             }
 
             if (m_PreloadingOperations == 0)
                 FinishInitializing();
         }
 
-        void FinishInitializing() => Complete(m_Settings, string.IsNullOrEmpty(m_Error), m_Error);
+        void PostInitializeExtensions()
+        {
+            if (m_PostInitializers == null)
+                return;
+
+            foreach (var init in m_PostInitializers)
+            {
+                init.PostInitialization(m_Settings);
+            }
+        }
+
+        void FinishInitializing()
+        {
+            PostInitializeExtensions();
+            Complete(m_Settings, string.IsNullOrEmpty(m_Error), m_Error);
+        }
     }
 }

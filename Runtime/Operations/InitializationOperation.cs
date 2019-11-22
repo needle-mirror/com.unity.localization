@@ -40,14 +40,7 @@ namespace UnityEngine.Localization
 
         protected override void Execute()
         {
-            if (!Addressables.InitializationOperation.IsDone)
-            {
-                Addressables.InitializationOperation.Completed += (async) => LoadLocales();
-            }
-            else
-            {
-                LoadLocales();
-            }
+            LoadLocales();
         }
 
         void LoadLocales()

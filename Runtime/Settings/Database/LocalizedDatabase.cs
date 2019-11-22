@@ -10,7 +10,7 @@ namespace UnityEngine.Localization.Settings
     [Serializable]
     public abstract class LocalizedDatabase<TTable, TEntry> : IPreloadRequired
         where TTable : LocalizedTableT<TEntry>
-        where TEntry : TableEntry, new()
+        where TEntry : TableEntry
     {
         /// <summary>
         /// Contains the results of a request. The found entry and the table the entry was found in,

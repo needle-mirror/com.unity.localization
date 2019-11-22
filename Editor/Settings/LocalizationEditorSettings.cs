@@ -266,7 +266,7 @@ namespace UnityEditor.Localization
         /// <param name="tableType">The type of table to create. Must inherit from LocalizedTable.</param>
         /// <param name="assetDirectory">The directory to save all the generated asset files to.</param>
         /// <returns></returns>
-        internal static List<LocalizedTable> CreateAssetTableColletion(IList<Locale> selectedLocales, string tableName, Type tableType, string assetDirectory)
+        public static List<LocalizedTable> CreateAssetTableCollection(IList<Locale> selectedLocales, string tableName, Type tableType, string assetDirectory)
         {
             return Instance.CreateAssetTableCollectionInternal(selectedLocales, tableName, tableType, assetDirectory, false, false);
         }
@@ -664,7 +664,7 @@ namespace UnityEditor.Localization
                     var tableToCheck = e.guid == tableGuid ? table : AssetDatabase.LoadAssetAtPath<AssetTable>(AssetDatabase.GUIDToAssetPath(e.guid));
                     if (tableToCheck != null && tableToCheck.LocaleIdentifier == table.LocaleIdentifier)
                     {
-                        foreach (var item in tableToCheck.TableEntries.Values)
+                        foreach (var item in tableToCheck.Values)
                         {
                             // The asset is referenced elsewhere so we can not remove the label or asset.
                             if (item.Guid == assetGuid)
@@ -876,7 +876,7 @@ namespace UnityEditor.Localization
             var assetTable = table as AssetTable;
             if (assetTable != null)
             {
-                foreach (var te in assetTable.TableEntries)
+                foreach (var te in assetTable)
                 {
                     RemoveAssetFromTableInternal(assetTable, te.Key, te.Value.Guid, createUndo);
                 }

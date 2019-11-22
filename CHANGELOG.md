@@ -1,15 +1,28 @@
 # Changelog
 All notable changes to this package will be documented in this file.
 
+## [0.5.1] - 2019-11-22
+- Updated to Addressables version *1.3.8*.
+- Fixed `ArgumentOutOfRangeException:` in the Tables window when only 1 string or asset table existed.
+- Exposed *CreateAssetTableCollection* in *LocalizationEditorSettings*.
+- Implemented *IDictionary* to *LocalizedTableT* and Removed *TableEntries* property. 
+- Fixed LocalizedTableT not serializing changes made when using the Dictionary interface.
+- Added *LocalizedTableT.CreateTableEntry*, this should be used when creating a *StringTableEntry* or *AssetTableEntry*. 
+- *ArgumentNullException* is now thrown when using a null ChangeHandler with *LocalizedString.RegisterChangeHandler* or *LocalizedAsset.RegisterChangeHandler*.
+- Fixed *PluralLocalizationFormatter* using the Selected Locale when a CultureInfo provider was used.
+- Current loading operations are now cleared when using *ClearChangeHandler* with *LocalizedAsset* and *LocalizedString*
+- Added default constructor to FallbackLocale Metadata.
+- Fixed error spamming when adding Metadata that does not have a default constructor. 
+- Removed missing image from LocalizationTablesWindow manual page.
+
 ## [0.5.0] - 2019-11-4
-- Updated to Addressables version *1.2.4-preview*.
+- Updated to Addressables version *1.2.4*.
 - Removed type specific asset tables. The AssetTable class can now hold mixed types per entry.
 - Removed Custom Locale support from Locale Generator Window. You should use Metadata to modify the Locale instead.
 - Removed Preload behaviour from Localization Settings. Preload behaviour can now be controlled per table through the Asset Tables Window. 
 - Removed Addressable tests. These would cause issues when run in a project already using Addressables. They have been moved to an internal test suite.
 - Removed *Key Database* field from *New Table* panel. Key databases should not be shared now as they act as the Table Name Guid.
 - Added Metadata to Locale, LocalizedTable and TableEntry. Metadata can be used to add additional data that implements the IMetadata interface and is serializable.
-mized with additional sources and formatters. See docs for further details.
 - Added PreloadAssetTable Metadata. Add this to an AssetTable to configure the preload behaviour for individual assets contained in the table. By default the assets will not be preloaded if this is not present.
 - Added PreloadAsset Metadata. Add this to Asset Table entries when using PreloadBehaviour.PreloadSelected to select the entry for preloading.
 - Added Comment Metadata. This can be added to any Metadata to provide comments. In the future these comments will be extracted when exporting to external formats.
@@ -21,6 +34,7 @@ mized with additional sources and formatters. See docs for further details.
 - Changed the name format for Tables for Addressables and asset creation to start with the name followed by the locale.
 - Improved LocalizedString editor. It is now possible to modify the selected entry details in the Inspector without opening the Asset Tables Window.
 - Moved Localization Table editor window option to *Window/Asset Management/Localization Tables*.
+  
 ## [0.4.1] - 2019-07-09
 - Updated to Addressables version '1.1.4-preview'.
 

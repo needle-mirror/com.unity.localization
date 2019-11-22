@@ -18,8 +18,6 @@ To create a Table, follow these steps:
 + Select the Table Type, String Table for localizing strings or text and Asset Table for localizing Unity assets such as Textures, Audio etc.
 + Click Create. This creates an Asset Table Collection, an Asset Table for each Locale.
 
-<img src="images/ProjectView_Generated_AssetTables.png" width="200"/>
-
 Once you have created a table, you can edit it in the **Edit Table** tab. Here, you can access all Asset Tables within the project. Use the **Selected Table** dropdown menu to select a table collection to view and edit. Unity displays the table for editing in the lower portion of the Asset Tables window. Different Tables have different editors, depending on the type of information they contain.
 Individual table columns can be toggled to show/hide by right clicking the column header.
 If the table collection does not have a table for all the Locales in the project then additional columns will be shown to allow for adding a new table to the collection for the missing Locale.

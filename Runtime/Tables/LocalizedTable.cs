@@ -134,7 +134,7 @@ namespace UnityEngine.Localization.Tables
         protected uint FindKeyId(string key)
         {
             if (Keys == null)
-                throw new Exception($"Can not find Key Id for \"{key}\". The Table \"{TableName} does not have a Key Database.");
+                throw new NullReferenceException($"Can not find Key Id for \"{key}\". The Table \"{TableName} does not have a Key Database.");
             return Keys.GetId(key, true);
         }
 

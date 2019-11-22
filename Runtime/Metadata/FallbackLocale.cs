@@ -14,6 +14,13 @@ namespace UnityEngine.Localization.Metadata
         Locale m_Locale;
 
         /// <summary>
+        /// Creates a new FallbackLocale.
+        /// </summary>
+        public FallbackLocale()
+        {
+        }
+
+        /// <summary>
         /// Create a new FallbackLocale to the specified fallback locale.
         /// </summary>
         /// <param name="fallback"></param>

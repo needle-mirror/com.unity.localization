@@ -101,12 +101,18 @@ namespace UnityEditor.Localization.UI
 
             if (m_Property.DefferedAdd != null)
             {
-                prop.InsertArrayElementAtIndex(prop.arraySize);
-                var item = prop.GetArrayElementAtIndex(prop.arraySize - 1);
+                try
+                {
+                    prop.InsertArrayElementAtIndex(prop.arraySize);
+                    var item = prop.GetArrayElementAtIndex(prop.arraySize - 1);
 
-                var instance = Activator.CreateInstance(m_Property.DefferedAdd);
-                item.managedReferenceValue = instance;
-                m_Property.DefferedAdd = null;
+                    var instance = Activator.CreateInstance(m_Property.DefferedAdd);
+                    item.managedReferenceValue = instance;
+                }
+                finally
+                {
+                    m_Property.DefferedAdd = null;
+                }
             }
 
             if (prop.isExpanded)

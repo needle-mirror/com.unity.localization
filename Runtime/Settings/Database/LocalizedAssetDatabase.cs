@@ -89,7 +89,7 @@ namespace UnityEngine.Localization.Settings
                 var table = tableOp.Result;
                 if (table != null)
                 {
-                    foreach (var tableEntry in table.TableEntries.Values)
+                    foreach (var tableEntry in table.Values)
                     {
                         if (tableEntry.AsyncOperation.HasValue)
                         {

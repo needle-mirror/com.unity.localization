@@ -30,6 +30,9 @@ namespace UnityEngine.Localization
         /// <param name="handler">A handler that will be called when the LocalizedAsset is ready for use.</param>
         public void RegisterChangeHandler(ChangeHandler handler)
         {
+            if (handler == null)
+                throw new ArgumentNullException(nameof(handler));
+
             LocalizationSettings.ValidateSettingsExist();
             m_ChangeHandler = handler ?? throw new ArgumentNullException(nameof(handler), "Handler must not be null");
             LocalizationSettings.SelectedLocaleChanged += HandleLocaleChange;
@@ -45,6 +48,7 @@ namespace UnityEngine.Localization
             LocalizationSettings.ValidateSettingsExist();
             LocalizationSettings.SelectedLocaleChanged -= HandleLocaleChange;
             m_ChangeHandler = null;
+            ClearLoadingOperation();
         }
 
         /// <summary>
@@ -65,10 +69,7 @@ namespace UnityEngine.Localization
         void HandleLocaleChange(Locale _)
         {
             // Cancel any previous loading operations.
-            if (m_CurrentLoadingOperation != null)
-            {
-                m_CurrentLoadingOperation.Value.Completed -= AutomaticLoadingCompleted;
-            }
+            ClearLoadingOperation();
 
             m_CurrentLoadingOperation = LoadAssetAsync();
             if (m_CurrentLoadingOperation.Value.IsDone)
@@ -87,6 +88,15 @@ namespace UnityEngine.Localization
 
             m_CurrentLoadingOperation = null;
             m_ChangeHandler(loadOperation.Result);
+        }
+
+        void ClearLoadingOperation()
+        {
+            if (m_CurrentLoadingOperation.HasValue)
+            {
+                m_CurrentLoadingOperation.Value.Completed -= AutomaticLoadingCompleted;
+                m_CurrentLoadingOperation = null;
+            }
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Localization.Metadata;
@@ -197,12 +198,59 @@ namespace UnityEngine.Localization.Tables
         }
     };
 
-    public class LocalizedTableT<TEntry> : LocalizedTable, ISerializationCallbackReceiver where TEntry : TableEntry, new()
+    public abstract class LocalizedTableT<TEntry> : LocalizedTable, IDictionary<uint, TEntry> ,ISerializationCallbackReceiver where TEntry : TableEntry
     {
+        Dictionary<uint, TEntry> m_TableEntries = new Dictionary<uint, TEntry>();
+
+        ICollection<uint> IDictionary<uint, TEntry>.Keys => m_TableEntries.Keys;
+
         /// <summary>
-        /// All entries stored within this table.
+        /// All values in this table.
         /// </summary>
-        public virtual Dictionary<uint, TEntry> TableEntries { get; private set; } = new Dictionary<uint, TEntry>();
+        public ICollection<TEntry> Values => m_TableEntries.Values;
+
+        /// <summary>
+        /// The number of entries in this Table.
+        /// </summary>
+        public int Count => m_TableEntries.Count;
+
+        /// <summary>
+        /// Will always be false. Implemented because it is required by the System.Collections.IList interface.
+        /// </summary>
+        public bool IsReadOnly => false;
+
+        /// <summary>
+        /// Get/Set a value the specified key.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public TEntry this[uint key]
+        {
+            get => m_TableEntries[key];
+            set
+            {
+                if (key == KeyDatabase.EmptyId)
+                    throw new Exception("Key Id value 0, is not valid. All Key Id's must be non-zero.");
+
+                if (value.Table != this)
+                    throw new Exception("Table entry does not belong to this table. Table entries can not be shared across tables.");
+
+                m_TableEntries[key] = value;
+            }
+        }
+
+        /// <summary>
+        /// Returns a new instance of TEntry.
+        /// </summary>
+        /// <returns></returns>
+        public abstract TEntry CreateTableEntry();
+
+        internal TEntry CreateTableEntry(TableEntryData data)
+        {
+            var entry = CreateTableEntry();
+            entry.Data = data;
+            return entry;
+        }
 
         /// <summary>
         /// Add or update an entry in the table.
@@ -224,11 +272,11 @@ namespace UnityEngine.Localization.Tables
         /// <returns></returns>
         public virtual TEntry AddEntry(uint keyId, string localized)
         {
-            if (!TableEntries.TryGetValue(keyId, out var tableEntry))
+            if (!m_TableEntries.TryGetValue(keyId, out var tableEntry))
             {
-                tableEntry = new TEntry() { Data = new TableEntryData(keyId), Table = this };
-                TableEntries[keyId] = tableEntry;
-                TableData.Add(tableEntry.Data);
+                tableEntry = CreateTableEntry();
+                tableEntry.Data = new TableEntryData(keyId);
+                m_TableEntries[keyId] = tableEntry;
             }
 
             tableEntry.Data.Localized = localized;
@@ -253,10 +301,9 @@ namespace UnityEngine.Localization.Tables
         /// <returns>True if the entry was found and removed.</returns>
         public virtual bool RemoveEntry(uint keyId)
         {
-            if (TableEntries.TryGetValue(keyId, out var item))
+            if (m_TableEntries.TryGetValue(keyId, out var item))
             {
-                TableData.Remove(item.Data);
-                return TableEntries.Remove(keyId);
+                return m_TableEntries.Remove(keyId);
             }
 
             return false;
@@ -280,9 +327,106 @@ namespace UnityEngine.Localization.Tables
         /// <returns></returns>
         public virtual TEntry GetEntry(uint keyId)
         {
-            TableEntries.TryGetValue(keyId, out var tableEntry);
+            m_TableEntries.TryGetValue(keyId, out var tableEntry);
             return tableEntry;
         }
+
+        /// <summary>
+        /// Adds the entry with the specified keyId.
+        /// </summary>
+        /// <param name="keyId"></param>
+        /// <param name="value"></param>
+        public void Add(uint keyId, TEntry value)
+        {
+            if (value.Table != this)
+                throw new Exception("Table entry does not belong to this table. Table entries can not be shared across tables.");
+
+            if (keyId == KeyDatabase.EmptyId)
+                throw new Exception("Key Id value 0, is not valid. All Key Id's must be non-zero.");
+
+            m_TableEntries.Add(keyId, value);
+        }
+
+        /// <summary>
+        /// Adds the item value with the specified keyId.
+        /// </summary>
+        /// <param name="item"></param>
+        public void Add(KeyValuePair<uint, TEntry> item)
+        {
+            if (item.Value.Table != this)
+                throw new Exception("Table entry does not belong to this table. Table entries can not be shared across tables.");
+
+            if (item.Key == KeyDatabase.EmptyId)
+                throw new Exception("Key Id value 0, is not valid. All Key Id's must be non-zero.");
+
+            m_TableEntries.Add(item.Key, item.Value);
+        }
+
+        /// <summary>
+        /// Returns true if the table contains an entry with the keyId.
+        /// </summary>
+        /// <param name="keyId"></param>
+        /// <returns></returns>
+        public bool ContainsKey(uint keyId) => m_TableEntries.ContainsKey(keyId);
+
+        /// <summary>
+        /// Returns true if the table contains the item.
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public bool Contains(KeyValuePair<uint, TEntry> item) => m_TableEntries.Contains(item);
+
+        /// <summary>
+        /// Remove the entry with the keyId.
+        /// </summary>
+        /// <param name="keyId"></param>
+        /// <returns></returns>
+        public bool Remove(uint keyId) => m_TableEntries.Remove(keyId);
+
+        /// <summary>
+        /// Remove the item from the table if it exists.
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public bool Remove(KeyValuePair<uint, TEntry> item) => m_TableEntries.Remove(item.Key);
+
+        /// <summary>
+        /// Find the entry, if it exists in the table.
+        /// </summary>
+        /// <param name="keyId"></param>
+        /// <param name="value"></param>
+        /// <returns>Trus if the entry was found.</returns>
+        public bool TryGetValue(uint keyId, out TEntry value) => m_TableEntries.TryGetValue(keyId, out value);
+
+        /// <summary>
+        /// Clear all entries in this table.
+        /// </summary>
+        public void Clear() => m_TableEntries.Clear();
+
+        /// <summary>
+        /// Copies the contents of the table into an array starting at the arrayIndex.
+        /// </summary>
+        /// <param name="array"></param>
+        /// <param name="arrayIndex"></param>
+        public void CopyTo(KeyValuePair<uint, TEntry>[] array, int arrayIndex)
+        {
+            foreach (var entry in m_TableEntries)
+            {
+                array[arrayIndex++] = entry;
+            }
+        }
+
+        /// <summary>
+        /// Return an enumerator for the entries in this table.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator<KeyValuePair<uint, TEntry>> GetEnumerator() => m_TableEntries.GetEnumerator();
+
+        /// <summary>
+        /// Return an enumerator for the entries in this table.
+        /// </summary>
+        /// <returns></returns>
+        IEnumerator IEnumerable.GetEnumerator() => m_TableEntries.GetEnumerator();
 
         /// <summary>
         /// Creates a string representation of the table as "{TableName}({LocaleIdentifier})".
@@ -293,16 +437,26 @@ namespace UnityEngine.Localization.Tables
         /// <summary>
         /// Does nothing but required for <see cref="OnAfterDeserialize"/>.
         /// </summary>
-        public void OnBeforeSerialize() {}
+        public void OnBeforeSerialize()
+        {
+            TableData.Clear();
+            foreach(var entry in this)
+            {
+                // Sync the id
+                entry.Value.Data.Id = entry.Key;
+
+                TableData.Add(entry.Value.Data);
+            }
+        }
 
         /// <summary>
-        /// Converts the serialized data into <see cref="TableEntries"/>.
+        /// Converts the serialized data into <see cref="m_TableEntries"/>.
         /// </summary>
         public void OnAfterDeserialize()
         {
             try
             {
-                TableEntries = TableData.ToDictionary(o => o.Id, e => new TEntry() { Table = this, Data = e });
+                m_TableEntries = TableData.ToDictionary(o => o.Id, CreateTableEntry);
             }
             catch (Exception e)
             {

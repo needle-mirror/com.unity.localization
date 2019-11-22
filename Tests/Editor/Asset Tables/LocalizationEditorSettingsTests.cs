@@ -45,7 +45,7 @@ namespace UnityEditor.Localization.Tests
         {
             Assert.IsEmpty(Settings.CreatedKeyDatabases);
             const string tableName = nameof(CreateTables_AssignsTableNameToAllNewTables);
-            var createdTables = LocalizationEditorSettings.CreateAssetTableColletion(GenerateSampleLocales(), tableName, tableType, "");
+            var createdTables = LocalizationEditorSettings.CreateAssetTableCollection(GenerateSampleLocales(), tableName, tableType, "");
 
             foreach (var table in createdTables)
             {

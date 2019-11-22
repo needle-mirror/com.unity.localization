@@ -17,12 +17,16 @@ namespace UnityEngine.Localization.Tables
         /// <summary>
         /// The asset Guid, used to load the asset by the Addressables system.
         /// </summary>
-        public string Guid{ get => Data.Localized; set => Data.Localized = value; }
+        public string Guid { get => Data.Localized; set => Data.Localized = value; }
 
         /// <summary>
         /// Does this entry contain any data? Checks if <see cref="Guid"/> is empty.
         /// </summary>
         public bool IsEmpty => string.IsNullOrEmpty(Guid);
+
+        internal AssetTableEntry()
+        {
+        }
     }
 
     /// <summary>
@@ -60,7 +64,7 @@ namespace UnityEngine.Localization.Tables
 
                 if (preload.Behaviour == PreloadAssetTableMetadata.PreloadBehaviour.PreloadAll)
                 {
-                    foreach (var entry in TableEntries.Values)
+                    foreach (var entry in Values)
                     {
                         if (!entry.IsEmpty && !entry.AsyncOperation.HasValue)
                         {
@@ -119,9 +123,18 @@ namespace UnityEngine.Localization.Tables
                     var keyName = Keys.GetKey(entry.Data.Id);
                     return ResourceManager.CreateCompletedOperation<TObject>(null, $"The asset table entry \"{keyName}({entry.Data.Id})\" is empty, no asset can be loaded from the table \"{ToString()}\"");
                 }
-                entry.AsyncOperation = Addressables.LoadAssetAsync<TObject>(entry.Guid);;
+                entry.AsyncOperation = Addressables.LoadAssetAsync<TObject>(entry.Guid); ;
             }
             return entry.AsyncOperation.Value.Convert<TObject>();
+        }
+
+        /// <summary>
+        /// Creates a new, empty AssetTableEntry.
+        /// </summary>
+        /// <returns></returns>
+        public override AssetTableEntry CreateTableEntry()
+        {
+            return new AssetTableEntry() { Table = this, Data = new TableEntryData() };
         }
 
         #if UNITY_EDITOR

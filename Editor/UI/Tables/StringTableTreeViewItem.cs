@@ -16,7 +16,10 @@ namespace UnityEditor.Localization.UI
         {
             m_TableProperties = new (SmartFormatField, ISelectable)[startIdx + tables.Count];
 
-            m_Keys = tables[startIdx].Keys;
+            // Get the keys
+            if (tables.Count > 0)
+                m_Keys = tables[0].Keys;
+
             Debug.Assert(m_Keys != null);
             for (int i = startIdx; i < m_TableProperties.Length; ++i)
             {

@@ -1,16 +1,22 @@
 {
     "name": "Unity.Localization.Runtime.Tests",
     "references": [
-        "Unity.Localization"
-    ],
-    "optionalUnityReferences": [
-        "TestAssemblies"
+        "Unity.Localization",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "Unity.ResourceManager"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": []
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

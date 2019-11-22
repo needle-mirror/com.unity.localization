@@ -8,7 +8,7 @@ Smart Strings are a modified version of the [SmartFormat](https://github.com/axu
 SmartFormat is a lightweight templating library, with an emphasis on grammar.  
 It makes it easy for a data-driven template to have proper pluralization, gender conjugation, lists, and conditional language logic. Named placeholder give a more intuitive and less error-prone way to introduce variables.
 
-> **Note:** Before getting started, carefully read the chapter about [[Common Pitfalls]]. It's a real time saver :)
+> **Note:** Before getting started, carefully read the chapter about [Common Pitfalls](Common-Pitfalls.md). It's a real time saver.
 
 ### [Conditional](Conditional.md)
 ```c#

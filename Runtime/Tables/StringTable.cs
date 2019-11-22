@@ -44,6 +44,10 @@ namespace UnityEngine.Localization.Tables
             }
         }
 
+        internal StringTableEntry()
+        {
+        }
+
         /// <summary>
         /// Returns the raw localized value without any formatting applied.
         /// </summary>
@@ -81,5 +85,13 @@ namespace UnityEngine.Localization.Tables
     /// </summary>
     public class StringTable : LocalizedTableT<StringTableEntry>
     {
+        /// <summary>
+        /// Creates a new, empty StringTableEntry.
+        /// </summary>
+        /// <returns></returns>
+        public override StringTableEntry CreateTableEntry()
+        {
+            return new StringTableEntry() { Table = this, Data = new TableEntryData() };
+        }
     }
 }

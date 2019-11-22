@@ -90,6 +90,13 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                 (CustomPluralRuleProvider) provider?.GetFormat(typeof(CustomPluralRuleProvider));
             if (pluralRuleProvider != null) return pluralRuleProvider.GetPluralRule();
 
+            // Use the CultureInfo, if provided:
+            if (provider is CultureInfo cultureInfo)
+            {
+                var culturePluralRule = PluralRules.GetPluralRule(cultureInfo.TwoLetterISOLanguageName);
+                return culturePluralRule;
+            }
+
             // Use the selected Locale
             var selectedLocale = LocalizationSettings.SelectedLocale;
             if (selectedLocale != null)
@@ -108,13 +115,6 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                 }
                 
                 var culturePluralRule = PluralRules.GetPluralRule(isoCode);
-                return culturePluralRule;
-            }
-            
-            // Use the CultureInfo, if provided:
-            if (provider is CultureInfo cultureInfo)
-            {
-                var culturePluralRule = PluralRules.GetPluralRule(cultureInfo.TwoLetterISOLanguageName);
                 return culturePluralRule;
             }
 

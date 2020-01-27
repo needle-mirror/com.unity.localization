@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using UnityEngine.Localization.SmartFormat.Core.Formatting;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
 
@@ -39,7 +39,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
         {
             Assert.AreEqual(expectedResult, Smart.Format(format, arg0));
         }
-        
+
         [TestCase("{0:choose(1|2|3):one|two|three|default}", 1, "one")]
         [TestCase("{0:choose(1|2|3):one|two|three|default}", 2, "two")]
         [TestCase("{0:choose(1|2|3):one|two|three|default}", 3, "three")]
@@ -61,7 +61,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
         {
             Assert.AreEqual(expectedResult, Smart.Format(format, arg0));
         }
-        
+
         [TestCase("{0:choose(null):nothing|{} }", null, "nothing")]
         [TestCase("{0:choose(null):nothing|{} }", 5, "5 ")]
         [TestCase("{0:choose(null|5):nothing|five|{} }", null, "nothing")]

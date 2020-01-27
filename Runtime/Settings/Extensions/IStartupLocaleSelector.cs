@@ -1,4 +1,4 @@
-﻿namespace UnityEngine.Localization.Settings
+namespace UnityEngine.Localization.Settings
 {
     /// <summary>
     /// Determines what locale should be used when the application starts or does not currently have an active locale.

@@ -12,7 +12,7 @@ namespace UnityEditor.Localization
     public class AssetTableCollection : IEquatable<AssetTableCollection>
     {
         List<LocalizedTable> m_Tables;
-        private KeyDatabase m_Keys;
+        private SharedTableData m_SharedTableData;
 
         /// <summary>
         /// The type of <see cref="LocalizedTable"/> implementation for this collection.
@@ -23,7 +23,7 @@ namespace UnityEditor.Localization
         /// <summary>
         /// The name all tables in this collection share.
         /// </summary>
-        public string TableName { get => Keys.TableName; }
+        public string TableName { get => SharedData.TableName; }
 
         /// <summary>
         /// A list of <see cref="AddressableAssetEntry"/>, each one represents a single table in this collection.
@@ -31,22 +31,23 @@ namespace UnityEditor.Localization
         public List<AddressableAssetEntry> TableEntries { get; set; } = new List<AddressableAssetEntry>();
 
         /// <summary>
-        /// The Key database that is shared by all the tables in this collection.
+        /// The data that is shared across all the tables in this collection.
         /// </summary>
-        public KeyDatabase Keys
+        public SharedTableData SharedData
         {
             get
             {
-                if (m_Keys == null)
+                if (m_SharedTableData == null)
                 {
-                    // Just load 1 table so we can get the Key db.
+                    // Just load 1 table so we can get the shared data.
                     var tableAsset = AssetDatabase.LoadAssetAtPath<LocalizedTable>(TableEntries[0].AssetPath);
                     if (tableAsset != null)
-                        m_Keys = tableAsset.Keys;
+                        m_SharedTableData = tableAsset.SharedData;
+                    Debug.Assert(m_SharedTableData != null, "Shared table Data should not be null.", TableEntries[0].MainAsset);
                 }
-                return m_Keys;
+                return m_SharedTableData;
             }
-            set => m_Keys = value;
+            set => m_SharedTableData = value;
         }
 
         /// <summary>
@@ -70,21 +71,21 @@ namespace UnityEditor.Localization
         void LoadTables()
         {
             Tables = new List<LocalizedTable>();
-            Keys = null;
+            m_SharedTableData = null;
             foreach (var addressableEntry in TableEntries)
             {
                 var tableAsset = AssetDatabase.LoadAssetAtPath<LocalizedTable>(addressableEntry.AssetPath);
                 if (tableAsset == null)
                     continue;
 
-                var keyDb = tableAsset.Keys;
+                var sharedTableData = tableAsset.SharedData;
 
-                if (Keys != null && Keys != keyDb)
+                if (m_SharedTableData != null && m_SharedTableData != sharedTableData)
                 {
-                    Debug.LogError($"Table '{addressableEntry.AssetPath}' does not use the same KeyDatabase as the other tables with the same name and type. Tables must share the same KeyDatabase. This table will be ignored.", tableAsset);
+                    Debug.LogError($"Table '{addressableEntry.AssetPath}' does not use the same {nameof(SharedTableData)} as the other tables with the same name and type. Tables must share the same {nameof(SharedTableData)}. This table will be ignored.", tableAsset);
                     continue;
                 }
-                Keys = keyDb;
+                m_SharedTableData = sharedTableData;
                 Tables.Add(tableAsset);
             }
         }

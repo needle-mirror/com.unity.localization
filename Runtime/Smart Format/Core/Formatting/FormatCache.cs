@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine.Localization.SmartFormat.Core.Parsing;
 
 namespace UnityEngine.Localization.SmartFormat.Core.Formatting

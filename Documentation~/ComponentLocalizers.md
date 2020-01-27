@@ -25,16 +25,16 @@ using UnityEngine.Events;
 
 public class LocalizeSpriteBehaviour : LocalizedAssetBehaviour<Sprite>
 {
-	[Serializable]
-	public class UnityEventSprite : UnityEvent<Sprite> { }
+    [Serializable]
+    public class UnityEventSprite : UnityEvent<Sprite> { }
 
-	[SerializeField]
-	UnityEventSprite m_UpdateAsset = new UnityEventSprite();
+    [SerializeField]
+    UnityEventSprite m_UpdateAsset = new UnityEventSprite();
 
-	protected override void UpdateAsset(Sprite localizedAsset)
-	{
-		OnUpdateAsset.Invoke(localizedAsset);
-	}
+    protected override void UpdateAsset(Sprite localizedAsset)
+    {
+        OnUpdateAsset.Invoke(localizedAsset);
+    }
 }
 ```
 
@@ -45,4 +45,3 @@ Some Unity Components can be automatically set up with a Component Localizer. Th
 ![Localize Component menu.](images/Component_LocalizeMenu.png)
 
 ![Localize String Component.](images/Component_LocalizeString.png)
-

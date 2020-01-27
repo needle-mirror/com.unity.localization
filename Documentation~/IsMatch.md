@@ -1,6 +1,6 @@
 # isMatch
 
-The `IsMatchFormatter` lets you evaluate regular expressions to control the output. 
+The `IsMatchFormatter` lets you evaluate regular expressions to control the output.
 
 ## Examples
 ```Csharp
@@ -29,7 +29,7 @@ Smart.Format(CultureInfo.InvariantCulture, "{0:list:{:ismatch(^100|200|999$):'ma
 
 > Note:
 
-The **IsMatchFormatter** is not included in the default SmartFormatter instance. 
+The **IsMatchFormatter** is not included in the default SmartFormatter instance.
 In case you'll need it, it must be added like so:
 
 ```CSharp

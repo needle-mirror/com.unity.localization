@@ -1,4 +1,4 @@
-﻿/*
+/*
 using System;
 using Newtonsoft.Json.Linq;
 using SmartFormat.Core.Extensions;
@@ -18,7 +18,7 @@ namespace SmartFormat.Extensions
             formatter.Parser.AddAdditionalSelectorChars("_");
             // For JsonSource it would be optimal not to have any operators in place,
             // but we have a workaround, if they are set by other extensions
-            // formatter.Parser.AddOperators("."); 
+            // formatter.Parser.AddOperators(".");
         }
 
         public bool TryEvaluateSelector(ISelectorInfo selectorInfo)

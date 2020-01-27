@@ -1,4 +1,4 @@
-﻿using UnityEngine.Localization.SmartFormat.Core.Settings;
+using UnityEngine.Localization.SmartFormat.Core.Settings;
 
 namespace UnityEngine.Localization.SmartFormat.Core.Parsing
 {
@@ -15,7 +15,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
         internal readonly int operatorStart;
 
         public Selector(SmartSettings smartSettings, string baseString, int startIndex, int endIndex, int operatorStart,
-            int selectorIndex)
+                        int selectorIndex)
             : base(smartSettings, baseString, startIndex, endIndex)
         {
             SelectorIndex = selectorIndex;

@@ -55,7 +55,6 @@ The tests for calculating the performance indexes where setup as follows:
 * The instance of the ```SmartFormatter``` had only 2 source extensions: ```ReflectionSource``` or ```DictionarySource```, and ```DefaultSource```.
 * The instance of the ```SmartFormatter``` had only 1 formatter extension (```DefaultFormatter```)
 * Each test ran with 100,000 iterations
-* Release build running with NUnit 3 on .Net Framework 4.5 
+* Release build running with NUnit 3 on .Net Framework 4.5
 
 The performance test is part of the ```DictionaryFormatter``` unit tests.
-

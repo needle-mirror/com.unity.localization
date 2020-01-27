@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace UnityEditor.Localization
 {
@@ -9,7 +9,7 @@ namespace UnityEditor.Localization
     internal class AddressableEntryNotFoundException : Exception
     {
         public AddressableEntryNotFoundException(UnityEngine.Object target) :
-            base($"{target.name} could not an Addressable asset.")
+            base($"{target.name} could not find an Addressable asset.")
         {
         }
     }

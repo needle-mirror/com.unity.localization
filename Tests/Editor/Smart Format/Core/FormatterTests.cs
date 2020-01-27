@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine.Localization.SmartFormat.Tests.TestUtils;
@@ -11,7 +11,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
 {
     public class FormatterTests
     {
-        private object[] errorArgs = new object[]{ new FormatDelegate(format => { throw new Exception("ERROR!"); } ) };
+        private object[] errorArgs = new object[] { new FormatDelegate(format => { throw new Exception("ERROR!"); }) };
 
         [Test]
         public void Formatter_Throws_Exceptions()
@@ -116,9 +116,9 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             formatter.Settings.ConvertCharacterStringLiterals = true;
             formatter.Settings.FormatErrorAction = ErrorAction.OutputErrorInResult;
             formatter.Settings.ParseErrorAction = ErrorAction.OutputErrorInResult;
-            var formatParsed = formatter.Parser.ParseFormat(format, new []{string.Empty});
+            var formatParsed = formatter.Parser.ParseFormat(format, new[] {string.Empty});
             var formatDetails = new FormatDetails(formatter, formatParsed, args, null, null, output);
-            
+
             Assert.AreEqual(args, formatDetails.OriginalArgs);
             Assert.AreEqual(format, formatDetails.OriginalFormat.RawText);
             Assert.AreEqual(formatter.Settings, formatDetails.Settings);

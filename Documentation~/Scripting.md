@@ -83,7 +83,7 @@ public class LocalizedStringExample : MonoBehaviour
 ### Dynamic Strings
 
 At times it may be necessary to update a localized string, such as when using [Smart Strings](SmartStrings.md) or *String.Format* with arguments that have since changed.
-Calling **GetLocalizedString** with the arguments will always update the string. 
+Calling **GetLocalizedString** with the arguments will always update the string.
 When using a **ChangeHandler**, the **RefreshString** function can be used to request an update and the **Arguments** property can be used to configure the arguments used to format the string.
 
 ```
@@ -123,7 +123,7 @@ public class LocalizedStringExample : MonoBehaviour
     void OnGUI()
     {
         // This will either call UpdateString immediately (if the table is loaded) or when the table is available.
-        myString.RefreshString(); 
+        myString.RefreshString();
         GUILayout.Label(localizedText);
     }
 }
@@ -131,7 +131,7 @@ public class LocalizedStringExample : MonoBehaviour
 
 ## Using AsyncOperationHandle
 
-The localization system is designed so that Unity does not need to hold all localized Assets in memory ready for use, but can instead load them on demand when it needs them, and unload them when it no longer needs them. Because of this, localized Assets might not be immediately available, and Unity might need to load them from disk or fetch them from a server. To facilitate this, Unity uses the [AsyncOperationHandle](https://docs.unity3d.com/Packages/com.unity.addressables@latest?subfolder=/manual/AddressableAssetsAsyncOperationHandle.html) as an interface to all requests. 
+The localization system is designed so that Unity does not need to hold all localized Assets in memory ready for use, but can instead load them on demand when it needs them, and unload them when it no longer needs them. Because of this, localized Assets might not be immediately available, and Unity might need to load them from disk or fetch them from a server. To facilitate this, Unity uses the [AsyncOperationHandle](https://docs.unity3d.com/Packages/com.unity.addressables@latest?subfolder=/manual/AddressableAssetsAsyncOperationHandle.html) as an interface to all requests.
 
 When an Asset is not immediately available, the localization system returns an *AsyncOperationHandle*. The *AsyncOperationHandle* provides a Completed event that notifies Unity when the operation has finished. It calls this during *LateUpdate*. If the request has already been completed, such as when the requested data is already loaded from a previous request or during preloading, then the *IsDone* property can be used to check for immediate access through the *Result* property, alternative the Completed event still occurs in the LateUpdate, allowing for all code to follow the same path. You can also yield on an *AsyncOperationHandle* inside of a coroutine.
 

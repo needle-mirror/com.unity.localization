@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.Localization.Pseudo;
 
 namespace UnityEngine.Localization.Settings
 {
@@ -10,12 +11,13 @@ namespace UnityEngine.Localization.Settings
     [Serializable]
     public class LocalesProvider : ILocalesProvider, IPreloadRequired
     {
-        // There is a bug with SerializeField that causes empty instances to not deserialize. This is a workaround while we wait for the fix (case 1183543)
+        // There is a bug with SerializeReference that causes empty instances to not deserialize. This is a workaround while we wait for the fix (case 1183547)
         [SerializeField, HideInInspector]
         int dummyObject;
-        
+
         List<Locale> m_Locales;
         AsyncOperationHandle? m_LoadOperation;
+        int m_PseudoLocaleCount;
 
         /// <summary>
         /// The list of all supported locales.
@@ -44,6 +46,7 @@ namespace UnityEngine.Localization.Settings
                 if (m_LoadOperation == null)
                 {
                     Locales = new List<Locale>();
+                    m_PseudoLocaleCount = 0;
                     m_LoadOperation = AddressableAssets.Addressables.LoadAssetsAsync<Locale>(LocalizationSettings.LocaleLabel, AddLocale);
                 }
 
@@ -97,12 +100,31 @@ namespace UnityEngine.Localization.Settings
         /// <param name="locale"></param>
         public void AddLocale(Locale locale)
         {
-            if (GetLocale(locale.Identifier) != null)
+            bool isPsedudoLocale = locale is PseudoLocale;
+            if (!isPsedudoLocale)
             {
-                Debug.LogWarning("Ignoring locale. A locale with the same Id has already been added: " + locale.Identifier);
-                return;
+                var foundLocale = GetLocale(locale.Identifier);
+                if (foundLocale != null && !(foundLocale is PseudoLocale))
+                {
+                    Debug.LogWarning("Ignoring locale. A locale with the same Id has already been added: " + locale.Identifier);
+                    return;
+                }
             }
-            Locales.Add(locale);
+
+            // Insert PseudoLocale's at the end so they are not returned by GetLocale.
+            if (isPsedudoLocale)
+            {
+                m_PseudoLocaleCount++;
+                Locales.Add(locale);
+            }
+            else if (m_PseudoLocaleCount > 0)
+            {
+                Locales.Insert(0, locale);
+            }
+            else
+            {
+                Locales.Add(locale);
+            }
         }
 
         /// <summary>

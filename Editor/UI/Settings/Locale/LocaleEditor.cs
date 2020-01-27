@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using UnityEngine;
 using UnityEngine.Localization;
@@ -10,6 +10,7 @@ namespace UnityEditor.Localization.UI
     {
         class Styles
         {
+            public static readonly GUIContent code = new GUIContent("Locale Code");
             public static readonly GUIContent cultureNotFoundLabel = new GUIContent("Not Found");
             public static readonly GUIContent cultureInfo = new GUIContent("Culture Info");
         }
@@ -37,7 +38,7 @@ namespace UnityEditor.Localization.UI
             EditorGUILayout.PropertyField(m_Name);
 
             EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(m_Code);
+            EditorGUILayout.PropertyField(m_Code, Styles.code);
             if (EditorGUI.EndChangeCheck())
             {
                 UpdateCultureInfo();
@@ -65,4 +66,3 @@ namespace UnityEditor.Localization.UI
         }
     }
 }
-

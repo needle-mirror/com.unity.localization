@@ -1,6 +1,6 @@
 # String Tables
-A String Table is responsible for returning a localized string when requested via a **Key** (an identifying name or unique id). 
-String Tables work in a similar way to Asset Tables, but they contain all of the translated string data within them, and they do not require an additional loading step. 
+A String Table is responsible for returning a localized string when requested via a **Key** (an identifying name or unique id).
+String Tables work in a similar way to Asset Tables, but they contain all of the translated string data within them, and they do not require an additional loading step.
 
 
 Each row on a String Table contains a **Key Id** and a string entry for a specified Locale. A string entry can be either a static string or a tokenized string for use with [Smart Strings](SmartStrings.md) or *String.Format*.
@@ -19,7 +19,7 @@ The **Smart** field can be used to enable or disable [Smart Formatting](SmartStr
 It makes it easy for a data-driven template to have proper pluralization, gender conjugation, lists, and conditional language logic. Named placeholder give a more intuitive and less error-prone way to introduce variables.*.
 
 ## Table Metadata
-The [Metadata](Metadata.md) for a table can be shown by selecting the table properties via the button above the table column header. 
+The [Metadata](Metadata.md) for a table can be shown by selecting the table properties via the button above the table column header.
 
 **Shared** Metadata is stored in the **Key Database** for the table collection, this means that all Tables have access to this data.
 Locale specific Metadata(The list below Shared) is stored in the table and is only accessible by the table with the data.
@@ -31,4 +31,3 @@ The [Metadata](Metadata.md) for a table entry can be shown by selecting the tabl
 Locale specific Metadata(The list below Shared) is stored in the table entry and is only accessible by the table with the data.
 
 ![Editing Table Entry Metadata](images/StringTables_EntryProperties.png)
-

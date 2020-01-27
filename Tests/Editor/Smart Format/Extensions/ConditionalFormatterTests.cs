@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 using UnityEngine.Localization.SmartFormat.Tests.TestUtils;
 using UnityEngine.Localization.SmartFormat.Net.Utilities;
@@ -9,18 +9,19 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
     {
         private object[] GetArgs()
         {
-            return new object[] {
-                0,1,2,3,
-                -1,-2, // {4},{5}
+            return new object[]
+            {
+                0, 1, 2, 3,
+                -1, -2, // {4},{5}
                 TestFactory.GetPerson(), // {6}
-                false,true, // {7},{8}
+                false, true, // {7},{8}
                 // Note: only the date part will be compared:
-                new DateTime(1111,1,1,1,1,1),SystemTime.Now(),new DateTime(5555,5,5,5,5,5), // {9},{10},{11}
-                new TimeSpan(-1,-1,-1,-1,-1), TimeSpan.Zero,new TimeSpan(5,5,5,5,5), // {12},{13},{14}
+                new DateTime(1111, 1, 1, 1, 1, 1), SystemTime.Now(), new DateTime(5555, 5, 5, 5, 5, 5), // {9},{10},{11}
+                new TimeSpan(-1, -1, -1, -1, -1), TimeSpan.Zero, new TimeSpan(5, 5, 5, 5, 5), // {12},{13},{14}
                 "Hello", "", // {15},{16}
                 new {NotNull = true}, null, // {17},{18}
                 // Note: only the date part will be compared:
-                SystemTime.OffsetNow().AddDays(-1),SystemTime.OffsetNow(),SystemTime.OffsetNow().AddDays(1) // {19},{20},{21}
+                SystemTime.OffsetNow().AddDays(-1), SystemTime.OffsetNow(), SystemTime.OffsetNow().AddDays(1) // {19},{20},{21}
             };
         }
 
@@ -28,12 +29,14 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
         public void Test_Numbers()
         {
             // Note: the "::" is necessary to bypass the PluralLocalizationExtension, and will be ignored in the output
-            var formats = new[] {
+            var formats = new[]
+            {
                 "{0::Zero|Other} {1::Zero|Other} {2::Zero|Other} {3::Zero|Other} {4::Zero|Other} {5::Zero|Other}",
                 "{0::Zero|One|Other} {1::Zero|One|Other} {2::Zero|One|Other} {3::Zero|One|Other} {4::Zero|One|Other} {5::Zero|One|Other}",
                 "{0::Zero|One|Two|Other} {1::Zero|One|Two|Other} {2::Zero|One|Two|Other} {3::Zero|One|Two|Other} {4::Zero|One|Two|Other} {5::Zero|One|Two|Other}",
             };
-            var expected = new[] {
+            var expected = new[]
+            {
                 "Zero Other Other Other Other Other",
                 "Zero One Other Other Other Other",
                 "Zero One Two Other Other Other",
@@ -42,15 +45,18 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             var args = GetArgs();
             Smart.Default.Test(formats, args, expected);
         }
+
         [Test]
         public void Test_Enum()
         {
-            var formats = new[] {
+            var formats = new[]
+            {
                 "{6.Friends.0:{FirstName} is a {Gender:man|woman}.}",
                 "{6.Friends.1:{FirstName} is a {Gender:man|woman}.}",
                 "{9.DayOfWeek:Sunday|Monday|Some other day} / {11.DayOfWeek:Sunday|Monday|Some other day}",
             };
-            var expected = new[] {
+            var expected = new[]
+            {
                 "Jim is a man.",
                 "Pam is a woman.",
                 "Sunday / Some other day",
@@ -59,14 +65,17 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             var args = GetArgs();
             Smart.Default.Test(formats, args, expected);
         }
+
         [Test]
         public void Test_Bool()
         {
-            var formats = new[] {
+            var formats = new[]
+            {
                 "{7:Yes|No}",
                 "{8:Yes|No}",
             };
-            var expected = new[] {
+            var expected = new[]
+            {
                 "No",
                 "Yes",
             };
@@ -74,14 +83,17 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             var args = GetArgs();
             Smart.Default.Test(formats, args, expected);
         }
+
         [Test]
         public void Test_Dates()
         {
-            var formats = new[] {
+            var formats = new[]
+            {
                 "{9:Past|Future} {10:Past|Future} {11:Past|Future}",
                 "{9:Past|Present|Future} {10:Past|Present|Future} {11:Past|Present|Future}",
             };
-            var expected = new[] {
+            var expected = new[]
+            {
                 "Past Past Future",
                 "Past Present Future",
             };
@@ -89,14 +101,17 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             var args = GetArgs();
             Smart.Default.Test(formats, args, expected);
         }
+
         [Test]
         public void Test_DateTimeOffset_Dates()
         {
-            var formats = new[] {
+            var formats = new[]
+            {
                 "{19:Past|Future} {20:Past|Future} {21:Past|Future}",
                 "{19:Past|Present|Future} {20:Past|Present|Future} {21:Past|Present|Future}",
             };
-            var expected = new[] {
+            var expected = new[]
+            {
                 "Past Past Future",
                 "Past Present Future",
             };
@@ -108,11 +123,13 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
         [Test]
         public void Test_TimeSpan()
         {
-            var formats = new[] {
+            var formats = new[]
+            {
                 "{12:Past|Future} {13:Past|Future} {14:Past|Future}",
                 "{12:Past|Zero|Future} {13:Past|Zero|Future} {14:Past|Zero|Future}",
             };
-            var expected = new[] {
+            var expected = new[]
+            {
                 "Past Past Future",
                 "Past Zero Future",
             };
@@ -120,26 +137,32 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             var args = GetArgs();
             Smart.Default.Test(formats, args, expected);
         }
+
         [Test]
         public void Test_Strings()
         {
-            var formats = new[] {
+            var formats = new[]
+            {
                 "{15:{}|Empty} {16:{}|Empty} {18:{}|Null}",
             };
-            var expected = new[] {
+            var expected = new[]
+            {
                 "Hello Empty Null",
             };
 
             var args = GetArgs();
             Smart.Default.Test(formats, args, expected);
         }
+
         [Test]
         public void Test_Object()
         {
-            var formats = new[] {
+            var formats = new[]
+            {
                 "{17:{}|Null}; {18:{}|Null}",
             };
-            var expected = new[] {
+            var expected = new[]
+            {
                 "{ NotNull = True }; Null",
             };
 
@@ -151,7 +174,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
         public void Test_ComplexCondition()
         {
             var args = new object[] {-5, 0, 0.5, 1.0, 1.5, 5.0, 11.0M, 14.0f, 18, 22, 45, 60, 101};
-            var formats = new[] {
+            var formats = new[]
+            {
                 "{0::>0?Positive|<0?Negative|=0?Zero}, {1::>0?Positive|<0?Negative|=0?Zero}, {2::>0?Positive|<0?Negative|=0?Zero}",
                 "{1::<1?Baby|>=1&<4?Toddler|>=4&<=9?Child|=10/=11/=12?Pre-Teen|<18?Teenager|<20?Young Adult|<20/<=24&<25?Early Twenties|>55&<100?Senior Citizen|>100?Crazy Old|Adult}",
                 "{2::<1?Baby|>=1&<4?Toddler|>=4&<=9?Child|=10/=11/=12?Pre-Teen|<18?Teenager|<20?Young Adult|<20/<=24&<25?Early Twenties|>55&<100?Senior Citizen|>100?Crazy Old|Adult}",
@@ -166,7 +190,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
                 "{11::<1?Baby|>=1&<4?Toddler|>=4&<=9?Child|=10/=11/=12?Pre-Teen|<18?Teenager|<20?Young Adult|<20/<=24&<25?Early Twenties|>55&<100?Senior Citizen|>100?Crazy Old|Adult}",
                 "{12::<1?Baby|>=1&<4?Toddler|>=4&<=9?Child|=10/=11/=12?Pre-Teen|<18?Teenager|<20?Young Adult|<20/<=24&<25?Early Twenties|>55&<100?Senior Citizen|>100?Crazy Old|Adult}",
             };
-            var expected = new[] {
+            var expected = new[]
+            {
                 "Negative, Zero, Positive",
                 "Baby",
                 "Baby",

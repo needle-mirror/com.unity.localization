@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine.Events;
 
 namespace UnityEngine.Localization.Components
@@ -14,7 +14,7 @@ namespace UnityEngine.Localization.Components
         /// UnityEvent which can pass an AudioClip as an argument.
         /// </summary>
         [Serializable]
-        public class UnityEventAudioClip : UnityEvent<AudioClip> { }
+        public class UnityEventAudioClip : UnityEvent<AudioClip> {}
 
         [SerializeField]
         UnityEventAudioClip m_UpdateAsset = new UnityEventAudioClip();

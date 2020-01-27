@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
 using UnityEngine.Localization.SmartFormat.Extensions;
 

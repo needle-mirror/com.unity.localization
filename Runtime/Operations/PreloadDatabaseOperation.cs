@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
@@ -14,7 +14,7 @@ namespace UnityEngine.Localization
         LocalizedDatabase<TTable, TEntry> m_Database;
         AsyncOperationHandle<IList<IResourceLocation>> m_LoadResourcesOperation;
         AsyncOperationHandle<IList<TTable>> m_LoadTablesOperation;
-        
+
         GroupIAsyncOperation m_PreloadTableContentsGroupOperation;
         List<AsyncOperationHandle> m_PreloadTableContentsOperations = new List<AsyncOperationHandle>();
         float m_Progress;
@@ -28,7 +28,7 @@ namespace UnityEngine.Localization
             m_Database = database;
             m_PreloadTableContentsOperations.Clear();
         }
-        
+
         /// <summary>
         /// Preloads a LocalizedDatabase.
         /// The following steps are performed for a full preload:
@@ -47,8 +47,15 @@ namespace UnityEngine.Localization
         /// <returns></returns>
         void BeginPreloading()
         {
+            var selectedLocale = LocalizationSettings.SelectedLocale;
+            if (selectedLocale == null)
+            {
+                Debug.LogError("Can not preload when `LocalizationSettings.SelectedLocale` is null.");
+                return;
+            }
+
             m_Progress = 0;
-            var localeLabel = AddressHelper.FormatAssetLabel(LocalizationSettings.SelectedLocale.Identifier);
+            var localeLabel = AddressHelper.FormatAssetLabel(selectedLocale.Identifier);
             m_LoadResourcesOperation = Addressables.LoadResourceLocationsAsync(new object[] { localeLabel, LocalizationSettings.PreloadLabel }, Addressables.MergeMode.Intersection, typeof(TTable));
 
             if (!m_LoadResourcesOperation.IsDone)
@@ -78,7 +85,7 @@ namespace UnityEngine.Localization
             if (!m_LoadTablesOperation.IsDone)
                 m_LoadTablesOperation.Completed += LoadTableContents;
             else
-               LoadTableContents(m_LoadTablesOperation);
+                LoadTableContents(m_LoadTablesOperation);
         }
 
         void TableLoaded(TTable table)
@@ -94,12 +101,12 @@ namespace UnityEngine.Localization
                 Complete(m_Database, false, "Failed to preload tables.");
                 return;
             }
-            
+
             // Iterate through the loaded tables, add them to our known tables and preload the actual table contents if required.
             foreach (var table in loadTablesOperation.Result)
             {
-                Debug.Assert(!m_Database.TableOperations.ContainsKey(table.TableName), $"A table with the same key `{table.TableName}` already exists. Something went wrong during preloading.");
-                m_Database.RegisterTableOperation(LocalizationSettings.ResourceManager.CreateCompletedOperation(table, null), table.TableName); 
+                Debug.Assert(!m_Database.TableOperations.ContainsKey((table.LocaleIdentifier, table.TableName)), $"A table with the same key `{table.TableName}` already exists. Something went wrong during preloading.");
+                m_Database.RegisterTableOperation(LocalizationSettings.ResourceManager.CreateCompletedOperation(table, null), table.LocaleIdentifier, table.TableName);
 
                 if (table is IPreloadRequired preloadRequired)
                 {
@@ -117,7 +124,7 @@ namespace UnityEngine.Localization
                 return;
             }
 
-            m_PreloadTableContentsGroupOperation = m_PreloadTableContentsGroupOperation ?? (GroupIAsyncOperation) LocalizationSettings.ResourceManager.Allocator.New(typeof(GroupIAsyncOperation), typeof(GroupIAsyncOperation).GetHashCode());
+            m_PreloadTableContentsGroupOperation = m_PreloadTableContentsGroupOperation ?? (GroupIAsyncOperation)LocalizationSettings.ResourceManager.Allocator.New(typeof(GroupIAsyncOperation), typeof(GroupIAsyncOperation).GetHashCode());
             m_PreloadTableContentsGroupOperation.Init(m_PreloadTableContentsOperations);
             var groupOperation = LocalizationSettings.ResourceManager.StartOperation(m_PreloadTableContentsGroupOperation, default);
 

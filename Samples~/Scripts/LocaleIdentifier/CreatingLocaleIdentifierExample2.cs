@@ -1,4 +1,4 @@
-﻿namespace UnityEngine.Localization.Samples
+namespace UnityEngine.Localization.Samples
 {
     /// <summary>
     /// This shows how to create a locale for English and a regional locale for English(US).
@@ -11,7 +11,7 @@
             var localeId = new LocaleIdentifier(SystemLanguage.English);
             var locale = Locale.CreateLocale(localeId);
             Debug.Log("English locale: " + locale);
-        
+
             // Create a regional locale to represent English UK.
             var regionalLocaleId = new LocaleIdentifier("en-GB");
             var regionalLocale = Locale.CreateLocale(regionalLocaleId);

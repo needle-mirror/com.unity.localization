@@ -1,4 +1,4 @@
-﻿namespace UnityEngine.Localization.Samples
+namespace UnityEngine.Localization.Samples
 {
     /// <summary>
     /// This example shows how the cultureInfo can be retrieved after creating a LocaleIdentifier using a Code.

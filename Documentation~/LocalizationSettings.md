@@ -14,7 +14,7 @@ You can also create the settings Asset through the Assets menu. Navigate to **As
 ![Default Localization Settings.](images/Default_LocalizationSettings_Inspector.png)
 
 ## Available Locales
-**Available Locales** contains the list of [locales](Locale.md) that the Project supports when built. 
+**Available Locales** contains the list of [locales](Locale.md) that the Project supports when built.
 By default, this uses the Addressable system to fetch Locales. However, you can also create a class that implements *ILocalesProvider* to completely customize this (see [Built-in Locales Provider Example ](Example-BuiltinLocalesProvider.md)).
 
 ### Locale Generator window
@@ -22,7 +22,7 @@ To create a Locale, click the *Locale Generator** button in the Available Locale
 
 ![Locale Generator window.](images/Create_Locale_Window.png)
 
-The Locale Generator provides a set of known Locales that you can select and save to the Project. 
+The Locale Generator provides a set of known Locales that you can select and save to the Project.
 
 Use the **Locale Source** field to control the source that Unity generates the list of Locales from. These known locales can be gathered from either the CultureInfo class or the Unity SystemLanguage enum.
 
@@ -39,18 +39,17 @@ By default, there are 4 Locale Selectors to choose from however, you can create 
 The Localization Settings will query each selector in the list, starting at the top(index 0). If a selector returns null, then it queries the next, until it finds a valid Locale or it reaches the end of the list. This allows you to create fallback behaviors when Unity is selecting which Locale to use.
 
 ## Asset Database
-The Asset Database is responsible for retrieving the various Asset Tables and subsequent Assets, this involves querying and loading through the Addressable Assets system. 
+The Asset Database is responsible for retrieving the various Asset Tables and subsequent Assets, this involves querying and loading through the Addressable Assets system.
 The **Default Table** field can be used to set a default Asset Table name, this can then be used when loading assets and not providing an explicit table name.
 
 By default, the Asset Database works in the following way:
 ![Asset Database example.](images/AssetDatabase_Flow.png)
 
 ## String Database
-The String Database is responsible for retrieving the various String Tables and subsequent localized strings. 
+The String Database is responsible for retrieving the various String Tables and subsequent localized strings.
 
 The **Default Table** field can be used to set a default String Table name, this can then be used when loading strings and not providing an explicit table name.
 
 The **No Translation Found Format** field can be used to configure the string that should be returned for non-localized values.
 
 The **Smart Format** section can be used to configure the behavior when parsing and formatting [Smart Strings](SmartStrings.md)
-

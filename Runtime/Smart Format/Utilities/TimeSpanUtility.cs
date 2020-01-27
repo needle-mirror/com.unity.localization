@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +8,7 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
 {
     public static class TimeSpanUtility
     {
-        #region: ToTimeString :
+        #region : ToTimeString :
 
         /// <summary>
         /// <para>Turns a TimeSpan into a human-readable text.</para>
@@ -34,7 +34,7 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
             var lessThan = options.Mask(TimeSpanFormatOptions._LessThan) != TimeSpanFormatOptions.LessThanOff;
             var abbreviate = options.Mask(TimeSpanFormatOptions._Abbreviate) != TimeSpanFormatOptions.AbbreviateOff;
 
-            var round = lessThan ? (Func<double, double>) Math.Floor : Math.Ceiling;
+            var round = lessThan ? (Func<double, double>)Math.Floor : Math.Ceiling;
             switch (rangeMin)
             {
                 case TimeSpanFormatOptions.RangeWeeks:
@@ -60,34 +60,34 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
             // Create our result:
             var textStarted = false;
             var result = new StringBuilder();
-            for (var i = rangeMax; i >= rangeMin; i = (TimeSpanFormatOptions) ((int) i >> 1))
+            for (var i = rangeMax; i >= rangeMin; i = (TimeSpanFormatOptions)((int)i >> 1))
             {
                 // Determine the value and title:
                 int value;
                 switch (i)
                 {
                     case TimeSpanFormatOptions.RangeWeeks:
-                        value = (int) Math.Floor(FromTime.TotalDays / 7);
+                        value = (int)Math.Floor(FromTime.TotalDays / 7);
                         FromTime -= TimeSpan.FromDays(value * 7);
                         break;
                     case TimeSpanFormatOptions.RangeDays:
-                        value = (int) Math.Floor(FromTime.TotalDays);
+                        value = (int)Math.Floor(FromTime.TotalDays);
                         FromTime -= TimeSpan.FromDays(value);
                         break;
                     case TimeSpanFormatOptions.RangeHours:
-                        value = (int) Math.Floor(FromTime.TotalHours);
+                        value = (int)Math.Floor(FromTime.TotalHours);
                         FromTime -= TimeSpan.FromHours(value);
                         break;
                     case TimeSpanFormatOptions.RangeMinutes:
-                        value = (int) Math.Floor(FromTime.TotalMinutes);
+                        value = (int)Math.Floor(FromTime.TotalMinutes);
                         FromTime -= TimeSpan.FromMinutes(value);
                         break;
                     case TimeSpanFormatOptions.RangeSeconds:
-                        value = (int) Math.Floor(FromTime.TotalSeconds);
+                        value = (int)Math.Floor(FromTime.TotalSeconds);
                         FromTime -= TimeSpan.FromSeconds(value);
                         break;
                     case TimeSpanFormatOptions.RangeMilliSeconds:
-                        value = (int) Math.Floor(FromTime.TotalMilliseconds);
+                        value = (int)Math.Floor(FromTime.TotalMilliseconds);
                         FromTime -= TimeSpan.FromMilliseconds(value);
                         break;
                     default:
@@ -152,7 +152,7 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
 
         #endregion
 
-        #region: DefaultFormatOptions :
+        #region : DefaultFormatOptions :
 
         static TimeSpanUtility()
         {
@@ -179,7 +179,7 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
 
         #endregion
 
-        #region: TimeSpan Rounding :
+        #region : TimeSpan Rounding :
 
         /// <summary>
         /// <para>Returns the largest <c>TimeSpan</c> less than or equal to the specified interval.</para>
@@ -224,7 +224,7 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
         #endregion
     }
 
-    #region: TimeSpanFormatOptions :
+    #region : TimeSpanFormatOptions :
 
     /// <summary>
     /// <para>Determines all options for time formatting.</para>
@@ -396,9 +396,9 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
         public static IEnumerable<TimeSpanFormatOptions> AllFlags(this TimeSpanFormatOptions timeSpanFormatOptions)
         {
             uint value = 0x1;
-            while (value <= (uint) timeSpanFormatOptions)
+            while (value <= (uint)timeSpanFormatOptions)
             {
-                if ((value & (uint) timeSpanFormatOptions) != 0) yield return (TimeSpanFormatOptions) value;
+                if ((value & (uint)timeSpanFormatOptions) != 0) yield return (TimeSpanFormatOptions)value;
                 value <<= 1;
             }
         }
@@ -479,7 +479,7 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
 
     #endregion
 
-    #region: TimeTextInfo :
+    #region : TimeTextInfo :
 
     /// <summary>
     /// Supplies the localized text used for TimeSpan formatting.
@@ -502,8 +502,8 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
         private readonly string[] week;
 
         public TimeTextInfo(PluralRules.PluralRuleDelegate pluralRule, string[] week, string[] day, string[] hour,
-            string[] minute, string[] second, string[] millisecond, string[] w, string[] d, string[] h, string[] m,
-            string[] s, string[] ms, string lessThan)
+                            string[] minute, string[] second, string[] millisecond, string[] w, string[] d, string[] h, string[] m,
+                            string[] s, string[] ms, string lessThan)
         {
             PluralRule = pluralRule;
 
@@ -525,7 +525,7 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
         }
 
         public TimeTextInfo(string week, string day, string hour, string minute, string second, string millisecond,
-            string lessThan)
+                            string lessThan)
         {
             // Always use singular:
             PluralRule = (d, c) => 0;

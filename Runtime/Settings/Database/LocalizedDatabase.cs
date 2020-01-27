@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Localization.Tables;
@@ -18,7 +18,7 @@ namespace UnityEngine.Localization.Settings
         /// </summary>
         public struct TableEntryResult
         {
-            public TEntry Entry{ get; private set; }
+            public TEntry Entry { get; private set; }
             public TTable Table { get; private set; }
 
             internal TableEntryResult(TEntry entry, TTable table)
@@ -40,7 +40,7 @@ namespace UnityEngine.Localization.Settings
                 {
                     // TODO: We need to reuse these operations however its not possible to reset the internal state at the moment.
                     //if (m_PreloadOperation == null)
-                        m_PreloadOperation = new PreloadDatabaseOperation<TTable, TEntry>();
+                    m_PreloadOperation = new PreloadDatabaseOperation<TTable, TEntry>();
                     m_PreloadOperation.Init(this);
                     m_PreloadOperationHandle = ResourceManager.StartOperation(m_PreloadOperation, default);
                 }
@@ -61,26 +61,26 @@ namespace UnityEngine.Localization.Settings
         protected virtual ResourceManager ResourceManager => LocalizationSettings.ResourceManager;
 
         // These values should never go null however they currently do due to bug 1193322. As a workaround we check them in a property.
-        Dictionary<string, AsyncOperationHandle<TTable>> m_TableOperations = new Dictionary<string, AsyncOperationHandle<TTable>>();
-        Dictionary<Guid, AsyncOperationHandle<KeyDatabase>> m_KeyDatabaseOperations = new Dictionary<Guid, AsyncOperationHandle<KeyDatabase>>();
+        Dictionary<(LocaleIdentifier localeIdentifier, string tableName), AsyncOperationHandle<TTable>> m_TableOperations = new Dictionary<(LocaleIdentifier localeIdentifier, string tableName), AsyncOperationHandle<TTable>>();
+        Dictionary<Guid, AsyncOperationHandle<SharedTableData>> m_SharedTableDataOperations = new Dictionary<Guid, AsyncOperationHandle<SharedTableData>>();
 
-        internal Dictionary<string, AsyncOperationHandle<TTable>> TableOperations
+        internal Dictionary<(LocaleIdentifier localeIdentifier, string tableName), AsyncOperationHandle<TTable>> TableOperations
         {
             get
             {
                 if (m_TableOperations == null)
-                    m_TableOperations = new Dictionary<string, AsyncOperationHandle<TTable>>();
+                    m_TableOperations = new Dictionary<(LocaleIdentifier localeIdentifier, string tableName), AsyncOperationHandle<TTable>>();
                 return m_TableOperations;
             }
         }
 
-        Dictionary<Guid, AsyncOperationHandle<KeyDatabase>> KeyDatabaseOperations
+        Dictionary<Guid, AsyncOperationHandle<SharedTableData>> SharedTableDataOperations
         {
             get
             {
-                if (m_KeyDatabaseOperations == null)
-                    m_KeyDatabaseOperations = new Dictionary<Guid, AsyncOperationHandle<KeyDatabase>>();
-                return m_KeyDatabaseOperations;
+                if (m_SharedTableDataOperations == null)
+                    m_SharedTableDataOperations = new Dictionary<Guid, AsyncOperationHandle<SharedTableData>>();
+                return m_SharedTableDataOperations;
             }
         }
 
@@ -93,9 +93,25 @@ namespace UnityEngine.Localization.Settings
             set => m_DefaultTableReference = value;
         }
 
-        internal void RegisterTableOperation(AsyncOperationHandle<TTable> handle, string tableName)
+        internal void RegisterTableOperation(AsyncOperationHandle<TTable> handle, LocaleIdentifier localeIdentifier, string tableName)
         {
-            TableOperations[tableName] = handle;
+            TableOperations[(localeIdentifier, tableName)] = handle;
+        }
+
+        /// <summary>
+        /// Returns the named table.
+        /// This function is asynchronous and may not have an immediate result available.
+        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
+        /// </summary>
+        /// <param name="tableReference">The table identifier. Can be either the name of the table or the table name Guid.</param>
+        /// <param name="locale">The <see cref="Locale"/> to load the table from if you do not wish to use <see cref="LocalizationSettings.SelectedLocale"/>.</param>
+        /// <returns></returns>
+        public AsyncOperationHandle<TTable> GetTableAsync(TableReference tableReference, Locale locale)
+        {
+            var initOp = LocalizationSettings.InitializationOperation;
+            if (!initOp.IsDone)
+                return ResourceManager.CreateChainOperation(initOp, (op) => GetTable_LoadTable(tableReference, locale));
+            return GetTable_LoadTable(tableReference, locale);
         }
 
         /// <summary>
@@ -107,10 +123,31 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<TTable> GetTableAsync(TableReference tableReference)
         {
+            // We need to initialize before we can use .LocalizationSettings.SelectedLocale.
             var initOp = LocalizationSettings.InitializationOperation;
             if (!initOp.IsDone)
-                return ResourceManager.CreateChainOperation(initOp, (op) => GetTable_LoadTable(tableReference));
-            return GetTable_LoadTable(tableReference);
+                return ResourceManager.CreateChainOperation(initOp, (op) => GetTableAsync(tableReference, LocalizationSettings.SelectedLocale));
+            return GetTableAsync(tableReference, LocalizationSettings.SelectedLocale);
+        }
+
+        /// <summary>
+        /// Returns the entry from the requested table. A table entry will contain the localized item and metadata.
+        /// This function is asynchronous and may not have an immediate result available.
+        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
+        /// </summary>
+        /// <param name="tableReference">The table identifier. Can be either the name of the table or the table name Guid.</param>
+        /// <param name="tableEntryReference">A reference to the entry in the table.</param>
+        /// <param name="locale">The <see cref="Locale"/> to load the table from if you do not wish to use <see cref="LocalizationSettings.SelectedLocale"/>.</param>
+        /// <returns></returns>
+        public AsyncOperationHandle<TableEntryResult> GetTableEntryAsync(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale)
+        {
+            tableReference.Validate();
+            tableEntryReference.Validate();
+
+            var tableOp = GetTableAsync(tableReference, locale);
+            if (!tableOp.IsDone)
+                return ResourceManager.CreateChainOperation(tableOp, (op) => GetTableEntry_FindEntry(tableOp, tableEntryReference));
+            return GetTableEntry_FindEntry(tableOp, tableEntryReference);
         }
 
         /// <summary>
@@ -123,57 +160,56 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<TableEntryResult> GetTableEntryAsync(TableReference tableReference, TableEntryReference tableEntryReference)
         {
-            tableReference.Validate();
-            tableEntryReference.Validate();
-
-            var tableOp = GetTableAsync(tableReference);
-            if (!tableOp.IsDone)
-                return ResourceManager.CreateChainOperation(tableOp, (op) => GetTableEntry_FindEntry(tableOp, tableEntryReference));
-            return GetTableEntry_FindEntry(tableOp, tableEntryReference);
+            // We need to initialize before we can use .LocalizationSettings.SelectedLocale.
+            var initOp = LocalizationSettings.InitializationOperation;
+            if (!initOp.IsDone)
+                return ResourceManager.CreateChainOperation(initOp, (op) => GetTableEntryAsync(tableReference, tableEntryReference, LocalizationSettings.SelectedLocale));
+            return GetTableEntryAsync(tableReference, tableEntryReference, LocalizationSettings.SelectedLocale);
         }
 
-        AsyncOperationHandle<KeyDatabase> GetKeyDatabase(Guid tableNameGuid)
+        AsyncOperationHandle<SharedTableData> GetSharedTableData(Guid tableNameGuid)
         {
-            if (KeyDatabaseOperations.TryGetValue(tableNameGuid, out var keyDatabaseOp))
-                return keyDatabaseOp;
+            if (SharedTableDataOperations.TryGetValue(tableNameGuid, out var sharedTableDataOp))
+                return sharedTableDataOp;
 
-            keyDatabaseOp = Addressables.LoadAssetAsync<KeyDatabase>(TableReference.StringFromGuid(tableNameGuid));
-            KeyDatabaseOperations[tableNameGuid] = keyDatabaseOp;
-            return keyDatabaseOp;
+            sharedTableDataOp = Addressables.LoadAssetAsync<SharedTableData>(TableReference.StringFromGuid(tableNameGuid));
+            SharedTableDataOperations[tableNameGuid] = sharedTableDataOp;
+            return sharedTableDataOp;
         }
 
-        AsyncOperationHandle<TTable> GetTable_LoadTable(AsyncOperationHandle<KeyDatabase> keyDatabaseOperation)
-        {
-            if (keyDatabaseOperation.Status != AsyncOperationStatus.Succeeded)
-            {
-                var error = $"Failed to load key database: {keyDatabaseOperation.DebugName}";
-                Debug.LogError(error);
-                if (keyDatabaseOperation.OperationException != null)
-                {
-                    Debug.LogException(keyDatabaseOperation.OperationException);
-                }
-                return ResourceManager.CreateCompletedOperation(default(TTable), error);
-            }
-            return GetTable_LoadTable(keyDatabaseOperation.Result.TableName);
-        }
-
-        AsyncOperationHandle<TTable> GetTable_LoadTable(TableReference tableReference)
+        AsyncOperationHandle<TTable> GetTable_LoadTable(TableReference tableReference, Locale locale)
         {
             if (tableReference.ReferenceType == TableReference.Type.Guid)
             {
-                var keyDatabaseOperation = GetKeyDatabase(tableReference);
-                if (keyDatabaseOperation.IsDone)
-                    return GetTable_LoadTable(keyDatabaseOperation);
-                return ResourceManager.CreateChainOperation(keyDatabaseOperation, op => GetTable_LoadTable(op));
+                // We need to load the SharedTableData so we can resolve the name of the table
+                var sharedTableDataOperation = GetSharedTableData(tableReference);
+                if (sharedTableDataOperation.IsDone)
+                    return GetTable_LoadTable(sharedTableDataOperation, locale);
+                return ResourceManager.CreateChainOperation(sharedTableDataOperation, op => GetTable_LoadTable(op, locale));
             }
 
-            if (TableOperations.TryGetValue(tableReference, out var asyncOp))
+            if (TableOperations.TryGetValue((locale.Identifier, tableReference), out var asyncOp))
                 return asyncOp;
 
-            var tableAddress = AddressHelper.GetTableAddress(tableReference, LocalizationSettings.SelectedLocale.Identifier);
+            var tableAddress = AddressHelper.GetTableAddress(tableReference, locale.Identifier);
             asyncOp = Addressables.LoadAssetAsync<TTable>(tableAddress);
-            RegisterTableOperation(asyncOp, tableReference.TableName);
+            RegisterTableOperation(asyncOp, locale.Identifier, tableReference.TableName);
             return asyncOp;
+        }
+
+        AsyncOperationHandle<TTable> GetTable_LoadTable(AsyncOperationHandle<SharedTableData> sharedTableDataOperation, Locale locale)
+        {
+            if (sharedTableDataOperation.Status != AsyncOperationStatus.Succeeded)
+            {
+                var error = $"Failed to load SharedTableData: {sharedTableDataOperation.DebugName}";
+                Debug.LogError(error);
+                if (sharedTableDataOperation.OperationException != null)
+                {
+                    Debug.LogException(sharedTableDataOperation.OperationException);
+                } 
+                return ResourceManager.CreateCompletedOperation(default(TTable), error);
+            }
+            return GetTable_LoadTable(sharedTableDataOperation.Result.TableName, locale);
         }
 
         AsyncOperationHandle<TableEntryResult> GetTableEntry_FindEntry(AsyncOperationHandle<TTable> tableOperation, TableEntryReference tableEntryReference)

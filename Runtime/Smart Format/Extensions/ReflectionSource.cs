@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Reflection;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
@@ -8,7 +8,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     [Serializable]
     public class ReflectionSource : ISource
     {
-        // There is a bug with SerializeField that causes empty instances to not deserialize. This is a workaround while we wait for the fix (case 1183543)
+        // There is a bug with SerializeReference that causes empty instances to not deserialize. This is a workaround while we wait for the fix (case 1183547)
         [SerializeField, HideInInspector]
         int dummyObject;
 
@@ -34,8 +34,8 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             var sourceType = current.GetType();
 
             // Important:
-            // GetMembers (opposite to GetMember!) returns all members, 
-            // both those defined by the type represented by the current T:System.Type object 
+            // GetMembers (opposite to GetMember!) returns all members,
+            // both those defined by the type represented by the current T:System.Type object
             // AS WELL AS those inherited from its base types.
             var members = sourceType.GetMembers(bindingFlags).Where(m =>
                 string.Equals(m.Name, selector, selectorInfo.FormatDetails.Settings.GetCaseSensitivityComparison()));
@@ -44,7 +44,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                 {
                     case MemberTypes.Field:
                         //  Selector is a Field; retrieve the value:
-                        var field = (FieldInfo) member;
+                        var field = (FieldInfo)member;
                         selectorInfo.Result = field.GetValue(current);
                         return true;
                     case MemberTypes.Property:
@@ -53,7 +53,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                         if (member.MemberType == MemberTypes.Property)
                         {
                             //  Selector is a Property
-                            var prop = (PropertyInfo) member;
+                            var prop = (PropertyInfo)member;
                             //  Make sure the property is not WriteOnly:
                             if (prop.CanRead)
                                 method = prop.GetGetMethod();
@@ -63,7 +63,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                         else
                         {
                             //  Selector is a method
-                            method = (MethodInfo) member;
+                            method = (MethodInfo)member;
                         }
 
                         //  Check that this method is valid -- it needs to return a value and has to be parameterless:

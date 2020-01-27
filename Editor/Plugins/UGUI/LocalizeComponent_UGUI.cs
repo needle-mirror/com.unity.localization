@@ -1,4 +1,4 @@
-﻿#if PACKAGE_UGUI
+#if PACKAGE_UGUI
 
 using UnityEngine;
 using UnityEngine.Events;
@@ -40,7 +40,7 @@ namespace UnityEditor.Localization.Plugins.UGUI
             if (foundKey.entry != null && foundKey.matchDistance < kMatchThreshold)
             {
                 comp.StringReference.TableEntryReference = foundKey.entry.Id;
-                comp.StringReference.TableReference = foundKey.collection.Keys.TableNameGuid;
+                comp.StringReference.TableReference = foundKey.collection.SharedData.TableNameGuid;
             }
 
             return comp;

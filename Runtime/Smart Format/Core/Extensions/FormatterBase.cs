@@ -1,10 +1,10 @@
-﻿namespace UnityEngine.Localization.SmartFormat.Core.Extensions
+namespace UnityEngine.Localization.SmartFormat.Core.Extensions
 {
     public abstract class FormatterBase : IFormatter
     {
         [SerializeField]
         string[] m_Names;
-        
+
         public string[] Names
         {
             get => m_Names;

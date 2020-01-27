@@ -7,7 +7,7 @@ The `ListFormatter` repeats the contents of any ```IEnumerable```, e.g. an Array
 ```c#
 var items = new[] { "one", "two", "three" };
 // important: do not use only "items" as the parameter
-var result = Smart.Format("{0:list:{}|, |, and }", new object[] { items }); 
+var result = Smart.Format("{0:list:{}|, |, and }", new object[] { items });
 // Outputs: "one, two, and three"
 ```
 

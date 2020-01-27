@@ -1,4 +1,4 @@
-﻿//using UnityEngine;
+//using UnityEngine;
 //using UnityEngine.Localization;
 //using UnityEngine.Localization.Tables;
 
@@ -34,7 +34,7 @@
 
 //        void FetchString()
 //        {
-//            // A string may not be immediately available such as during initialization of the localization system or when a table has not been loaded yet. 
+//            // A string may not be immediately available such as during initialization of the localization system or when a table has not been loaded yet.
 //            // The Completed event will be called when the string is ready.
 //            stringRef.GetLocalizedString().Completed += op => m_TranslatedString = op.Result;
 //        }

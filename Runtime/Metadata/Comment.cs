@@ -1,5 +1,6 @@
-﻿#if UNITY_EDITOR
+#if UNITY_EDITOR
 using System;
+using System.Globalization;
 
 namespace UnityEngine.Localization.Metadata
 {
@@ -9,7 +10,7 @@ namespace UnityEngine.Localization.Metadata
     /// </summary>
     [Metadata]
     [Serializable]
-    public class Comment : IMetadata
+    public class Comment : IMetadata, ISerializationCallbackReceiver
     {
         [SerializeField]
         string m_TimeStamp;
@@ -19,21 +20,9 @@ namespace UnityEngine.Localization.Metadata
         string m_CommentText = "Comment Text";
 
         /// <summary>
-        /// Creates a new Comment with the current date and time for <see cref="TimeStamp"/>.
-        /// </summary>
-        public Comment()
-        {
-            m_TimeStamp = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss");
-        }
-
-        /// <summary>
         /// A time stamp to indicate when the comment was created.
         /// </summary>
-        public string TimeStamp
-        {
-            get => m_TimeStamp;
-            set => m_TimeStamp = value;
-        }
+        public DateTime TimeStamp { get; set; } = DateTime.Now;
 
         /// <summary>
         /// The comment text.
@@ -42,6 +31,17 @@ namespace UnityEngine.Localization.Metadata
         {
             get => m_CommentText;
             set => m_CommentText = value;
+        }
+
+        public void OnAfterDeserialize()
+        {
+            if (DateTime.TryParse(m_TimeStamp, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime time))
+                TimeStamp = time;
+        }
+
+        public void OnBeforeSerialize()
+        {
+            m_TimeStamp = TimeStamp.ToString("HH:mm:ss.ffffff");
         }
     }
 }

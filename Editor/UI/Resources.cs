@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.UI

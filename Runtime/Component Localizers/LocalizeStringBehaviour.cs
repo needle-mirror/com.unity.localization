@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine.Events;
 using UnityEngine.Localization.Tables;
@@ -7,7 +7,7 @@ namespace UnityEngine.Localization.Components
 {
     /// <summary>
     /// Component that can be used to Localize a string.
-    /// Allows for configuring optional string arguments and provides an update event that can be used to update the string.  
+    /// Allows for configuring optional string arguments and provides an update event that can be used to update the string.
     /// </summary>
     [AddComponentMenu("Localization/Localize String")]
     public class LocalizeStringBehaviour : MonoBehaviour
@@ -16,7 +16,7 @@ namespace UnityEngine.Localization.Components
         /// UnityEvent which can pass a string as an argument.
         /// </summary>
         [Serializable]
-        public class StringUnityEvent : UnityEvent<string> { };
+        public class StringUnityEvent : UnityEvent<string> {};
 
         [SerializeField]
         LocalizedString m_StringReference = new LocalizedString();
@@ -26,7 +26,7 @@ namespace UnityEngine.Localization.Components
 
         [SerializeField]
         StringUnityEvent m_UpdateString = new StringUnityEvent();
-        
+
         /// <summary>
         /// References the <see cref="StringTable"/> and <see cref="StringTableEntry"/> of the localized string.
         /// </summary>
@@ -50,9 +50,10 @@ namespace UnityEngine.Localization.Components
         /// </summary>
         protected virtual void OnEnable()
         {
-            StringReference.Arguments.Clear();
             if (m_FormatArguments.Count > 0)
-                StringReference.Arguments.AddRange(m_FormatArguments);
+            {
+                StringReference.Arguments = m_FormatArguments.ToArray();
+            }
 
             StringReference.RegisterChangeHandler(UpdateString);
         }

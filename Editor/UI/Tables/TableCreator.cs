@@ -1,18 +1,20 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Localization;
+using UnityEngine.Localization.Pseudo;
 using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.UI
 {
     class TableCreator : VisualElement
     {
-        internal new class UxmlFactory : UxmlFactory<TableCreator> { }
+        internal new class UxmlFactory : UxmlFactory<TableCreator> {}
 
         TextField m_TableName;
         ScrollView m_LocalesList;
         TableTypePopup m_TableType;
-         
+        Button m_CreateButton;
+
         public TableCreator()
         {
             var asset = Resources.GetTemplateAsset(nameof(TableCreator));
@@ -22,12 +24,17 @@ namespace UnityEditor.Localization.UI
             m_LocalesList = this.Q<ScrollView>("locales-list");
             foreach (var locale in locales)
             {
-                m_LocalesList.Add(new Toggle(){ name = locale.name,  text = locale.name, value = true});
+                AddLocaleElement(locale);
             }
 
-            this.Q<Button>("create-table-button").clickable.clicked += CreateTables;
+            m_CreateButton = this.Q<Button>("create-table-button");
+            m_CreateButton.clickable.clicked += CreateTables;
+            UpdateCreateButtonState();
+
             this.Q<Button>("select-all-button").clickable.clicked += () => SelectAllLocales(true);
             this.Q<Button>("select-none-button").clickable.clicked += () => SelectAllLocales(false);
+            this.Q<Button>("locale-generator-button").clickable.clicked += () => LocaleGeneratorWindow.ShowWindow();
+
             m_TableType = this.Q<TableTypePopup>();
             m_TableName = this.Q<TextField>("new-table-name-field");
 
@@ -36,19 +43,50 @@ namespace UnityEditor.Localization.UI
 
         ~TableCreator() => LocalizationEditorSettings.OnModification -= LocalizationEditorSettingsOnOnModification;
 
-        private void LocalizationEditorSettingsOnOnModification(LocalizationEditorSettings.ModificationEvent evt, object obj)
+        void AddLocaleElement(Locale locale)
+        {
+            if (locale is PseudoLocale) // Don't include pseudo locales
+                return;
+
+            var toggle = new Toggle() { name = locale.name, text = locale.name, value = true };
+            toggle.RegisterValueChangedCallback((evt) => UpdateCreateButtonState());
+            m_LocalesList.Add(toggle);
+        }
+
+        void UpdateCreateButtonState()
+        {
+            // If we have no active Locales then the button should be disabled.
+            foreach(var child in m_LocalesList.Children())
+            {
+                if (child is Toggle toggle)
+                {
+                    if (toggle.value)
+                    {
+                        m_CreateButton.SetEnabled(true);
+                        return;
+                    }
+                }
+            }
+            m_CreateButton.SetEnabled(false);
+        }
+
+        void LocalizationEditorSettingsOnOnModification(LocalizationEditorSettings.ModificationEvent evt, object obj)
         {
             if (evt == LocalizationEditorSettings.ModificationEvent.LocaleAdded)
             {
                 var locale = (Locale)obj;
-                m_LocalesList.Add(new Toggle(){ name = locale.name, text = locale.name, value = true});
+                AddLocaleElement(locale);
+                UpdateCreateButtonState();
             }
             else if (evt == LocalizationEditorSettings.ModificationEvent.LocaleRemoved)
             {
                 var locale = (Locale)obj;
                 var toggle = m_LocalesList.Q<Toggle>(locale.name);
                 if (toggle != null)
+                {
                     m_LocalesList.Remove(toggle);
+                    UpdateCreateButtonState();
+                }
             }
         }
 

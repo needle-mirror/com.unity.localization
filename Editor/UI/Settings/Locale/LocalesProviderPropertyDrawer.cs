@@ -92,30 +92,30 @@ namespace UnityEditor.Localization.UI
                     LocaleGeneratorWindow.ShowWindow();
                     break;
                 case ToolBarChoices.RemoveSelected:
+                {
+                    var selectedLocales = m_ListView.GetSelection();
+                    for (int i = selectedLocales.Count - 1; i >= 0; --i)
                     {
-                        var selectedLocales = m_ListView.GetSelection();
-                        for (int i = selectedLocales.Count - 1; i >= 0; --i)
-                        {
-                            var item = m_ListView.GetRows()[selectedLocales[i]] as SerializedLocaleItem;
-                            LocalizationEditorSettings.RemoveLocale(item.SerializedObject.targetObject as Locale, true);
-                        }
-                        m_ListView.SetSelection(new int[0]);
-                        m_ListView.Reload();
+                        var item = m_ListView.GetRows()[selectedLocales[i]] as SerializedLocaleItem;
+                        LocalizationEditorSettings.RemoveLocale(item.SerializedObject.targetObject as Locale, true);
                     }
-                    break;
+                    m_ListView.SetSelection(new int[0]);
+                    m_ListView.Reload();
+                }
+                break;
                 case ToolBarChoices.AddAsset:
                     EditorGUIUtility.ShowObjectPicker<Locale>(null, false, string.Empty, controlId);
                     break;
                 case ToolBarChoices.AddAllAssets:
+                {
+                    var assets = AssetDatabase.FindAssets("t:Locale");
+                    for (int i = 0; i < assets.Length; ++i)
                     {
-                        var assets = AssetDatabase.FindAssets("t:Locale");
-                        for (int i = 0; i < assets.Length; ++i)
-                        {
-                            LocalizationEditorSettings.AddLocale(AssetDatabase.LoadAssetAtPath<Locale>(AssetDatabase.GUIDToAssetPath(assets[i])), true);
-                        }
-                        m_ListView.Reload();
+                        LocalizationEditorSettings.AddLocale(AssetDatabase.LoadAssetAtPath<Locale>(AssetDatabase.GUIDToAssetPath(assets[i])), true);
                     }
-                    break;
+                    m_ListView.Reload();
+                }
+                break;
             }
 
             if (commandName == "ObjectSelectorClosed" && EditorGUIUtility.GetObjectPickerControlID() == controlId && EditorGUIUtility.GetObjectPickerObject() != null)

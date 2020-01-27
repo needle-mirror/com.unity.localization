@@ -1,4 +1,4 @@
-﻿namespace UnityEngine.Localization
+namespace UnityEngine.Localization
 {
     class AddressHelper
     {

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Settings;
@@ -30,7 +30,7 @@ namespace UnityEngine.Localization.Tables
     }
 
     /// <summary>
-    /// An AssetTable 
+    /// An AssetTable
     /// </summary>
     public class AssetTable : LocalizedTableT<AssetTableEntry>, IPreloadRequired
     {
@@ -55,7 +55,7 @@ namespace UnityEngine.Localization.Tables
         AsyncOperationHandle PreloadAssets()
         {
             // Check the metadata to see if we should preload. First we check the table preload data, if one does not exist then check the key database(global).
-            var preload = GetMetadata<PreloadAssetTableMetadata>() ?? Keys.Metadata.GetMetadata<PreloadAssetTableMetadata>();
+            var preload = GetMetadata<PreloadAssetTableMetadata>() ?? SharedData.Metadata.GetMetadata<PreloadAssetTableMetadata>();
             if (preload != null)
             {
                 m_PreloadOperation = m_PreloadOperation ?? new GroupIAsyncOperation();
@@ -107,7 +107,7 @@ namespace UnityEngine.Localization.Tables
             var entry = GetEntry(keyId);
             if (entry == null)
             {
-                var keyName = Keys.GetKey(keyId);
+                var keyName = SharedData.GetKey(keyId);
 
                 return ResourceManager.CreateCompletedOperation<TObject>(null, $"Could not find asset with key \"{keyName}({keyId})\"");
             }
@@ -120,10 +120,10 @@ namespace UnityEngine.Localization.Tables
             {
                 if (string.IsNullOrEmpty(entry.Guid))
                 {
-                    var keyName = Keys.GetKey(entry.Data.Id);
+                    var keyName = SharedData.GetKey(entry.Data.Id);
                     return ResourceManager.CreateCompletedOperation<TObject>(null, $"The asset table entry \"{keyName}({entry.Data.Id})\" is empty, no asset can be loaded from the table \"{ToString()}\"");
                 }
-                entry.AsyncOperation = Addressables.LoadAssetAsync<TObject>(entry.Guid); ;
+                entry.AsyncOperation = Addressables.LoadAssetAsync<TObject>(entry.Guid);;
             }
             return entry.AsyncOperation.Value.Convert<TObject>();
         }
@@ -145,6 +145,7 @@ namespace UnityEngine.Localization.Tables
         {
             m_PreloadOperationHandle = null;
         }
+
         #endif
     }
 }

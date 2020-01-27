@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor.UIElements;
@@ -25,7 +25,7 @@ namespace UnityEditor.Localization.UI
                 Show();
         }
 
-        public GameViewLanguageMenu() : 
+        public GameViewLanguageMenu() :
             base(GetChoices(), 0)
         {
             focusable = false;
@@ -38,6 +38,10 @@ namespace UnityEditor.Localization.UI
         /// </summary>
         public static void Show()
         {
+            // Don't show if we have 0 locales and are using Addressables
+            if (LocalizationEditorSettings.GetLocales().Count == 0 && LocalizationSettings.AvailableLocales is LocalesProvider)
+                return;
+
             LocalizationSettings.SelectedLocaleChanged += OnLanguageChanged;
 
             var initOp = LocalizationSettings.InitializationOperation;
@@ -118,7 +122,7 @@ namespace UnityEditor.Localization.UI
 
         static void OnLanguageChanged(Locale locale)
         {
-            foreach(var gv in s_GameViews)
+            foreach (var gv in s_GameViews)
             {
                 gv.menu.SetValueWithoutNotify(locale);
             }

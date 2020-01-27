@@ -1,5 +1,5 @@
 ## SmartFormat.NET
-SmartFormat is a lightweight templating library, with an emphasis on grammar.  
+SmartFormat is a lightweight templating library, with an emphasis on grammar.
 It makes it easy for a data-driven template to have proper pluralization, gender conjugation, lists, and conditional language logic. Named placeholder give a more intuitive and less error-prone way to introduce variables.
 
 > **Note:** Before getting started, carefully read the chapter about [[Common Pitfalls]]. It's a real time saver :)
@@ -45,18 +45,18 @@ Smart.Format("You have {Messages.Count:choose(0|1):no new messages|a new message
 ```
 #### [[Named placeholders|Expressions and Nesting]]
 ```c#
-var addrList = new[] { 	new { Name = "Jim", Address = new {City = "New York", State = "NY"} } };
+var addrList = new[] {  new { Name = "Jim", Address = new {City = "New York", State = "NY"} } };
 Smart.Format("{Name} from {Address.City}, {Address.State}", addrList);
 // Outputs: "Jim from New York, NY"
 ```
 
 #### Extra features
 
-* Fully compatible with, and fully replaces, `String.Format`  
-  `string.Format("{0} {0:N2} {1:yyyy-MM-dd HH:mm:ss}", 5, new DateTime())`  outputs the same results as  
-  `Smart.Format("{0} {0:N2} {1:yyyy-MM-dd HH:mm:ss}", 5, new DateTime())`  
+* Fully compatible with, and fully replaces, `String.Format`
+  `string.Format("{0} {0:N2} {1:yyyy-MM-dd HH:mm:ss}", 5, new DateTime())`  outputs the same results as
+  `Smart.Format("{0} {0:N2} {1:yyyy-MM-dd HH:mm:ss}", 5, new DateTime())`
 * Extensible plugin architecture.  **Pluralization**, **Conditionals**, **Lists**, and **Named Placeholders** are all bundled plugins.  Creating your own is easy, too.
-* Pure C# library.  
-* Fast, small, lightweight.  Even with all these features, `Smart.Format` performs nearly as well as `string.Format` -- creating output in *micro*seconds.  
+* Pure C# library.
+* Fast, small, lightweight.  Even with all these features, `Smart.Format` performs nearly as well as `string.Format` -- creating output in *micro*seconds.
   It can even out-perform `string.Format`: parsing results can be cached, plugins can be disabled, output can be streamed.  It's **FAST**.
 * Available via Nuget: `Install-Package SmartFormat.NET`

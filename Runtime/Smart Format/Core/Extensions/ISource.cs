@@ -1,4 +1,4 @@
-﻿namespace UnityEngine.Localization.SmartFormat.Core.Extensions
+namespace UnityEngine.Localization.SmartFormat.Core.Extensions
 {
     /// <summary>
     /// Evaluates a selector.

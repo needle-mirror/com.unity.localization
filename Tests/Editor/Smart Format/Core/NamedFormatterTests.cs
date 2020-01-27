@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using NUnit.Framework;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
@@ -14,15 +14,15 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
         [TestCase("{0:cond:zero|one|two}", 0, "zero")]
         [TestCase("{0:cond:zero|one|two}", 1, "one")]
         [TestCase("{0:cond:zero|one|two}", 2, "two")]
-        
+
         [TestCase("{0:plural:one|many}", 1, "one")]
         [TestCase("{0:plural:one|many}", 2, "many")]
         [TestCase("{0:p:one|many}", 1, "one")]
         [TestCase("{0:p:one|many}", 2, "many")]
 
-        [TestCase("{0:list:+{}|, |, and }", new []{ 1, 2, 3 }, "+1, +2, and +3")]
-        [TestCase("{0:l:+{}|, |, and }", new []{ 1, 2, 3 }, "+1, +2, and +3")]
-        
+        [TestCase("{0:list:+{}|, |, and }", new[] { 1, 2, 3 }, "+1, +2, and +3")]
+        [TestCase("{0:l:+{}|, |, and }", new[] { 1, 2, 3 }, "+1, +2, and +3")]
+
         [TestCase("{0:default()}", 5, "5")]
         [TestCase("{0:default:N2}", 5, "5.00")]
         [TestCase("{0:d()}", 5, "5")]

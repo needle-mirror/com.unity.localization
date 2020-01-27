@@ -1,4 +1,4 @@
-﻿using UnityEngine.Localization.Tables;
+using UnityEngine.Localization.Tables;
 using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.UI

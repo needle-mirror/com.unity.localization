@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -97,6 +97,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
             ArgumentValidator.CheckForEmpty(source, "source");
             return RandomIterator(source);
         }
+
         /// <summary>Chooses one of the items at random.
         ///
         /// Returns default if there are no items.
@@ -134,6 +135,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
             ArgumentValidator.CheckForZeroValue(count, "count");
             return SplitIterator(source, count);
         }
+
         private static IEnumerable<TSource[]> SplitIterator<TSource>(this IEnumerable<TSource> source, int count)
         {
             // Splits an enumeration into sections of equal size
@@ -182,6 +184,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
             ArgumentValidator.CheckForNullReference(splitPredicate, "splitPredicate");
             return SplitIterator(source, splitPredicate, null, false);
         }
+
         /// <summary>Splits the enumeration into segments,
         /// each segment containing the portion between predicate matches.
         /// </summary>
@@ -195,6 +198,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
             ArgumentValidator.CheckForNullReference(splitPredicate, "splitPredicate");
             return SplitIterator(source, splitPredicate, null, true);
         }
+
         /// <summary>Splits the enumeration into segments,
         /// each segment containing the portion between predicate matches.
         /// </summary>
@@ -209,6 +213,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
             ArgumentValidator.CheckForNullReference(splitPredicate, "splitPredicate");
             return SplitIterator(source, null, splitPredicate, false);
         }
+
         /// <summary>Splits the enumeration into segments,
         /// each segment containing the portion between predicate matches.
         /// </summary>
@@ -299,6 +304,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
                 action(item, itemIndex++);
             }
         }
+
         /// <summary>Performs an action for each item in the list.
         /// For simple actions, this provides an easier syntax than the normal foreach loop.
         /// </summary>
@@ -335,8 +341,9 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
         /// </summary>
         public static IEnumerable<T> Concat<T>(this IEnumerable<T> first, params T[] secondItems)
         {
-            return first.Concat((IEnumerable<T>) secondItems);
+            return first.Concat((IEnumerable<T>)secondItems);
         }
+
         /// <summary>Produces the set union of the first sequence and the specified items by using the default equality comparer.
         ///
         /// This method is an overload for Union that uses the params argument to provide
@@ -344,7 +351,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
         /// </summary>
         public static IEnumerable<T> Union<T>(this IEnumerable<T> first, params T[] secondItems)
         {
-            return first.Union((IEnumerable<T>) secondItems);
+            return first.Union((IEnumerable<T>)secondItems);
         }
     }
 }

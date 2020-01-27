@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -29,7 +29,7 @@ namespace UnityEditor.Localization.UI
             public GUIContent entryNameLabel;
 
             GUIContent m_FieldLabel;
-            KeyDatabase.KeyDatabaseEntry m_SelectedEntry;
+            SharedTableData.SharedTableEntry m_SelectedEntry;
             AssetTableCollection m_SelectedTableCollection;
             int m_SelectedTableIdx = -1;
 
@@ -78,7 +78,7 @@ namespace UnityEditor.Localization.UI
                         }
                         else if (tableReference.Reference.ReferenceType == TableReference.Type.Guid)
                         {
-                            m_SelectedTableCollection = tableCollections.FirstOrDefault(t => t.Keys.TableNameGuid == tableReference.Reference);
+                            m_SelectedTableCollection = tableCollections.FirstOrDefault(t => t.SharedData.TableNameGuid == tableReference.Reference);
                         }
                     }
                     return m_SelectedTableCollection;
@@ -89,19 +89,19 @@ namespace UnityEditor.Localization.UI
                     m_SelectedTableIdx = -1;
                     SelectedTableEntry = null;
                     if (value != null)
-                        tableReference.Reference = value.Keys.TableNameGuid;
+                        tableReference.Reference = value.SharedData.TableNameGuid;
                     else
                         tableReference.Reference = string.Empty;
                 }
             }
 
-            public virtual KeyDatabase.KeyDatabaseEntry SelectedTableEntry
+            public virtual SharedTableData.SharedTableEntry SelectedTableEntry
             {
                 get
                 {
                     if (m_SelectedEntry == null && SelectedTableCollection != null)
                     {
-                        m_SelectedEntry = m_SelectedTableCollection.Keys.GetEntry(tableEntryReference.Reference);
+                        m_SelectedEntry = m_SelectedTableCollection.SharedData.GetEntry(tableEntryReference.Reference);
                     }
                     return m_SelectedEntry;
                 }
@@ -109,7 +109,7 @@ namespace UnityEditor.Localization.UI
                 {
                     m_FieldLabel = null;
                     m_SelectedEntry = value;
-                    tableEntryReference.Reference = value != null ? value.Id : KeyDatabase.EmptyId;
+                    tableEntryReference.Reference = value != null ? value.Id : SharedTableData.EmptyId;
                 }
             }
 
@@ -122,7 +122,14 @@ namespace UnityEditor.Localization.UI
                         var icon = EditorGUIUtility.ObjectContent(null, assetType);
                         if (SelectedTableCollection != null && SelectedTableEntry != null)
                         {
-                            m_FieldLabel = new GUIContent($"{SelectedTableCollection.TableName}/{SelectedTableEntry.Key}", icon.image);
+                            var key = SelectedTableEntry.Key;
+                            var eol = key.IndexOf('\n');
+                            if (eol > 0)
+                            {
+                                // We dont want a multiline label as it overflows in the UI.
+                                key = key.Substring(0, eol);
+                            }
+                            m_FieldLabel = new GUIContent($"{SelectedTableCollection.TableName}/{key}", icon.image);
                         }
                         else
                         {
@@ -157,7 +164,7 @@ namespace UnityEditor.Localization.UI
 
                     s_TableChoicesLabels = new GUIContent[assetTables.Count + 1];
                     s_TableChoicesLabels[0] = Styles.noTableSelected;
-                    for(int i = 0; i < assetTables.Count; ++i)
+                    for (int i = 0; i < assetTables.Count; ++i)
                     {
                         s_TableChoicesLabels[i + 1] = new GUIContent(assetTables[i].TableName);
                     }
@@ -284,11 +291,11 @@ namespace UnityEditor.Localization.UI
                 if (GUI.Button(buttonPos, Styles.addTableEntry, EditorStyles.miniButton))
                 {
                     // Attempt to create a new key with a set default name
-                    var keys = m_Property.SelectedTableCollection.Keys;
+                    var keys = m_Property.SelectedTableCollection.SharedData;
 
                     const string newKeyName = "New Entry";
                     var keyToTry = newKeyName;
-                    KeyDatabase.KeyDatabaseEntry entry = null;
+                    SharedTableData.SharedTableEntry entry = null;
                     int counter = 1;
                     while (entry == null)
                     {
@@ -304,10 +311,9 @@ namespace UnityEditor.Localization.UI
                         }
                     }
                     m_Property.SelectedTableEntry = entry;
-                    var eventData = new Tuple<KeyDatabase, KeyDatabase.KeyDatabaseEntry>(keys, entry);
+                    var eventData = new Tuple<SharedTableData, SharedTableData.SharedTableEntry>(keys, entry);
                     LocalizationEditorSettings.Instance.SendEvent(LocalizationEditorSettings.ModificationEvent.TableEntryAdded, eventData);
                 }
-
             }
 
             rowPosition.y += rowPosition.height;
@@ -333,8 +339,8 @@ namespace UnityEditor.Localization.UI
             if (EditorGUI.EndChangeCheck() && m_Property.SelectedTableCollection != null)
             {
                 // Prevent renaming to a new that is already taken.
-                var keys = m_Property.SelectedTableCollection.Keys;
-                var entry = keys.GetEntry(newName);
+                var sharedData = m_Property.SelectedTableCollection.SharedData;
+                var entry = sharedData.GetEntry(newName);
 
                 if (string.IsNullOrEmpty(newName))
                 {
@@ -342,9 +348,9 @@ namespace UnityEditor.Localization.UI
                 }
                 else if (entry == null || m_Property.SelectedTableEntry == entry)
                 {
-                    Undo.RecordObject(keys, "Rename key entry");
-                    keys.RenameKey(m_Property.SelectedTableEntry.Key, newName);
-                    EditorUtility.SetDirty(keys);
+                    Undo.RecordObject(sharedData, "Rename key entry");
+                    sharedData.RenameKey(m_Property.SelectedTableEntry.Key, newName);
+                    EditorUtility.SetDirty(sharedData);
                     m_Property.entryNameLabel = Styles.entryName;
                 }
                 else

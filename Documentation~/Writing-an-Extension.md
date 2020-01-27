@@ -40,7 +40,7 @@ public class BooleanFormatter : IFormatter
 {
     public void EvaluateFormat(object current, Format format, ref bool handled, IOutput output, FormatDetails formatDetails)
     {
-        if (!current is bool) return; 
+        if (!current is bool) return;
         string outputText;
         if ((bool)current == true)
         {
@@ -69,7 +69,7 @@ Here's an example of how to do that:
     var args = new object[]{ "Zero", true, false };
     var expected = "Arg0: Zero, Arg1: Yes, Arg2: No";
     var actual = Smart.Format(format, args);
-    
+
     Assert.AreEqual(expected, actual);
 }
 </pre>
@@ -84,23 +84,23 @@ This simple example ignores the **Item Format**, so the text `"this format is ig
 ```c#
 public class HelloFormatter : IFormatter
 {
-	private string[] names = new[] {"hello", "hi"};
-	public string[] Names { get { return names; } set { this.names = value; } }
+    private string[] names = new[] {"hello", "hi"};
+    public string[] Names { get { return names; } set { this.names = value; } }
 
-	public bool TryEvaluateFormat(IFormattingInfo formattingInfo)
-	{
-		var iCanHandleThisInput = formattingInfo.CurrentValue is bool;
-		if (!iCanHandleThisInput)
-			return false;
+    public bool TryEvaluateFormat(IFormattingInfo formattingInfo)
+    {
+        var iCanHandleThisInput = formattingInfo.CurrentValue is bool;
+        if (!iCanHandleThisInput)
+            return false;
 
-		formattingInfo.Write("HELLO ");
-		if ((bool) formattingInfo.CurrentValue)
-			formattingInfo.Write(formattingInfo.FormatterOptions);
-		else
-			formattingInfo.Write(formattingInfo.Format.GetLiteralText());
+        formattingInfo.Write("HELLO ");
+        if ((bool) formattingInfo.CurrentValue)
+            formattingInfo.Write(formattingInfo.FormatterOptions);
+        else
+            formattingInfo.Write(formattingInfo.Format.GetLiteralText());
 
-		return true;
-	}
+        return true;
+    }
 }
 ```
 
@@ -124,11 +124,11 @@ Let's analyze the following Format String: <pre>"The user {Name} was born in {Bi
 
 **Literal text** is the area in-between placeholders: `The user `, ` was born in `, `, is `, ` `, ` old, and lives in `.
 
-Each placeholder starts with a list of **Selectors**, such as `Name` and `Birthday`.   
-Selectors are separated by a period `.`, known as an **Operator**, such as `Address`**.**`City`.  
+Each placeholder starts with a list of **Selectors**, such as `Name` and `Birthday`.
+Selectors are separated by a period `.`, known as an **Operator**, such as `Address`**.**`City`.
 Selectors determine what data will be used in the output.
 
-If the placeholder contains a colon `:`, the remaining text is known as the **Item Format**.  
-For example, `MMMM`, `000`, and `year|years` are Item Formats.  
+If the placeholder contains a colon `:`, the remaining text is known as the **Item Format**.
+For example, `MMMM`, `000`, and `year|years` are Item Formats.
 Note that there is a distinction between the entire *Format String* and the placeholder's *Item Format*.
 The Item Format determines how that data will be formatted.  For example, `MMMM` tells the DateTime to output the name of the Month, like `January`.  `000` tells an integer to use 3 digits.  Please see [[Microsoft's Formatting Types Reference|http://msdn.microsoft.com/en-us/library/26etazsy.aspx]] for complete documentation of Item Formats.

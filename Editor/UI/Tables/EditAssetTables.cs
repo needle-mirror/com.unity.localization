@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Localization.Tables;
@@ -8,7 +8,7 @@ namespace UnityEditor.Localization.UI
 {
     class EditAssetTables : VisualElement
     {
-        internal new class UxmlFactory : UxmlFactory<EditAssetTables> { }
+        internal new class UxmlFactory : UxmlFactory<EditAssetTables> {}
 
         VisualElement m_TableContents;
         ProjectTablesPopup m_AssetTablesField;

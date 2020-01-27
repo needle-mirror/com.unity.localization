@@ -1,4 +1,4 @@
-﻿//namespace UnityEngine.Localization.Metadata
+//namespace UnityEngine.Localization.Metadata
 //{
 //    /// <summary>
 //    /// TODO: DOC

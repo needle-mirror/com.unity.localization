@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine.Localization.Metadata;
 
 namespace UnityEngine.Localization.Tables
@@ -25,7 +25,7 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Localized table entry. This can be either a translated string or for assets the guid. 
+        /// Localized table entry. This can be either a translated string or for assets the guid.
         /// </summary>
         public string Localized
         {
@@ -42,7 +42,7 @@ namespace UnityEngine.Localization.Tables
             set => m_Metadata = value;
         }
 
-        public TableEntryData() { }
+        public TableEntryData() {}
 
         /// <summary>
         /// TODO: DOC

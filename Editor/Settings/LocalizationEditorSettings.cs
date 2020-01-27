@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -10,6 +10,7 @@ using UnityEditor.Localization.UI;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Metadata;
+using UnityEngine.Localization.Pseudo;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 using Object = UnityEngine.Object;
@@ -42,13 +43,13 @@ namespace UnityEditor.Localization
         /// </summary>
         internal enum ModificationEvent
         {
-                                     // Event type
+            // Event type
             LocaleAdded,             // Locale
             LocaleRemoved,           // Locale
             TableAdded,              // LocalizedTable
             TableRemoved,            // LocalizedTable,
-            TableEntryAdded,         // Tuple<KeyDatabase, KeyDatabase.KeyDatabaseEntry>
-            TableEntryRemoved,       // Tuple<KeyDatabase, KeyDatabase.KeyDatabaseEntry>
+            TableEntryAdded,         // Tuple<SharedTableData, SharedTableData.SharedTableEntry>
+            TableEntryRemoved,       // Tuple<SharedTableData, SharedTableData.SharedTableEntry>
             AssetTableEntryAdded,    // Tuple<AssetTable, AssetTableEntry, string>
             AssetTableEntryRemoved,  // Tuple<AssetTable, AssetTableEntry, string>
             AssetAdded,              // AddressableAssetEntry
@@ -60,7 +61,7 @@ namespace UnityEditor.Localization
 
         // Cached searches to help performance.
         ReadOnlyCollection<Locale> m_ProjectLocales;
-        Dictionary<Type, ReadOnlyCollection<AssetTableCollection>> m_TableCollections = new Dictionary<Type, ReadOnlyCollection<AssetTableCollection>>(); 
+        Dictionary<Type, ReadOnlyCollection<AssetTableCollection>> m_TableCollections = new Dictionary<Type, ReadOnlyCollection<AssetTableCollection>>();
 
         // Allows for overriding the default behavior, used for testing.
         internal static LocalizationEditorSettings Instance
@@ -102,6 +103,8 @@ namespace UnityEditor.Localization
             set => LocalizationSettings.ShowLocaleMenuInGameView = value;
         }
 
+        internal static bool EnableAddressablesCreation { get; set; } = true;
+
         /// <summary>
         /// Add the Locale to the Addressables system, so that it can be used by the Localization system during runtime.
         /// </summary>
@@ -141,7 +144,7 @@ namespace UnityEditor.Localization
         {
             Instance.AddAssetToTableInternal(table, keyId, asset, createUndo);
         }
-        
+
         /// <summary>
         /// Remove the asset mapping from the table and also cleanup the Addressables if necessary.
         /// </summary>
@@ -187,7 +190,7 @@ namespace UnityEditor.Localization
         /// </summary>
         /// <param name="tableType"></param>
         /// <returns></returns>
-        public static List<AddressableAssetEntry> GetAssetTables(Type tableType) 
+        public static List<AddressableAssetEntry> GetAssetTables(Type tableType)
         {
             return Instance.GetAssetTablesInternal(tableType);
         }
@@ -201,7 +204,7 @@ namespace UnityEditor.Localization
         {
             return Instance.GetAssetTablesCollectionInternal(typeof(TLocalizedTable));
         }
-        
+
         /// <summary>
         /// Returns all asset tables in the project sorted by type and table name.
         /// </summary>
@@ -240,7 +243,7 @@ namespace UnityEditor.Localization
         /// <typeparam name="TTable"></typeparam>
         /// <param name="keyName"></param>
         /// <returns></returns>
-        public static (AssetTableCollection collection, KeyDatabase.KeyDatabaseEntry entry, int matchDistance) FindSimilarKey<TTable>(string keyName) where TTable : LocalizedTable
+        public static (AssetTableCollection collection, SharedTableData.SharedTableEntry entry, int matchDistance) FindSimilarKey<TTable>(string keyName) where TTable : LocalizedTable
         {
             return Instance.FindSimilarKeyInternal<TTable>(keyName);
         }
@@ -249,13 +252,13 @@ namespace UnityEditor.Localization
         /// Create a new AssetTable asset. This will create the table and ensure that the table is also added to the Addressables.
         /// </summary>
         /// <param name="selectedLocales">The locale the table should be created for.</param>
-        /// <param name="keyDatabase"></param>
+        /// <param name="SharedTableData"></param>
         /// <param name="tableType">The type of table to create. Must inherit from LocalizedTable.</param>
         /// <param name="assetPath">The path to save the asset to.</param>
         /// <returns></returns>
-        public static LocalizedTable CreateAssetTable(Locale selectedLocales, KeyDatabase keyDatabase, Type tableType, string assetPath)
+        public static LocalizedTable CreateAssetTable(Locale selectedLocales, SharedTableData SharedTableData, Type tableType, string assetPath)
         {
-            return Instance.CreateAssetTableInternal(selectedLocales, keyDatabase, tableType, assetPath);
+            return Instance.CreateAssetTableInternal(selectedLocales, SharedTableData, tableType, assetPath);
         }
 
         /// <summary>
@@ -298,7 +301,7 @@ namespace UnityEditor.Localization
 
         internal virtual AddressableAssetSettings GetAddressableAssetSettings(bool create)
         {
-            return AddressableAssetSettingsDefaultObject.GetSettings(create);
+            return AddressableAssetSettingsDefaultObject.GetSettings(create && EnableAddressablesCreation);
         }
 
         /// <summary>
@@ -329,6 +332,10 @@ namespace UnityEditor.Localization
             if (group == null && create)
             {
                 group = settings.CreateGroup(groupName, false, true, true, new List<AddressableAssetGroupSchema>(){ ScriptableObject.CreateInstance<ContentUpdateGroupSchema>() }, typeof(BundledAssetGroupSchema));
+
+                // Default to just the name of the group, no hashes.
+                var schema = group.GetSchema<BundledAssetGroupSchema>();
+                schema.BundleNaming = BundledAssetGroupSchema.BundleNamingStyle.NoHash;
 
                 if (createUndo)
                     Undo.RegisterCreatedObjectUndo(group, "Create group");
@@ -476,7 +483,7 @@ namespace UnityEditor.Localization
                 if (!string.IsNullOrEmpty(localeAddressable.guid))
                 {
                     var locale = AssetDatabase.LoadAssetAtPath<Locale>(AssetDatabase.GUIDToAssetPath(localeAddressable.guid));
-                    if (locale != null)
+                    if (locale != null && !(locale is PseudoLocale)) // Dont include Pseudo locales.
                         foundLocales.Add(locale);
                 }
             }
@@ -509,10 +516,10 @@ namespace UnityEditor.Localization
         protected virtual void AddAssetToTableInternal(AssetTable table, uint keyId, Object asset, bool createUndo)
         {
             if (table == null)
-                throw new ArgumentNullException(nameof(table));
+                throw new ArgumentNullException(nameof(table), "Can not add asset to null table");
 
             if (asset == null)
-                throw new ArgumentNullException(nameof(asset));
+                throw new ArgumentNullException(nameof(asset), "Can not add null asset to table");
 
             if (!EditorUtility.IsPersistent(table) || !EditorUtility.IsPersistent(asset))
             {
@@ -542,7 +549,7 @@ namespace UnityEditor.Localization
             var tableEntry = table.GetEntry(keyId);
             if (tableEntry != null)
             {
-                if(tableEntry.Guid == assetGuid)
+                if (tableEntry.Guid == assetGuid)
                     return;
 
                 // Remove the old asset first
@@ -571,12 +578,12 @@ namespace UnityEditor.Localization
             if (createUndo)
             {
                 Undo.RecordObject(table, "Add asset to table");
-                Undo.RecordObject(table.Keys, "Add asset to table");
+                Undo.RecordObject(table.SharedData, "Add asset to table");
             }
             else
             {
                 EditorUtility.SetDirty(table);
-                EditorUtility.SetDirty(table.Keys);
+                EditorUtility.SetDirty(table.SharedData);
             }
 
             tableEntry = table.AddEntry(keyId, assetGuid);
@@ -585,7 +592,7 @@ namespace UnityEditor.Localization
             AssetTypeMetadata entryMetadata = null;
             AssetTypeMetadata typeMetadata = null;
             var assetType = asset.GetType();
-            foreach(var md in table.Keys.Metadata.Entries)
+            foreach (var md in table.SharedData.Metadata.MetadataEntries)
             {
                 if (md is AssetTypeMetadata at)
                 {
@@ -641,9 +648,9 @@ namespace UnityEditor.Localization
 
             // Update type metadata
             // We cant use a foreach here as we are sometimes inside of a loop and exceptions will be thrown (Collection was modified).
-            for (int i = 0; i <table.Keys.Metadata.Entries.Count; ++i)
+            for (int i = 0; i < table.SharedData.Metadata.MetadataEntries.Count; ++i)
             {
-                var md = table.Keys.Metadata.Entries[i];
+                var md = table.SharedData.Metadata.MetadataEntries[i];
                 if (md is AssetTypeMetadata at)
                 {
                     if (at.Contains(keyId))
@@ -709,7 +716,7 @@ namespace UnityEditor.Localization
         }
 
         /// <summary>
-        /// Updates the group the asset should belong to. 
+        /// Updates the group the asset should belong to.
         /// If an asset is used by more than 1 <see cref="Locale"/> then it will be moved to the shared group.
         /// </summary>
         /// <param name="settings"></param>
@@ -790,7 +797,7 @@ namespace UnityEditor.Localization
         protected virtual void AddOrUpdateTableInternal(LocalizedTable table, bool createUndo)
         {
             if (table == null)
-                throw new ArgumentNullException(nameof(table));
+                throw new ArgumentNullException(nameof(table), "Can not update a null table");
 
             if (!EditorUtility.IsPersistent(table))
             {
@@ -805,14 +812,15 @@ namespace UnityEditor.Localization
             if (createUndo)
                 Undo.RecordObject(aaSettings, "Update table");
 
-            // Add the key database
-            var keyDbGuid = GetAssetGuid(table.Keys);
-            var keyDbEntry = aaSettings.FindAssetEntry(keyDbGuid);
-            if (keyDbEntry == null)
+            // Add the shared table data
+            var sharedDataGuid = GetAssetGuid(table.SharedData);
+            var sharedDataEntry = aaSettings.FindAssetEntry(sharedDataGuid);
+            if (sharedDataEntry == null)
             {
                 // Add to the shared assets group
                 var sharedGroup = GetGroup(aaSettings, SharedAssetGroupName, true, createUndo);
-                aaSettings.CreateOrMoveEntry(keyDbGuid, sharedGroup);
+                sharedDataEntry = aaSettings.CreateOrMoveEntry(sharedDataGuid, sharedGroup);
+                sharedDataEntry.address = table.SharedData.name;
             }
 
             // Has the asset already been added?
@@ -838,15 +846,15 @@ namespace UnityEditor.Localization
             }
 
             tableEntry.address = AddressHelper.GetTableAddress(table.TableName, table.LocaleIdentifier);
-            tableEntry.labels.Clear(); // Locale may have changed so clear the old one.
+            tableEntry.labels.RemoveWhere(AddressHelper.IsLocaleLabel); // Locale may have changed so clear the old ones.
 
-            // We store the KeyDatabase GUID in the importer so we can search through tables without loading them.
+            // We store the SharedTableData GUID in the importer so we can search through tables without loading them.
             var importer = AssetImporter.GetAtPath(tableEntry.AssetPath);
-            if (importer.userData != keyDbGuid)
+            if (importer.userData != sharedDataGuid)
             {
                 if (createUndo)
                     Undo.RecordObject(importer, "Update table");
-                importer.userData = keyDbGuid;
+                importer.userData = sharedDataGuid;
                 importer.SaveAndReimport();
             }
 
@@ -905,7 +913,7 @@ namespace UnityEditor.Localization
         protected virtual void SetPreloadTableInternal(LocalizedTable table, bool preload, bool createUndo = false)
         {
             if (table == null)
-                throw new ArgumentNullException(nameof(table));
+                throw new ArgumentNullException(nameof(table), "Can not set preload flag on a null table");
 
             var aaSettings = GetAddressableAssetSettings(true);
             if (aaSettings == null)
@@ -933,8 +941,8 @@ namespace UnityEditor.Localization
         protected virtual bool GetPreloadTableFlagInternal(LocalizedTable table)
         {
             if (table == null)
-                throw new ArgumentNullException(nameof(table));
-            
+                throw new ArgumentNullException(nameof(table), "Can not get preload flag from a null table");
+
             var aaSettings = GetAddressableAssetSettings(true);
             if (aaSettings == null)
                 return false;
@@ -975,7 +983,7 @@ namespace UnityEditor.Localization
         /// <returns></returns>
         protected virtual ReadOnlyCollection<AssetTableCollection> GetAssetTablesCollectionInternal(Type tableType)
         {
-            if(!typeof(LocalizedTable).IsAssignableFrom(tableType))
+            if (!typeof(LocalizedTable).IsAssignableFrom(tableType))
                 throw new Exception($"{nameof(tableType)} must inherit from {nameof(LocalizedTable)}");
 
             if (m_TableCollections.TryGetValue(tableType, out var foundCollection))
@@ -991,21 +999,21 @@ namespace UnityEditor.Localization
             {
                 // Get the table name from the meta data so we do not need to load the whole asset.
                 var importer = AssetImporter.GetAtPath(table.AssetPath);
-                var keyDbGuid = importer.userData;
-                if (string.IsNullOrEmpty(keyDbGuid))
+                var sharedDataGuid = importer.userData;
+                if (string.IsNullOrEmpty(sharedDataGuid))
                 {
                     // Try and find the key db table name guid
                     var loadedTable = AssetDatabase.LoadAssetAtPath<LocalizedTable>(table.AssetPath);
-                    keyDbGuid = GetAssetGuid(loadedTable.Keys);
+                    sharedDataGuid = GetAssetGuid(loadedTable.SharedData);
                 }
 
                 var assetTableType = AssetDatabase.GetMainAssetTypeAtPath(table.AssetPath);
-                var key = (assetTableType, keyDbGuid);
+                var key = (assetTableType, sharedDataGuid);
                 AssetTableCollection tableCollection;
                 if (!lookup.TryGetValue(key, out tableCollection))
                 {
                     tableCollection = new AssetTableCollection() { TableType = assetTableType };
-                    tableCollection.Keys = AssetDatabase.LoadAssetAtPath<KeyDatabase>(AssetDatabase.GUIDToAssetPath(key.keyDbGuid));
+                    tableCollection.SharedData = AssetDatabase.LoadAssetAtPath<SharedTableData>(AssetDatabase.GUIDToAssetPath(key.sharedDataGuid));
 
                     assetTablesCollection.Add(tableCollection);
                     lookup[key] = tableCollection;
@@ -1025,16 +1033,16 @@ namespace UnityEditor.Localization
         /// <param name="keyName"></param>
         /// <typeparam name="TTable"></typeparam>
         /// <returns></returns>
-        protected virtual (AssetTableCollection collection, KeyDatabase.KeyDatabaseEntry entry, int matchDistance) FindSimilarKeyInternal<TTable>(string keyName) where TTable : LocalizedTable
+        protected virtual (AssetTableCollection collection, SharedTableData.SharedTableEntry entry, int matchDistance) FindSimilarKeyInternal<TTable>(string keyName) where TTable : LocalizedTable
         {
             // Check if we can find a matching key to the key name
             var tables = GetAssetTablesCollection<TTable>();
             int currentMatchDistance = int.MaxValue;
-            KeyDatabase.KeyDatabaseEntry currentEntry = null;
+            SharedTableData.SharedTableEntry currentEntry = null;
             AssetTableCollection tableCollection = null;
             foreach (var assetTableCollection in tables)
             {
-                var keys = assetTableCollection.Keys;
+                var keys = assetTableCollection.SharedData;
                 var foundKey = keys.FindSimilarKey(keyName, out int distance);
                 if (foundKey != null && distance < currentMatchDistance)
                 {
@@ -1046,9 +1054,9 @@ namespace UnityEditor.Localization
             return (tableCollection, currentEntry, currentMatchDistance);
         }
 
-        internal static LocalizedTable CreateAssetTableFilePanel(Locale selectedLocales, KeyDatabase keyDatabase, string tableName, Type tableType, string defaultDirectory)
+        internal static LocalizedTable CreateAssetTableFilePanel(Locale selectedLocales, SharedTableData SharedTableData, string tableName, Type tableType, string defaultDirectory)
         {
-            return Instance.CreateAssetTableFilePanelInternal(selectedLocales, keyDatabase, tableName, tableType, defaultDirectory);
+            return Instance.CreateAssetTableFilePanelInternal(selectedLocales, SharedTableData, tableName, tableType, defaultDirectory);
         }
 
         internal static void CreateAssetTablesFolderPanel(List<Locale> selectedLocales, string tableName, string tableType)
@@ -1060,26 +1068,26 @@ namespace UnityEditor.Localization
         {
             Instance.CreateAssetTableCollectionInternal(selectedLocales, tableName, tableType);
         }
-        
-        LocalizedTable CreateAssetTableFilePanelInternal(Locale selectedLocale, KeyDatabase keyDatabase, string tableName, Type tableType, string defaultDirectory)
+
+        LocalizedTable CreateAssetTableFilePanelInternal(Locale selectedLocale, SharedTableData SharedTableData, string tableName, Type tableType, string defaultDirectory)
         {
             var assetPath = EditorUtility.SaveFilePanel(Styles.saveTableDialog, defaultDirectory, AddressHelper.GetTableAddress(tableName, selectedLocale.Identifier), "asset");
-            return string.IsNullOrEmpty(assetPath) ? null : CreateAssetTable(selectedLocale, keyDatabase, tableType, assetPath);
+            return string.IsNullOrEmpty(assetPath) ? null : CreateAssetTable(selectedLocale, SharedTableData, tableType, assetPath);
         }
 
         /// <summary>
         /// Creates a table using provided arguments.
         /// </summary>
         /// <param name="selectedLocales">The <see cref="Locale"/> the table represents.</param>
-        /// <param name="keyDatabase"></param>
+        /// <param name="SharedTableData"></param>
         /// <param name="tableType">The type of table, must derive from <see cref="LocalizedTable"/>.</param>
         /// <param name="assetPath">Where to save the asset, must be inside of the project Assets folder.</param>
         /// <returns>Returns the created table.</returns>
-        protected virtual LocalizedTable CreateAssetTableInternal(Locale selectedLocales, KeyDatabase keyDatabase, Type tableType, string assetPath)
+        protected virtual LocalizedTable CreateAssetTableInternal(Locale selectedLocales, SharedTableData SharedTableData, Type tableType, string assetPath)
         {
             var relativePath = MakePathRelative(assetPath);
             var table = (LocalizedTable)ScriptableObject.CreateInstance(tableType);
-            table.Keys = keyDatabase;
+            table.SharedData = SharedTableData;
             table.LocaleIdentifier = selectedLocales.Identifier;
             table.name = Path.GetFileNameWithoutExtension(assetPath);
 
@@ -1113,18 +1121,18 @@ namespace UnityEditor.Localization
             try
             {
                 // TODO: Check that no tables already exist with the same name, locale and type.
-                AssetDatabase.StartAssetEditing(); // Batch the assets into a single asset operation
+                //AssetDatabase.StartAssetEditing(); // Disabled due to test failure on 2019.3 project yamato jobs failing.
                 var relativePath = MakePathRelative(assetDirectory);
 
-                var keyDbPath = Path.Combine(relativePath, tableName + " Keys.asset");
-                var keyDatabase = ScriptableObject.CreateInstance<KeyDatabase>();
-                keyDatabase.TableName = tableName;
-                CreateAsset(keyDatabase, keyDbPath);
+                var sharedDataPath = Path.Combine(relativePath, tableName + " Shared Data.asset");
+                var SharedTableData = ScriptableObject.CreateInstance<SharedTableData>();
+                SharedTableData.TableName = tableName;
+                CreateAsset(SharedTableData, sharedDataPath);
 
-                // Extract the KeyDatabase Guid and assign it so we can use it as a unique id for the table name.
-                var keyDbGuid = GetAssetGuid(keyDatabase);
-                keyDatabase.TableNameGuid = Guid.Parse(keyDbGuid); // We need to set it dirty so the change to TableNameGuid is saved.
-                EditorUtility.SetDirty(keyDatabase);
+                // Extract the SharedTableData Guid and assign it so we can use it as a unique id for the table name.
+                var sharedDataGuid = GetAssetGuid(SharedTableData);
+                SharedTableData.TableNameGuid = Guid.Parse(sharedDataGuid); // We need to set it dirty so the change to TableNameGuid is saved.
+                EditorUtility.SetDirty(SharedTableData);
 
                 // Create the instances
                 if (showProgressBar)
@@ -1134,7 +1142,7 @@ namespace UnityEditor.Localization
                 foreach (var locale in selectedLocales)
                 {
                     var table = (LocalizedTable)ScriptableObject.CreateInstance(tableType);
-                    table.Keys = keyDatabase;
+                    table.SharedData = SharedTableData;
                     table.LocaleIdentifier = locale.Identifier;
                     table.name = AddressHelper.GetTableAddress(tableName, locale.Identifier);
                     createdTables.Add(table);
@@ -1156,8 +1164,8 @@ namespace UnityEditor.Localization
                     CreateAsset(tbl, assetPath);
                     AddOrUpdateTableInternal(tbl, false);
                 }
-                AssetDatabase.StopAssetEditing();
-                AssetDatabase.SaveAssets(); // Required to ensure the change to KeyDatabase is written.
+                //AssetDatabase.StopAssetEditing();
+                AssetDatabase.SaveAssets(); // Required to ensure the change to SharedTableData is written.
 
                 if (showInTablesWindow)
                     AssetTablesWindow.ShowWindow(createdTables[0]);

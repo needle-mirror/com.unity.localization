@@ -1,12 +1,12 @@
-﻿using UnityEngine.Localization.Tables;
+using UnityEngine.Localization.Tables;
 
 namespace UnityEngine.Localization.Metadata
 {
     /// <summary>
     /// Interface to indicate a class can be used as Metadata.
     /// Metadata is data that can be used to provide additional information about the item it is attached to.
-    /// Metadata can be attached to a <see cref="Locale"/>, a <see cref="LocalizedTable"/>, a table entry or a <see cref="KeyDatabase"/>.
-    /// 
+    /// Metadata can be attached to a <see cref="Locale"/>, a <see cref="LocalizedTable"/>, a table entry or a <see cref="SharedTableData"/>.
+    ///
     /// Metadata is serialized using the SerializeReference feature, this means that it must be marked as serializable,
     /// can be shared across the same asset and does not inherit from UnityEngine.Object.
     /// Metadata does not have to include serialized fields, it can also be empty and used to tag fields as having certain attributes.
@@ -36,5 +36,5 @@ namespace UnityEngine.Localization.Metadata
     /// }
     /// </code>
     /// </example>
-    public interface IMetadata { }
+    public interface IMetadata {}
 }

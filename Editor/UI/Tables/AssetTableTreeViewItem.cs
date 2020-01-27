@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -15,7 +15,7 @@ namespace UnityEditor.Localization.UI
 
         (ISelectable selected, Object value, AssetTable table)[] m_TableProperties;
 
-        KeyDatabase m_Keys;
+        SharedTableData m_SharedTableData;
         AssetTypeMetadata m_AssetTypeMetadata;
 
         public Type AssetType => m_AssetTypeMetadata == null ? typeof(Object) : m_AssetTypeMetadata.Type;
@@ -37,16 +37,16 @@ namespace UnityEditor.Localization.UI
 
         public override void Initialize(List<LocalizedTable> tables, int startIdx)
         {
-            m_TableProperties = new (ISelectable, Object, AssetTable)[startIdx + tables.Count];
+            m_TableProperties = new(ISelectable, Object, AssetTable)[startIdx + tables.Count];
 
-            // Get the keys
+            // Get the shared data
             if (tables.Count > 0)
-                m_Keys = tables[0].Keys;
+                m_SharedTableData = tables[0].SharedData;
 
-            Debug.Assert(m_Keys != null);
+            Debug.Assert(m_SharedTableData != null);
             for (int i = startIdx; i < m_TableProperties.Length; ++i)
             {
-                m_TableProperties[i] = (null, null, tables[i-startIdx] as AssetTable);
+                m_TableProperties[i] = (null, null, tables[i - startIdx] as AssetTable);
             }
             RefreshFields();
         }
@@ -58,8 +58,8 @@ namespace UnityEditor.Localization.UI
                 var table = m_TableProperties[i].table;
                 if (table == null)
                     continue;
-                
-                var entry = table.GetEntry(KeyEntry.Id);
+
+                var entry = table.GetEntry(SharedEntry.Id);
                 var guid = entry?.Guid;
                 Object asset = null;
                 if (!string.IsNullOrEmpty(guid))
@@ -75,7 +75,7 @@ namespace UnityEditor.Localization.UI
         void UpdateType()
         {
             m_AssetTypeMetadata = null;
-            foreach(var md in  m_Keys.Metadata.Entries)
+            foreach (var md in  m_SharedTableData.Metadata.MetadataEntries)
             {
                 if (md is AssetTypeMetadata at)
                 {
@@ -143,7 +143,7 @@ namespace UnityEditor.Localization.UI
         void UpdateSearchString()
         {
             var sb = new StringBuilder();
-            sb.AppendLine(KeyEntry.Key);
+            sb.AppendLine(SharedEntry.Key);
             foreach (var tableAsset in m_TableProperties)
             {
                 if (tableAsset.value != null)

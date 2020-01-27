@@ -7,7 +7,7 @@ namespace UnityEngine.Localization.Tables
     /// The TableReference provides a flexible way to reference via either of these methods and also includes editor functionality.
     /// </summary>
     [Serializable]
-    public struct TableReference : ISerializationCallbackReceiver
+    public struct TableReference : ISerializationCallbackReceiver, IEquatable<TableReference>
     {
         /// <summary>
         /// The type of reference.
@@ -136,11 +136,24 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Converts the reference into a serializable string.
+        /// Compare 2 TableReferences.
         /// </summary>
-        public void OnBeforeSerialize()
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public bool Equals(TableReference other)
         {
-            m_TableName = GetSerializedString();
+            if (ReferenceType != other.ReferenceType)
+                return false;
+
+            if (ReferenceType == Type.Guid)
+            {
+                return TableNameGuid == other.TableNameGuid;
+            }
+            else if (ReferenceType == Type.Name)
+            {
+                return TableName == other.TableName;
+            }
+            return true;
         }
 
         /// <summary>
@@ -187,6 +200,14 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
+        /// Converts the reference into a serializable string.
+        /// </summary>
+        public void OnBeforeSerialize()
+        {
+            m_TableName = GetSerializedString();
+        }
+
+        /// <summary>
         /// Converts the serializable string into the correct reference type.
         /// </summary>
         public void OnAfterDeserialize()
@@ -211,7 +232,7 @@ namespace UnityEngine.Localization.Tables
     /// Allows for referencing a table entry via key or key id.
     /// </summary>
     [Serializable]
-    public struct TableEntryReference : ISerializationCallbackReceiver
+    public struct TableEntryReference : ISerializationCallbackReceiver, IEquatable<TableEntryReference>
     {
         /// <summary>
         /// The type of reference.
@@ -312,7 +333,7 @@ namespace UnityEngine.Localization.Tables
                         throw new ArgumentException("Must use a valid Key, can not be null or Empty.");
                     break;
                 case Type.Id:
-                    if (KeyId == KeyDatabase.EmptyId)
+                    if (KeyId == SharedTableData.EmptyId)
                         throw new ArgumentException("Key Id can not be empty.");
                     break;
             }
@@ -322,16 +343,16 @@ namespace UnityEngine.Localization.Tables
         /// <summary>
         /// Returns the key name.
         /// If <see cref="ReferenceType"/> is <see cref="Type.Name"/> then <see cref="Key"/> will be returned.
-        /// If <see cref="ReferenceType"/> is <see cref="Type.Id"/> then <paramref name="keyDatabase"/> will be used to extract the name.
+        /// If <see cref="ReferenceType"/> is <see cref="Type.Id"/> then <paramref name="sharedData"/> will be used to extract the name.
         /// </summary>
-        /// <param name="keyDatabase">The Key Database to use if the key name is not stored in the reference.</param>
+        /// <param name="sharedData">The <see cref="SharedTableData"/> to use if the key name is not stored in the reference.</param>
         /// <returns></returns>
-        public string ResolveKeyName(KeyDatabase keyDatabase)
+        public string ResolveKeyName(SharedTableData sharedData)
         {
             if (ReferenceType == Type.Name)
                 return Key;
             else if (ReferenceType == Type.Id)
-                return keyDatabase != null ? keyDatabase.GetKey(KeyId) : $"Key Id {KeyId}";
+                return sharedData != null ? sharedData.GetKey(KeyId) : $"Key Id {KeyId}";
             return "None";
         }
 
@@ -351,6 +372,22 @@ namespace UnityEngine.Localization.Tables
             return $"{nameof(TableEntryReference)}(Empty)";
         }
 
+        public bool Equals(TableEntryReference other)
+        {
+            if (ReferenceType != other.ReferenceType)
+                return false;
+
+            if (ReferenceType == Type.Name)
+            {
+                return Key == other.Key;
+            }
+            else if(ReferenceType == Type.Id)
+            {
+                return KeyId == other.KeyId;
+            }
+            return true;
+        }
+
         /// <summary>
         /// Does nothing but is required for <see cref="OnAfterDeserialize"/>.
         /// </summary>
@@ -363,7 +400,7 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         public void OnAfterDeserialize()
         {
-            if (KeyId != KeyDatabase.EmptyId)
+            if (KeyId != SharedTableData.EmptyId)
                 ReferenceType = Type.Id;
             else if (string.IsNullOrEmpty(m_Key))
                 ReferenceType = Type.Empty;

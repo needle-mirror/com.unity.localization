@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -15,14 +15,14 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
     public class Format : FormatItem
     {
         public Format(SmartSettings smartSettings, string baseString) : base(smartSettings, baseString, 0,
-            baseString.Length)
+                                                                             baseString.Length)
         {
             parent = null;
             Items = new List<FormatItem>();
         }
 
         public Format(SmartSettings smartSettings, Placeholder parent, int startIndex) : base(smartSettings, parent,
-            startIndex)
+                                                                                              startIndex)
         {
             this.parent = parent;
             Items = new List<FormatItem>();

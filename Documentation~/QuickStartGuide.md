@@ -2,7 +2,7 @@
 
 This guide will take you through setting up a simple Project with localized Assets and strings.
 
-## 1. Create the Localization Settings 
+## 1. Create the Localization Settings
 
 The Project's Localization Settings is an Asset. To create this Asset, go to **Edit > Project Settings > Localization** and click **Create**
 
@@ -16,7 +16,7 @@ To open the Locale Generator window, navigate to the Localization Settings (menu
 
 ![Locale Generator button.](images/LocalizationSettings_LocaleGeneratorButton.png)
 
-To select a Locale, tick the toggle box next to its name. Tick the checkbox next to the Locale you want to add, then click the **Create Locales** button and select where you want to save the Assets to. 
+To select a Locale, tick the toggle box next to its name. Tick the checkbox next to the Locale you want to add, then click the **Create Locales** button and select where you want to save the Assets to.
 
 ![Locale Generator window.](images/Create_Locale_Window.png)
 
@@ -28,7 +28,7 @@ Use the Locale Selectors to determine which Locale your application uses by defa
 ![The Locale selection UI Dropdown menu.](images/UIDropdownMenu.png)
 
 ## 4. Texture Localization: Create an Asset Table
-There are many reasons you might need to localize an Asset. For example, you might want to play a different piece of voiceover audio or music, or change a texture that contains written text (such as a signpost). The localization system uses Asset Tables to support this. 
+There are many reasons you might need to localize an Asset. For example, you might want to play a different piece of voiceover audio or music, or change a texture that contains written text (such as a signpost). The localization system uses Asset Tables to support this.
 
 This demonstrates changing an Asset's Texture to the flag of that Locale's country.
 
@@ -40,7 +40,7 @@ Finally select **Create** and choose a directory to generate the Asset Table Ass
 
 ![Creating Texture2D Asset Tables.](images/TutorialTextureTableCreation.png)
 
-Click **Edit Table** and select the **My Assets** table. 
+Click **Edit Table** and select the **My Assets** table.
 
 A table contains a **Key** field and a value field for each Locale. Unity uses the Key to identify the localized Asset. For this tutorial, name the Key **Country Flag** and use + button to add the key entry.
 
@@ -56,7 +56,7 @@ Add the **Raw Image**, go to **GameObject > UI > Raw Image**. To localize a Raw 
 
 ![The Raw Image context menu provides a shortcut to localize the component.](images/RawImageContextMenu.png)
 
-This adds a new component called **Localize Texture**. This is a generic localization component. When you add it via the **Localize** option, Unity automatically configures it to localize that component. 
+This adds a new component called **Localize Texture**. This is a generic localization component. When you add it via the **Localize** option, Unity automatically configures it to localize that component.
 
 ![Unity automatically configures the Update Asset event for the Raw Image component.](images/LocalizeComponentTexture2D.png)
 

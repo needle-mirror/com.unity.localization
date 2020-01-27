@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.IMGUI.Controls;
@@ -15,7 +15,7 @@ namespace UnityEditor.Localization.UI
 
         VisualElement CreateEditor();
     }
-    
+
     abstract class GenericAssetTableListView<T1, T2> : TreeView
         where T1 : LocalizedTable
         where T2 : GenericAssetTableTreeViewItem<T1>, new()
@@ -26,7 +26,7 @@ namespace UnityEditor.Localization.UI
         static readonly GUIContent newEntry = new GUIContent("Add New Entry");
 
         protected string TableName => TableCollection.TableName;
-        
+
         public AssetTableCollection TableCollection { get; private set; }
 
         public ISelectable Selected
@@ -39,7 +39,7 @@ namespace UnityEditor.Localization.UI
 
                 // Toggle?
                 if (m_Selected == value)
-                    value = null; 
+                    value = null;
 
                 m_Selected = value;
 
@@ -92,8 +92,8 @@ namespace UnityEditor.Localization.UI
         {
             if (evt == LocalizationEditorSettings.ModificationEvent.TableEntryAdded)
             {
-                var eventData = (Tuple<KeyDatabase, KeyDatabase.KeyDatabaseEntry>)obj;
-                if (eventData.Item1 == TableCollection.Keys)
+                var eventData = (Tuple<SharedTableData, SharedTableData.SharedTableEntry>)obj;
+                if (eventData.Item1 == TableCollection.SharedData)
                     Reload();
                 return;
             }
@@ -130,7 +130,7 @@ namespace UnityEditor.Localization.UI
         {
             showBorder = true;
             showAlternatingRowBackgrounds = true;
-            var keys = TableCollection.Keys;
+            var keys = TableCollection.SharedData;
 
             var columns = new List<MultiColumnHeaderState.Column>
             {
@@ -153,7 +153,7 @@ namespace UnityEditor.Localization.UI
             var multiColState = new MultiColumnHeaderState(columns.ToArray());
 
             var visibleColumns = new List<int>();
-            for ( int i = 0; i < columns.Count; ++i)
+            for (int i = 0; i < columns.Count; ++i)
             {
                 if (columns[i] is VisibleColumn col && col.Visible)
                     visibleColumns.Add(i);
@@ -165,40 +165,40 @@ namespace UnityEditor.Localization.UI
             multiColumnHeader.ResizeToFit();
         }
 
-        protected virtual T2 CreateTreeViewItem(int index, KeyDatabase.KeyDatabaseEntry keyEntry)
+        protected virtual T2 CreateTreeViewItem(int index, SharedTableData.SharedTableEntry entry)
         {
-            var item = new T2() { id = index, KeyEntry = keyEntry };
+            var item = new T2() { id = index, SharedEntry = entry };
             item.Initialize(TableCollection.Tables, k_TableStartIndex);
             return item;
-        } 
+        }
 
         protected override TreeViewItem BuildRoot()
         {
             var root = new TreeViewItem(-1, -1, "root");
             var items = new List<TreeViewItem>();
 
-            if (TableCollection.Keys == null)
+            if (TableCollection.SharedData == null)
             {
-                Debug.LogError("No KeyDatabase assigned to Table: " + TableName);
+                Debug.LogError($"No {nameof(SharedTableData)} assigned to Table: " + TableName);
                 SetupParentsAndChildrenFromDepths(root, items);
                 return root;
             }
 
-            var keys = TableCollection.Keys.Entries;
+            var sharedEntries = TableCollection.SharedData.Entries;
 
             // Apply Sorting?
             if (multiColumnHeader.sortedColumnIndex >= 0)
             {
                 var ascend = multiColumnHeader.IsSortedAscending(multiColumnHeader.sortedColumnIndex);
                 if (multiColumnHeader.sortedColumnIndex == 0)
-                    keys.Sort((a, b) => ascend ? string.Compare(b.Key, a.Key) : string.Compare(a.Key, b.Key));
+                    sharedEntries.Sort((a, b) => ascend ? string.Compare(b.Key, a.Key) : string.Compare(a.Key, b.Key));
                 else if (multiColumnHeader.sortedColumnIndex == 1)
-                    keys.Sort((a, b) => ascend ? b.Id.CompareTo(a.Id) : a.Id.CompareTo(b.Id));
+                    sharedEntries.Sort((a, b) => ascend ? b.Id.CompareTo(a.Id) : a.Id.CompareTo(b.Id));
             }
 
-            for (int i = 0; i < keys.Count; ++i)
+            for (int i = 0; i < sharedEntries.Count; ++i)
             {
-                var tvi = CreateTreeViewItem(i, keys[i]);
+                var tvi = CreateTreeViewItem(i, sharedEntries[i]);
                 items.Add(tvi);
             }
 
@@ -211,9 +211,12 @@ namespace UnityEditor.Localization.UI
 
         protected virtual Rect DrawSearchField(Rect rect)
         {
-            var searchRect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
+            // Apply a small border around the search field
+            const float borderWidth = 2;
+            const float borderHeight = 1;
+            var searchRect = new Rect(rect.x + borderWidth, rect.y + borderHeight, rect.width - (2 * borderWidth), EditorGUIUtility.singleLineHeight);
             searchString = m_SearchField.OnToolbarGUI(searchRect, searchString);
-            rect.yMin += EditorGUIUtility.singleLineHeight;
+            rect.yMin += EditorGUIUtility.singleLineHeight + (2 * borderHeight);
             return rect;
         }
 
@@ -261,7 +264,7 @@ namespace UnityEditor.Localization.UI
         protected override bool DoesItemMatchSearch(TreeViewItem item, string search)
         {
             return item.id != k_AddItemId && base.DoesItemMatchSearch(item, search); // Ignore add button
-        } 
+        }
 
         protected override IList<TreeViewItem> BuildRows(TreeViewItem root)
         {
@@ -282,15 +285,15 @@ namespace UnityEditor.Localization.UI
             var newKey = EditorGUI.TextArea(keyFieldRect, keyItem.Key);
             if (EditorGUI.EndChangeCheck())
             {
-                if (TableCollection.Keys.Contains(newKey))
+                if (TableCollection.SharedData.Contains(newKey))
                 {
                     Debug.LogWarningFormat("Cannot rename key {0} to {1}. Key must be unique and this one has already been used.", keyItem.Key, newKey);
                 }
                 else
                 {
-                    Undo.RecordObject(TableCollection.Keys, "Rename key");
-                    TableCollection.Keys.RenameKey(keyItem.Key, newKey);
-                    EditorUtility.SetDirty(TableCollection.Keys);
+                    Undo.RecordObject(TableCollection.SharedData, "Rename key");
+                    TableCollection.SharedData.RenameKey(keyItem.Key, newKey);
+                    EditorUtility.SetDirty(TableCollection.SharedData);
                     RefreshCustomRowHeights();
                 }
             }
@@ -298,12 +301,12 @@ namespace UnityEditor.Localization.UI
             if (GUI.Button(removeKeyButtonRect, "-"))
             {
                 var objects = new List<Object>(TableCollection.Tables);
-                objects.Add(TableCollection.Keys);
-                 
+                objects.Add(TableCollection.SharedData);
+
                 Undo.RecordObjects(objects.ToArray(), "Remove key");
                 keyItem.OnDeleteKey();
-                TableCollection.Keys.RemoveKey(keyItem.KeyId);
-                EditorUtility.SetDirty(TableCollection.Keys);
+                TableCollection.SharedData.RemoveKey(keyItem.KeyId);
+                EditorUtility.SetDirty(TableCollection.SharedData);
                 Reload();
             }
         }
@@ -329,9 +332,9 @@ namespace UnityEditor.Localization.UI
 
         protected virtual void AddNewKey()
         {
-            Undo.RecordObject(TableCollection.Keys, "Add new key");
-            TableCollection.Keys.AddKey();
-            EditorUtility.SetDirty(TableCollection.Keys);
+            Undo.RecordObject(TableCollection.SharedData, "Add new key");
+            TableCollection.SharedData.AddKey();
+            EditorUtility.SetDirty(TableCollection.SharedData);
         }
 
         protected abstract void DrawItemField(Rect cellRect, int colIdx, TableColumn<T1> col, T2 item);
@@ -346,7 +349,7 @@ namespace UnityEditor.Localization.UI
             {
                 DragAndDrop.PrepareStartDrag();
                 DragAndDrop.SetGenericData(k_DragId, draggedRows[0]);
-                DragAndDrop.objectReferences = new UnityEngine.Object[] { };  // this is required for dragging to work
+                DragAndDrop.objectReferences = new UnityEngine.Object[] {};  // this is required for dragging to work
                 DragAndDrop.StartDrag("Move Key");
             }
         }
@@ -371,14 +374,14 @@ namespace UnityEditor.Localization.UI
 
             if (args.performDrop)
             {
-                var keys = TableCollection.Keys;
-                Undo.RecordObject(keys, "Move Key");
+                var sharedData = TableCollection.SharedData;
+                Undo.RecordObject(sharedData, "Move Key");
 
-                var newIndex = Mathf.Clamp(args.insertAtIndex, 0, keys.Entries.Count);
-                keys.Entries.Insert(newIndex, keys.Entries[itemIndex]);
+                var newIndex = Mathf.Clamp(args.insertAtIndex, 0, sharedData.Entries.Count);
+                sharedData.Entries.Insert(newIndex, sharedData.Entries[itemIndex]);
                 if (newIndex <= itemIndex)
                     ++itemIndex;
-                keys.Entries.RemoveAt(itemIndex);
+                sharedData.Entries.RemoveAt(itemIndex);
                 SetSelection(new[] { newIndex });
                 Reload();
             }

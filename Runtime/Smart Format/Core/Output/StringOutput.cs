@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
 
 namespace UnityEngine.Localization.SmartFormat.Core.Output
@@ -26,7 +26,6 @@ namespace UnityEngine.Localization.SmartFormat.Core.Output
             this.output = output;
         }
 
-
         public void Write(string text, IFormattingInfo formattingInfo)
         {
             output.Append(text);
@@ -36,7 +35,6 @@ namespace UnityEngine.Localization.SmartFormat.Core.Output
         {
             output.Append(text, startIndex, length);
         }
-
 
         /// <summary>
         /// Returns the results of the StringBuilder.

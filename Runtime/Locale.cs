@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using UnityEngine.Localization.Metadata;
 
@@ -153,7 +153,7 @@ namespace UnityEngine.Localization
         /// <param name="l1"></param>
         /// <param name="l2"></param>
         /// <returns></returns>
-        public static bool operator ==(LocaleIdentifier l1, LocaleIdentifier l2) => l1.Equals(l2);
+        public static bool operator==(LocaleIdentifier l1, LocaleIdentifier l2) => l1.Equals(l2);
 
         /// <summary>
         /// Compare the LocaleIdentifier to another LocaleIdentifier.
@@ -161,7 +161,7 @@ namespace UnityEngine.Localization
         /// <param name="l1"></param>
         /// <param name="l2"></param>
         /// <returns></returns>
-        public static bool operator !=(LocaleIdentifier l1, LocaleIdentifier l2) => !l1.Equals(l2);
+        public static bool operator!=(LocaleIdentifier l1, LocaleIdentifier l2) => !l1.Equals(l2);
     }
 
     /// <summary>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine.Events;
 
 namespace UnityEngine.Localization.Components
@@ -14,7 +14,7 @@ namespace UnityEngine.Localization.Components
         /// UnityEvent which can pass a Texture as an argument.
         /// </summary>
         [Serializable]
-        public class UnityEventTexture : UnityEvent<Texture> { }
+        public class UnityEventTexture : UnityEvent<Texture> {}
 
         [SerializeField]
         UnityEventTexture m_UpdateAsset = new UnityEventTexture();

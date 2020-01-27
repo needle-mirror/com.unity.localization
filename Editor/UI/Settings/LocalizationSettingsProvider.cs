@@ -51,7 +51,7 @@ namespace UnityEditor.Localization.UI
                     if (created != null)
                     {
                         LocalizationEditorSettings.ActiveLocalizationSettings = created;
-                        
+
                         // Trigger the activate so it generates a new Editor
                         base.OnActivate(m_SearchContext, m_RootElement);
                     }

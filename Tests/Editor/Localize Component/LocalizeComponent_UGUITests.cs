@@ -20,7 +20,7 @@ namespace UnityEditor.Localization.Tests
             Assert.NotNull(localizedComponent, $"Expected a {nameof(LocalizeStringBehaviour)} component to be returned.");
 
             Assert.AreEqual(StringTableKeyId, localizedComponent.StringReference.TableEntryReference.KeyId, "Expected the StringReference property to be setup with the correct key id.");
-            Assert.AreEqual(KeyDb.TableNameGuid, localizedComponent.StringReference.TableReference.TableNameGuid, "Expected the StringReference property to be setup with the correct table name guid.");
+            Assert.AreEqual(sharedData.TableNameGuid, localizedComponent.StringReference.TableReference.TableNameGuid, "Expected the StringReference property to be setup with the correct table name guid.");
 
             // Check event
             Assert.AreEqual(1, localizedComponent.OnUpdateString.GetPersistentEventCount(), "Expected the UpdateString event to have 1 listener.");
@@ -36,7 +36,7 @@ namespace UnityEditor.Localization.Tests
             var localizedComponent = LocalizeComponent_UGUI.SetupForLocalization(textComponent) as LocalizeStringBehaviour;
             Assert.NotNull(localizedComponent, $"Expected a {nameof(LocalizeStringBehaviour)} component to be returned.");
 
-            Assert.AreEqual(KeyDatabase.EmptyId ,localizedComponent.StringReference.TableEntryReference.KeyId, "Expected the StringReference property to be setup with the default key id.");
+            Assert.AreEqual(SharedTableData.EmptyId , localizedComponent.StringReference.TableEntryReference.KeyId, "Expected the StringReference property to be setup with the default key id.");
             Assert.AreEqual(TableReference.Type.Empty, localizedComponent.StringReference.TableReference.ReferenceType, "Expected the StringReference property to be empty.");
 
             // Check event

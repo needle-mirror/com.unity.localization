@@ -5,11 +5,11 @@ The Localization Tables Window is used for creating and editing Localization Tab
 
 ![The Asset Tables window's Create Tables tab.](images/AssetTables_CreateTableTab.png)
 
-To open the Asset Tables window, navigate to **Window > Asset Management > Localization Tables**. 
-Use this window to create and manage the Project's localization Tables. The window consists of two tabs: 
+To open the Asset Tables window, navigate to **Window > Asset Management > Localization Tables**.
+Use this window to create and manage the Project's localization Tables. The window consists of two tabs:
 
 + **Create Table:** Use this tab to create new Tables.
-+ **Edit Table:** Use this tab to make changes to existing Tables within the Project. 
++ **Edit Table:** Use this tab to make changes to existing Tables within the Project.
 
 To create a Table, follow these steps:
 

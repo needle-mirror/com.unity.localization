@@ -1,6 +1,6 @@
 # Sub-String
 
-The `SubStringFormatter` lets you output parts of an input string. 
+The `SubStringFormatter` lets you output parts of an input string.
 
 ## Examples
 ```Csharp

@@ -19,11 +19,11 @@ Metadata can be used for many purposes, some examples are:
 
 ## Creating Metadata
 
-New Metadata can be added by implementing the **IMetadata** interface. 
+New Metadata can be added by implementing the **IMetadata** interface.
 Any class can be Metadata providing it is **serializable** and does not inherit from **UnityEngine.Object**, *UnityEngine.Objects* can be included in Metadata though.
 
 For example, the following Metadata could be used to attach information to a Locale:
-```
+```c#
 using System;
 using UnityEngine.Localization.Metadata;
 

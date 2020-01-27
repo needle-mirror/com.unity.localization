@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using NUnit.Framework;
 
@@ -41,7 +41,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
         [Test]
         public void IndexPlaceholderAlignment()
         {
-            // columns in the time part must not be recogniced as delimiters of a named placeholder
+            // columns in the time part must not be recognized as delimiters of a named placeholder
             // (except a formatter's name would really be 'yyyy/MM/dd HH')
             var fmt = "Year: {0,-6}  Amount: {1,15:N0}";
             var year = 2017;
@@ -66,14 +66,14 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             var now = DateTime.Now;
             var smartFmt = "It is now {Date:d} at {Date:t}";
             var stringFmt = $"It is now {now.Date:d} at {now.Date:t}";
-            
+
             Assert.AreEqual(stringFmt, Smart.Format(smartFmt, now));
         }
 
         [Test]
         public void NamedPlaceholderDateTimeHHmmss()
         {
-            // columns in the time part must not be recogniced as delimiters of a named placeholder
+            // columns in the time part must not be recognized as delimiters of a named placeholder
             // (except a formatter's name would really be 'yyyy/MM/dd HH')
             var now = DateTime.Now;
             var smartFmt = "It is now {Date:yyyy/MM/dd HH:mm:ss}";
@@ -84,7 +84,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
         [Test]
         public void NamedPlaceholderAlignment()
         {
-            var yearAmount = new Tuple<long,long>(2017, 1025632);
+            var yearAmount = new Tuple<long, long>(2017, 1025632);
             var smartFmt = "Year: {Item1,-6}  Amount: {Item2,15:N0}";
             var stringFmt = $"Year: {yearAmount.Item1,-6}  Amount: {yearAmount.Item2,15:N0}";
 

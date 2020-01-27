@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using NUnit.Framework;
@@ -29,12 +29,12 @@ namespace UnityEngine.Localization.SmartFormat.Tests.OldTests
                 Birthday = DateTime.Today.AddYears(-30),
                 Address = new Address("101 1st Ave", "Minneapolis", States.Minnesota, "55401"),
                 Friends = new List<Person>
-                    {
-                        new Person() { FullName = "John Smith", Birthday = new DateTime(1978, 1, 1) },
-                        new Person() { FullName = "Bob Johnson", Birthday = new DateTime(1957, 1, 1) },
-                        new Person() { FullName = "Mary Meyer", Birthday = new DateTime(1990, 1, 1) },
-                        new Person() { FullName = "Dr. Jamal Cornucopia", Birthday = new DateTime(1973, 1, 1) }
-                    }
+                {
+                    new Person() { FullName = "John Smith", Birthday = new DateTime(1978, 1, 1) },
+                    new Person() { FullName = "Bob Johnson", Birthday = new DateTime(1957, 1, 1) },
+                    new Person() { FullName = "Mary Meyer", Birthday = new DateTime(1990, 1, 1) },
+                    new Person() { FullName = "Dr. Jamal Cornucopia", Birthday = new DateTime(1973, 1, 1) }
+                }
             };
 
             return p;
@@ -86,11 +86,11 @@ namespace UnityEngine.Localization.SmartFormat.Tests.OldTests
         public void BasicArray()
         {
             var data = new DateTime[]
-                {
-                    new DateTime(1999, 12, 31),
-                    new DateTime(2010, 10, 10),
-                    new DateTime(3000, 1, 1),
-                };
+            {
+                new DateTime(1999, 12, 31),
+                new DateTime(2010, 10, 10),
+                new DateTime(3000, 1, 1),
+            };
 
             var formatString = "All dates: {0:{:M/d/yyyy}| and }.";
             var expectedOutput = "All dates: 12/31/1999 and 10/10/2010 and 1/1/3000.";

@@ -1,4 +1,4 @@
-﻿using UnityEngine.Localization.Metadata;
+using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.SmartFormat.Core.Formatting;
 
@@ -66,12 +66,12 @@ namespace UnityEngine.Localization.Tables
         public string GetLocalizedString(params object[] args)
         {
             string translatedText = null;
-            
+
             if (IsSmart)
             {
                 translatedText = LocalizationSettings.StringDatabase.SmartFormatter.FormatWithCache(ref m_FormatCache, Data.Localized, args);
             }
-            else if(!string.IsNullOrEmpty(Data.Localized))
+            else if (!string.IsNullOrEmpty(Data.Localized))
             {
                 translatedText = args == null ? Data.Localized : string.Format(Data.Localized, args);
             }

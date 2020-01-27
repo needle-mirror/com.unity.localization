@@ -1,4 +1,4 @@
-﻿using UnityEngine.Localization.Settings;
+using UnityEngine.Localization.Settings;
 
 namespace UnityEngine.Localization.Samples
 {

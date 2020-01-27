@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -61,7 +61,7 @@ namespace UnityEditor.Localization.UI
         /// </summary>
         public bool IsSmart
         {
-            get => m_IsSmart; 
+            get => m_IsSmart;
             set
             {
                 m_Mode = Mode.Edit;

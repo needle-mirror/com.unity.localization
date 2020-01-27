@@ -1,4 +1,4 @@
-﻿using UnityEditor.IMGUI.Controls;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.Localization.Tables;
 
@@ -8,7 +8,7 @@ namespace UnityEditor.Localization.UI
     {
         protected static readonly Color k_SelectedColor = new Color(0.37f, 0.41f, 0.7f);
 
-        public StringTableListView(AssetTableCollection tableCollection) : 
+        public StringTableListView(AssetTableCollection tableCollection) :
             base(tableCollection)
         {
         }
@@ -31,7 +31,7 @@ namespace UnityEditor.Localization.UI
             var visibleColumns = multiColumnHeader.state.visibleColumns;
             if (item is StringTableTreeViewItem stringTableItem)
             {
-                foreach(var colIdx in visibleColumns)
+                foreach (var colIdx in visibleColumns)
                 {
                     var editor = stringTableItem.GetSmartFormatEditor(colIdx);
                     if (editor != null)

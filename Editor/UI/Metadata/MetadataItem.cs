@@ -1,4 +1,4 @@
-﻿using UnityEditor.UIElements;
+using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 
@@ -6,7 +6,7 @@ namespace UnityEditor.Localization.UI
 {
     class MetadataItem : Foldout
     {
-        internal new class UxmlFactory : UxmlFactory<MetadataItem> { }
+        internal new class UxmlFactory : UxmlFactory<MetadataItem> {}
 
         Object m_Asset;
 

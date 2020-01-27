@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
 using UnityEngine.Localization.SmartFormat.Net.Utilities;
@@ -9,7 +9,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     [Serializable]
     public class TimeFormatter : FormatterBase
     {
-        [SerializeField] 
+        [SerializeField]
         TimeSpanFormatOptions m_DefaultFormatOptions = TimeSpanUtility.DefaultFormatOptions;
 
         private string m_DefaultTwoLetterIsoLanguageName = "en";
@@ -18,7 +18,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         {
             Names = new[] {"timespan", "time", "t", ""};
         }
-        
+
         /// <summary>
         /// Determines the options for time formatting.
         /// </summary>
@@ -57,7 +57,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                 options = "";
 
             TimeSpan fromTime;
-            
+
             switch (current)
             {
                 case TimeSpan timeSpan:
@@ -100,9 +100,9 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             // Return the default if there is no provider:
             if (provider == null)
                 return CommonLanguagesTimeTextInfo.GetTimeTextInfo(DefaultTwoLetterISOLanguageName);
-            
+
             // See if the provider can give us what we want:
-            var timeTextInfo = (TimeTextInfo) provider.GetFormat(typeof(TimeTextInfo));
+            var timeTextInfo = (TimeTextInfo)provider.GetFormat(typeof(TimeTextInfo));
             if (timeTextInfo != null) return timeTextInfo;
 
             // See if there is a rule for this culture:

@@ -1,8 +1,6 @@
-﻿using System;
-using System.Text.RegularExpressions;
+using System;
 using UnityEditorInternal;
 using UnityEngine;
-using System.Linq;
 
 namespace UnityEditor.Localization.UI
 {
@@ -42,7 +40,7 @@ namespace UnityEditor.Localization.UI
             bool disabled = IsReadOnly(element);
 
             EditorGUI.BeginDisabledGroup(disabled);
-            
+
             // Get the class name only
             var name = element.managedReferenceFullTypename;
             var namespaceIndex = name.LastIndexOf('.');
@@ -58,8 +56,10 @@ namespace UnityEditor.Localization.UI
                 name = name.Substring(namespaceIndex + 1, name.Length - namespaceIndex - 1);
             }
 
+            name = ObjectNames.NicifyVariableName(name);
+
             var label = new GUIContent(name);
-            rect.x += 8;
+            rect.xMin += 8; // Prevent the foldout arrow(>) being drawn over the reorder icon(=)
             EditorGUI.PropertyField(rect, element, label, true);
             EditorGUI.EndDisabledGroup();
         }
@@ -99,14 +99,13 @@ namespace UnityEditor.Localization.UI
             for (int i = 0; i < foundTypes.Count; ++i)
             {
                 var type = foundTypes[i];
-                
+
                 if (type.IsAbstract)
                     continue;
 
                 menu.AddItem(new GUIContent(ObjectNames.NicifyVariableName(type.Name)), false, () =>
                 {
-                    serializedProperty.InsertArrayElementAtIndex(serializedProperty.arraySize);
-                    var element = serializedProperty.GetArrayElementAtIndex(serializedProperty.arraySize - 1);
+                    var element = serializedProperty.AddArrayElement();
                     element.managedReferenceValue = Activator.CreateInstance(type);
                     serializedProperty.serializedObject.ApplyModifiedProperties();
                 });

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
@@ -12,7 +12,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         {
             Names = new[] {"xelement", "xml", "x", ""};
         }
-        
+
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {
             var format = formattingInfo.Format;

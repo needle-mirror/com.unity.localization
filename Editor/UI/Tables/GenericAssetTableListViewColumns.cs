@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Linq;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.UIElements;
@@ -10,7 +10,7 @@ using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.UI
 {
-    class GenericAssetTableListViewMultiColumnHeader<T1, T2> : MultiColumnHeader 
+    class GenericAssetTableListViewMultiColumnHeader<T1, T2> : MultiColumnHeader
         where T1 : LocalizedTable
         where T2 : GenericAssetTableTreeViewItem<T1>, new()
     {
@@ -80,30 +80,30 @@ namespace UnityEditor.Localization.UI
             switch (column)
             {
                 case ISelectable selectable:
+                {
+                    EditorGUI.BeginChangeCheck();
+                    GUI.Toggle(btnRect, selectable.Selected, k_MetadataIcon, GUI.skin.button);
+                    if (EditorGUI.EndChangeCheck())
                     {
-                        EditorGUI.BeginChangeCheck();
-                        GUI.Toggle(btnRect, selectable.Selected, k_MetadataIcon, GUI.skin.button);
-                        if (EditorGUI.EndChangeCheck())
-                        {
-                            m_Parent.Selected = selectable;
-                        }
-                        base.ColumnHeaderGUI(column, headerRect, columnIndex);
-                        break;
+                        m_Parent.Selected = selectable;
                     }
+                    base.ColumnHeaderGUI(column, headerRect, columnIndex);
+                    break;
+                }
 
                 case VisibleColumn _:
                     base.ColumnHeaderGUI(column, headerRect, columnIndex);
                     break;
 
                 case MissingTableColumn mtc:
+                {
+                    var labelRect = new Rect(headerRect.x, headerRect.yMax - EditorGUIUtility.singleLineHeight - EditorGUIUtility.standardVerticalSpacing, headerRect.width, EditorGUIUtility.singleLineHeight);
+                    if (GUI.Button(labelRect, mtc.headerContent))
                     {
-                        var labelRect = new Rect(headerRect.x, headerRect.yMax - EditorGUIUtility.singleLineHeight - EditorGUIUtility.standardVerticalSpacing, headerRect.width, EditorGUIUtility.singleLineHeight);
-                        if (GUI.Button(labelRect, mtc.headerContent))
-                        {
-                            CreateMissingTable(mtc);
-                        }
-                        break;
+                        CreateMissingTable(mtc);
                     }
+                    break;
+                }
             }
         }
 
@@ -111,7 +111,7 @@ namespace UnityEditor.Localization.UI
         {
             var tableToCopyPath = TableCollection.TableEntries[0].AssetPath;
             string tableToCopyDir = Path.GetDirectoryName(tableToCopyPath);
-            LocalizationEditorSettings.CreateAssetTableFilePanel(mtc.TableLocale, TableCollection.Keys, TableCollection.TableName, TableCollection.TableType, tableToCopyDir);
+            LocalizationEditorSettings.CreateAssetTableFilePanel(mtc.TableLocale, TableCollection.SharedData, TableCollection.TableName, TableCollection.TableType, tableToCopyDir);
         }
     }
 
@@ -131,8 +131,8 @@ namespace UnityEditor.Localization.UI
     class TableColumn<T1> : VisibleColumn, ISelectable  where T1 : LocalizedTable
     {
         public T1 Table { get; set; }
-        public SerializedObject SerializedObjectTable{ get; private set; }
-        public SerializedObject SerializedObjectKeyDatabase{ get; private set; }
+        public SerializedObject SerializedObjectTable { get; private set; }
+        public SerializedObject SerializedObjectSharedTableData { get; private set; }
 
         public Locale TableLocale { get; set; }
         public bool Selected { get; set; }
@@ -148,7 +148,7 @@ namespace UnityEditor.Localization.UI
             minWidth = 100;
             Table = table as T1;
             SerializedObjectTable = new SerializedObject(Table);
-            SerializedObjectKeyDatabase = new SerializedObject(Table.Keys);
+            SerializedObjectSharedTableData = new SerializedObject(Table.SharedData);
             TableLocale = locale;
             headerContent = new GUIContent(TableLocale != null ? TableLocale.ToString() : table.LocaleIdentifier.Code);
             headerTextAlignment = TextAlignment.Center;
@@ -218,15 +218,15 @@ namespace UnityEditor.Localization.UI
             preloadEditor.AddToClassList("unity-box");
             root.Add(preloadEditor);
 
-            var keyDatabaseEditor = new IMGUIContainer(() =>
+            var sharedTableDataEditor = new IMGUIContainer(() =>
             {
-                SerializedObjectKeyDatabase.Update();
+                SerializedObjectSharedTableData.Update();
                 EditorGUILayout.LabelField("Shared", EditorStyles.boldLabel);
-                EditorGUILayout.PropertyField(SerializedObjectKeyDatabase.FindProperty("m_Metadata"));
-                SerializedObjectKeyDatabase.ApplyModifiedProperties();
+                EditorGUILayout.PropertyField(SerializedObjectSharedTableData.FindProperty("m_Metadata"));
+                SerializedObjectSharedTableData.ApplyModifiedProperties();
             });
-            keyDatabaseEditor.style.borderBottomWidth = 10;
-            root.Add(keyDatabaseEditor);
+            sharedTableDataEditor.style.borderBottomWidth = 10;
+            root.Add(sharedTableDataEditor);
 
             RefreshPreloadToggle();
 
@@ -254,12 +254,12 @@ namespace UnityEditor.Localization.UI
 
     class KeyColumn : VisibleColumn
     {
-        public KeyDatabase Keys { get; }
+        public SharedTableData SharedData { get; }
 
-        public KeyColumn(KeyDatabase keys)
+        public KeyColumn(SharedTableData sharedData)
         {
             minWidth = 100;
-            Keys = keys;
+            SharedData = sharedData;
             headerContent = new GUIContent("Key");
             headerTextAlignment = TextAlignment.Center;
             canSort = true;
@@ -271,13 +271,13 @@ namespace UnityEditor.Localization.UI
 
     class KeyIdColumn : VisibleColumn
     {
-        public KeyDatabase Keys { get; }
+        public SharedTableData Keys { get; }
 
-        public KeyIdColumn(KeyDatabase keys)
+        public KeyIdColumn(SharedTableData sharedData)
         {
             minWidth = 50;
             maxWidth = 100;
-            Keys = keys;
+            Keys = sharedData;
             headerContent = new GUIContent("Key Id");
             headerTextAlignment = TextAlignment.Center;
             canSort = true;
@@ -296,7 +296,7 @@ namespace UnityEditor.Localization.UI
         {
             minWidth = 50;
             maxWidth = 150;
-            
+
             TableLocale = locale;
             headerContent = new GUIContent("Add " + TableLocale);
             headerTextAlignment = TextAlignment.Center;

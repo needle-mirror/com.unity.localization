@@ -55,6 +55,6 @@ var result = Smart.Format("First dictionary: {0:{Name}}, second dictionary: {1:{
 // alternative notation:
 var result = Smart.Format("First dictionary: {0.Name}, second dictionary: {1.City}", dict1, dict2);
 
-// result: 
+// result:
 // "First dictionary: John, second dictionary: Washington"
 ```

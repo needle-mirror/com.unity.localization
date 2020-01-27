@@ -25,7 +25,7 @@ namespace UnityEditor.Localization.UI
             keyId = property.FindPropertyRelative("m_KeyId");
 
             var id = (uint)keyId.intValue;
-            if (id != KeyDatabase.EmptyId)
+            if (id != SharedTableData.EmptyId)
             {
                 Reference = id;
             }

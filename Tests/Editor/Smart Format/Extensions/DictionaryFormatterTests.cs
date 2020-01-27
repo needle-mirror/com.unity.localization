@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
@@ -17,25 +17,29 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
     {
         public object[] GetArgs()
         {
-            var d = new Dictionary<string, object>() {
-                {"Numbers", new Dictionary<string, object>() {
-                    {"One", 1},
-                    {"Two", 2},
-                    {"Three", 3},
-                }},
-                {"Letters", new Dictionary<string, object>() {
-                    {"A", "a"},
-                    {"B", "b"},
-                    {"C", "c"},
-                }},
+            var d = new Dictionary<string, object>()
+            {
+                {"Numbers", new Dictionary<string, object>()
+                 {
+                     {"One", 1},
+                     {"Two", 2},
+                     {"Three", 3},
+                 }},
+                {"Letters", new Dictionary<string, object>()
+                 {
+                     {"A", "a"},
+                     {"B", "b"},
+                     {"C", "c"},
+                 }},
                 {"Object", new {
-                    Prop1 = "a",
-                    Prop2 = "b",
-                    Prop3 = "c",
-                }},
+                     Prop1 = "a",
+                     Prop2 = "b",
+                     Prop3 = "c",
+                 }},
             };
 
-            return new object[] {
+            return new object[]
+            {
                 d,
             };
         }
@@ -48,7 +52,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             d.Raw = new Dictionary<string, string>() { { "X", "z" } };
             d.Object = new { Prop1 = "a", Prop2 = "b", Prop3 = "c", };
 
-            return new object[] {
+            return new object[]
+            {
                 d,
             };
         }
@@ -60,11 +65,13 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             Assert.IsNotNull(formatter.GetSourceExtension<DictionarySource>(), "Expected a DictionarySource extension.");
             formatter.Parser.UseAlternativeEscapeChar(); // curly braces MUST be escaped with \{ and \} instead of {{ and }} for this complex test
 
-            var formats = new string[] {
+            var formats = new string[]
+            {
                 "Chained: {0.Numbers.One} {Numbers.Two} {Letters.A} {Object.Prop1}",
-                "Nested: {0:{Numbers:{One} {Two}}} {Letters:{A}} {Object:{Prop1}}" 
+                "Nested: {0:{Numbers:{One} {Two}}} {Letters:{A}} {Object:{Prop1}}"
             };
-            var expected = new string[] {
+            var expected = new string[]
+            {
                 "Chained: 1 2 a a",
                 "Nested: 1 2 a a"
             };
@@ -81,11 +88,13 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             Assert.IsNotNull(formatter.GetSourceExtension<DictionarySource>(), "Expected a DictionarySource extension.");
             formatter.Parser.UseAlternativeEscapeChar(); // curly braces MUST be escaped with \{ and \} instead of {{ and }} for this complex test
 
-            var formats = new string[] {
+            var formats = new string[]
+            {
                 "Chained: {0.Numbers.One} {Numbers.Two} {Letters.A} {Object.Prop1} {Raw.X}",
                 "Nested: {0:{Numbers:{One} {Two}}} {Letters:{A}} {Object:{Prop1}} {Raw:{X}}"
             };
-            var expected = new string[] {
+            var expected = new string[]
+            {
                 "Chained: 1 2 a a z",
                 "Nested: 1 2 a a z"
             };
@@ -103,11 +112,13 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             Assert.IsNotNull(formatter.GetSourceExtension<DictionarySource>(), "Expected a DictionarySource extension.");
             formatter.Parser.UseAlternativeEscapeChar(); // curly braces MUST be escaped with \{ and \} instead of {{ and }} for this complex test
 
-            var formats = new string[] {
+            var formats = new string[]
+            {
                 "Chained: {0.Numbers.One} {Numbers.Two} {Letters.A} {Object.Prop1} {Raw.x}",
                 "Nested: {0:{Numbers:{One} {Two}}} {Letters:{A}} {Object:{Prop1}} {Raw:{x}}"
             };
-            var expected = new string[] {
+            var expected = new string[]
+            {
                 "Chained: 1 2 a a z",
                 "Nested: 1 2 a a z"
             };
@@ -126,17 +137,16 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             var addr = new Address();
 
             const string format = "Address: {City.ZipCode} {City.Name}, {City.AreaCode}\n" +
-                                  "Name: {Person.FirstName} {Person.LastName}";
+                "Name: {Person.FirstName} {Person.LastName}";
 
             var expected = $"Address: {addr.City.ZipCode} {addr.City.Name}, {addr.City.AreaCode}\n" +
-                         $"Name: {addr.Person.FirstName} {addr.Person.LastName}";
+                $"Name: {addr.Person.FirstName} {addr.Person.LastName}";
 
             var formatter = Smart.CreateDefaultSmartFormat();
             var result = formatter.Format(format, addr.ToDictionary());
 
             Assert.AreEqual(expected, result);
         }
-
 
         public class Address
         {

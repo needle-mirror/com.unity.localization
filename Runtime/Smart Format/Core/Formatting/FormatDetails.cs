@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine.Localization.SmartFormat.Core.Output;
 using UnityEngine.Localization.SmartFormat.Core.Parsing;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
@@ -12,7 +12,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Formatting
     public class FormatDetails
     {
         public FormatDetails(SmartFormatter formatter, Format originalFormat, object[] originalArgs,
-            FormatCache formatCache, IFormatProvider provider, IOutput output)
+                             FormatCache formatCache, IFormatProvider provider, IOutput output)
         {
             Formatter = formatter;
             OriginalFormat = originalFormat;

@@ -15,7 +15,6 @@ namespace UnityEditor.Localization.UI
                 m_Reference = value;
                 tableName.stringValue = m_Reference.GetSerializedString();
             }
-
         }
 
         public SerializedTableReference(SerializedProperty property)

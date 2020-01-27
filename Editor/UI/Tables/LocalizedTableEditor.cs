@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization.UI
@@ -8,7 +8,7 @@ namespace UnityEditor.Localization.UI
     {
         GUIContent m_TableEditorButton;
         SerializedProperty m_LocaleId;
-        SerializedObject m_KeyDbSerializedObject;
+        SerializedObject m_SharedTableDataSerializedObject;
         SerializedProperty m_TableName;
 
         public virtual void OnEnable()
@@ -19,15 +19,15 @@ namespace UnityEditor.Localization.UI
             m_TableEditorButton = new GUIContent("Open Table Editor", EditorGUIUtility.ObjectContent(target, target.GetType()).image);
 
             var table = target as LocalizedTable;
-            m_KeyDbSerializedObject = new SerializedObject(table.Keys);
+            m_SharedTableDataSerializedObject = new SerializedObject(table.SharedData);
             m_LocaleId = serializedObject.FindProperty("m_LocaleId");
-            m_TableName = m_KeyDbSerializedObject.FindProperty("m_TableName");
+            m_TableName = m_SharedTableDataSerializedObject.FindProperty("m_TableName");
         }
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-            m_KeyDbSerializedObject.Update();
+            m_SharedTableDataSerializedObject.Update();
 
             EditorGUILayout.LabelField("Table Name", m_TableName.stringValue);
             EditorGUILayout.PropertyField(m_LocaleId);

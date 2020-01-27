@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine.Localization.SmartFormat.Core.Parsing;
 
 namespace UnityEngine.Localization.SmartFormat.Core.Formatting
@@ -40,17 +40,17 @@ namespace UnityEngine.Localization.SmartFormat.Core.Formatting
         /// The string being formatted.
         /// </summary>
         public string Format { get; }
-        
+
         /// <summary>
         /// The <see cref="FormatItem"/> causing the error.
         /// </summary>
         public FormatItem ErrorItem { get; }
-        
+
         /// <summary>
         /// The reported issue.
         /// </summary>
         public string Issue { get; }
-        
+
         /// <summary>
         /// Index of the error.
         /// </summary>

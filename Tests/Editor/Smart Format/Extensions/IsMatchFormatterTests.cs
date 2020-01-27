@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -11,7 +11,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
 {
     public class IsMatchFormatterTests
     {
-        private Dictionary<string, object> m_Variable = new Dictionary<string,object>() { {"theKey", "Some123Content"}};
+        private Dictionary<string, object> m_Variable = new Dictionary<string, object>() { {"theKey", "Some123Content"}};
         private SmartFormatter m_Formatter;
 
         public IsMatchFormatterTests()
@@ -22,7 +22,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             m_Formatter.AddExtensions(ismatch);
             m_Formatter.Settings.FormatErrorAction = ErrorAction.ThrowError;
         }
-        
+
         [TestCase("{theKey:ismatch(^.+123.+$):Okay - {}|No match content}", RegexOptions.None, "Okay - Some123Content")]
         [TestCase("{theKey:ismatch(^.+123.+$):Fixed content if match|No match content}", RegexOptions.None, "Fixed content if match")]
         [TestCase("{theKey:ismatch(^.+999.+$):{}|No match content}", RegexOptions.None, "No match content")]
@@ -32,7 +32,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
         [TestCase("{theKey:ismatch(^SOME123.+$):Okay - {}|No match content}", RegexOptions.None, "No match content")]
         public void Test_Formats_And_CaseSensitivity(string format, RegexOptions options, string expected)
         {
-            ((IsMatchFormatter) m_Formatter.FormatterExtensions.First(fex =>
+            ((IsMatchFormatter)m_Formatter.FormatterExtensions.First(fex =>
                 fex.GetType() == typeof(IsMatchFormatter))).RegexOptions = options;
 
             Assert.AreEqual(expected, m_Formatter.Format(format, m_Variable));

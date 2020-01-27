@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
@@ -32,7 +32,7 @@ namespace UnityEngine.Localization.SmartFormat
         /// Event raising, if an error occurs during formatting.
         /// </summary>
         public event EventHandler<FormattingErrorEventArgs> OnFormattingFailure;
-        
+
         /// <summary>
         /// Gets the list of <see cref="ISource" /> source extensions.
         /// </summary>
@@ -235,7 +235,7 @@ namespace UnityEngine.Localization.SmartFormat
                 }
 
                 // Otherwise, the item must be a placeholder.
-                var placeholder = (Placeholder) item;
+                var placeholder = (Placeholder)item;
                 var childFormattingInfo = formattingInfo.CreateChild(placeholder);
                 try
                 {
@@ -336,7 +336,7 @@ namespace UnityEngine.Localization.SmartFormat
             {
                 // if the current value is of type SmartObjects
                 // then try to find the right source extension for each of the objects in SmartObjects
-                // Note: SmartObjects cannot be nested, so this can be the case only once. 
+                // Note: SmartObjects cannot be nested, so this can be the case only once.
                 if (formattingInfo.CurrentValue is SmartObjects smartObjects)
                 {
                     var savedCurrentValue = formattingInfo.CurrentValue;

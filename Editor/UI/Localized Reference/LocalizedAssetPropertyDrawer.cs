@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using UnityEngine;
@@ -18,7 +18,7 @@ namespace UnityEditor.Localization.UI
             // Find the asset type.
             Type baseType = fieldInfo.FieldType;
             Type assetType = null;
-            while(baseType != null)
+            while (baseType != null)
             {
                 if (baseType.IsGenericType && baseType.GetGenericTypeDefinition() == typeof(LocalizedAsset<>))
                 {
@@ -81,7 +81,7 @@ namespace UnityEditor.Localization.UI
                         var tableToCopyPath = m_Property.SelectedTableCollection.TableEntries[0].AssetPath;
                         string tableToCopyDir = Path.GetDirectoryName(tableToCopyPath);
                         var tc = m_Property.SelectedTableCollection;
-                        LocalizationEditorSettings.CreateAssetTableFilePanel(locale, tc.Keys, tc.TableName, tc.TableType, tableToCopyDir);
+                        LocalizationEditorSettings.CreateAssetTableFilePanel(locale, tc.SharedData, tc.TableName, tc.TableType, tableToCopyDir);
                     }
                 }
 

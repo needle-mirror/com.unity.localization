@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Localization.Settings;
 
 namespace UnityEditor.Localization.UI
@@ -49,7 +49,7 @@ namespace UnityEditor.Localization.UI
 
             // Player
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            
+
             EditorGUILayout.LabelField(Styles.player, EditorStyles.boldLabel);
             EditorGUILayout.Space();
 

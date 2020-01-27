@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
@@ -23,9 +23,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             }
 
             m_People = new List<object>
-                {new {Name = "Long John", City = "New York"}, new {Name = "Short Mary", City = "Massachusetts"},};
+            {new {Name = "Long John", City = "New York"}, new {Name = "Short Mary", City = "Massachusetts"}, };
         }
-
 
         [Test]
         public void NoParameters()

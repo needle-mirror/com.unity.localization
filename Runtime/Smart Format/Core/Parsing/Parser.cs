@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
@@ -13,45 +13,45 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
     {
         [SerializeField]
         char m_OpeningBrace = '{';
-        
+
         [SerializeField]
         char m_ClosingBrace = '}';
-        
+
         [SerializeReference]
         SmartSettings m_Settings;
-        
+
         // The following fields are points of extensibility
 
         [Tooltip("If false, only digits are allowed as selectors. If true, selectors can be alpha-numeric. " +
-                 "This allows optimized alpha-character detection. Specify any additional selector chars " +
-                 "in AllowedSelectorChars.")]
+            "This allows optimized alpha-character detection. Specify any additional selector chars " +
+            "in AllowedSelectorChars.")]
         [SerializeField]
         bool m_AlphanumericSelectors;
-        
+
         [Tooltip("A list of allowable selector characters, to support additional selector syntaxes such as math. " +
-                 "Digits are always included, and letters can be included with AlphanumericSelectors.")]
+            "Digits are always included, and letters can be included with AlphanumericSelectors.")]
         [SerializeField]
         string m_AllowedSelectorChars = "";
-        
+
         [Tooltip("A list of characters that come between selectors. This can be \".\" for dot-notation, \"[]\" for " +
-                 "arrays, or even math symbols. By default, there are no operators.")]
+            "arrays, or even math symbols. By default, there are no operators.")]
         [SerializeField]
         string m_Operators = "";
-        
+
         [Tooltip("If false, double-curly braces are escaped. If true, the AlternativeEscapeChar is used for escaping braces.")]
         [SerializeField]
         bool m_AlternativeEscaping;
-        
+
         [Tooltip("If AlternativeEscaping is true, then this character is used to escape curly braces.")]
         [SerializeField]
         private char m_AlternativeEscapeChar = '\\';
-        
+
         [Tooltip("The character literal escape character e.g. for \t (TAB) and others. This is kind of overlapping " +
-                 "functionality with `UseAlternativeEscapeChar` Note: In a future release escape characters for placeholders " +
-                 " and character literals should become the same.")]
+            "functionality with `UseAlternativeEscapeChar` Note: In a future release escape characters for placeholders " +
+            " and character literals should become the same.")]
         [SerializeField]
         internal const char m_CharLiteralEscapeChar = '\\';
-        
+
         /// <summary>
         /// Gets or sets the <seealso cref="Core.Settings.SmartSettings" /> for Smart.Format
         /// </summary>
@@ -131,7 +131,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
             m_OpeningBrace = opening;
             m_ClosingBrace = closing;
         }
-        
+
         public Format ParseFormat(string format, string[] formatterExtensionNames)
         {
             var result = new Format(Settings, format);
@@ -272,7 +272,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                                 // ensure no trailing chars past ')'
                                 var nextI = i + 1;
                                 var nextCharIsValid = nextI < format.Length &&
-                                                      (format[nextI] == ':' || format[nextI] == closingBrace);
+                                    (format[nextI] == ':' || format[nextI] == closingBrace);
 
                                 if (!hasOpeningParenthesis || !nextCharIsValid)
                                 {
@@ -335,7 +335,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                 }
                 else
                 {
-                    // Placeholder is NOT null, so that means 
+                    // Placeholder is NOT null, so that means
                     // we're parsing the selectors:
                     if (m_Operators.IndexOf(c) != -1)
                     {
@@ -435,7 +435,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
         {
             return formatterExtensionNames.Any(n => n == name);
         }
-        
+
         public enum ParsingError
         {
             TooManyClosingBraces = 1,

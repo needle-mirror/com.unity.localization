@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace UnityEngine.Localization.Settings
 {
@@ -21,7 +21,7 @@ namespace UnityEngine.Localization.Settings
         }
 
         /// <summary>
-        /// Returns the selected locale from the available locales list. 
+        /// Returns the selected locale from the available locales list.
         /// </summary>
         /// <param name="availableLocales">The list of locales that should be searched.</param>
         /// <returns>Locale that matches the command line argument or null.</returns>

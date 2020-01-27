@@ -1,4 +1,4 @@
-﻿using System.Xml.Linq;
+using System.Xml.Linq;
 using NUnit.Framework;
 using UnityEngine.Localization.SmartFormat.Core.Formatting;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
@@ -8,34 +8,34 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
     public class XmlSourceTest
     {
         public const string TwoLevelXml = "<root>" +
-                                      "<Person>" +
-                                      "  <FirstName>Joe</FirstName>" +
-                                      "  <LastName>Doe</LastName>" +
-                                      "  <Phone>123-123-1234</Phone>" +
-                                      "</Person>" +
-                                      "<Person>" +
-                                      "  <FirstName>Jack</FirstName>" +
-                                      "  <LastName>Doe</LastName>" +
-                                      "  <Phone>789-789-7890</Phone>" +
-                                      "</Person>" +
-                                      "</root>";
+            "<Person>" +
+            "  <FirstName>Joe</FirstName>" +
+            "  <LastName>Doe</LastName>" +
+            "  <Phone>123-123-1234</Phone>" +
+            "</Person>" +
+            "<Person>" +
+            "  <FirstName>Jack</FirstName>" +
+            "  <LastName>Doe</LastName>" +
+            "  <Phone>789-789-7890</Phone>" +
+            "</Person>" +
+            "</root>";
 
         private const string OneLevelXml = "<root>" +
-                                           "<FirstName>Joe</FirstName>" +
-                                           "<LastName>Doe</LastName>" +
-                                           "<Dob>1950-05-05</Dob>" +
-                                           "</root>";
+            "<FirstName>Joe</FirstName>" +
+            "<LastName>Doe</LastName>" +
+            "<Dob>1950-05-05</Dob>" +
+            "</root>";
         private const string OneLevelXmlWithNameSpaces = "<my:root xmlns:my='http://tempuri.org'>" +
-                                                   "<my:FirstName>Joe</my:FirstName>" +
-                                                   "<my:LastName>Doe</my:LastName>" +
-                                                   "<my:Dob>1950-05-05</my:Dob>" +
-                                                   "</my:root>";
+            "<my:FirstName>Joe</my:FirstName>" +
+            "<my:LastName>Doe</my:LastName>" +
+            "<my:Dob>1950-05-05</my:Dob>" +
+            "</my:root>";
         private const string XmlMultipleFirstNameStr = "<root>" +
-                                                       "<FirstName>Joe</FirstName>" +
-                                                       "<FirstName>Jack</FirstName>" +
-                                                       "<LastName>Doe</LastName>" +
-                                                       "<FirstName>Jim</FirstName>" +
-                                                       "</root>";
+            "<FirstName>Joe</FirstName>" +
+            "<FirstName>Jack</FirstName>" +
+            "<LastName>Doe</LastName>" +
+            "<FirstName>Jim</FirstName>" +
+            "</root>";
 
         [Test]
         public void Format_SingleLevelXml_Replaced()

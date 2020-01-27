@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -13,15 +13,25 @@ namespace UnityEngine.Localization
     [Serializable]
     public class LocalizedAsset<TObject> : LocalizedReference where TObject : Object
     {
-        AsyncOperationHandle<TObject>? m_CurrentLoadingOperation;
         ChangeHandler m_ChangeHandler;
-        
+
+        AsyncOperationHandle<TObject>? m_CurrentLoadingOperation;
+
         /// <summary>
         /// <inheritdoc cref="RegisterChangeHandler"/>
         /// </summary>
         /// <param name="value"></param>
         public delegate void ChangeHandler(TObject value);
-        
+
+        /// <summary>
+        /// The current loading operation for the Asset when using a <see cref="ChangeHandler"/>.
+        /// </summary>
+        public AsyncOperationHandle<TObject>? CurrentLoadingOperation
+        {
+            get => m_CurrentLoadingOperation;
+            internal set => m_CurrentLoadingOperation = value;
+        }
+
         /// <summary>
         /// Register a handler that will be called whenever the LocalizedAsset has finished loading.
         /// When a handler is registered, the asset will then be automatically loaded whenever the <see cref="LocalizationSettings.SelectedLocaleChanged"/> is changed.
@@ -60,10 +70,13 @@ namespace UnityEngine.Localization
             LocalizationSettings.ValidateSettingsExist("Can not Load Asset.");
             return LocalizationSettings.AssetDatabase.GetLocalizedAssetAsync<TObject>(TableReference, TableEntryReference);
         }
-        
-        void ForceUpdate()
+
+        protected override void ForceUpdate()
         {
-            HandleLocaleChange(null);
+            if (m_ChangeHandler != null)
+            {
+                HandleLocaleChange(null);
+            }
         }
 
         void HandleLocaleChange(Locale _)
@@ -90,11 +103,13 @@ namespace UnityEngine.Localization
             m_ChangeHandler(loadOperation.Result);
         }
 
-        void ClearLoadingOperation()
+        internal void ClearLoadingOperation()
         {
             if (m_CurrentLoadingOperation.HasValue)
             {
-                m_CurrentLoadingOperation.Value.Completed -= AutomaticLoadingCompleted;
+                // We should only call this if we are not done as its possible that the internal list is null if its not been used.
+                if (!m_CurrentLoadingOperation.Value.IsDone)
+                    m_CurrentLoadingOperation.Value.Completed -= AutomaticLoadingCompleted;
                 m_CurrentLoadingOperation = null;
             }
         }
@@ -104,23 +119,23 @@ namespace UnityEngine.Localization
     /// Holds a reference to an <see cref="AssetTable"/> and <see cref="AssetTableEntry"/> which references a Texture asset.
     /// </summary>
     [Serializable]
-    public class LocalizedTexture : LocalizedAsset<Texture> { }
+    public class LocalizedTexture : LocalizedAsset<Texture> {}
 
     /// <summary>
     /// Holds a reference to an <see cref="AssetTable"/> and <see cref="AssetTableEntry"/> which references a AudioClip asset.
     /// </summary>
     [Serializable]
-    public class LocalizedAudioClip : LocalizedAsset<AudioClip> { }
+    public class LocalizedAudioClip : LocalizedAsset<AudioClip> {}
 
     /// <summary>
     /// Holds a reference to an <see cref="AssetTable"/> and <see cref="AssetTableEntry"/> which references a Sprite asset.
     /// </summary>
     [Serializable]
-    public class LocalizedSprite : LocalizedAsset<Sprite> { }
+    public class LocalizedSprite : LocalizedAsset<Sprite> {}
 
     /// <summary>
     /// Holds a reference to an <see cref="AssetTable"/> and <see cref="AssetTableEntry"/> which references a GameObject asset/prefab.
     /// </summary>
     [Serializable]
-    public class LocalizedGameObject : LocalizedAsset<GameObject> { }
+    public class LocalizedGameObject : LocalizedAsset<GameObject> {}
 }

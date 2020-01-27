@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using UnityEngine.Localization.Settings;
-using UnityEngine.Localization.SmartFormat;
 using UnityEngine.Localization.Tables;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
@@ -16,13 +15,11 @@ namespace UnityEngine.Localization
         ChangeHandler m_ChangeHandler;
 
         AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult>? m_CurrentLoadingOperation;
-        LocalizedTable m_Table;
-        StringTableEntry m_Entry;
 
         /// <summary>
         /// Arguments that will be passed through to Smart Format. These arguments are not serialized and will need to be set during play mode.
         /// </summary>
-        public SmartObjects Arguments { get; set; } = new SmartObjects();
+        public object[] Arguments { get; set; }
 
         /// <summary>
         /// <inheritdoc cref="RegisterChangeHandler"/>
@@ -39,7 +36,7 @@ namespace UnityEngine.Localization
         public AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult>? CurrentLoadingOperation
         {
             get => m_CurrentLoadingOperation;
-            private set => m_CurrentLoadingOperation = value;
+            internal set => m_CurrentLoadingOperation = value;
         }
 
         /// <summary>
@@ -55,7 +52,7 @@ namespace UnityEngine.Localization
             if (handler == null)
                 throw new ArgumentNullException(nameof(handler));
 
-            LocalizationSettings.ValidateSettingsExist();
+            ClearChangeHandler();
             m_ChangeHandler = handler ?? throw new ArgumentNullException(nameof(handler), "Handler must not be null");
             LocalizationSettings.SelectedLocaleChanged += HandleLocaleChange;
 
@@ -72,7 +69,7 @@ namespace UnityEngine.Localization
             m_ChangeHandler = null;
             ClearLoadingOperation();
         }
-        
+
         /// <summary>
         /// Forces a refresh of the string when using a <see cref="ChangeHandler"/>.
         /// Note, this will only only force the refresh if there is currently no loading operation, if one is still being executed then it will be ignored and false will be returned.
@@ -88,13 +85,15 @@ namespace UnityEngine.Localization
                 return false;
 
             string translatedText;
-            if (m_Entry != null)
+            if (m_CurrentLoadingOperation.Value.Result.Entry != null)
             {
-                translatedText = Arguments.Count == 0 ? m_Entry.GetLocalizedString() : m_Entry.GetLocalizedString(Arguments);
+                var entryResult = LocalizationSettings.StringDatabase.GetLocalizedString_ProcessTableEntry(m_CurrentLoadingOperation.Value, TableEntryReference, LocalizationSettings.SelectedLocale, Arguments);
+                translatedText = entryResult.Result;
             }
             else
             {
-                translatedText = LocalizationSettings.StringDatabase?.ProcessUntranslatedText(TableEntryReference.ResolveKeyName(m_Table?.Keys));
+                var table = m_CurrentLoadingOperation.Value.Result.Table;
+                translatedText = LocalizationSettings.StringDatabase?.ProcessUntranslatedText(TableEntryReference.ResolveKeyName(table?.SharedData));
             }
             m_ChangeHandler(translatedText);
             return true;
@@ -130,19 +129,19 @@ namespace UnityEngine.Localization
             LocalizationSettings.ValidateSettingsExist();
             return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, arguments);
         }
-        
-        void ForceUpdate()
+
+        protected override void ForceUpdate()
         {
-            HandleLocaleChange(null);
+            if (m_ChangeHandler != null)
+            {
+                HandleLocaleChange(null);
+            }
         }
 
         void HandleLocaleChange(Locale _)
         {
             // Cancel any previous loading operations.
             ClearLoadingOperation();
-
-            m_Entry = null;
-            m_Table = null;
 
             CurrentLoadingOperation = LocalizationSettings.StringDatabase.GetTableEntryAsync(TableReference, TableEntryReference);
             if (CurrentLoadingOperation.Value.IsDone)
@@ -158,18 +157,17 @@ namespace UnityEngine.Localization
                 CurrentLoadingOperation = null;
                 return;
             }
-
-            m_Entry = loadOperation.Result.Entry;
-            m_Table = loadOperation.Result.Table;
             RefreshString();
         }
 
         void ClearLoadingOperation()
         {
-            if (m_CurrentLoadingOperation.HasValue)
+            if (CurrentLoadingOperation.HasValue)
             {
-                m_CurrentLoadingOperation.Value.Completed -= AutomaticLoadingCompleted;
-                m_CurrentLoadingOperation = null;
+                // We should only call this if we are not done as its possible that the internal list is null if its not been used.
+                if (!CurrentLoadingOperation.Value.IsDone)
+                    CurrentLoadingOperation.Value.Completed -= AutomaticLoadingCompleted;
+                CurrentLoadingOperation = null;
             }
         }
     }

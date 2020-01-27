@@ -29,10 +29,7 @@
       * [Creating your own extension](Writing-an-Extension.md)
       * [Performance](Performance.md)
       * [Compatibility with string.Format](Compatibility-with-string.Format.md)
+  * [Pseudo-Localization](Pseudo-Localization.md)
+    * [Methods](Pseudo-Localization-Methods.md)
   * [Scripting](Scripting.md)
   * [Component Localizers](ComponentLocalizers.md)
-
-
-
-
-

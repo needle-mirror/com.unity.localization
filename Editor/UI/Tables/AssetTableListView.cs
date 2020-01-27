@@ -1,4 +1,4 @@
-﻿using UnityEditor.IMGUI.Controls;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.Localization.Tables;
 
@@ -11,7 +11,7 @@ namespace UnityEditor.Localization.UI
         const int k_MetadataLabelWidth = 20;
         const float k_ThumbnailPreviewHeight = 80;
 
-        public LocalizedAssetTableListView(AssetTableCollection tableCollection) : 
+        public LocalizedAssetTableListView(AssetTableCollection tableCollection) :
             base(tableCollection)
         {
         }

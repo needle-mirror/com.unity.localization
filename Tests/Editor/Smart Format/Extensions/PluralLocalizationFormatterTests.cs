@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Globalization;
 using NUnit.Framework;
 using UnityEngine.Localization.SmartFormat.Extensions;
@@ -28,7 +28,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             TestAllResults(
                 new CultureInfo("en-US"),
                 "There {0:is|are} {0} {0:item|items} remaining",
-                new ExpectedResults {
+                new ExpectedResults
+                {
                     {  -1, "There are -1 items remaining"},
                     {   0, "There are 0 items remaining"},
                     {0.5m, "There are 0.5 items remaining"},
@@ -45,7 +46,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             TestAllResults(
                 new CultureInfo("en-US"),
                 "There {0:is|are} {0} {0:item|items} remaining",
-                new ExpectedResults {
+                new ExpectedResults
+                {
                     {  -1, "There are -1 items remaining"},
                     {   0, "There are 0 items remaining"},
                     {0.5m, "There are 0.5 items remaining"},
@@ -99,7 +101,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             TestAllResults(
                 new CultureInfo("tr-TR"),
                 "{0} nesne kaldı.",
-                new ExpectedResults {
+                new ExpectedResults
+                {
                     {   0, "0 nesne kaldı."},
                     {   1, "1 nesne kaldı."},
                     {   2, "2 nesne kaldı."},
@@ -108,7 +111,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             TestAllResults(
                 new CultureInfo("tr"),
                 "Seçili {0:nesneyi|nesneleri} silmek istiyor musunuz?",
-                new ExpectedResults {
+                new ExpectedResults
+                {
                     {  -1, "Seçili nesneleri silmek istiyor musunuz?"},
                     {   0, "Seçili nesneleri silmek istiyor musunuz?"},
                     {0.5m, "Seçili nesneleri silmek istiyor musunuz?"},
@@ -125,7 +129,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             TestAllResults(
                 new CultureInfo("ru-RU"),
                 "Я купил {0} {0:банан|банана|бананов}.",
-                new ExpectedResults {
+                new ExpectedResults
+                {
                     {   0, "Я купил 0 бананов."},
                     {   1, "Я купил 1 банан."},
                     {   2, "Я купил 2 банана."},
@@ -147,7 +152,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             TestAllResults(
                 new CultureInfo("pl"),
                 "{0} {0:miesiąc|miesiące|miesięcy} temu",
-                new ExpectedResults {
+                new ExpectedResults
+                {
                     {   0, "0 miesięcy temu"},
                     {   1, "1 miesiąc temu"},
                     {   2, "2 miesiące temu"},

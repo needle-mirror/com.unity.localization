@@ -7,7 +7,7 @@ namespace UnityEngine.Localization.SmartFormat
 {
     public static class SmartExtensions
     {
-        #region: StringBuilder :
+        #region : StringBuilder :
 
         /// <summary> Appends a formatted string, using the same semantics as Smart.Format. </summary>
         /// <param name="sb">The StringBuilder that will be used for output</param>
@@ -31,7 +31,7 @@ namespace UnityEngine.Localization.SmartFormat
 
         #endregion
 
-        #region: TextWriter :
+        #region : TextWriter :
 
         /// <summary> Writes out a formatted string, using the same semantics as Smart.Format. </summary>
         /// <param name="writer">The TextWriter that will be used for output</param>
@@ -55,7 +55,7 @@ namespace UnityEngine.Localization.SmartFormat
 
         #endregion
 
-        #region: String :
+        #region : String :
 
         /// <summary> Formats the specified arguments using this string as a template. </summary>
         /// <param name="format">The template that defines how the arguments are formatted</param>

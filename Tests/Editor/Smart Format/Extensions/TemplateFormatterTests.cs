@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using UnityEngine.Localization.SmartFormat.Core.Formatting;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
 using UnityEngine.Localization.SmartFormat.Extensions;
@@ -33,6 +33,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
 
             templates.Register("NESTED", "{:template:FIRST} {:template:last}");
         }
+
         private void TestWithScottRippey(string format, string expected)
         {
             var person = new
@@ -44,9 +45,11 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             var actual = smart.Format(format, person);
             Assert.AreEqual(expected, actual);
         }
+
         private void TestWithMultipleUsers(string format, string expected)
         {
-            var people = new [] {
+            var people = new[]
+            {
                 new { First = "Jim", Last = "Halpert" },
                 new { First = "Pam", Last = "Beasley" },
                 new { First = "Dwight", Last = "Schrute" },
@@ -90,7 +93,6 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
         [TestCase("{:{:template:FIRST} {:template:last}|, }", "JIM halpert, PAM beasley, DWIGHT schrute")]
         [TestCase("{:{:template:NESTED}|, }", "JIM halpert, PAM beasley, DWIGHT schrute")]
         public void Templates_can_be_reused(string format, string expected) { TestWithMultipleUsers(format, expected); }
-
 
 
         [Test]
@@ -137,7 +139,5 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             // Reset:
             this.SetupSmart();
         }
-
-
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace UnityEngine.Localization.SmartFormat.Core.Settings
+namespace UnityEngine.Localization.SmartFormat.Core.Settings
 {
     /// <summary>
     /// Determines how format errors are handled.

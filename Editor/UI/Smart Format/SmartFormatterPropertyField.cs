@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.SmartFormat;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
 
@@ -43,7 +44,17 @@ namespace UnityEditor.Localization.UI
             m_Property.parser = property.FindPropertyRelative("m_Parser");
             m_Property.sources = property.FindPropertyRelative("m_Sources");
             m_Property.formatters = property.FindPropertyRelative("m_Formatters");
-            m_Property.smartFormatterInstance = property.GetActualObjectForSerializedProperty<SmartFormatter>(fieldInfo);
+
+            var settings = property.serializedObject.targetObject as LocalizationSettings;
+            if (settings != null)
+            {
+                m_Property.smartFormatterInstance = settings.GetStringDatabase()?.SmartFormatter;
+            }
+            else
+            {
+                m_Property.smartFormatterInstance = property.GetActualObjectForSerializedProperty<SmartFormatter>(fieldInfo);
+            }
+            Debug.Assert(m_Property.smartFormatterInstance != null, $"Failed to extract {nameof(SmartFormatter)} instance.");
 
             m_Property.sourcesList = new ReorderableListExtended(m_Property.sources.serializedObject, m_Property.sources);
             m_Property.sourcesList.drawHeaderCallback = (rect) => EditorGUI.LabelField(rect, Styles.sourcesHeader);
@@ -59,7 +70,7 @@ namespace UnityEditor.Localization.UI
             var menu = new GenericMenu();
 
             var foundTypes = TypeCache.GetTypesDerivedFrom(baseType);
-            for(int i = 0; i < foundTypes.Count; ++i)
+            for (int i = 0; i < foundTypes.Count; ++i)
             {
                 var type = foundTypes[i];
                 menu.AddItem(new GUIContent(ObjectNames.NicifyVariableName(type.Name)), false, () =>
@@ -70,9 +81,7 @@ namespace UnityEditor.Localization.UI
 
                     if (hasSmartFormatterConstructor || hasDefaultConstructor)
                     {
-                        list.serializedProperty.InsertArrayElementAtIndex(list.serializedProperty.arraySize);
-                        var elementProp = list.serializedProperty.GetArrayElementAtIndex(list.serializedProperty.arraySize - 1);
-
+                        var elementProp = list.serializedProperty.AddArrayElement();
                         elementProp.managedReferenceValue = hasDefaultConstructor ? Activator.CreateInstance(type) : Activator.CreateInstance(type, m_Property.smartFormatterInstance);
                         list.serializedProperty.serializedObject.ApplyModifiedProperties();
                     }

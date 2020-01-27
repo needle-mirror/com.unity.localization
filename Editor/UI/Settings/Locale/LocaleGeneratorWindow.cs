@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -126,7 +126,7 @@ namespace UnityEditor.Localization.UI
                     locales.Add(locale);
                     localeDict[selectedIdentifier] = locale;
                 }
-                
+
                 // When checking for fallbacks we also need to take into account the existing locales
                 var allLocales = new List<Locale>(locales);
                 allLocales.AddRange(LocalizationEditorSettings.GetLocales());

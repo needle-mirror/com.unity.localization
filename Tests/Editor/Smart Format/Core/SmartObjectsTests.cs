@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
@@ -33,23 +33,23 @@ namespace UnityEngine.Localization.SmartFormat.Tests
             // With SmartObjects
             // * all objects used for Smart.Format can be collected in one place as the first argument
             // * the format string can be written like each object would be the first argument of Smart.Format
-            // * there is no need to bother from which argument a value should come from 
+            // * there is no need to bother from which argument a value should come from
 
             var addr = new Extensions.DictionaryFormatterTests.Address();
             var dict1 = new Dictionary<string, string> { {"dict1key", "dict1 Value"} };
             var dict2 = new Dictionary<string, string> { { "dict2key", "dict2 Value" } };
-            
+
             // format for SmartObjects as argument 1 to Smart.Format
             const string format1 = "Name: {Person.FirstName} {Person.LastName}\n" +
-                                  "Dictionaries: {dict1key}, {dict2key}";
+                "Dictionaries: {dict1key}, {dict2key}";
 
             // format for SmartObjects as argument 2 to Smart.Format:
             // works although unnecessary and leading to argument references in the format string
             const string format2 = "Name: {1.Person.FirstName} {1.Person.LastName}\n" +
-                                   "Dictionaries: {1.dict1key}, {1.dict2key}";
+                "Dictionaries: {1.dict1key}, {1.dict2key}";
 
             var expected = $"Name: {addr.Person.FirstName} {addr.Person.LastName}\n" +
-                           $"Dictionaries: {dict1["dict1key"]}, {dict2["dict2key"]}";
+                $"Dictionaries: {dict1["dict1key"]}, {dict2["dict2key"]}";
 
             var formatter = Smart.CreateDefaultSmartFormat();
             var result1 = formatter.Format(format1, new SmartObjects(new object[] { addr, dict1, dict2 }));

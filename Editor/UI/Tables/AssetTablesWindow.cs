@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.Localization.Tables;
@@ -75,7 +75,6 @@ namespace UnityEditor.Localization.UI
                     }
                 };
             }
-
             else
             {
                 var asset = Resources.GetTemplateAsset(nameof(AssetTablesWindow));

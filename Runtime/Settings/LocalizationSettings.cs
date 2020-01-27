@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine.ResourceManagement;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -170,10 +170,11 @@ namespace UnityEngine.Localization.Settings
             m_SelectedLocale = null;
             m_InitializingOperationHandle = null;
         }
+
         #endif
 
         /// <summary>
-        /// Used to ensure a <see cref="LocalizationSettings"/> exists in the project. 
+        /// Used to ensure a <see cref="LocalizationSettings"/> exists in the project.
         /// Throws an exception if <see cref="HasSettings"/> is false.
         /// </summary>
         /// <param name="error"></param>
@@ -264,11 +265,18 @@ namespace UnityEngine.Localization.Settings
 
             m_InitializingOperationHandle = null;
             var initOp = GetInitializationOperation();
-            initOp.Completed += (o) =>
+            if (initOp.Status == AsyncOperationStatus.Succeeded)
             {
-                // Don't send the change event until preloading is completed.
                 OnSelectedLocaleChanged?.Invoke(locale);
-            };
+            }
+            else
+            {
+                initOp.Completed += (o) =>
+                {
+                    // Don't send the change event until preloading is completed.
+                    OnSelectedLocaleChanged?.Invoke(locale);
+                };
+            }
         }
 
         /// <summary>
@@ -279,7 +287,7 @@ namespace UnityEngine.Localization.Settings
         {
             Debug.Assert(m_AvailableLocales != null, "Available locales is null, can not pick a locale.");
             m_SelectedLocale = null;
-            foreach(var sel in m_StartupSelectors)
+            foreach (var sel in m_StartupSelectors)
             {
                 var locale = sel.GetStartupLocale(m_AvailableLocales);
                 if (locale != null)

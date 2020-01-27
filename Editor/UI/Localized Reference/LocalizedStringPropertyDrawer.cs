@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditorInternal;
 using UnityEngine;
@@ -35,7 +35,7 @@ namespace UnityEditor.Localization.UI
                         m_SmartFormatFields = new List<(Locale locale, bool expanded, SmartFormatField)>();
                         var projectLocales = LocalizationEditorSettings.GetLocales();
 
-                        foreach(var locale in projectLocales)
+                        foreach (var locale in projectLocales)
                         {
                             var table = SelectedTableCollection.Tables.FirstOrDefault(tbl => tbl.LocaleIdentifier == locale.Identifier);
                             SmartFormatField smartField = null;
@@ -61,7 +61,7 @@ namespace UnityEditor.Localization.UI
                 }
             }
 
-            public override KeyDatabase.KeyDatabaseEntry SelectedTableEntry
+            public override SharedTableData.SharedTableEntry SelectedTableEntry
             {
                 set
                 {
@@ -114,7 +114,7 @@ namespace UnityEditor.Localization.UI
             base.DrawTableEntryDetails(ref rowPosition, position);
             var stringPropertyData = (StringPropertyData)m_Property;
 
-            for(int i = 0; i < stringPropertyData.LocaleFields.Count; ++i)
+            for (int i = 0; i < stringPropertyData.LocaleFields.Count; ++i)
             {
                 var field = stringPropertyData.LocaleFields[i];
 
@@ -172,7 +172,7 @@ namespace UnityEditor.Localization.UI
             {
                 var stringPropertyData = (StringPropertyData)m_Property;
 
-                foreach(var field in stringPropertyData.LocaleFields)
+                foreach (var field in stringPropertyData.LocaleFields)
                 {
                     height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing; // Locale label/foldout
                     if (field.expanded)
@@ -189,10 +189,13 @@ namespace UnityEditor.Localization.UI
                 }
 
                 // Preview field
-                height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing; // Preview foldout
-                if (stringPropertyData.previewExpanded)
+                if (ShowPreview)
                 {
-                    height += stringPropertyData.previewArgumentsList.GetHeight() + EditorGUIUtility.standardVerticalSpacing; // Preview foldout
+                    height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing; // Preview foldout
+                    if (stringPropertyData.previewExpanded)
+                    {
+                        height += stringPropertyData.previewArgumentsList.GetHeight() + EditorGUIUtility.standardVerticalSpacing; // Preview foldout
+                    }
                 }
             }
             return height;

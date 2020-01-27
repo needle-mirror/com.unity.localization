@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using UnityEngine.Localization.Pseudo;
 using UnityEngine.Localization.SmartFormat;
 using UnityEngine.Localization.Tables;
 using UnityEngine.ResourceManagement;
@@ -46,7 +47,20 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference)
         {
-            return GetLocalizedStringAsync(tableEntryReference, null);
+            return GetLocalizedStringAsync(tableEntryReference, LocalizationSettings.SelectedLocale, null);
+        }
+
+        /// <summary>
+        /// Attempts to retrieve a string from the default StringTable.
+        /// This function is asynchronous and may not have an immediate result.
+        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
+        /// </summary>
+        /// <param name="tableEntryReference"></param>
+        /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
+        /// <returns></returns>
+        public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference, Locale locale)
+        {
+            return GetLocalizedStringAsync(tableEntryReference, locale, null);
         }
 
         /// <summary>
@@ -59,7 +73,21 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference, params object[] arguments)
         {
-            return GetLocalizedStringAsync(DefaultTable, tableEntryReference, arguments);
+            return GetLocalizedStringAsync(DefaultTable, tableEntryReference, LocalizationSettings.SelectedLocale, arguments);
+        }
+
+        /// <summary>
+        /// Attempts to retrieve a string from the default StringTable.
+        /// This function is asynchronous and may not have an immediate result.
+        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
+        /// </summary>
+        /// <param name="tableEntryReference">A reference to the entry in the <see cref="LocalizedDatabase{TTable, TEntry}.DefaultTable"/></param>
+        /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
+        /// <param name="arguments">Arguments passed to SmartFormat or String.Format.</param>
+        /// <returns></returns>
+        public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference, Locale locale, params object[] arguments)
+        {
+            return GetLocalizedStringAsync(DefaultTable, tableEntryReference, locale, arguments);
         }
 
         /// <summary>
@@ -72,7 +100,21 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference)
         {
-            return GetLocalizedStringAsync(tableReference, tableEntryReference, null);
+            return GetLocalizedStringAsync(tableReference, tableEntryReference, LocalizationSettings.SelectedLocale, null);
+        }
+
+        /// <summary>
+        /// Attempts to retrieve a string from the requested table.
+        /// This function is asynchronous and may not have an immediate result.
+        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
+        /// </summary>
+        /// <param name="tableReference">A reference to the table to check for the string.</param>
+        /// <param name="tableEntryReference">A reference to the entry in the <see cref="StringTable"/></param>
+        /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
+        /// <returns></returns>
+        public AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale)
+        {
+            return GetLocalizedStringAsync(tableReference, tableEntryReference, locale, null);
         }
 
         /// <summary>
@@ -87,48 +129,72 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference, params object[] arguments)
         {
+            return GetLocalizedStringAsync(tableReference, tableEntryReference, LocalizationSettings.SelectedLocale, arguments);
+        }
+
+        /// <summary>
+        /// Attempts to retrieve a string from the requested table.
+        /// The string will first be formatted with <see cref="SmartFormat"/> if <see cref="StringTableEntry.IsSmart"/> is enabled otherwise it will use String.Format.
+        /// This function is asynchronous and may not have an immediate result.
+        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
+        /// </summary>
+        /// <param name="tableReference">A reference to the table to check for the string.</param>
+        /// <param name="tableEntryReference">A reference to the entry in the <see cref="StringTable"/></param>
+        /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
+        /// <param name="arguments">Arguments passed to SmartFormat or String.Format.</param>
+        /// <returns></returns>
+        public AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale, params object[] arguments)
+        {
             tableReference.Validate();
             tableEntryReference.Validate();
 
             var initOp = LocalizationSettings.InitializationOperation;
             if (!initOp.IsDone)
-                return ResourceManager.CreateChainOperation(initOp, (op) => GetLocalizedStringAsyncInternal(tableReference, tableEntryReference, arguments));
-            return GetLocalizedStringAsyncInternal(tableReference, tableEntryReference, arguments);
+                return ResourceManager.CreateChainOperation(initOp, (op) => GetLocalizedStringAsyncInternal(tableReference, tableEntryReference, locale, arguments));
+            return GetLocalizedStringAsyncInternal(tableReference, tableEntryReference, locale, arguments);
         }
 
         /// <inheritdoc cref="GetLocalizedStringAsync"/>
-        protected virtual AsyncOperationHandle<string> GetLocalizedStringAsyncInternal(TableReference tableReference, TableEntryReference tableEntryReference, object[] arguments)
+        protected virtual AsyncOperationHandle<string> GetLocalizedStringAsyncInternal(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale, object[] arguments)
         {
-            var tableEntryOp = GetTableEntryAsync(tableReference, tableEntryReference);
+            var tableEntryOp = GetTableEntryAsync(tableReference, tableEntryReference, locale);
             if (!tableEntryOp.IsDone)
-                return ResourceManager.CreateChainOperation(tableEntryOp, (op) => GetLocalizedString_ProcessTableEntry(op, tableEntryReference, arguments));
-            return GetLocalizedString_ProcessTableEntry(tableEntryOp, tableEntryReference, arguments);
+                return ResourceManager.CreateChainOperation(tableEntryOp, (op) => GetLocalizedString_ProcessTableEntry(op, tableEntryReference, locale, arguments));
+            return GetLocalizedString_ProcessTableEntry(tableEntryOp, tableEntryReference, locale, arguments);
         }
 
         /// <summary>
         /// Converts a <see cref="StringTableEntry"/> into a translated string.
-        /// Any Smart Format or String.Format operations are performed here.
+        /// Any Smart Format or String.Format operations and pseudo-localization are performed here.
         /// </summary>
         /// <param name="entryOp">The handle generated from calling <see cref="LocalizedDatabase.GetTableEntryAsync"/>.</param>
         /// <param name="tableEntryReference"></param>
         /// <param name="arguments">Arguments to be passed to Smart Format or String.Format. If null then no formatting will be performed.</param>
         /// <returns></returns>
-        protected virtual AsyncOperationHandle<string> GetLocalizedString_ProcessTableEntry(AsyncOperationHandle<TableEntryResult> entryOp, TableEntryReference tableEntryReference, object[] arguments)
+        internal protected virtual AsyncOperationHandle<string> GetLocalizedString_ProcessTableEntry(AsyncOperationHandle<TableEntryResult> entryOp, TableEntryReference tableEntryReference, Locale locale, object[] arguments)
         {
             if (entryOp.Status != AsyncOperationStatus.Succeeded || entryOp.Result.Entry == null)
             {
-                string key = tableEntryReference.ResolveKeyName(entryOp.Result.Table?.Keys);
+                string key = tableEntryReference.ResolveKeyName(entryOp.Result.Table?.SharedData);
                 return ResourceManager.CreateCompletedOperation(ProcessUntranslatedText(key) , null);
             }
 
             var entry = entryOp.Result.Entry;
-            return ResourceManager.CreateCompletedOperation(entry.GetLocalizedString(arguments), null);
+            var localizedString = entry.GetLocalizedString(arguments);
+
+            // Apply pseudo-localization
+            if (locale is PseudoLocale pseudoLocale)
+            {
+                localizedString = pseudoLocale.GetPseudoString(localizedString);
+            }
+
+            return ResourceManager.CreateCompletedOperation(localizedString, null);
         }
 
         /// <summary>
         /// Returns a string to indicate that the entry could not be found for the key when calling <see cref="GetLocalizedStringAsync"/>.
         /// </summary>
-        /// <param name="original">The <see cref="KeyDatabase"/> key or keyId if a <see cref="KeyDatabase"/> could not be found to convert a keyId.</param>
+        /// <param name="key">The key that could not be found.</param>
         /// <returns></returns>
         internal string ProcessUntranslatedText(string key)
         {

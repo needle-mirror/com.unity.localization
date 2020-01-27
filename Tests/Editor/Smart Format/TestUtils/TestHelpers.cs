@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using NUnit.Framework;
@@ -32,8 +32,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.TestUtils
             var numberOfTests = Math.Max(bunchOfArgs.Length, bunchOfExpected.Length);
             for (int i = 0; i < numberOfTests; i++)
             {
-                var args = bunchOfArgs[i%bunchOfArgs.Length];
-                var expected = bunchOfExpected[i%bunchOfExpected.Length];
+                var args = bunchOfArgs[i % bunchOfArgs.Length];
+                var expected = bunchOfExpected[i % bunchOfExpected.Length];
 
                 string actual = null;
                 try
@@ -59,8 +59,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.TestUtils
             var numberOfTests = Math.Max(bunchOfFormat.Length, bunchOfExpected.Length);
             for (int i = 0; i < numberOfTests; i++)
             {
-                var format = bunchOfFormat[i%bunchOfFormat.Length];
-                var expected = bunchOfExpected[i%bunchOfExpected.Length];
+                var format = bunchOfFormat[i % bunchOfFormat.Length];
+                var expected = bunchOfExpected[i % bunchOfExpected.Length];
 
                 string actual = null;
                 try
@@ -90,7 +90,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.TestUtils
             }
             for (int i = 0; i < doFormats.Length - 1; i++)
             {
-                Assert.AreEqual(actuals[i], actuals[i+1],"Results don't match.");
+                Assert.AreEqual(actuals[i], actuals[i + 1], "Results don't match.");
             }
 
 

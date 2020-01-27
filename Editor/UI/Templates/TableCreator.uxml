@@ -5,6 +5,7 @@
     <ui:VisualElement style="flex-direction: row-reverse;">
         <ui:Button text="Select All" name="select-all-button" />
         <ui:Button text="Select None" name="select-none-button" />
+        <ui:Button text="Locale Generator" name="locale-generator-button" />
     </ui:VisualElement>
     <ui:TextField label="Table Name" tooltip="The name to use for a set of newly created localization tables." name="new-table-name-field" text="[New Table]" class="unity-property-field-input" />
     <ui:VisualElement class="unity-base-field">

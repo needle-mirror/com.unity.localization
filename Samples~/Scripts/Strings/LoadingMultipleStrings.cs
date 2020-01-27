@@ -1,4 +1,4 @@
-﻿//using System.Collections;
+//using System.Collections;
 //using UnityEngine;
 //using UnityEngine.Localization;
 //using UnityEngine.Localization.Tables;
@@ -39,7 +39,7 @@
 
 //        IEnumerator FetchString()
 //        {
-//            // A string may not be immediately available such as during initialization of the localization system or when a table has not been loaded yet. 
+//            // A string may not be immediately available such as during initialization of the localization system or when a table has not been loaded yet.
 //            var loadingOperation = tableRef.GetLocalizedStringTable();
 //            yield return loadingOperation;
 

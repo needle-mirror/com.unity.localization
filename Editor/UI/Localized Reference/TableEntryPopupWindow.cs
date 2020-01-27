@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Tables;
-using static UnityEditor.Localization.UI.LocalizedAssetPropertyDrawer;
 
 namespace UnityEditor.Localization.UI
 {
@@ -43,7 +42,7 @@ namespace UnityEditor.Localization.UI
                 editorWindow.Close();
             }
 
-            if(m_TreeView.HasSelection())
+            if (m_TreeView.HasSelection())
                 ForceClose();
         }
 
@@ -69,16 +68,16 @@ namespace UnityEditor.Localization.UI
     class TableEntryTreeViewItem : TreeViewItem
     {
         public AssetTableCollection TableCollection { get; set; }
-        public KeyDatabase.KeyDatabaseEntry KeyEntry { get; set; }
+        public SharedTableData.SharedTableEntry SharedEntry { get; set; }
 
-        public TableEntryTreeViewItem(AssetTableCollection table, KeyDatabase.KeyDatabaseEntry keyEntry, int id, int depth) :
+        public TableEntryTreeViewItem(AssetTableCollection table, SharedTableData.SharedTableEntry sharedEntry, int id, int depth) :
             base(id, depth)
         {
             TableCollection = table;
-            if (keyEntry != null)
+            if (sharedEntry != null)
             {
-                KeyEntry = keyEntry;
-                displayName = KeyEntry.Key;
+                SharedEntry = sharedEntry;
+                displayName = SharedEntry.Key;
             }
         }
     }
@@ -89,9 +88,9 @@ namespace UnityEditor.Localization.UI
     class TableEntryReferenceTreeView : TreeView
     {
         Type m_AssetType;
-        Action<AssetTableCollection, KeyDatabase.KeyDatabaseEntry> m_SelectionHandler;
+        Action<AssetTableCollection, SharedTableData.SharedTableEntry> m_SelectionHandler;
 
-        public TableEntryReferenceTreeView(Type assetType, Action<AssetTableCollection, KeyDatabase.KeyDatabaseEntry> selectionHandler)
+        public TableEntryReferenceTreeView(Type assetType, Action<AssetTableCollection, SharedTableData.SharedTableEntry> selectionHandler)
             : base(new TreeViewState())
         {
             m_AssetType = assetType;
@@ -120,8 +119,8 @@ namespace UnityEditor.Localization.UI
                     tableNode.icon = AssetDatabase.GetCachedIcon(AssetDatabase.GetAssetPath(table.Tables[0])) as Texture2D;
                     root.AddChild(tableNode);
 
-                    var keys = table.Keys;
-                    foreach (var entry in keys.Entries)
+                    var sharedData = table.SharedData;
+                    foreach (var entry in sharedData.Entries)
                     {
                         tableNode.AddChild(new TableEntryTreeViewItem(table, entry, id++, 1));
                     }
@@ -137,8 +136,8 @@ namespace UnityEditor.Localization.UI
                     root.AddChild(tableNode);
 
                     // Only show keys that have a compatible type.
-                    var keys = table.Keys;
-                    foreach (var entry in keys.Entries)
+                    var sharedData = table.SharedData;
+                    foreach (var entry in sharedData.Entries)
                     {
                         var typeMetadata = entry.Metadata.GetMetadata<AssetTypeMetadata>();
                         if (typeMetadata == null || m_AssetType.IsAssignableFrom(typeMetadata.Type))
@@ -161,12 +160,12 @@ namespace UnityEditor.Localization.UI
         {
             if (FindItem(selectedIds[0], rootItem) is TableEntryTreeViewItem keyNode)
             {
-                m_SelectionHandler(keyNode.TableCollection, keyNode.KeyEntry);
+                m_SelectionHandler(keyNode.TableCollection, keyNode.SharedEntry);
             }
             else
             {
                 // Ignore Table selections. We just care about table entries.
-                SetSelection(new int[] { });
+                SetSelection(new int[] {});
             }
         }
     }

@@ -1,6 +1,6 @@
 # Choose
 
-The `ChooseFormatter` lets you add simple logic to your templates.  
+The `ChooseFormatter` lets you add simple logic to your templates.
 
 ## Examples
 ```c#

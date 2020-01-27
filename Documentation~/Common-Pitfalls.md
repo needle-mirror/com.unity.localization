@@ -73,4 +73,3 @@ Only instance methods of a type kind be used in a placeholder, **extension metho
 ## Security Exception
 When running on .NET Framework 4.x SmartFormat is using ```System.Runtime.Remoting.Messaging.CallContext.LogicalGet|SetData``` in its ```ListFormatter```.
 With this in place, we know that [dotnetfiddle.net](https://www.dotnetfiddle.net/) will throw a security exception. When compiling SmartFormat for .Net Core, ```LogicalGet|SetData``` is replaced by ```AsyncLocal<T>```, which does not bring this issue. Unfortunately ```AsyncLocal<T>``` is supported only on .NET Framework version 4.6 or later.
-

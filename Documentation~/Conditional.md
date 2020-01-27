@@ -12,7 +12,7 @@ The behavior of Conditional Formatting varies depending on the data type of the 
 | Number (Integer, Double, etc...)  | "{0:one\|default}"  |  "{0} {0:item\|items}" |
 |   | "{0:zero\|one\|default}" | "{0:no items\|one item\|many items}" |
 |   | "{0:negative\|zero\|one\|default}" | "{0:negative items\|no items\|one item\|many items}" |
-| boolean  | "{0:true\|false}" | "Enabled? {0:Yes\|No}" | 
+| boolean  | "{0:true\|false}" | "Enabled? {0:Yes\|No}" |
 | string   | "{0:default\|null or empty}" | "Text: {0:{0}\|No text to display}" |
 | DateTime | "{0:before\|after}" (as compared to Date.Now) | "My birthday {0:was on\|will be on} {0:MMMM d}" |
 | TimeSpan | "{0:negative\|positive}"       | "My birthday {0:was {0} ago\|will be in {0} from now}" |
@@ -23,7 +23,7 @@ The behavior of Conditional Formatting varies depending on the data type of the 
 
 Each parameter is separated by "|". The comparison is followed by a "?" and then the text. The last (default) entry does not contain a comparison nor a "?". Valid comparisons: `>=` `>` `=` `<` `<=` `!=`.
 
-Comparisons can be combined using "&" for AND or "/" for OR. 
+Comparisons can be combined using "&" for AND or "/" for OR.
 
 ## Example:
 

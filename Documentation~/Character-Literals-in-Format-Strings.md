@@ -4,18 +4,18 @@ Whenever the format string comes from code, by default the compiler will take ca
 
 Example:
 ```Csharp
-string.Format("\t")   
-Smart.Format("\t")    
+string.Format("\t")
+Smart.Format("\t")
 // result in both cases: TAB
 ```
 
 Things are different, when the format string is read from a file or resource. Example:
 ```Csharp
-string.Format(@"Read from file \t")   
+string.Format(@"Read from file \t")
 // result: "Read from file \t"
 ```
 
-There is a property ```ConvertCharacterStringLiterals``` in ```SmartSettings```. This setting is relevant for interpreting character literals. If true (the default), character string literals will be treated just like the compiler would do. 
+There is a property ```ConvertCharacterStringLiterals``` in ```SmartSettings```. This setting is relevant for interpreting character literals. If true (the default), character string literals will be treated just like the compiler would do.
 
 **ConvertCharacterStringLiterals = true**
 

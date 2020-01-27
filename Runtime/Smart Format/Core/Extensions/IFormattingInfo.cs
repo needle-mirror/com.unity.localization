@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using UnityEngine.Localization.SmartFormat.Core.Formatting;
 using UnityEngine.Localization.SmartFormat.Core.Parsing;
 
@@ -72,7 +72,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Extensions
         /// <param name="format"></param>
         /// <param name="value"></param>
         void Write(Format format, object value);
-        
+
         /// <summary>
         /// Creates a <see cref="FormattingException" /> associated with the <see cref="IFormattingInfo.Format" />.
         /// </summary>

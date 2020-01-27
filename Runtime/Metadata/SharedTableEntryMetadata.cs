@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine.Localization.Tables;
 
 namespace UnityEngine.Localization.Metadata
@@ -55,7 +55,7 @@ namespace UnityEngine.Localization.Metadata
             else
                 m_EntriesLookup.Clear();
 
-            foreach(var e in m_Entries)
+            foreach (var e in m_Entries)
             {
                 m_EntriesLookup.Add(e);
             }

@@ -1,4 +1,4 @@
-﻿using UnityEngine.Localization.SmartFormat.Core.Settings;
+using UnityEngine.Localization.SmartFormat.Core.Settings;
 
 namespace UnityEngine.Localization.SmartFormat.Core.Parsing
 {

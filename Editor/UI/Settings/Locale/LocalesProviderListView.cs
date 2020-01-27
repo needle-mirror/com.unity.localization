@@ -50,7 +50,7 @@ namespace UnityEditor.Localization.UI
             var root = new TreeViewItem(-1, -1, "root");
 
             var items = new List<TreeViewItem>();
-            foreach(var l in LocalizationEditorSettings.GetLocales())
+            foreach (var l in LocalizationEditorSettings.GetLocales())
             {
                 items.Add(new SerializedLocaleItem(l));
             }
@@ -123,7 +123,5 @@ namespace UnityEditor.Localization.UI
                     break;
             }
         }
-
     }
 }
-

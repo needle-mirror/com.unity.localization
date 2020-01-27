@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,11 +17,12 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
     {
         protected readonly List<TException> innerExceptions = new List<TException>();
 
-        public ExceptionCollection() { }
+        public ExceptionCollection() {}
         public ExceptionCollection(TException exception)
         {
             this.innerExceptions.Add(exception);
         }
+
         public ExceptionCollection(IEnumerable<TException> exceptions)
         {
             this.innerExceptions.AddRange(exceptions);
@@ -104,6 +105,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
         {
             return this.innerExceptions.GetEnumerator();
         }
+
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
@@ -141,16 +143,16 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
             get
             {
                 return string.Format(
-                                     "{0} {1}{2} thrown:\n{3}",
-                                     innerExceptions.Count,
-                                     typeof(TException).Name,
-                                     innerExceptions.Count == 1 ? " was" : "s were",
-                                     string.Join("\n",
-                                         innerExceptions
-                                         .Select((e, i) => string.Format("\t#{0}: {1}",
-                                                                        i + 1,
-                                                                        "\t" + e.Message)).ToArray())
-                                     );
+                    "{0} {1}{2} thrown:\n{3}",
+                    innerExceptions.Count,
+                    typeof(TException).Name,
+                    innerExceptions.Count == 1 ? " was" : "s were",
+                    string.Join("\n",
+                        innerExceptions
+                            .Select((e, i) => string.Format("\t#{0}: {1}",
+                            i + 1,
+                            "\t" + e.Message)).ToArray())
+                );
             }
         }
     }
@@ -162,9 +164,9 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
     [DebuggerNonUserCode] // (Steps over all methods)
     public class ExceptionCollection : ExceptionCollection<Exception>
     {
-        public ExceptionCollection() { }
-        public ExceptionCollection(Exception exception) : base(exception) { }
-        public ExceptionCollection(IEnumerable<Exception> exceptions) : base(exceptions) { }
+        public ExceptionCollection() {}
+        public ExceptionCollection(Exception exception) : base(exception) {}
+        public ExceptionCollection(IEnumerable<Exception> exceptions) : base(exceptions) {}
         public static ExceptionCollection Combine(params ExceptionCollection[] combineAllExceptions)
         {
             var combined = new ExceptionCollection();
@@ -185,6 +187,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
         {
             AddNewException(null, message, args);
         }
+
         /// <summary>
         /// Adds a new Exception to the ExceptionCollection.
         /// </summary>

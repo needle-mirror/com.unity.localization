@@ -14,7 +14,7 @@ Even with all its features, **SmartFormat** is efficient and has amazing perform
 
 ## Compared to `String.Format`
 
-Due to its ability to cache and output directly to streams, in some scenarios `Smart.Format` can actually outperform `String.Format`!  
+Due to its ability to cache and output directly to streams, in some scenarios `Smart.Format` can actually outperform `String.Format`!
 
 For example, a lengthy email template would benefit greatly from the `FormatWithCache` method and could easily outperform `String.Format` by about 25%.
 

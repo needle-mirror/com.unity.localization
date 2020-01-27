@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
@@ -31,25 +31,29 @@ namespace UnityEngine.Localization.SmartFormat.Tests
         }
 
         private string mStreetAddress;
-        public string StreetAddress {
+        public string StreetAddress
+        {
             get { return mStreetAddress; }
             set { mStreetAddress = value; }
         }
 
         private string mCity;
-        public string City {
+        public string City
+        {
             get { return mCity; }
             set { mCity = value; }
         }
 
         private States mState;
-        public States State {
+        public States State
+        {
             get { return mState; }
             set { mState = value; }
         }
 
         private string mZip;
-        public string Zip {
+        public string Zip
+        {
             get { return mZip; }
             set { mZip = value; }
         }
@@ -63,7 +67,6 @@ namespace UnityEngine.Localization.SmartFormat.Tests
         /// <param name="AddressString">The entire Address.</param>
         public static bool TryParse(string AddressString, ref Address result)
         {
-
             Match match = static_TryParse_AddressPattern.Match(AddressString);
             if (!match.Success)
                 return false;
@@ -71,6 +74,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests
             result = new Address(match.Groups["streetaddress"].Value, match.Groups["city"].Value, match.Groups["state"].Value, match.Groups["zip"].Value);
             return true;
         }
+
         static Regex static_TryParse_AddressPattern = new Regex("(?<streetaddress>.*?)\\s*[\\n,]\\s*(?<city>.*?),\\s*(?<state>\\S\\S)\\s*(?<zip>\\S*)");
         public static Address Parse(string AddressString)
         {
@@ -99,13 +103,15 @@ namespace UnityEngine.Localization.SmartFormat.Tests
         /// Returns the 2-letter abbreviation of the state.
         /// For example, States.California = "CA"
         /// </summary>
-        public string StateAbbreviation {
+        public string StateAbbreviation
+        {
             get { return GetStateAbbreviation(this.State); }
         }
         public static string GetStateAbbreviation(States state)
         {
             return AbbreviationAttribute.GetAbbrevation(state);
         }
+
         public static States ParseState(string state)
         {
             // See if the abbreviation matches one of the states:
@@ -114,13 +120,15 @@ namespace UnityEngine.Localization.SmartFormat.Tests
                 return result;
 
             // Try to parse the full state name:
-            try {
+            try
+            {
                 return (States)Enum.Parse(typeof(States), state, true);
-            } catch {
+            }
+            catch
+            {
                 // Couldn't parse the full state name!
                 return States.Unknown;
             }
-
         }
     }
 
@@ -281,7 +289,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests
         {
             Type baseType = value.GetType();
             FieldInfo fieldInfo = baseType.GetField(Enum.GetName(baseType, value));
-            foreach (AbbreviationAttribute abbr in fieldInfo.GetCustomAttributes(typeof(AbbreviationAttribute), true)) {
+            foreach (AbbreviationAttribute abbr in fieldInfo.GetCustomAttributes(typeof(AbbreviationAttribute), true))
+            {
                 return abbr.Abbreviation;
             }
             // Couldn't find anything:
@@ -294,20 +303,25 @@ namespace UnityEngine.Localization.SmartFormat.Tests
         public static TBaseType FindAbbreviation<TBaseType>(string abbreviation, bool ignoreCase)
         {
             TBaseType result = default(TBaseType);
-            if (TryFindAbbreviation(abbreviation, ignoreCase, ref result)) {
+            if (TryFindAbbreviation(abbreviation, ignoreCase, ref result))
+            {
                 return result;
             }
             return default(TBaseType);
         }
+
         /// <summary>
         /// Searches for the object from the abbreviation
         /// </summary>
         public static bool TryFindAbbreviation<TBaseType>(string abbreviation, bool ignoreCase, ref TBaseType result)
         {
             // Search for the abbreviation:
-            foreach (FieldInfo f in typeof(TBaseType).GetFields()) {
-                foreach (AbbreviationAttribute abbr in f.GetCustomAttributes(typeof(AbbreviationAttribute), true)) {
-                    if (string.Compare(abbreviation, abbr.Abbreviation, ignoreCase) == 0) {
+            foreach (FieldInfo f in typeof(TBaseType).GetFields())
+            {
+                foreach (AbbreviationAttribute abbr in f.GetCustomAttributes(typeof(AbbreviationAttribute), true))
+                {
+                    if (string.Compare(abbreviation, abbr.Abbreviation, ignoreCase) == 0)
+                    {
                         result = (TBaseType)f.GetValue(null);
                         return true;
                     }

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Localization.Components;
 
 namespace UnityEditor.Localization.UI
@@ -27,7 +27,7 @@ namespace UnityEditor.Localization.UI
         void UpdateArgumentsPreview()
         {
             m_StringReferenceDrawer.Arguments.Clear();
-            for(int i = 0; i < m_FormatArguments.arraySize; ++i)
+            for (int i = 0; i < m_FormatArguments.arraySize; ++i)
             {
                 var item = m_FormatArguments.GetArrayElementAtIndex(i);
                 if (item.objectReferenceValue != null)

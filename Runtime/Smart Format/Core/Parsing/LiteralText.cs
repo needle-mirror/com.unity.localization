@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
 
 namespace UnityEngine.Localization.SmartFormat.Core.Parsing
@@ -10,7 +10,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
     public class LiteralText : FormatItem
     {
         public LiteralText(SmartSettings smartSettings, Format parent, int startIndex) : base(smartSettings, parent,
-            startIndex)
+                                                                                              startIndex)
         {
         }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -29,7 +29,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
 
         public PluralLocalizationFormatter()
         {
-            Names = new [] {"plural", "p", ""};
+            Names = new[] {"plural", "p", ""};
         }
 
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
@@ -87,7 +87,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             // See if a CustomPluralRuleProvider is available from the FormatProvider:
             var provider = formattingInfo.FormatDetails.Provider;
             var pluralRuleProvider =
-                (CustomPluralRuleProvider) provider?.GetFormat(typeof(CustomPluralRuleProvider));
+                (CustomPluralRuleProvider)provider?.GetFormat(typeof(CustomPluralRuleProvider));
             if (pluralRuleProvider != null) return pluralRuleProvider.GetPluralRule();
 
             // Use the CultureInfo, if provided:
@@ -113,7 +113,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                     if (selectedLocale.Identifier.Code.Length > 2)
                         isoCode = selectedLocale.Identifier.Code.Substring(0, 2);
                 }
-                
+
                 var culturePluralRule = PluralRules.GetPluralRule(isoCode);
                 return culturePluralRule;
             }

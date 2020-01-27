@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
 
 namespace UnityEngine.Localization.SmartFormat.Extensions
@@ -6,7 +6,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     [Serializable]
     public class DefaultSource : ISource
     {
-        // There is a bug with SerializeField that causes empty instances to not deserialize. This is a workaround while we wait for the fix (case 1183543)
+        // There is a bug with SerializeReference that causes empty instances to not deserialize. This is a workaround while we wait for the fix (case 1183547)
         [SerializeField, HideInInspector]
         int dummyObject;
 

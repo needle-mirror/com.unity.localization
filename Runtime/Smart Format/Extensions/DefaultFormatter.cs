@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
 
 namespace UnityEngine.Localization.SmartFormat.Extensions
@@ -11,9 +11,9 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     {
         public DefaultFormatter()
         {
-            Names = new [] {"default", "d", ""};
+            Names = new[] {"default", "d", ""};
         }
-        
+
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {
             var format = formattingInfo.Format;

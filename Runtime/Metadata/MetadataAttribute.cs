@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace UnityEngine.Localization.Metadata
 {
@@ -12,27 +12,27 @@ namespace UnityEngine.Localization.Metadata
         /// Metadata can be added to a <see cref="Locale"/>.
         /// </summary>
         Locale = 1,
-        
+
         /// <summary>
-        /// Metadata can be added to a <see cref="KeyDatabase"/>.
+        /// Metadata can be added to a <see cref="SharedTableData"/>.
         /// </summary>
-        KeyDatabase = 2,
-        
+        SharedTableData = 2,
+
         /// <summary>
         /// Metadata can be added to a <see cref="StringTable"/>.
         /// </summary>
         StringTable = 4,
-        
+
         /// <summary>
         /// Metadata can be added to a <see cref="AssetTable"/>.
         /// </summary>
         AssetTable = 8,
-        
+
         /// <summary>
         /// Metadata can be added to a <see cref="StringTable"/> entry.
         /// </summary>
         StringTableEntry = 16,
-        
+
         /// <summary>
         /// Metadata can be added to a <see cref="AssetTable"/> entry.
         /// </summary>
@@ -42,21 +42,21 @@ namespace UnityEngine.Localization.Metadata
         /// Metadata can be added to any table type.
         /// </summary>
         AllTables = StringTable | AssetTable,
-        
+
         /// <summary>
         /// Metadata can be added to any table entry.
         /// </summary>
         AllTableEntries = StringTableEntry | AssetTableEntry,
-        
+
         /// <summary>
         /// Metadata can be added to anything.
         /// </summary>
-        All = AllTables | AllTableEntries | Locale | KeyDatabase
+        All = AllTables | AllTableEntries | Locale | SharedTableData
     }
 
 
     /// <summary>
-    /// Used to indicate the type of the Metaddata that can be added.
+    /// Used to indicate the type of the Metadata that can be added.
     /// <seealso cref="MetadataAttribute"/>
     /// </summary>
     [AttributeUsage(AttributeTargets.Field)]
@@ -79,7 +79,7 @@ namespace UnityEngine.Localization.Metadata
 
     /// <summary>
     /// Provides a hint to the editor on where this metadata can be used.
-    /// This is only used in the editor and ignored when adding Metadata through script. 
+    /// This is only used in the editor and ignored when adding Metadata through script.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
     public class MetadataAttribute : Attribute
@@ -88,7 +88,7 @@ namespace UnityEngine.Localization.Metadata
         /// Name to use in the add Metadata menu. If empty then the class name will be used.
         /// </summary>
         public string MenuItem { get; set; }
-        
+
         /// <summary>
         /// Can multiple instances be added?
         /// </summary>

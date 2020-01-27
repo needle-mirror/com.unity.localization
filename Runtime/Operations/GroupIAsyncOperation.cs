@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization
@@ -24,7 +24,7 @@ namespace UnityEngine.Localization
             m_TotalLoadingObjects = 0;
             m_Error = null;
         }
-        
+
         protected override void Execute()
         {
             foreach (var asyncOperationHandle in m_Operations)

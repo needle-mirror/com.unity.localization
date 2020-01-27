@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
@@ -95,7 +95,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             return false;
         }
 
-        // This does not work, because CollectionIndex will be initialized only once 
+        // This does not work, because CollectionIndex will be initialized only once
         // NOT once per thread.
         // [ThreadStatic] private static int CollectionIndex = -1;
         // same with: private static ThreadLocal<int> CollectionIndex2 = new ThreadLocal<int>(() => -1);
@@ -116,7 +116,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             get
             {
                 var val = CallContext.LogicalGetData(key);
-                return (int?) val ?? -1;
+                return (int?)val ?? -1;
             }
             set => CallContext.LogicalSetData(key, value);
         }
@@ -127,7 +127,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         private static readonly AsyncLocal<int?> _collectionIndex = new AsyncLocal<int?>();
 
         /// <remarks>
-        /// System.Runtime.Remoting.Messaging and CallContext.Logical[Get|Set]Data 
+        /// System.Runtime.Remoting.Messaging and CallContext.Logical[Get|Set]Data
         /// not supported by .Net Core. Instead .Net Core provides AsyncLocal&lt;T&gt;
         /// Good examples are: https://msdn.microsoft.com/en-us/library/dn906268(v=vs.110).aspx
         /// and https://github.com/StephenCleary/AsyncLocal/blob/master/src/UnitTests/UnitTests.cs
@@ -136,7 +136,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         {
             get { return _collectionIndex.Value ?? -1; }
             set { _collectionIndex.Value = value; }
-        }    
+        }
 #endif
         public bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {

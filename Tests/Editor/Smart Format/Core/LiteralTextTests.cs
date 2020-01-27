@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -36,12 +36,12 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
 
             const string formatWithFileBehavior = @"All supported literal characters: \' \"" \\ \a \b \f \n \r \t \v {key}\0!";
             const string formatWithCodeBahavior = "All supported literal characters: \' \" \\ \a \b \f \n \r \t \v {key}\0!";
-            
+
             var formatter = Smart.CreateDefaultSmartFormat();
             formatter.Settings.ConvertCharacterStringLiterals = true;
 
             var result = formatter.Format(formatWithFileBehavior, data);
-            Assert.AreEqual(string.Format(formatWithCodeBahavior.Replace("{"+ data.First().Key +"}", data.First().Value)), result);
+            Assert.AreEqual(string.Format(formatWithCodeBahavior.Replace("{" + data.First().Key + "}", data.First().Value)), result);
         }
 
         [Test]
@@ -62,15 +62,15 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             Smart.Default.Settings.ConvertCharacterStringLiterals = true;
 
             Assert.Throws<ArgumentException>(() => {
-                Smart.Default.Format(@"Illegal excape sequence at end of line = \z");
+                Smart.Default.Format(@"Illegal escape sequence at end of line = \z");
             });
 
             Assert.Throws<ArgumentException>(() => {
-                Smart.Default.Format(@"Illegal excape sequence \z somewhere in text");
+                Smart.Default.Format(@"Illegal escape sequence \z somewhere in text");
             });
 
             Assert.Throws<ArgumentException>(() => {
-                Smart.Default.Format(@"Illegal excape sequences at end of line = \");
+                Smart.Default.Format(@"Illegal escape sequences at end of line = \");
             });
 
             Smart.Default.Settings.ConvertCharacterStringLiterals = false;

@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using UnityEngine.Localization.SmartFormat.Utilities;
 
 namespace UnityEngine.Localization.SmartFormat.Tests.Extensions

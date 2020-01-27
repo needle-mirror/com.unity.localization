@@ -30,7 +30,7 @@ namespace UnityEditor.Localization.Plugins.TMPro
             if (foundKey.entry != null && foundKey.matchDistance < kMatchThreshold)
             {
                 comp.StringReference.TableEntryReference = foundKey.entry.Id;
-                comp.StringReference.TableReference = foundKey.collection.Keys.TableNameGuid;
+                comp.StringReference.TableReference = foundKey.collection.SharedData.TableNameGuid;
             }
 
             return null;

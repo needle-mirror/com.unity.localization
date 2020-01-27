@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine.Localization.Metadata;
+using UnityEngine.Serialization;
 
 namespace UnityEngine.Localization.Tables
 {
@@ -13,8 +14,9 @@ namespace UnityEngine.Localization.Tables
         [SerializeField]
         LocaleIdentifier m_LocaleId;
 
+        [FormerlySerializedAs("m_KeyDatabase")]
         [SerializeField, HideInInspector]
-        KeyDatabase m_KeyDatabase;
+        SharedTableData m_SharedData;
 
         [SerializeField]
         MetadataCollection m_Metadata = new MetadataCollection();
@@ -36,17 +38,25 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         public string TableName
         {
-            get => Keys.TableName;
-            set => Keys.TableName = value;
+            get
+            {
+                VerifySharedTableDataIsNotNull();
+                return SharedData.TableName;
+            }
+            set
+            {
+                VerifySharedTableDataIsNotNull();
+                SharedData.TableName = value;
+            }
         }
 
         /// <summary>
-        /// Database of all keys used by this Table.
+        /// Data shared across all tables.
         /// </summary>
-        public KeyDatabase Keys
+        public SharedTableData SharedData
         {
-            get => m_KeyDatabase;
-            set => m_KeyDatabase = value;
+            get => m_SharedData;
+            set => m_SharedData = value;
         }
 
         /// <summary>
@@ -61,9 +71,9 @@ namespace UnityEngine.Localization.Tables
         /// <summary>
         /// Table Metadata.
         /// </summary>
-        public IList<IMetadata> Entries
+        public IList<IMetadata> MetadataEntries
         {
-            get => m_Metadata.Entries;
+            get => m_Metadata.MetadataEntries;
         }
 
         /// <summary>
@@ -126,16 +136,21 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Returns the key with the matching name from the <see cref="KeyDatabase"/>, if one exists.
+        /// Returns the key with the matching name from the <see cref="SharedTableData"/>, if one exists.
         /// </summary>
         /// <param name="key"></param>
         /// <returns>The found key or null if one could not be found.</returns>
-        /// <exception cref="Exception">Thrown if the <see cref="KeyDatabase"/> is null.</exception>
+        /// <exception cref="Exception">Thrown if the <see cref="SharedTableData"/> is null.</exception>
         protected uint FindKeyId(string key)
         {
-            if (Keys == null)
-                throw new NullReferenceException($"Can not find Key Id for \"{key}\". The Table \"{TableName} does not have a Key Database.");
-            return Keys.GetId(key, true);
+            VerifySharedTableDataIsNotNull();
+            return SharedData.GetId(key, true);
+        }
+
+        void VerifySharedTableDataIsNotNull()
+        {
+            if (SharedData == null)
+                throw new NullReferenceException($"The Table \"{name}\" does not have a {nameof(SharedTableData)}.");
         }
 
         /// <summary>

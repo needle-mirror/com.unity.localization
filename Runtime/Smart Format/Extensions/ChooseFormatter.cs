@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
 using UnityEngine.Localization.SmartFormat.Core.Parsing;
@@ -16,10 +16,10 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             get => m_SplitChar;
             set => m_SplitChar = value;
         }
-        
+
         public ChooseFormatter()
         {
-            Names = new [] {"choose", "c"};
+            Names = new[] {"choose", "c"};
         }
 
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
@@ -47,13 +47,13 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             // Validate the number of formats:
             if (choiceFormats.Count < chooseOptions.Length)
                 throw formattingInfo.FormattingException("You must specify at least " + chooseOptions.Length +
-                                                         " choices");
+                    " choices");
             if (choiceFormats.Count > chooseOptions.Length + 1)
                 throw formattingInfo.FormattingException("You cannot specify more than " + (chooseOptions.Length + 1) +
-                                                         " choices");
+                    " choices");
             if (chosenIndex == -1 && choiceFormats.Count == chooseOptions.Length)
                 throw formattingInfo.FormattingException("\"" + currentValueString +
-                                                         "\" is not a valid choice, and a \"default\" choice was not supplied");
+                    "\" is not a valid choice, and a \"default\" choice was not supplied");
 
             if (chosenIndex == -1) chosenIndex = choiceFormats.Count - 1;
 

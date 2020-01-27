@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Localization.Tables;
@@ -6,8 +6,8 @@ using UnityEngine.Localization.Tables;
 namespace UnityEngine.Localization.Metadata
 {
     /// <summary>
-    /// Shared Metadata is data that is associated to all tables that use the same <see cref="KeyDatabase"/>, also known as an AssetTableCollection.
-    /// Multiple table entries can be included in the SharedTableCollectionMetadata and The tables that use each table entry are recorded. 
+    /// Shared Metadata is data that is associated to all tables that use the same <see cref="SharedTableData"/>, also known as an AssetTableCollection.
+    /// Multiple table entries can be included in the SharedTableCollectionMetadata and The tables that use each table entry are recorded.
     /// </summary>
     [Serializable]
     public abstract class SharedTableCollectionMetadata : IMetadata, ISerializationCallbackReceiver
@@ -66,7 +66,7 @@ namespace UnityEngine.Localization.Metadata
         }
 
         /// <summary>
-        /// Add the table entry for a specific table to the shared Metadata. 
+        /// Add the table entry for a specific table to the shared Metadata.
         /// </summary>
         /// <param name="keyId">The Id of the table entry.</param>
         /// <param name="code">The table culture code.</param>
@@ -83,7 +83,7 @@ namespace UnityEngine.Localization.Metadata
         }
 
         /// <summary>
-        /// Remove the table entry for a specific table from the shared Metadata. 
+        /// Remove the table entry for a specific table from the shared Metadata.
         /// </summary>
         /// <param name="keyId"></param>
         /// <param name="code"></param>

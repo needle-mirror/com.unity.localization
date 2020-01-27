@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using NUnit.Framework;
 using UnityEditor.Localization.UI;
 using UnityEngine;
@@ -24,6 +24,7 @@ namespace UnityEditor.Localization.Tests.UI
         [TearDown]
         public void Teardown()
         {
+            m_Window.Close();
             Object.DestroyImmediate(m_Window);
             Directory.Delete(testPath, true);
             AssetDatabase.Refresh();

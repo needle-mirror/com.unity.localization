@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine.Localization.SmartFormat.Core.Parsing;
@@ -18,7 +18,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             parser.AddAdditionalSelectorChars("_");
             parser.AddOperators(".");
 
-            var formats = new[]{
+            var formats = new[]
+            {
                 " aaa {bbb.ccc: ddd {eee} fff } ggg ",
                 "{aaa} {bbb}",
                 "{}",
@@ -42,7 +43,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             formatter.Settings.ParseErrorAction = ErrorAction.ThrowError;
 
             var args = new object[] { TestFactory.GetPerson() };
-            var invalidFormats = new[] {
+            var invalidFormats = new[]
+            {
                 "{",
                 "{0",
                 "}",
@@ -95,7 +97,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
         public void Parser_Ignores_Exceptions()
         {
             var parser = new SmartFormatter() { Settings = { ParseErrorAction = ErrorAction.Ignore } }.Parser;
-            var invalidFormats = new[] {
+            var invalidFormats = new[]
+            {
                 "{",
                 "{0",
                 "}",
@@ -131,7 +134,6 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             Assert.AreEqual(" {eee} ", ((LiteralText)parsed.Items[4]).RawText);
             Assert.AreEqual("{ggg}", ((Placeholder)parsed.Items[5]).Format.Items[0].RawText);
             Assert.AreEqual("iii", ((Placeholder)((Placeholder)parsed.Items[7]).Format.Items[0]).Selectors[0].RawText);
-
         }
 
         private static Parser GetRegularParser()
@@ -178,7 +180,6 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             Assert.That(() => format.Substring(-1, 10), Throws.TypeOf<ArgumentOutOfRangeException>());
             Assert.That(() => format.Substring(30), Throws.TypeOf<ArgumentOutOfRangeException>());
             Assert.That(() => format.Substring(25, 5), Throws.TypeOf<ArgumentOutOfRangeException>());
-
         }
 
         [Test]
@@ -188,7 +189,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             var formatString = "{0}";
 
             var format = parser.ParseFormat(formatString, new[] { Guid.NewGuid().ToString("N") });
-            var placeholder = (Placeholder) format.Items[0];
+            var placeholder = (Placeholder)format.Items[0];
             Assert.AreEqual(formatString, placeholder.ToString());
             placeholder.Alignment = 10;
             Assert.AreEqual($"{{0,{placeholder.Alignment}}}", placeholder.ToString());
@@ -221,7 +222,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             Assert.That(Format.IndexOf('#'), Is.EqualTo(-1));
 
             // Test nested formats:
-            var placeholder = (Placeholder) Format.Items[1];
+            var placeholder = (Placeholder)Format.Items[1];
             Format = placeholder.Format;
             Assert.That(Format.ToString(), Is.EqualTo(" ccc dd|d {:|||} {eee} ff|f "));
 
@@ -245,7 +246,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             Assert.That(splits[2].ToString(), Is.EqualTo("g "));
 
             // Test nested formats:
-            var placeholder = (Placeholder) Format.Items[1];
+            var placeholder = (Placeholder)Format.Items[1];
             Format = placeholder.Format;
             Assert.That(Format.ToString(), Is.EqualTo(" ccc dd|d {:|||} {eee} ff|f "));
             splits = Format.Split('|');
@@ -276,7 +277,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
 
             // Named formatters will only be recognized by the parser, if their name occurs in one of FormatterExtensions.
             // If the name of the formatter does not exists, the string is treaded as format for the DefaultFormatter.
-            var placeholder = (Placeholder) Parse(format, formatterExtensions).Items[0];
+            var placeholder = (Placeholder)Parse(format, formatterExtensions).Items[0];
             Assert.AreEqual(expectedName, placeholder.FormatterName);
             Assert.AreEqual(expectedOptions, placeholder.FormatterOptions);
             Assert.AreEqual(expectedFormat, placeholder.Format.ToString());
@@ -286,7 +287,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
         public void Name_of_unregistered_NamedFormatter_will_not_be_parsed()
         {
             // find formatter formattername, which does not exist in the (empty) list of formatter extensions
-            var placeholderWithNonExistingName = (Placeholder)Parse("{0:formattername:}", new string[] {} ).Items[0];
+            var placeholderWithNonExistingName = (Placeholder)Parse("{0:formattername:}", new string[] {}).Items[0];
             Assert.AreEqual("formattername:", placeholderWithNonExistingName.Format.ToString()); // name is only treaded as a literal
         }
 
@@ -337,7 +338,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             parser.UseAlternativeEscapeChar('\\');
             parser.Settings.ConvertCharacterStringLiterals = false;
 
-            var placeholder = (Placeholder) parser.ParseFormat(format, new[] { Guid.NewGuid().ToString("N") }).Items[0];
+            var placeholder = (Placeholder)parser.ParseFormat(format, new[] { Guid.NewGuid().ToString("N") }).Items[0];
             Assert.IsEmpty(placeholder.FormatterName);
             Assert.IsEmpty(placeholder.FormatterOptions);
             var literalText = placeholder.Format.GetLiteralText();
@@ -365,9 +366,9 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             parser.UseAlternativeEscapeChar('\\');
             var placeholders = parser.ParseFormat("{c1:{c2:{c3}}}", new[] {Guid.NewGuid().ToString("N")});
 
-            var c1 = (Placeholder) placeholders.Items[0];
-            var c2 = (Placeholder) c1.Format.Items[0];
-            var c3 = (Placeholder) c2.Format.Items[0];
+            var c1 = (Placeholder)placeholders.Items[0];
+            var c2 = (Placeholder)c1.Format.Items[0];
+            var c3 = (Placeholder)c2.Format.Items[0];
             Assert.AreEqual("c1", c1.Selectors[0].RawText);
             Assert.AreEqual("c2", c2.Selectors[0].RawText);
             Assert.AreEqual("c3", c3.Selectors[0].RawText);

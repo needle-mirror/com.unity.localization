@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.Localization;
@@ -32,11 +32,11 @@ namespace UnityEditor.Localization.UI
             {
                 m_Editor = new VisualElement(){ style = { marginLeft = 5, marginRight = 5, marginTop = 5, marginBottom = 5 } };
                 var metadataLabel = new GUIContent("Metadata");
-                
+
                 // Shared data
-                var sharedIndex = m_Table.Keys.Entries.FindIndex(e => e.Id == m_KeyId);
+                var sharedIndex = m_Table.SharedData.Entries.FindIndex(e => e.Id == m_KeyId);
                 Debug.Assert(sharedIndex != -1, $"Could not find index of key {m_KeyId}");
-                var sharedSerializedObject = new SerializedObject(m_Table.Keys);
+                var sharedSerializedObject = new SerializedObject(m_Table.SharedData);
                 var sharedSerializedEditor = new MetadataCollectionField(){ Type = m_MetadataType };
                 var sharedEntryProperty = sharedSerializedObject.FindProperty($"m_Entries.Array.data[{sharedIndex}].m_Metadata");
                 var sharedLabel = new GUIContent("Shared");

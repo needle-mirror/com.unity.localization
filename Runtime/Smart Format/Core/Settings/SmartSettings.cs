@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace UnityEngine.Localization.SmartFormat.Core.Settings
@@ -9,21 +9,21 @@ namespace UnityEngine.Localization.SmartFormat.Core.Settings
     [Serializable]
     public class SmartSettings
     {
-        [SerializeField] 
+        [SerializeField]
         ErrorAction m_FormatErrorAction = ErrorAction.Ignore;
 
-        [SerializeField] 
+        [SerializeField]
         ErrorAction m_ParseErrorAction = ErrorAction.Ignore;
 
         [Tooltip("Determines whether placeholders are case-sensitive or not.")]
-        [SerializeField] 
+        [SerializeField]
         CaseSensitivityType m_CaseSensitivity = CaseSensitivityType.CaseSensitive;
 
         [Tooltip(@"This setting is relevant for the 'Parsing.LiteralText', If true (the default), character string literals " +
-                 "are treated like in normal string.Format: string.Format(\"\t\") will return a \"TAB\" character " +
-                 "If false, character string literals are not converted, just like with this string.Format: " +
-                 "string.Format(@\"\t\") will return the 2 characters \"\" and \"t\"")]
-        [SerializeField] 
+            "are treated like in normal string.Format: string.Format(\"\t\") will return a \"TAB\" character " +
+            "If false, character string literals are not converted, just like with this string.Format: " +
+            "string.Format(@\"\t\") will return the 2 characters \"\" and \"t\"")]
+        [SerializeField]
         bool m_ConvertCharacterStringLiterals = true;
 
         internal SmartSettings()

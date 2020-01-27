@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
@@ -12,14 +12,14 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     {
         public ConditionalFormatter()
         {
-            Names = new [] {"conditional", "cond", ""};
+            Names = new[] {"conditional", "cond", ""};
         }
 
         private static readonly Regex _complexConditionPattern
             = new Regex(@"^  (?:   ([&/]?)   ([<>=!]=?)   ([0-9.-]+)   )+   \?",
-                //   Description:      and/or    comparator     value
-                RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled);
-        
+            //   Description:      and/or    comparator     value
+            RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled);
+
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {
             var format = formattingInfo.Format;
@@ -81,7 +81,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                 // We don't have any "complex conditions",
                 // so let's do the normal conditional formatting:
             }
-            
+
             var paramCount = parameters.Count;
 
             // Determine the Current item's Type:
@@ -90,56 +90,57 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                 if (currentNumber < 0)
                     paramIndex = paramCount - 1;
                 else
-                    paramIndex = Math.Min((int) Math.Floor(currentNumber), paramCount - 1);
+                    paramIndex = Math.Min((int)Math.Floor(currentNumber), paramCount - 1);
             }
-            else switch (current)
-            {
-                case bool boolArg:
-                    // Bool: True|False
-                    paramIndex = boolArg ? 0 : 1;
-                    break;
-                // Date: Past|Present|Future   or   Past/Present|Future
-                case DateTime dateTimeArg when paramCount == 3 && dateTimeArg.ToUniversalTime().Date == SystemTime.Now().ToUniversalTime().Date:
-                    paramIndex = 1;
-                    break;
-                case DateTime dateTimeArg when dateTimeArg.ToUniversalTime() <= SystemTime.Now().ToUniversalTime():
-                    paramIndex = 0;
-                    break;
-                case DateTime dateTimeArg:
-                    paramIndex = paramCount - 1;
-                    break;
-                // Date: Past|Present|Future   or   Past/Present|Future
-                case DateTimeOffset dateTimeOffsetArg when paramCount == 3 && dateTimeOffsetArg.UtcDateTime.Date == SystemTime.OffsetNow().UtcDateTime.Date:
-                    paramIndex = 1;
-                    break;
-                case DateTimeOffset dateTimeOffsetArg when dateTimeOffsetArg.UtcDateTime <= SystemTime.OffsetNow().UtcDateTime:
-                    paramIndex = 0;
-                    break;
-                case DateTimeOffset dateTimeOffsetArg:
-                    paramIndex = paramCount - 1;
-                    break;
-                // TimeSpan: Negative|Zero|Positive  or  Negative/Zero|Positive
-                case TimeSpan timeSpanArg when paramCount == 3 && timeSpanArg == TimeSpan.Zero:
-                    paramIndex = 1;
-                    break;
-                case TimeSpan timeSpanArg when timeSpanArg.CompareTo(TimeSpan.Zero) <= 0:
-                    paramIndex = 0;
-                    break;
-                case TimeSpan timeSpanArg:
-                    paramIndex = paramCount - 1;
-                    break;
-                case string stringArg:
-                    // String: Value|NullOrEmpty
-                    paramIndex = !string.IsNullOrEmpty(stringArg) ? 0 : 1;
-                    break;
-                default:
+            else
+                switch (current)
                 {
-                    // Object: Something|Nothing
-                    var arg = current;
-                    paramIndex = arg != null ? 0 : 1;
-                    break;
+                    case bool boolArg:
+                        // Bool: True|False
+                        paramIndex = boolArg ? 0 : 1;
+                        break;
+                    // Date: Past|Present|Future   or   Past/Present|Future
+                    case DateTime dateTimeArg when paramCount == 3 && dateTimeArg.ToUniversalTime().Date == SystemTime.Now().ToUniversalTime().Date:
+                        paramIndex = 1;
+                        break;
+                    case DateTime dateTimeArg when dateTimeArg.ToUniversalTime() <= SystemTime.Now().ToUniversalTime():
+                        paramIndex = 0;
+                        break;
+                    case DateTime dateTimeArg:
+                        paramIndex = paramCount - 1;
+                        break;
+                    // Date: Past|Present|Future   or   Past/Present|Future
+                    case DateTimeOffset dateTimeOffsetArg when paramCount == 3 && dateTimeOffsetArg.UtcDateTime.Date == SystemTime.OffsetNow().UtcDateTime.Date:
+                        paramIndex = 1;
+                        break;
+                    case DateTimeOffset dateTimeOffsetArg when dateTimeOffsetArg.UtcDateTime <= SystemTime.OffsetNow().UtcDateTime:
+                        paramIndex = 0;
+                        break;
+                    case DateTimeOffset dateTimeOffsetArg:
+                        paramIndex = paramCount - 1;
+                        break;
+                    // TimeSpan: Negative|Zero|Positive  or  Negative/Zero|Positive
+                    case TimeSpan timeSpanArg when paramCount == 3 && timeSpanArg == TimeSpan.Zero:
+                        paramIndex = 1;
+                        break;
+                    case TimeSpan timeSpanArg when timeSpanArg.CompareTo(TimeSpan.Zero) <= 0:
+                        paramIndex = 0;
+                        break;
+                    case TimeSpan timeSpanArg:
+                        paramIndex = paramCount - 1;
+                        break;
+                    case string stringArg:
+                        // String: Value|NullOrEmpty
+                        paramIndex = !string.IsNullOrEmpty(stringArg) ? 0 : 1;
+                        break;
+                    default:
+                    {
+                        // Object: Something|Nothing
+                        var arg = current;
+                        paramIndex = arg != null ? 0 : 1;
+                        break;
+                    }
                 }
-            }
 
             // Now, output the selected parameter:
             var selectedParameter = parameters[paramIndex];

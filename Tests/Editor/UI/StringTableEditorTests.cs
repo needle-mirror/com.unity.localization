@@ -1,4 +1,4 @@
-﻿//using NUnit.Framework;
+//using NUnit.Framework;
 //using UnityEditor.Localization.Tables;
 //using UnityEngine;
 //using UnityEngine.Localization.Tables;

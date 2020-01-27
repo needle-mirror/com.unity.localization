@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,10 +24,10 @@ namespace UnityEngine.Localization.Tables
         /// <summary>
         /// The Metadata for this table entry.
         /// </summary>
-        public IList<IMetadata> Entries => Data.Metadata.Entries;
+        public IList<IMetadata> MetadataEntries => Data.Metadata.MetadataEntries;
 
         /// <summary>
-        /// Returns the first Metadata item from <see cref="Entries"/> of type TObject.
+        /// Returns the first Metadata item from <see cref="MetadataEntries"/> of type TObject.
         /// </summary>
         /// <typeparam name="TObject"></typeparam>
         /// <returns></returns>
@@ -37,7 +37,7 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Populates the list with all Metadata from <see cref="Entries"/> that is of type TObject.
+        /// Populates the list with all Metadata from <see cref="MetadataEntries"/> that is of type TObject.
         /// </summary>
         /// <typeparam name="TObject"></typeparam>
         /// <param name="foundItems"></param>
@@ -47,7 +47,7 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Returns all Metadata from <see cref="Entries"/> that is of type TObject.
+        /// Returns all Metadata from <see cref="MetadataEntries"/> that is of type TObject.
         /// </summary>
         /// <typeparam name="TObject"></typeparam>
         /// <returns></returns>
@@ -60,13 +60,13 @@ namespace UnityEngine.Localization.Tables
         /// Tags are Metadata that can be shared across multiple table entries,
         /// they are often used to indicate an entry has a particular attribute or feature, e.g SmartFormat.
         /// Generally Tags do not contains data, for sharing data across multiple table entries see <see cref="AddSharedMetadata"/>.
-        /// A Tag reference will be stored in <see cref="LocalizedTable.TableData"/> and <see cref="Entries"/>.
+        /// A Tag reference will be stored in <see cref="LocalizedTable.TableData"/> and <see cref="MetadataEntries"/>.
         /// </summary>
         /// <typeparam name="TShared"></typeparam>
         public void AddTagMetadata<TShared>() where TShared : SharedTableEntryMetadata, new()
         {
             TShared tag = null;
-            foreach(var md in Table.TableData)
+            foreach (var md in Table.TableData)
             {
                 if (md is TShared shared)
                 {
@@ -87,7 +87,7 @@ namespace UnityEngine.Localization.Tables
 
         /// <summary>
         /// SharedTableEntryMetadata is Metadata that can be shared across multiple entries in a single table.
-        /// The instance reference will be stored in <see cref="LocalizedTable.TableData"/> and <see cref="Entries"/>.
+        /// The instance reference will be stored in <see cref="LocalizedTable.TableData"/> and <see cref="MetadataEntries"/>.
         /// </summary>
         /// <param name="md"></param>
         public void AddSharedMetadata(SharedTableEntryMetadata md)
@@ -103,14 +103,14 @@ namespace UnityEngine.Localization.Tables
 
         /// <summary>
         /// SharedTableCollectionMetadata is Metadata that can be applied to multiple table entries in a table collection.
-        /// The Metadata is stored in the <see cref="KeyDatabase"/>.
+        /// The Metadata is stored in the <see cref="SharedTableData"/>.
         /// </summary>
         /// <param name="md"></param>
         public void AddSharedMetadata(SharedTableCollectionMetadata md)
         {
-            if (!Table.Keys.Metadata.Contains(md))
+            if (!Table.SharedData.Metadata.Contains(md))
             {
-                Table.Keys.Metadata.AddMetadata(md);
+                Table.SharedData.Metadata.AddMetadata(md);
             }
 
             md.AddEntry(Data.Id, Table.LocaleIdentifier.Code);
@@ -146,7 +146,7 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Removes the entry from the shared Metadata in the table and removes the 
+        /// Removes the entry from the shared Metadata in the table and removes the
         /// shared Metadata if no other entires are using it.
         /// </summary>
         /// <param name="md"></param>
@@ -163,8 +163,8 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Removes the entry from the Shared Metadata and removes it from the 
-        /// <see cref="KeyDatabase"/> if no other entires are using it.
+        /// Removes the entry from the Shared Metadata and removes it from the
+        /// <see cref="SharedTableData"/> if no other entires are using it.
         /// </summary>
         /// <param name="md"></param>
         public void RemoveSharedMetadata(SharedTableCollectionMetadata md)
@@ -173,12 +173,12 @@ namespace UnityEngine.Localization.Tables
 
             if (md.IsEmpty)
             {
-                Table.Keys.Metadata.RemoveMetadata(md);
+                Table.SharedData.Metadata.RemoveMetadata(md);
             }
         }
 
         /// <summary>
-        /// Remove an entry from <see cref="Entries"/>.
+        /// Remove an entry from <see cref="MetadataEntries"/>.
         /// </summary>
         /// <param name="md"></param>
         /// <returns></returns>
@@ -188,7 +188,7 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Checks if the Metadata is contained within <see cref="Entries"/>.
+        /// Checks if the Metadata is contained within <see cref="MetadataEntries"/>.
         /// </summary>
         /// <param name="md"></param>
         /// <returns></returns>
@@ -198,7 +198,7 @@ namespace UnityEngine.Localization.Tables
         }
     };
 
-    public abstract class LocalizedTableT<TEntry> : LocalizedTable, IDictionary<uint, TEntry> ,ISerializationCallbackReceiver where TEntry : TableEntry
+    public abstract class LocalizedTableT<TEntry> : LocalizedTable, IDictionary<uint, TEntry> , ISerializationCallbackReceiver where TEntry : TableEntry
     {
         Dictionary<uint, TEntry> m_TableEntries = new Dictionary<uint, TEntry>();
 
@@ -220,7 +220,7 @@ namespace UnityEngine.Localization.Tables
         public bool IsReadOnly => false;
 
         /// <summary>
-        /// Get/Set a value the specified key.
+        /// Get/Set a value using the specified key.
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
@@ -229,13 +229,34 @@ namespace UnityEngine.Localization.Tables
             get => m_TableEntries[key];
             set
             {
-                if (key == KeyDatabase.EmptyId)
-                    throw new Exception("Key Id value 0, is not valid. All Key Id's must be non-zero.");
+                if (key == SharedTableData.EmptyId)
+                    throw new ArgumentException("Key Id value 0, is not valid. All Key Id's must be non-zero.");
 
                 if (value.Table != this)
-                    throw new Exception("Table entry does not belong to this table. Table entries can not be shared across tables.");
+                    throw new ArgumentException("Table entry does not belong to this table. Table entries can not be shared across tables.");
 
+                // Move the entry
+                RemoveEntry(value.Data.Id);
+                value.Data.Id = key;
                 m_TableEntries[key] = value;
+            }
+        }
+
+        /// <summary>
+        /// Get/Set a value using the specified key name.
+        /// </summary>
+        /// <param name="keyName"></param>
+        /// <returns></returns>
+        public TEntry this[string keyName]
+        {
+            get => GetEntry(keyName);
+            set
+            {
+                if (value.Table != this)
+                    throw new ArgumentException("Table entry does not belong to this table. Table entries can not be shared across tables.");
+
+                var key = FindKeyId(keyName);
+                this[key] = value;
             }
         }
 
@@ -272,6 +293,9 @@ namespace UnityEngine.Localization.Tables
         /// <returns></returns>
         public virtual TEntry AddEntry(uint keyId, string localized)
         {
+            if (keyId == SharedTableData.EmptyId)
+                throw new ArgumentException("Key Id value 0, is not valid. All Key Id's must be non-zero.", nameof(keyId));
+
             if (!m_TableEntries.TryGetValue(keyId, out var tableEntry))
             {
                 tableEntry = CreateTableEntry();
@@ -303,6 +327,7 @@ namespace UnityEngine.Localization.Tables
         {
             if (m_TableEntries.TryGetValue(keyId, out var item))
             {
+                item.Data.Id = SharedTableData.EmptyId;
                 return m_TableEntries.Remove(keyId);
             }
 
@@ -338,13 +363,7 @@ namespace UnityEngine.Localization.Tables
         /// <param name="value"></param>
         public void Add(uint keyId, TEntry value)
         {
-            if (value.Table != this)
-                throw new Exception("Table entry does not belong to this table. Table entries can not be shared across tables.");
-
-            if (keyId == KeyDatabase.EmptyId)
-                throw new Exception("Key Id value 0, is not valid. All Key Id's must be non-zero.");
-
-            m_TableEntries.Add(keyId, value);
+            this[keyId] = value;
         }
 
         /// <summary>
@@ -353,13 +372,7 @@ namespace UnityEngine.Localization.Tables
         /// <param name="item"></param>
         public void Add(KeyValuePair<uint, TEntry> item)
         {
-            if (item.Value.Table != this)
-                throw new Exception("Table entry does not belong to this table. Table entries can not be shared across tables.");
-
-            if (item.Key == KeyDatabase.EmptyId)
-                throw new Exception("Key Id value 0, is not valid. All Key Id's must be non-zero.");
-
-            m_TableEntries.Add(item.Key, item.Value);
+            this[item.Key] = item.Value;
         }
 
         /// <summary>
@@ -381,14 +394,22 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         /// <param name="keyId"></param>
         /// <returns></returns>
-        public bool Remove(uint keyId) => m_TableEntries.Remove(keyId);
+        public bool Remove(uint keyId) => RemoveEntry(keyId);
 
         /// <summary>
         /// Remove the item from the table if it exists.
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        public bool Remove(KeyValuePair<uint, TEntry> item) => m_TableEntries.Remove(item.Key);
+        public bool Remove(KeyValuePair<uint, TEntry> item)
+        {
+            if (Contains(item))
+            {
+                RemoveEntry(item.Key);
+                return true;
+            }
+            return false;
+        }
 
         /// <summary>
         /// Find the entry, if it exists in the table.
@@ -440,7 +461,7 @@ namespace UnityEngine.Localization.Tables
         public void OnBeforeSerialize()
         {
             TableData.Clear();
-            foreach(var entry in this)
+            foreach (var entry in this)
             {
                 // Sync the id
                 entry.Value.Data.Id = entry.Key;

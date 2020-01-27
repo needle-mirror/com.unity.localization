@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace UnityEngine.Localization.Metadata
 {
@@ -6,7 +6,7 @@ namespace UnityEngine.Localization.Metadata
     class AssetTypeMetadata : SharedTableCollectionMetadata
     {
         [SerializeField, HideInInspector]
-        string m_TypeString;
+        internal string m_TypeString;
 
         public Type Type { get; set; }
 

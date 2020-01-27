@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Xml.Linq;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;

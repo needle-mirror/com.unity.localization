@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
@@ -45,20 +45,22 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
 
         public object[] GetArgs()
         {
-            return new object[] {
+            return new object[]
+            {
                 TimeSpan.Zero,
-                new TimeSpan(1,1,1,1,1),
-                new TimeSpan(0,2,0,2,0),
-                new TimeSpan(3,0,0,3,0),
-                new TimeSpan(0,0,0,0,4),
-                new TimeSpan(5,0,0,0,0),
+                new TimeSpan(1, 1, 1, 1, 1),
+                new TimeSpan(0, 2, 0, 2, 0),
+                new TimeSpan(3, 0, 0, 3, 0),
+                new TimeSpan(0, 0, 0, 0, 4),
+                new TimeSpan(5, 0, 0, 0, 0),
             };
         }
 
         [Test]
         public void Test_Defaults()
         {
-            var formats = new string[] {
+            var formats = new string[]
+            {
                 "{0}",
                 "{1}",
                 "{2}",
@@ -66,7 +68,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
                 "{4}",
                 "{5}",
             };
-            var expected = new string[] {
+            var expected = new string[]
+            {
                 "less than 1 second",
                 "1 day 1 hour 1 minute 1 second",
                 "2 hours 2 seconds",
@@ -81,7 +84,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
         [Test]
         public void Test_Options()
         {
-            var formats = new string[] {
+            var formats = new string[]
+            {
                 "{0:noless}",
                 "{1:hours}",
                 "{1:hours minutes}",
@@ -92,7 +96,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
                 "{2:days milliseconds full}",
                 "{3:abbr}",
             };
-            var expected = new string[] {
+            var expected = new string[]
+            {
                 "0 seconds",
                 "25 hours",
                 "25 hours 1 minute",

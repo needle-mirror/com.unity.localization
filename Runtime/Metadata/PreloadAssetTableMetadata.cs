@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using UnityEngine.Localization.Tables;
 
 namespace UnityEngine.Localization.Metadata
 {
     /// <summary>
     /// Used to indicate if the assets within an <see cref="AssetTable"/> should all be preloaded when the table is loaded or should be loaded on demand(default).
-    /// If no <see cref="PreloadAssetTableMetadata"/> is attached to a <see cref="AssetTable"/> then the default behaviour is <see cref="PreloadBehaviour.NoPreload"/>. 
+    /// If no <see cref="PreloadAssetTableMetadata"/> is attached to a <see cref="AssetTable"/> then the default behaviour is <see cref="PreloadBehaviour.NoPreload"/>.
     /// </summary>
-    [Metadata(AllowedTypes = MetadataType.AssetTable | MetadataType.KeyDatabase)]
+    [Metadata(AllowedTypes = MetadataType.AssetTable | MetadataType.SharedTableData)]
     [Serializable]
     public class PreloadAssetTableMetadata : IMetadata
     {
@@ -34,9 +34,9 @@ namespace UnityEngine.Localization.Metadata
 
         [SerializeField]
         PreloadBehaviour m_PreloadBehaviour;
-        
+
         /// <summary>
-        /// <inheritdoc cref="PreloadBehaviour"/> 
+        /// <inheritdoc cref="PreloadBehaviour"/>
         /// </summary>
         public PreloadBehaviour Behaviour
         {

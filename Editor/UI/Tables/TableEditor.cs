@@ -1,4 +1,4 @@
-﻿using UnityEditor.UIElements;
+using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.UI
@@ -36,9 +36,9 @@ namespace UnityEditor.Localization.UI
         {
             var group = Undo.GetCurrentGroup();
             Undo.SetCurrentGroupName("Change table collection name");
-            Undo.RecordObject(TableCollection.Keys, "Change table collection name");
+            Undo.RecordObject(TableCollection.SharedData, "Change table collection name");
 
-            TableCollection.Keys.TableName = evt.newValue;
+            TableCollection.SharedData.TableName = evt.newValue;
             for (int i = 0; i < TableCollection.Tables.Count; ++i)
             {
                 var table = TableCollection.Tables[i];

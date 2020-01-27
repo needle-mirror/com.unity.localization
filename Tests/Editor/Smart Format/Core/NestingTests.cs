@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 
 namespace UnityEngine.Localization.SmartFormat.Tests.Core
 {
@@ -19,6 +19,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
                 }
             };
         }
+
         private object data;
 
         [TestCase("{ChildOne.ChildTwo: {Three} {0.One} }", " 3 1 ")]
@@ -39,10 +40,10 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             Assert.AreEqual(expectedOutput, actual);
         }
 
-        [TestCase("{ChildOne.ChildTwo.ChildThree:{Four}{One}}","41")]
-        [TestCase("{ChildOne:{ChildTwo:{ChildThree:{Four}{Three}{Two}{One}}}}","4321")]
-        [TestCase("{ChildOne:{ChildTwo:{ChildThree:{Four}{ChildTwo.Three}{ChildOne.Two}{One}}}}","4321")]
-        [TestCase("{ChildOne:{ChildTwo:{ChildThree:{ChildOne:{ChildTwo:{ChildThree:{Four}}}}}}}","4")]
+        [TestCase("{ChildOne.ChildTwo.ChildThree:{Four}{One}}", "41")]
+        [TestCase("{ChildOne:{ChildTwo:{ChildThree:{Four}{Three}{Two}{One}}}}", "4321")]
+        [TestCase("{ChildOne:{ChildTwo:{ChildThree:{Four}{ChildTwo.Three}{ChildOne.Two}{One}}}}", "4321")]
+        [TestCase("{ChildOne:{ChildTwo:{ChildThree:{ChildOne:{ChildTwo:{ChildThree:{Four}}}}}}}", "4")]
         public void Nesting_can_access_outer_scopes_no_blanks(string format, string expectedOutput)
         {
             // Removing the spaces from Nesting_can_access_outer_scopes requires alternative escaping of { and }!

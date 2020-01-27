@@ -14,7 +14,7 @@ namespace UnityEditor.Localization.Tests
 
         protected FakedLocalizationEditorSettings Settings { get; set; }
 
-        protected KeyDatabase KeyDb { get; set; }
+        protected SharedTableData sharedData { get; set; }
 
         protected const string kStringTableName = "MyText";
         protected const string kStringTableKey = "This is some text";
@@ -25,14 +25,14 @@ namespace UnityEditor.Localization.Tests
         {
             Settings = new FakedLocalizationEditorSettings();
             LocalizationEditorSettings.Instance = Settings;
-            KeyDb = ScriptableObject.CreateInstance<KeyDatabase>();
-            KeyDb.TableNameGuid = Guid.NewGuid();
-            var entry = KeyDb.AddKey(kStringTableKey);
+            sharedData = ScriptableObject.CreateInstance<SharedTableData>();
+            sharedData.TableNameGuid = Guid.NewGuid();
+            var entry = sharedData.AddKey(kStringTableKey);
             StringTableKeyId = entry.Id;
             m_Target = new GameObject("LocalizeComponent");
 
             var stringTable = ScriptableObject.CreateInstance<StringTable>();
-            stringTable.Keys = KeyDb;
+            stringTable.SharedData = sharedData;
             stringTable.TableName = kStringTableName;
             stringTable.LocaleIdentifier = "en";
             stringTable.AddEntry(kStringTableKey, "");
@@ -40,8 +40,8 @@ namespace UnityEditor.Localization.Tests
 
             var collection = new AssetTableCollection()
             {
-                Keys = KeyDb,
-                Tables = new List<LocalizedTable>{ stringTable },
+                SharedData = sharedData,
+                Tables = new List<LocalizedTable> { stringTable },
                 TableType = typeof(StringTable)
             };
             Settings.Collections.Add(collection);
@@ -51,7 +51,7 @@ namespace UnityEditor.Localization.Tests
         public virtual void Teardown()
         {
             LocalizationEditorSettings.Instance = null;
-            Object.DestroyImmediate(KeyDb);
+            Object.DestroyImmediate(sharedData);
             Object.DestroyImmediate(m_Target);
         }
 

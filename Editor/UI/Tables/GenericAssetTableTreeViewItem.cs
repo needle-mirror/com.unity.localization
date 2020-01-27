@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.Localization.Tables;
@@ -7,15 +7,15 @@ namespace UnityEditor.Localization.UI
 {
     class GenericAssetTableTreeViewItem<T1> : TreeViewItem
     {
-        public virtual KeyDatabase.KeyDatabaseEntry KeyEntry { get; set; }
+        public virtual SharedTableData.SharedTableEntry SharedEntry { get; set; }
 
         public string Key
         {
-            get => KeyEntry.Key;
-            set => KeyEntry.Key = value;
+            get => SharedEntry.Key;
+            set => SharedEntry.Key = value;
         }
 
-        public uint KeyId => KeyEntry.Id;
+        public uint KeyId => SharedEntry.Id;
 
         public bool Selected { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
 
@@ -23,11 +23,11 @@ namespace UnityEditor.Localization.UI
         /// Called during the setup of the tree view.
         /// </summary>
         /// <param name="tables"></param>
-        public virtual void Initialize(List<LocalizedTable> tables, int startIdx) { }
+        public virtual void Initialize(List<LocalizedTable> tables, int startIdx) {}
 
         /// <summary>
         /// Called before the key entry is deleted.
         /// </summary>
-        public virtual void OnDeleteKey(){}
+        public virtual void OnDeleteKey() {}
     }
 }

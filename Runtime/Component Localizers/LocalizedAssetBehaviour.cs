@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace UnityEngine.Localization.Components
 {
@@ -12,7 +12,7 @@ namespace UnityEngine.Localization.Components
         /// /// Reference to the localized asset entry and table.
         /// </summary>
         [Serializable]
-        public class LocalizedAssetReference : LocalizedAsset<TObject>{ };
+        public class LocalizedAssetReference : LocalizedAsset<TObject> {};
 
         [SerializeField]
         LocalizedAssetReference m_LocalizedAssetReference = new LocalizedAssetReference();

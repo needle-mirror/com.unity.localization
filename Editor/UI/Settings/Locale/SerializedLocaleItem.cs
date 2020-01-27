@@ -11,7 +11,7 @@ namespace UnityEditor.Localization.UI
         {
             get
             {
-                if(m_SerializedObject == null && Reference != null)
+                if (m_SerializedObject == null && Reference != null)
                 {
                     m_SerializedObject = new SerializedObject(Reference);
                 }

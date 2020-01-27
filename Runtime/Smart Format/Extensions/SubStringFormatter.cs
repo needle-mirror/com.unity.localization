@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
 
 namespace UnityEngine.Localization.SmartFormat.Extensions
@@ -11,7 +11,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     {
         [SerializeField]
         char m_ParameterDelimiter = ',';
-        
+
         [SerializeField]
         string m_NullDisplayString = "(null)";
 

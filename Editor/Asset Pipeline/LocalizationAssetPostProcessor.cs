@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
@@ -9,39 +9,52 @@ namespace UnityEditor.Localization
     {
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
-            foreach (var assetPath in importedAssets)
+            // We need to disable Addresables settings creation here.
+            // When doing a full project import, there is no guarantee of OnPostprocessAllAssets order
+            // and the Addressables may be called after Localization which would cause assets to be
+            // re-added to groups that become invalid and a general corruption of Addressables data.
+            LocalizationEditorSettings.EnableAddressablesCreation = false;
+
+            try
             {
-                if (assetPath.EndsWith("asset"))
+                foreach (var assetPath in importedAssets)
                 {
-                    var assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
+                    if (assetPath.EndsWith("asset"))
+                    {
+                        var assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
 
-                    if (typeof(LocalizedTable).IsAssignableFrom(assetType))
-                    {
-                        var table = AssetDatabase.LoadAssetAtPath<LocalizedTable>(assetPath);
-                        if (table != null)
-                            LocalizationEditorSettings.AddOrUpdateTable(table, false);
-                    }
-                    else if (typeof(KeyDatabase).IsAssignableFrom(assetType))
-                    {
-                        var keyDatabase = AssetDatabase.LoadAssetAtPath<KeyDatabase>(assetPath);
-                        if (keyDatabase != null)
+                        if (typeof(LocalizedTable).IsAssignableFrom(assetType))
                         {
-                            Debug.Assert(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(keyDatabase, out string keyDbGuid, out long _), "Failed to extract KeyDatabase Guid", keyDatabase);
-                            var guid = Guid.Parse(keyDbGuid);
+                            var table = AssetDatabase.LoadAssetAtPath<LocalizedTable>(assetPath);
+                            if (table != null)
+                                LocalizationEditorSettings.AddOrUpdateTable(table, false);
+                        }
+                        else if (typeof(SharedTableData).IsAssignableFrom(assetType))
+                        {
+                            var sharedTableData = AssetDatabase.LoadAssetAtPath<SharedTableData>(assetPath);
+                            if (sharedTableData != null)
+                            {
+                                Debug.Assert(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(sharedTableData, out string sharedTableDataGuid, out long _), "Failed to extract SharedTableData Guid", sharedTableData);
+                                var guid = Guid.Parse(sharedTableDataGuid);
 
-                            if (keyDatabase.TableNameGuid != Guid.Empty)
-                                Debug.Assert(keyDatabase.TableNameGuid == guid, "Key Database Name Guid does not match the assets Guid. This may cause issues matching the correct TableName.", keyDatabase);
-                            else
-                                keyDatabase.TableNameGuid = guid;
+                                if (sharedTableData.TableNameGuid != Guid.Empty)
+                                    Debug.Assert(sharedTableData.TableNameGuid == guid, "SharedTableData Name Guid does not match the assets Guid. This may cause issues matching the correct TableName.", sharedTableData);
+                                else
+                                    sharedTableData.TableNameGuid = guid;
+                            }
+                        }
+                        else if (typeof(Locale).IsAssignableFrom(assetType))
+                        {
+                            var locale = AssetDatabase.LoadAssetAtPath<Locale>(assetPath);
+                            Debug.Assert(locale != null, "Failed to load Locale asset.");
+                            LocalizationEditorSettings.AddLocale(locale, false);
                         }
                     }
-                    else if (typeof(Locale).IsAssignableFrom(assetType))
-                    {
-                        var locale = AssetDatabase.LoadAssetAtPath<Locale>(assetPath);
-                        Debug.Assert(locale != null, "Failed to load Locale asset.");
-                        LocalizationEditorSettings.AddLocale(locale, false);
-                    }
                 }
+            }
+            finally
+            {
+                LocalizationEditorSettings.EnableAddressablesCreation = true;
             }
         }
     }

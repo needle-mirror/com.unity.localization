@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine.Localization.Tables;
 
 namespace UnityEngine.Localization
@@ -22,7 +22,15 @@ namespace UnityEngine.Localization
         public TableReference TableReference
         {
             get => m_TableReference;
-            set => m_TableReference = value;
+
+            set
+            {
+                if (value.Equals(m_TableReference))
+                    return;
+
+                m_TableReference = value;
+                ForceUpdate();
+            }
         }
 
         /// <summary>
@@ -32,7 +40,42 @@ namespace UnityEngine.Localization
         public TableEntryReference TableEntryReference
         {
             get => m_TableEntryReference;
-            set => m_TableEntryReference = value;
+
+            set
+            {
+                if (value.Equals(m_TableEntryReference))
+                    return;
+
+                m_TableEntryReference = value;
+                ForceUpdate();
+            }
+        }
+
+        /// <summary>
+        /// Sets both the <see cref="TableReference"/> and <see cref="TableEntryReference"/>
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="entry"></param>
+        public void SetReference(TableReference table, TableEntryReference entry)
+        {
+            bool update = false;
+
+            if (!m_TableReference.Equals(table))
+            {
+                m_TableReference = table;
+                update = true;
+            }
+
+            if (!m_TableEntryReference.Equals(entry))
+            {
+                m_TableEntryReference = entry;
+                update = true;
+            }
+
+            if (update)
+            {
+                ForceUpdate();
+            }
         }
 
         /// <summary>
@@ -40,5 +83,10 @@ namespace UnityEngine.Localization
         /// </summary>
         /// <returns></returns>
         public override string ToString() => $"[{TableReference}]{TableEntryReference}";
+
+        /// <summary>
+        /// Called when a value has been changed and an update may be required.
+        /// </summary>
+        protected abstract void ForceUpdate();
     }
 }

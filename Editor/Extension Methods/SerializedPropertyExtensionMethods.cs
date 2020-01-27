@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 namespace UnityEditor.Localization
@@ -38,6 +38,12 @@ namespace UnityEditor.Localization
             {
                 return null;
             }
+        }
+
+        public static SerializedProperty AddArrayElement(this SerializedProperty property)
+        {
+            property.InsertArrayElementAtIndex(property.arraySize);
+            return property.GetArrayElementAtIndex(property.arraySize - 1);
         }
     }
 }

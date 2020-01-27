@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.Localization;
@@ -107,7 +107,7 @@ namespace UnityEditor.Localization.UI
                     case Column.Code:
                         m_Items.Sort((x, y) => ascend ? string.Compare(y.identifier.Code, x.identifier.Code) : string.Compare(x.identifier.Code, y.identifier.Code));
                         break;
-               }
+                }
             }
 
             SetupParentsAndChildrenFromDepths(root, m_Items.ConvertAll(item => (TreeViewItem)item));

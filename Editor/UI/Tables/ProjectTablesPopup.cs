@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEditor.UIElements;
 using UnityEngine.Localization.Tables;
 using UnityEngine.UIElements;
@@ -21,7 +21,7 @@ namespace UnityEditor.Localization.UI
             }
         }
 
-        public new class UxmlFactory : UxmlFactory<ProjectTablesPopup> { }
+        public new class UxmlFactory : UxmlFactory<ProjectTablesPopup> {}
 
         static List<AssetTableCollection> s_Tables;
 
@@ -49,7 +49,7 @@ namespace UnityEditor.Localization.UI
                 var choices = GetChoices();
 
                 // Check if the table is currently selected.
-                var table = (LocalizedTable)obj;  
+                var table = (LocalizedTable)obj;
                 if (value.TableType == table.GetType() && value.TableName == table.TableName)
                 {
                     value = choices[0];

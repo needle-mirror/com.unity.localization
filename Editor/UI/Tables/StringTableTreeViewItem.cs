@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Localization.Metadata;
@@ -8,19 +8,19 @@ namespace UnityEditor.Localization.UI
 {
     class StringTableTreeViewItem : GenericAssetTableTreeViewItem<StringTable>
     {
-        KeyDatabase m_Keys;
+        SharedTableData m_SharedTableData;
 
         (SmartFormatField editor, ISelectable selected)[] m_TableProperties;
 
         public override void Initialize(List<LocalizedTable> tables, int startIdx)
         {
-            m_TableProperties = new (SmartFormatField, ISelectable)[startIdx + tables.Count];
+            m_TableProperties = new(SmartFormatField, ISelectable)[startIdx + tables.Count];
 
-            // Get the keys
+            // Get the shared data
             if (tables.Count > 0)
-                m_Keys = tables[0].Keys;
+                m_SharedTableData = tables[0].SharedData;
 
-            Debug.Assert(m_Keys != null);
+            Debug.Assert(m_SharedTableData != null);
             for (int i = startIdx; i < m_TableProperties.Length; ++i)
             {
                 var table = tables[i - startIdx] as StringTable;
@@ -45,7 +45,8 @@ namespace UnityEditor.Localization.UI
 
         public SmartFormatField GetSmartFormatEditor(int colIdx)
         {
-            return m_TableProperties[colIdx].editor;
+            // Some cols may be missing table cols.
+            return colIdx < m_TableProperties.Length ? m_TableProperties[colIdx].editor : null;
         }
 
         public bool Draw(int colIdx, Rect rect, StringTableListView listView)
@@ -92,7 +93,7 @@ namespace UnityEditor.Localization.UI
         void UpdateSearchString()
         {
             var sb = new StringBuilder();
-            sb.AppendLine(KeyEntry.Key);
+            sb.AppendLine(SharedEntry.Key);
             foreach (var tableField in m_TableProperties)
             {
                 if (tableField.editor != null)

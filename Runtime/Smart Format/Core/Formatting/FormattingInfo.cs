@@ -1,4 +1,4 @@
-﻿using UnityEngine.Localization.SmartFormat.Core.Extensions;
+using UnityEngine.Localization.SmartFormat.Core.Extensions;
 using UnityEngine.Localization.SmartFormat.Core.Parsing;
 
 namespace UnityEngine.Localization.SmartFormat.Core.Formatting
@@ -19,7 +19,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Formatting
         }
 
         public FormattingInfo(FormattingInfo parent, FormatDetails formatDetails, Placeholder placeholder,
-            object currentValue)
+                              object currentValue)
         {
             Parent = parent;
             FormatDetails = formatDetails;
@@ -57,7 +57,6 @@ namespace UnityEngine.Localization.SmartFormat.Core.Formatting
             var nestedFormatInfo = CreateChild(format, value);
             FormatDetails.Formatter.Format(nestedFormatInfo);
         }
-
 
         public FormattingException FormattingException(string issue, FormatItem problemItem = null, int startIndex = -1)
         {

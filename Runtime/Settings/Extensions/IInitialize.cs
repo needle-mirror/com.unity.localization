@@ -1,4 +1,4 @@
-﻿namespace UnityEngine.Localization.Settings
+namespace UnityEngine.Localization.Settings
 {
     /// <summary>
     /// Indicates that an extension requires an Initialization callback.

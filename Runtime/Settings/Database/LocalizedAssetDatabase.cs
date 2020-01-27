@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Localization.Tables;
 using UnityEngine.ResourceManagement;
@@ -7,7 +7,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 namespace UnityEngine.Localization.Settings
 {
     /// <summary>
-    /// The Localized Asset Database provides a single point of access for all localized assets. 
+    /// The Localized Asset Database provides a single point of access for all localized assets.
     /// </summary>
     /// <remarks>
     /// A localized asset must derive from <see cref="UnityEngine.Object"/>.
@@ -22,10 +22,24 @@ namespace UnityEngine.Localization.Settings
         /// </summary>
         /// <typeparam name="TObject">The type of asset that should be loaded.</typeparam>
         /// <param name="tableEntryReference">A reference to the entry in the <see cref="LocalizedAssetDatabase.DefaultTable"/></param>
+        /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
         /// <returns></returns>
         public AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableEntryReference tableEntryReference) where TObject : Object
         {
-            return GetLocalizedAssetAsync<TObject>(DefaultTable, tableEntryReference);
+            return GetLocalizedAssetAsync<TObject>(DefaultTable, tableEntryReference, LocalizationSettings.SelectedLocale);
+        }
+
+        /// <summary>
+        /// Returns a handle to a localized asset loading operation from the <see cref="LocalizedAssetDatabase.DefaultTable"/>.
+        /// This function is asynchronous and may not have an immediate result available.
+        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
+        /// </summary>
+        /// <typeparam name="TObject">The type of asset that should be loaded.</typeparam>
+        /// <param name="tableEntryReference">A reference to the entry in the <see cref="LocalizedAssetDatabase.DefaultTable"/></param>
+        /// <returns></returns>
+        public AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableEntryReference tableEntryReference, Locale locale) where TObject : Object
+        {
+            return GetLocalizedAssetAsync<TObject>(DefaultTable, tableEntryReference, locale);
         }
 
         /// <summary>
@@ -38,9 +52,23 @@ namespace UnityEngine.Localization.Settings
         /// <param name="tableEntryReference">A reference to the entry in the table.</param>
         public AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableReference tableReference, TableEntryReference tableEntryReference) where TObject : Object
         {
+            return GetLocalizedAssetAsync<TObject>(tableReference, tableEntryReference, LocalizationSettings.SelectedLocale);
+        }
+
+        /// <summary>
+        /// Returns a handle to a localized asset loading operation from the requested table.
+        /// This function is asynchronous and may not have an immediate result available.
+        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
+        /// </summary>
+        /// <typeparam name="TObject">The type of asset that should be loaded.</typeparam>
+        /// <param name="tableReference">A reference to the table that the asset should be loaded from.</param>
+        /// <param name="tableEntryReference">A reference to the entry in the table.</param>
+        /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
+        public AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale) where TObject : Object
+        {
             tableReference.Validate();
             tableEntryReference.Validate();
-            return GetLocalizedAssetAsyncInternal<TObject>(tableReference, tableEntryReference);
+            return GetLocalizedAssetAsyncInternal<TObject>(tableReference, tableEntryReference, locale);
         }
 
         /// <summary>
@@ -49,16 +77,14 @@ namespace UnityEngine.Localization.Settings
         /// <typeparam name="TObject">The type of asset that should be loaded.</typeparam>
         /// <param name="tableReference">A reference to the table that the asset should be loaded from.</param>
         /// <param name="tableEntryReference">A reference to the entry in the table.</param>
-        protected virtual AsyncOperationHandle<TObject> GetLocalizedAssetAsyncInternal<TObject>(TableReference tableReference, TableEntryReference tableEntryReference) where TObject : Object
+        /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
+        protected virtual AsyncOperationHandle<TObject> GetLocalizedAssetAsyncInternal<TObject>(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale) where TObject : Object
         {
-            var tableEntryOp = GetTableEntryAsync(tableReference, tableEntryReference);
+            var tableEntryOp = GetTableEntryAsync(tableReference, tableEntryReference, locale);
             if (!tableEntryOp.IsDone)
                 return ResourceManager.CreateChainOperation<TObject>(tableEntryOp, (op) => GetLocalizedAsset_LoadAsset<TObject>(tableEntryOp, tableEntryReference));
             return GetLocalizedAsset_LoadAsset<TObject>(tableEntryOp, tableEntryReference);
         }
-
-
-
 
         /// <summary>
         /// /// Performs the final step after the <see cref="AssetTableEntry"/> has been found. Starts the table asset loading operation.
@@ -73,7 +99,7 @@ namespace UnityEngine.Localization.Settings
             {
                 // Find the key so we can provide a better error message.
                 var table = entryOp.Result.Table;
-                string key = tableEntryReference.ResolveKeyName(table?.Keys);
+                string key = tableEntryReference.ResolveKeyName(table?.SharedData);
                 var message = $"Could not load asset {key}";
                 return ResourceManager.CreateCompletedOperation<TObject>(null, message);
             }

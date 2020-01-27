@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine.Localization.Tables;
 
 namespace UnityEngine.Localization.Metadata

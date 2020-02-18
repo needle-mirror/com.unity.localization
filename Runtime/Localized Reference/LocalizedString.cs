@@ -87,7 +87,7 @@ namespace UnityEngine.Localization
             string translatedText;
             if (m_CurrentLoadingOperation.Value.Result.Entry != null)
             {
-                var entryResult = LocalizationSettings.StringDatabase.GetLocalizedString_ProcessTableEntry(m_CurrentLoadingOperation.Value, TableEntryReference, LocalizationSettings.SelectedLocale, Arguments);
+                var entryResult = LocalizationSettings.StringDatabase.GetLocalizedStringProcessTableEntry(m_CurrentLoadingOperation.Value, TableEntryReference, LocalizationSettings.SelectedLocale, Arguments);
                 translatedText = entryResult.Result;
             }
             else

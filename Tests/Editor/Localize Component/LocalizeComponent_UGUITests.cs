@@ -36,7 +36,7 @@ namespace UnityEditor.Localization.Tests
             var localizedComponent = LocalizeComponent_UGUI.SetupForLocalization(textComponent) as LocalizeStringBehaviour;
             Assert.NotNull(localizedComponent, $"Expected a {nameof(LocalizeStringBehaviour)} component to be returned.");
 
-            Assert.AreEqual(SharedTableData.EmptyId , localizedComponent.StringReference.TableEntryReference.KeyId, "Expected the StringReference property to be setup with the default key id.");
+            Assert.AreEqual(SharedTableData.EmptyId, localizedComponent.StringReference.TableEntryReference.KeyId, "Expected the StringReference property to be setup with the default key id.");
             Assert.AreEqual(TableReference.Type.Empty, localizedComponent.StringReference.TableReference.ReferenceType, "Expected the StringReference property to be empty.");
 
             // Check event

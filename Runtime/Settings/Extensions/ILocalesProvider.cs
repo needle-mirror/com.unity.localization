@@ -7,7 +7,7 @@ namespace UnityEngine.Localization.Settings
     /// </summary>
     public interface ILocalesProvider
     {
-        List<Locale> Locales { get; set; }
+        List<Locale> Locales { get; }
 
         /// <summary>
         /// Attempt to retrieve a Locale using the identifier.

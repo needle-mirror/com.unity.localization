@@ -10,18 +10,18 @@ The following table demonstrates the output of each Method.
 | **Character Substitutor**  | `_________________________`<br>`____________________________`<br>`______________________` | **Character Substitutor** replaces characters in a string with other characters. In this example, letters are replaced with underscores. This is a useful Method to find text that is hard-coded into the UI, and therefore does not go through the localization system.
 | **Accenter**               | `Ţĥîš îš åñ éẋåɱþļé šţŕîñĝ· Ţĥé ǫûîçķ ƀŕöŵñ ƒöẋ ĵûɱþš öṽéŕ ţĥé ļåžý ðöĝ·` | **Accenter** replaces all characters with accented versions. This helps to identify characters that are not supported by the font, and to indicate where accented text might not fit in the space.
 | **Encapsulator**           | `[This is an example string. The quick brown fox jumps over the lazy dog.]` | **Encapsulator** brackets around each string. This helps to indicate where text is truncated or is concatenated together.
-| **Expander**               | `This is an example string. The quick brown fox jumps over the lazy dog.,rAR]/GDcU;"K9X&-l%Nj\` | **Expander** simulates text expansion as the result of localization. This indicates where there is not enough space for languages that have longer strings, and issues where text is likely to clip or truncate. 
+| **Expander**               | `This is an example string. The quick brown fox jumps over the lazy dog.,rAR]/GDcU;"K9X&-l%Nj\` | **Expander** simulates text expansion as the result of localization. This indicates where there is not enough space for languages that have longer strings, and issues where text is likely to clip or truncate.
 | **Mirror**                 | `.god yzal eht revo spmuj xof nworb kciuq ehT .gnirts elpmaxe na si sihT` | **Mirror** reverses the string. You can use this alongside design changes to simulate how the UI might look when showing languages that are right-to-left.
 
 You can also combine Methods. The Pseudo-Localization system applies these Methods one at a time, in the order they appear in the Methods list. For example, the default Pseudo-Locale Asset contains the Accenter, Encapsulator and Expander, which results in the following:
 
 [Ţĥîš îš åñ éẋåɱþļé šţŕîñĝ· Ţĥé ǫûîçķ ƀŕöŵñ ƒöẋ ĵûɱþš öṽéŕ ţĥé ļåžý ðöĝ·,ŕÅŔ⁆⁄ĜÐçÛ⁏″Ķ⑨Ẋ⅋‐ļ‰Ñĵ∖]
 
-The following example shows some typical uses of Pseudo-Localization when testing a UI. 
+The following example shows some typical uses of Pseudo-Localization when testing a UI.
 
 ## Character Substitutor
 
-The **Character Substitutor** replaces the individual characters in a string. 
+The **Character Substitutor** replaces the individual characters in a string.
 
 ![Character Substitutor Inspector View](images/PseudoLocalization_CharacterSubstitor.png)
 
@@ -34,7 +34,7 @@ The **Character Substitutor** replaces the individual characters in a string.
 | <ul><li>**List Mode**</li></ul> | There are three options in the **List Mode** dropdown:<ul><li>**Random:** Replaces the original character with a random character form the list.</li><li>**Loop From Previous:** Replaces the first original character with the first character in the list, the second original character with the second character in the list, and so on. This persists across strings. When it reaches the end of the list, it starts again from the beginning of the list.</li><li>**Loop From Start:** Replaces the first original character with the first character in the list, the second original character with the second character in the list, and so on. This does not persist across strings. When it reaches the end of the list, it starts again from the beginning of the list.</li>
 | <ul><li>**Replacement List**</li></ul> | The **Replacement List** lists all characters that the Character Substitutor can use to replace original text characters in a string. Use **Size** to define the number of characters available as replacement characters, and use the **Element** text fields to manually enter which characters you want to use.
 | <ul><li>**Add Typical Character Set**</li></ul> | To automatically populate the **Replacement List** with characters that commonly appear in a certain language, select a language from the **Add Typical Character Set** drop-down. This is particularly useful when testing fonts for missing character sets.
-| **Map** | Returns a copy of this string, but replaces specific characters in the string with specific characters that you define. For example, you could specify that it should replace every lowercase e with an uppercase E. 
+| **Map** | Returns a copy of this string, but replaces specific characters in the string with specific characters that you define. For example, you could specify that it should replace every lowercase e with an uppercase E.
 | <ul><li>**Replacement Characters** | Use the **Replacement Characters** list to specify which characters you want to replace, and what you want to replace them with.<br><br>To add specific replacements, open the **Replacement Characters** foldout and select the plus (+) button in the header of the table. Enter the original character in the **Original** column, and the replacement character in the **Replacement** column.
 
 ## Accenter
@@ -58,7 +58,7 @@ The **Encapsulator** adds characters on either side of a string boundary, which 
 | **Start**                  | Set which character appears immediately before a string of text. This is set to an open square bracket by default.
 | **End**                    | Set which character appears immediately after a string of text. This is set to a closed square bracket by default.
 
-Connected strings often create a localization problem, because they fix content in a specific order (for example, in some languages the verb comes before the object of a sentence, while in other languages, the object comes before the verb), or they don’t take into account that some translation might change depending on what is around it. 
+Connected strings often create a localization problem, because they fix content in a specific order (for example, in some languages the verb comes before the object of a sentence, while in other languages, the object comes before the verb), or they don’t take into account that some translation might change depending on what is around it.
 For example: the string You picked up 1 apple might be constructed from 2 strings in script:
 
 ```c#
@@ -74,23 +74,23 @@ The pseudo-localized string for this would appear as `[You picked up] 1 [apple]`
 
 ## Expander
 
-The **Expander** simulates text expansion as the result of localization. This indicates where there is not enough space for languages that have longer strings, and issues where text is likely to clip or truncate. 
+The **Expander** simulates text expansion as the result of localization. This indicates where there is not enough space for languages that have longer strings, and issues where text is likely to clip or truncate.
 In some languages (including English), shorter strings often grow more than longer strings. The Expander allows you to provide different expansion values based on string length to simulate these issues. You can also add multiple rules based on the length of the input string.
 
 ![Expander Inspector View](images/PseudoLocalization_Expander.png)
 
 | **Property**               | **Description** |
 | -------------------------- | --------------- |
-| **String Length / Expansion**(table) | Use the table to define how many additional characters to add to a string, based on the string’s length. The **String Length** value defines the number of characters in the string, as a range. The **Expansion** value is a multiplier to determine how many extra characters to add. For example, if **String Length** is 0-10, and the **Expansion** for this range is 2, then the Method multiples any character with a string length of 0-10 by 2 (so a string of 7 characters becomes 14 characters).<br><br>By default, the Expander uses the following values:<ul><li>**0 - 10:** 2</li><li>**10 - 20:** 1</li><li>**20 - 30:** 0.8</li><li>**30 - 50:** 0.6</li><li>**50 - 70:** 0.7</li><li>**70+ :**0.3</li></ul><br>To add a new range to the table, click the plus (+) button next to the table header. The range for the new line automatically starts at the end of the range from the previous line.<br><br>If you’re not sure how much you should expand by, see _Guideline expansion values_, below. 
+| **String Length / Expansion**(table) | Use the table to define how many additional characters to add to a string, based on the string’s length. The **String Length** value defines the number of characters in the string, as a range. The **Expansion** value is a multiplier to determine how many extra characters to add. For example, if **String Length** is 0-10, and the **Expansion** for this range is 2, then the Method multiples any character with a string length of 0-10 by 2 (so a string of 7 characters becomes 14 characters).<br><br>By default, the Expander uses the following values:<ul><li>**0 - 10:** 2</li><li>**10 - 20:** 1</li><li>**20 - 30:** 0.8</li><li>**30 - 50:** 0.6</li><li>**50 - 70:** 0.7</li><li>**70+ :**0.3</li></ul><br>To add a new range to the table, click the plus (+) button next to the table header. The range for the new line automatically starts at the end of the range from the previous line.<br><br>If you’re not sure how much you should expand by, see _Guideline expansion values_, below.
 | **Location** | Define where to insert the extra characters: at the **Start** or **End** of the string, or **Both**. if you select **Both**, the Pseudo-Localization system applies half to the start and half to the end of the string, with an additional one on the end for odd-number values. This is set to **End** by default.
-| **Minimum String Length** | You can use this value to adjust the minimum string length after pseudo-localization. At runtime, the Pseudo-Localization system calculates the string length based on both this and the **String Length** value, and uses whichever is bigger. 
-| **Padding Characters** | The **Padding Characters** list lists all characters that the Expander can use to add characters to a string. Use **Size** to define the number of characters available, and use the **Element** text fields to manually enter which characters you want to use. By default, **Size** is set to 93, and the Expander uses all upper and lower case letters, and symbols on a standard American keyboard. 
+| **Minimum String Length** | You can use this value to adjust the minimum string length after pseudo-localization. At runtime, the Pseudo-Localization system calculates the string length based on both this and the **String Length** value, and uses whichever is bigger.
+| **Padding Characters** | The **Padding Characters** list lists all characters that the Expander can use to add characters to a string. Use **Size** to define the number of characters available, and use the **Element** text fields to manually enter which characters you want to use. By default, **Size** is set to 93, and the Expander uses all upper and lower case letters, and symbols on a standard American keyboard.
 
 ### Guideline expansion values
 
 The following table provides guideline expansion values when translating from English.
 
-| **Language** 	 | **Expansion from English** | 
+| **Language**   | **Expansion from English** |
 | -------------- | -------------------------- |
 | Arabic         | +20% to +25%               |
 | Croatian       | 15%                        |
@@ -115,7 +115,7 @@ The following table provides guideline expansion values when translating from En
 
 ## Mirror
 
-The **Mirror** method reverses the input string to simulate right-to-left languages. This Method has no configuration settings. 
+The **Mirror** method reverses the input string to simulate right-to-left languages. This Method has no configuration settings.
 
 ![Mirror Inspector View](images/PseudoLocalization_Mirror.png)
 

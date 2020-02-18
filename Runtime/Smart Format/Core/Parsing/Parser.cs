@@ -206,7 +206,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                         // Make sure that this is a nested placeholder before we un-nest it:
                         if (current.parent == null)
                         {
-                            parsingErrors.AddIssue(current, parsingErrorText[ParsingError.TooManyClosingBraces], i,
+                            parsingErrors.AddIssue(parsingErrorText[ParsingError.TooManyClosingBraces], i,
                                 i + 1);
                             continue;
                         }
@@ -357,7 +357,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                             currentPlaceholder.Selectors.Add(new Selector(Settings, format, lastI, i, operatorIndex,
                                 selectorIndex));
                         else if (operatorIndex != i)
-                            parsingErrors.AddIssue(current, parsingErrorText[ParsingError.TrailingOperatorsInSelector],
+                            parsingErrors.AddIssue(parsingErrorText[ParsingError.TrailingOperatorsInSelector],
                                 operatorIndex, i);
                         lastI = i + 1;
 
@@ -376,7 +376,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                             currentPlaceholder.Selectors.Add(new Selector(Settings, format, lastI, i, operatorIndex,
                                 selectorIndex));
                         else if (operatorIndex != i)
-                            parsingErrors.AddIssue(current, parsingErrorText[ParsingError.TrailingOperatorsInSelector],
+                            parsingErrors.AddIssue(parsingErrorText[ParsingError.TrailingOperatorsInSelector],
                                 operatorIndex, i);
                         lastI = i + 1;
 
@@ -395,7 +395,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                             || m_AlphanumericSelectors && ('a' <= c && c <= 'z' || 'A' <= c && c <= 'Z')
                             || m_AllowedSelectorChars.IndexOf(c) != -1;
                         if (!isValidSelectorChar)
-                            parsingErrors.AddIssue(current, parsingErrorText[ParsingError.InvalidCharactersInSelector],
+                            parsingErrors.AddIssue(parsingErrorText[ParsingError.InvalidCharactersInSelector],
                                 i, i + 1);
                     }
                 }
@@ -408,7 +408,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
             // Check that the format is finished:
             if (current.parent != null || currentPlaceholder != null)
             {
-                parsingErrors.AddIssue(current, parsingErrorText[ParsingError.MissingClosingBrace], format.Length,
+                parsingErrors.AddIssue(parsingErrorText[ParsingError.MissingClosingBrace], format.Length,
                     format.Length);
                 current.endIndex = format.Length;
                 while (current.parent != null)

@@ -1,7 +1,3 @@
-using System.Text;
-using System.Collections.Generic;
-using System;
-
 namespace UnityEngine.Localization.Pseudo
 {
     /// <summary>
@@ -47,7 +43,7 @@ namespace UnityEngine.Localization.Pseudo
 
             // Copy the remainder
             writePos = 0;
-            while(readPos >= 0)
+            while (readPos >= 0)
             {
                 mirrorBuffer[writePos++] = input[readPos--];
             }

@@ -331,7 +331,7 @@ namespace UnityEditor.Localization
             var group = settings.FindGroup(groupName);
             if (group == null && create)
             {
-                group = settings.CreateGroup(groupName, false, true, true, new List<AddressableAssetGroupSchema>(){ ScriptableObject.CreateInstance<ContentUpdateGroupSchema>() }, typeof(BundledAssetGroupSchema));
+                group = settings.CreateGroup(groupName, false, true, true, new List<AddressableAssetGroupSchema>() { ScriptableObject.CreateInstance<ContentUpdateGroupSchema>() }, typeof(BundledAssetGroupSchema));
 
                 // Default to just the name of the group, no hashes.
                 var schema = group.GetSchema<BundledAssetGroupSchema>();
@@ -925,7 +925,7 @@ namespace UnityEditor.Localization
                 throw new AddressableEntryNotFoundException(table);
 
             if (createUndo)
-                Undo.RecordObjects(new Object[] {aaSettings, tableEntry.parentGroup }, "Set Preload flag");
+                Undo.RecordObjects(new Object[] { aaSettings, tableEntry.parentGroup }, "Set Preload flag");
 
             aaSettings.AddLabel(LocalizationSettings.PreloadLabel);
             tableEntry.SetLabel(LocalizationSettings.PreloadLabel, preload);

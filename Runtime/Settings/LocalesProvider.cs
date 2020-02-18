@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.Localization.Pseudo;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization.Settings
 {
@@ -15,7 +15,7 @@ namespace UnityEngine.Localization.Settings
         [SerializeField, HideInInspector]
         int dummyObject;
 
-        List<Locale> m_Locales;
+        List<Locale> m_Locales = new List<Locale>();
         AsyncOperationHandle? m_LoadOperation;
         int m_PseudoLocaleCount;
 
@@ -30,10 +30,6 @@ namespace UnityEngine.Localization.Settings
                     Debug.LogError("Locales PreloadOperation has not been initialized, can not return the available locales.");
                 return m_Locales;
             }
-            set
-            {
-                m_Locales = value;
-            }
         }
 
         /// <summary>
@@ -45,7 +41,10 @@ namespace UnityEngine.Localization.Settings
             {
                 if (m_LoadOperation == null)
                 {
-                    Locales = new List<Locale>();
+                    if (m_Locales == null)
+                        m_Locales = new List<Locale>();
+
+                    m_Locales.Clear();
                     m_PseudoLocaleCount = 0;
                     m_LoadOperation = AddressableAssets.Addressables.LoadAssetsAsync<Locale>(LocalizationSettings.LocaleLabel, AddLocale);
                 }

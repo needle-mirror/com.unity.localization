@@ -1,4 +1,3 @@
-using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.UI

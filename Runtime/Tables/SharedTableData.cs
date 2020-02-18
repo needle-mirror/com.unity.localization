@@ -84,11 +84,7 @@ namespace UnityEngine.Localization.Tables
         /// <summary>
         /// All entries.
         /// </summary>
-        public List<SharedTableEntry> Entries
-        {
-            get => m_Entries;
-            set => m_Entries = value;
-        }
+        public List<SharedTableEntry> Entries => m_Entries;
 
         /// <summary>
         /// The name of this table collection.
@@ -311,6 +307,8 @@ namespace UnityEngine.Localization.Tables
             return foundEntry;
         }
 
+        #pragma warning disable CA1814 // CA1814 Prefer jagged arrays over multidimensional
+
         /// <summary>
         /// Compute the distance between two strings.
         /// </summary>
@@ -353,6 +351,8 @@ namespace UnityEngine.Localization.Tables
             // Step 7
             return d[n, m];
         }
+
+        #pragma warning restore CA1814
 
         /// <summary>
         /// Returns a new unique id for this SharedTableData.

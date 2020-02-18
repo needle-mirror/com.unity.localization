@@ -123,7 +123,7 @@ namespace UnityEngine.Localization.Tables
                     var keyName = SharedData.GetKey(entry.Data.Id);
                     return ResourceManager.CreateCompletedOperation<TObject>(null, $"The asset table entry \"{keyName}({entry.Data.Id})\" is empty, no asset can be loaded from the table \"{ToString()}\"");
                 }
-                entry.AsyncOperation = Addressables.LoadAssetAsync<TObject>(entry.Guid);;
+                entry.AsyncOperation = Addressables.LoadAssetAsync<TObject>(entry.Guid);
             }
             return entry.AsyncOperation.Value.Convert<TObject>();
         }

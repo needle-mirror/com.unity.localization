@@ -10,10 +10,10 @@ namespace UnityEditor.Localization.UI
     {
         internal new class UxmlFactory : UxmlFactory<TableCreator> {}
 
-        TextField m_TableName;
-        ScrollView m_LocalesList;
-        TableTypePopup m_TableType;
-        Button m_CreateButton;
+        readonly TextField m_TableName;
+        readonly ScrollView m_LocalesList;
+        readonly TableTypePopup m_TableType;
+        readonly Button m_CreateButton;
 
         public TableCreator()
         {
@@ -56,7 +56,7 @@ namespace UnityEditor.Localization.UI
         void UpdateCreateButtonState()
         {
             // If we have no active Locales then the button should be disabled.
-            foreach(var child in m_LocalesList.Children())
+            foreach (var child in m_LocalesList.Children())
             {
                 if (child is Toggle toggle)
                 {
@@ -106,8 +106,7 @@ namespace UnityEditor.Localization.UI
 
             for (int i = 0; i < m_LocalesList.contentContainer.childCount; ++i)
             {
-                var toggle = m_LocalesList.contentContainer.ElementAt(i) as Toggle;
-                if (toggle != null && toggle.value)
+                if (m_LocalesList.contentContainer.ElementAt(i) is Toggle toggle && toggle.value)
                 {
                     Debug.Assert(locales[i].name == toggle.text, $"Expected locale to match toggle. Expected {locales[i].name} but got {toggle.name}");
                     selectedLocales.Add(locales[i]);

@@ -159,8 +159,8 @@ namespace UnityEngine.Localization.Settings
         {
             var tableEntryOp = GetTableEntryAsync(tableReference, tableEntryReference, locale);
             if (!tableEntryOp.IsDone)
-                return ResourceManager.CreateChainOperation(tableEntryOp, (op) => GetLocalizedString_ProcessTableEntry(op, tableEntryReference, locale, arguments));
-            return GetLocalizedString_ProcessTableEntry(tableEntryOp, tableEntryReference, locale, arguments);
+                return ResourceManager.CreateChainOperation(tableEntryOp, (op) => GetLocalizedStringProcessTableEntry(op, tableEntryReference, locale, arguments));
+            return GetLocalizedStringProcessTableEntry(tableEntryOp, tableEntryReference, locale, arguments);
         }
 
         /// <summary>
@@ -171,12 +171,12 @@ namespace UnityEngine.Localization.Settings
         /// <param name="tableEntryReference"></param>
         /// <param name="arguments">Arguments to be passed to Smart Format or String.Format. If null then no formatting will be performed.</param>
         /// <returns></returns>
-        internal protected virtual AsyncOperationHandle<string> GetLocalizedString_ProcessTableEntry(AsyncOperationHandle<TableEntryResult> entryOp, TableEntryReference tableEntryReference, Locale locale, object[] arguments)
+        internal protected virtual AsyncOperationHandle<string> GetLocalizedStringProcessTableEntry(AsyncOperationHandle<TableEntryResult> entryOp, TableEntryReference tableEntryReference, Locale locale, object[] arguments)
         {
             if (entryOp.Status != AsyncOperationStatus.Succeeded || entryOp.Result.Entry == null)
             {
                 string key = tableEntryReference.ResolveKeyName(entryOp.Result.Table?.SharedData);
-                return ResourceManager.CreateCompletedOperation(ProcessUntranslatedText(key) , null);
+                return ResourceManager.CreateCompletedOperation(ProcessUntranslatedText(key), null);
             }
 
             var entry = entryOp.Result.Entry;

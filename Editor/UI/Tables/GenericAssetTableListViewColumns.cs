@@ -1,7 +1,6 @@
 using System.IO;
 using System.Linq;
 using UnityEditor.IMGUI.Controls;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Metadata;
@@ -128,7 +127,7 @@ namespace UnityEditor.Localization.UI
         }
     }
 
-    class TableColumn<T1> : VisibleColumn, ISelectable  where T1 : LocalizedTable
+    class TableColumn<T1> : VisibleColumn, ISelectable where T1 : LocalizedTable
     {
         public T1 Table { get; set; }
         public SerializedObject SerializedObjectTable { get; private set; }

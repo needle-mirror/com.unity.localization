@@ -29,13 +29,14 @@ namespace UnityEngine.Localization.Settings
             if (locale == null)
             {
                 var cultureInfo = CultureInfo.CurrentUICulture;
-                locale = availableLocales.GetLocale(cultureInfo);
+                var identifier = new LocaleIdentifier(cultureInfo);
+                locale = availableLocales.GetLocale(identifier);
                 if (locale == null)
                 {
                     // Attempt to use CultureInfo fallbacks to find the closest locale
                     while (!Equals(cultureInfo, CultureInfo.InvariantCulture) && locale == null)
                     {
-                        locale = availableLocales.GetLocale(cultureInfo);
+                        locale = availableLocales.GetLocale(identifier);
                         cultureInfo = cultureInfo.Parent;
                     }
 

@@ -1,5 +1,3 @@
-using System;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Metadata;
@@ -30,7 +28,7 @@ namespace UnityEditor.Localization.UI
         {
             if (m_Editor == null)
             {
-                m_Editor = new VisualElement(){ style = { marginLeft = 5, marginRight = 5, marginTop = 5, marginBottom = 5 } };
+                m_Editor = new VisualElement() { style = { marginLeft = 5, marginRight = 5, marginTop = 5, marginBottom = 5 } };
                 var metadataLabel = new GUIContent("Metadata");
 
                 // Shared data

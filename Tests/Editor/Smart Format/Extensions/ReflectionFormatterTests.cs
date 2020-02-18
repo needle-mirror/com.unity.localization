@@ -1,7 +1,7 @@
 using System;
 using NUnit.Framework;
-using UnityEngine.Localization.SmartFormat.Tests.TestUtils;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
+using UnityEngine.Localization.SmartFormat.Tests.TestUtils;
 
 namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
 {
@@ -153,7 +153,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
         {
             public override string Property
             {
-                set {}  // only a dummy setter, getter from base class
+                set {}   // only a dummy setter, getter from base class
             }
         }
     }

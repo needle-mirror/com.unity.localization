@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using UnityEngine.Localization.SmartFormat.Tests.TestUtils;
 using UnityEngine.Localization.SmartFormat.Core.Formatting;
 using UnityEngine.Localization.SmartFormat.Core.Output;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
+using UnityEngine.Localization.SmartFormat.Tests.TestUtils;
 using UnityEngine.Localization.SmartFormat.Utilities;
 
 namespace UnityEngine.Localization.SmartFormat.Tests.Core

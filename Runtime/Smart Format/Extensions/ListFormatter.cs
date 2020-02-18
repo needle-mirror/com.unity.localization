@@ -59,10 +59,9 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             var selector = selectorInfo.SelectorText;
 
             // See if we're trying to access a specific index:
-            int itemIndex;
             var currentList = current as IList;
             var isAbsolute = selectorInfo.SelectorIndex == 0 && selectorInfo.SelectorOperator.Length == 0;
-            if (!isAbsolute && currentList != null && int.TryParse(selector, out itemIndex) &&
+            if (!isAbsolute && currentList != null && int.TryParse(selector, out int itemIndex) &&
                 itemIndex < currentList.Count)
             {
                 // The current is a List, and the selector is a number;
@@ -146,8 +145,8 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             // This method needs the Highest priority so that it comes before the PluralLocalizationExtension and ConditionalExtension
 
             // This extension requires at least IEnumerable
-            var enumerable = current as IEnumerable;
-            if (enumerable == null) return false;
+            if (!(current is IEnumerable enumerable))
+                return false;
             // Ignore Strings, because they're IEnumerable.
             // This issue might actually need a solution
             // for other objects that are IEnumerable.
@@ -190,11 +189,11 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             }
 
             // Let's buffer all items from the enumerable (to ensure the Count without double-enumeration):
-            var items = current as ICollection;
-            if (items == null)
+            if (!(current is ICollection items))
             {
                 var allItems = new List<object>();
-                foreach (var item in enumerable) allItems.Add(item);
+                foreach (var item in enumerable)
+                    allItems.Add(item);
                 items = allItems;
             }
 

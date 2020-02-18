@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace UnityEngine.Localization.Samples
 {
     /// <summary>

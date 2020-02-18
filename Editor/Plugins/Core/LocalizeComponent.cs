@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Localization.Components;
-using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization
 {

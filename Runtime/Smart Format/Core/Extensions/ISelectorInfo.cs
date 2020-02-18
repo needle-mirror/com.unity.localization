@@ -39,7 +39,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Extensions
         /// <summary>
         /// Sets the result of evaluating the selector.
         /// </summary>
-        object Result { set; }
+        object Result { get;  set; }
 
         /// <summary>
         /// Contains all the details about the current placeholder.

@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Globalization;
 using NUnit.Framework;
 using UnityEngine.Localization.SmartFormat.Extensions;

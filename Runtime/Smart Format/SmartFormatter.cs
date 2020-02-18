@@ -36,12 +36,12 @@ namespace UnityEngine.Localization.SmartFormat
         /// <summary>
         /// Gets the list of <see cref="ISource" /> source extensions.
         /// </summary>
-        public List<ISource> SourceExtensions { get => m_Sources; set => m_Sources = value; }
+        public List<ISource> SourceExtensions { get => m_Sources; }
 
         /// <summary>
         /// Gets the list of <see cref="IFormatter" /> formatter extensions.
         /// </summary>
-        public List<IFormatter> FormatterExtensions { get => m_Formatters; set => m_Formatters = value; }
+        public List<IFormatter> FormatterExtensions => m_Formatters;
 
         public SmartFormatter()
         {

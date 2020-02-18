@@ -28,7 +28,7 @@ namespace UnityEditor.Localization
         /// <summary>
         /// A list of <see cref="AddressableAssetEntry"/>, each one represents a single table in this collection.
         /// </summary>
-        public List<AddressableAssetEntry> TableEntries { get; set; } = new List<AddressableAssetEntry>();
+        public List<AddressableAssetEntry> TableEntries { get; } = new List<AddressableAssetEntry>();
 
         /// <summary>
         /// The data that is shared across all the tables in this collection.
@@ -97,6 +97,18 @@ namespace UnityEditor.Localization
         public override string ToString() => TableName;
 
         /// <summary>
+        /// Compare the AssetTableCollection to another AssetTableCollection.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            if (obj is null)
+                return false;
+            return obj is AssetTableCollection ter && Equals(ter);
+        }
+
+        /// <summary>
         /// Compare another <see cref="AssetTableCollection"/> to this one.
         /// Compares the <see cref="TableEntries"/> field.
         /// </summary>
@@ -108,5 +120,11 @@ namespace UnityEditor.Localization
                 return false;
             return TableEntries == other.TableEntries;
         }
+
+        /// <summary>
+        /// Returns the hash code of <see cref="CultureInfo"/> or <see cref="Code"/> if it is null.
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode() => TableEntries.GetHashCode();
     }
 }

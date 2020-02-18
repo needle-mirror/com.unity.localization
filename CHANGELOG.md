@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this package will be documented in this file.
 
+## [0.6.1] - 2020-02-18
+### Added
+- Added IEquatable to LocaleIdentifier.
+### Changed
+- Changed collection properties to be read only (rule CA2227).
+- Made AddressableEntryNotFoundException public.
+### Fixed
+- Fixed **LocalizedAssetTexture** and **LocalizeAudioClipBehaviour** not serializing the asset reference field. (case 1216072)
+
 ## [0.6.0] - 2020-01-27
 ### Added
 - Added PseudoLocale and Pseudo-localization methods(Accenter, CharacterSubstitutor, Encapsulator and Expander). This is used to generate Pseudo-localization using various methods during runtime(See docs for further info).
@@ -27,7 +36,7 @@ All notable changes to this package will be documented in this file.
 - Fixed **New Table - Create** button being enabled when no locales were selected or existed in the project.
 - Fixed **LocalizedString** and **LocalizedAsset** not automatically updating when the **TableReference** or **TableEntryReference** was changed and a **ChangeHandler** was being used.
 - Fixed Addressable flags including **Preload** being removed during AddOrUpdateTable.
- 
+
 ## [0.5.1] - 2019-11-22
 - Updated to Addressables version *1.3.8*.
 - Fixed **ArgumentOutOfRangeException:** in the Tables window when only 1 string or asset table existed.

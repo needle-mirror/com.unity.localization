@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.Localization.Tables;

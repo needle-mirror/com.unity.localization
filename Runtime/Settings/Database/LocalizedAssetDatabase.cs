@@ -82,8 +82,8 @@ namespace UnityEngine.Localization.Settings
         {
             var tableEntryOp = GetTableEntryAsync(tableReference, tableEntryReference, locale);
             if (!tableEntryOp.IsDone)
-                return ResourceManager.CreateChainOperation<TObject>(tableEntryOp, (op) => GetLocalizedAsset_LoadAsset<TObject>(tableEntryOp, tableEntryReference));
-            return GetLocalizedAsset_LoadAsset<TObject>(tableEntryOp, tableEntryReference);
+                return ResourceManager.CreateChainOperation<TObject>(tableEntryOp, (op) => GetLocalizedAssetLoadAsset<TObject>(tableEntryOp, tableEntryReference));
+            return GetLocalizedAssetLoadAsset<TObject>(tableEntryOp, tableEntryReference);
         }
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace UnityEngine.Localization.Settings
         /// <param name="entryOp">The table entry operation returned from <see cref="LocalizedAssetDatabase.GetTableEntryAsync"/></param>
         /// <param name="tableEntryReference">A reference to the entry in the table.</param>
         /// <returns></returns>
-        protected virtual AsyncOperationHandle<TObject> GetLocalizedAsset_LoadAsset<TObject>(AsyncOperationHandle<TableEntryResult> entryOp, TableEntryReference tableEntryReference) where TObject : Object
+        protected virtual AsyncOperationHandle<TObject> GetLocalizedAssetLoadAsset<TObject>(AsyncOperationHandle<TableEntryResult> entryOp, TableEntryReference tableEntryReference) where TObject : Object
         {
             if (entryOp.Status != AsyncOperationStatus.Succeeded || entryOp.Result.Entry == null)
             {

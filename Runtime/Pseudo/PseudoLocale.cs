@@ -64,11 +64,7 @@ namespace UnityEngine.Localization.Pseudo
         /// <summary>
         /// The pseudo localization methods that will be applied to the source text.
         /// </summary>
-        public List<IPseudoLocalizationMethod> Methods
-        {
-            get => m_Methods;
-            set => m_Methods = value;
-        }
+        public List<IPseudoLocalizationMethod> Methods => m_Methods;
 
         /// <summary>
         /// Create a new instance with default values.

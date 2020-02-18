@@ -2,7 +2,10 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization
 {
-    interface IPreloadRequired
+    /// <summary>
+    /// Indicates that the class requires preloading during initialization before it is ready for use.
+    /// </summary>
+    public interface IPreloadRequired
     {
         AsyncOperationHandle PreloadOperation { get; }
     }

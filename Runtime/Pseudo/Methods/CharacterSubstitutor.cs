@@ -92,7 +92,7 @@ namespace UnityEngine.Localization.Pseudo
         /// <summary>
         /// Dictionary of characters that will be replaced when using <see cref="Method.ReplacementMap"/>. Any value that is not present will be preserved.
         /// </summary>
-        public Dictionary<char, char> ReplacementMap { get; set; } = new Dictionary<char, char>();
+        public Dictionary<char, char> ReplacementMap { get; private set; } = new Dictionary<char, char>();
 
         public ListSelectionMethod ListMode
         {
@@ -103,11 +103,7 @@ namespace UnityEngine.Localization.Pseudo
         /// <summary>
         /// The characters to use when using <see cref="Method.SingleCharacter"/> mode.
         /// </summary>
-        public List<char> ReplacementList
-        {
-            get => m_ReplacementList;
-            set => m_ReplacementList = value;
-        }
+        public List<char> ReplacementList => m_ReplacementList;
 
         /// <summary>
         /// Replaces each character in the input with a replacement character if one can be found.

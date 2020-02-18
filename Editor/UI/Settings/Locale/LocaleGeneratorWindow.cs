@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -6,7 +5,6 @@ using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Metadata;
-using UnityEngine.Localization.Settings;
 
 namespace UnityEditor.Localization.UI
 {

@@ -1,7 +1,6 @@
-﻿using NUnit.Framework;
-using UnityEngine.Localization.Pseudo;
 using System.Linq;
-using System.Collections.Generic;
+using NUnit.Framework;
+using UnityEngine.Localization.Pseudo;
 
 namespace UnityEngine.Localization.Tests.Pseudo
 {
@@ -102,13 +101,14 @@ namespace UnityEngine.Localization.Tests.Pseudo
         public void CorrectExpansionRuleIsUsed(int stringLength, float expectedExpansion)
         {
             var method = new Expander();
-            method.ExpansionRules = new List<Expander.ExpansionRule>
+            method.ExpansionRules.Clear();
+            method.ExpansionRules.AddRange(new[]
             {
                 new Expander.ExpansionRule(0, 10, 1),
                 new Expander.ExpansionRule(10, 20, 2),
                 new Expander.ExpansionRule(20, 30, 3),
                 new Expander.ExpansionRule(30, int.MaxValue, 5)
-            };
+            });
 
             Assert.AreEqual(expectedExpansion, method.GetExpansionForLength(stringLength), "Wrong expansion value returned");
         }

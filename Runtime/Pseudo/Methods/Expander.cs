@@ -128,11 +128,7 @@ namespace UnityEngine.Localization.Pseudo
         /// When the newly calculated length is not whole then the next largest whole number will be used.
         /// Rules can also be added using <see cref="SetConstantExpansion"/> and <see cref="AddExpansionRule(uint, uint, float)"/>.
         /// </summary>
-        public List<ExpansionRule> ExpansionRules
-        {
-            get => m_ExpansionRules;
-            set => m_ExpansionRules = value;
-        }
+        public List<ExpansionRule> ExpansionRules => m_ExpansionRules;
 
         /// <summary>
         /// The location where the padding characters will be added to the input string.
@@ -146,11 +142,7 @@ namespace UnityEngine.Localization.Pseudo
         /// <summary>
         /// The characters to randomly pick from when padding the length.
         /// </summary>
-        public List<char> PaddingCharacters
-        {
-            get => m_PaddingCharacters;
-            set => m_PaddingCharacters = value;
-        }
+        public List<char> PaddingCharacters => m_PaddingCharacters;
 
         /// <summary>
         /// The minimum length strings should be before evaluating the <see cref="ExpansionRules"/>.

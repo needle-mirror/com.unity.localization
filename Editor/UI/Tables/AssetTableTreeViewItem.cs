@@ -75,7 +75,7 @@ namespace UnityEditor.Localization.UI
         void UpdateType()
         {
             m_AssetTypeMetadata = null;
-            foreach (var md in  m_SharedTableData.Metadata.MetadataEntries)
+            foreach (var md in m_SharedTableData.Metadata.MetadataEntries)
             {
                 if (md is AssetTypeMetadata at)
                 {

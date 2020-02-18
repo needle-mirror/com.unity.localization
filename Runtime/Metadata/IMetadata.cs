@@ -36,5 +36,7 @@ namespace UnityEngine.Localization.Metadata
     /// }
     /// </code>
     /// </example>
+    #pragma warning disable CA1040 // CA1040: Avoid empty interfaces
     public interface IMetadata {}
+    #pragma warning restore CA1040
 }

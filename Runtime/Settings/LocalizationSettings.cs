@@ -93,11 +93,7 @@ namespace UnityEngine.Localization.Settings
         /// <summary>
         /// <inheritdoc cref="IStartupLocaleSelector"/>
         /// </summary>
-        public static List<IStartupLocaleSelector> StartupLocaleSelectors
-        {
-            get => Instance.GetStartupLocaleSelectors();
-            set => Instance.SetStartupLocaleSelectors(value);
-        }
+        public static List<IStartupLocaleSelector> StartupLocaleSelectors => Instance.GetStartupLocaleSelectors();
 
         /// <summary>
         /// <inheritdoc cref="AvailableLocales"/>
@@ -202,12 +198,6 @@ namespace UnityEngine.Localization.Settings
 
             return m_InitializingOperationHandle.Value;
         }
-
-        /// <summary>
-        /// <inheritdoc cref="IStartupLocaleSelector"/>
-        /// </summary>
-        /// <param name="selector"></param>
-        public void SetStartupLocaleSelectors(List<IStartupLocaleSelector> selector) => m_StartupSelectors = selector;
 
         /// <summary>
         /// <inheritdoc cref="IStartupLocaleSelector"/>

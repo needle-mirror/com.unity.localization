@@ -198,7 +198,7 @@ namespace UnityEngine.Localization.Tables
         }
     };
 
-    public abstract class LocalizedTableT<TEntry> : LocalizedTable, IDictionary<uint, TEntry> , ISerializationCallbackReceiver where TEntry : TableEntry
+    public abstract class LocalizedTableT<TEntry> : LocalizedTable, IDictionary<uint, TEntry>, ISerializationCallbackReceiver where TEntry : TableEntry
     {
         Dictionary<uint, TEntry> m_TableEntries = new Dictionary<uint, TEntry>();
 

@@ -106,7 +106,7 @@ namespace UnityEngine.Localization.Metadata
             m_Entries.Clear();
             foreach (var entry in m_EntriesLookup)
             {
-                m_Entries.Add(new Item(){ KeyId = entry.Key, Tables = entry.Value.ToList()});
+                m_Entries.Add(new Item() { KeyId = entry.Key, Tables = entry.Value.ToList() });
             }
         }
 

@@ -12,8 +12,8 @@ namespace UnityEditor.Localization.UI
     /// </summary>
     class TableEntryPopupWindow : PopupWindowContent
     {
-        SearchField m_SearchField;
-        TreeView m_TreeView;
+        readonly SearchField m_SearchField;
+        readonly TreeView m_TreeView;
         bool m_ShouldClose;
 
         public float Width { get; set; }
@@ -87,8 +87,8 @@ namespace UnityEditor.Localization.UI
     /// </summary>
     class TableEntryReferenceTreeView : TreeView
     {
-        Type m_AssetType;
-        Action<AssetTableCollection, SharedTableData.SharedTableEntry> m_SelectionHandler;
+        readonly Type m_AssetType;
+        readonly Action<AssetTableCollection, SharedTableData.SharedTableEntry> m_SelectionHandler;
 
         public TableEntryReferenceTreeView(Type assetType, Action<AssetTableCollection, SharedTableData.SharedTableEntry> selectionHandler)
             : base(new TreeViewState())
@@ -115,8 +115,10 @@ namespace UnityEditor.Localization.UI
                 var tables = LocalizationEditorSettings.GetAssetTablesCollection<StringTable>();
                 foreach (var table in tables)
                 {
-                    var tableNode = new TreeViewItem(id++, 0, table.TableName);
-                    tableNode.icon = AssetDatabase.GetCachedIcon(AssetDatabase.GetAssetPath(table.Tables[0])) as Texture2D;
+                    var tableNode = new TreeViewItem(id++, 0, table.TableName)
+                    {
+                        icon = AssetDatabase.GetCachedIcon(AssetDatabase.GetAssetPath(table.Tables[0])) as Texture2D
+                    };
                     root.AddChild(tableNode);
 
                     var sharedData = table.SharedData;
@@ -131,8 +133,10 @@ namespace UnityEditor.Localization.UI
                 var tables = LocalizationEditorSettings.GetAssetTablesCollection<AssetTable>();
                 foreach (var table in tables)
                 {
-                    var tableNode = new TreeViewItem(id++, 0, table.TableName);
-                    tableNode.icon = AssetDatabase.GetCachedIcon(AssetDatabase.GetAssetPath(table.Tables[0])) as Texture2D;
+                    var tableNode = new TreeViewItem(id++, 0, table.TableName)
+                    {
+                        icon = AssetDatabase.GetCachedIcon(AssetDatabase.GetAssetPath(table.Tables[0])) as Texture2D
+                    };
                     root.AddChild(tableNode);
 
                     // Only show keys that have a compatible type.

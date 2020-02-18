@@ -1,5 +1,5 @@
-using UnityEngine;
 using NUnit.Framework;
+using UnityEngine;
 using UnityEngine.Localization;
 
 namespace UnityEditor.Localization.Tests

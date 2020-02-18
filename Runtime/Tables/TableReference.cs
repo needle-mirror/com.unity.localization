@@ -52,6 +52,8 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         public string TableName { get => m_TableName; private set => m_TableName = value; }
 
+        #pragma warning disable CA2225 // CA2225: Operator overloads have named alternates
+
         /// <summary>
         /// Convert a table name into a <see cref="TableReference"/>.
         /// </summary>
@@ -90,6 +92,8 @@ namespace UnityEngine.Localization.Tables
             return tableReference.TableNameGuid;
         }
 
+        #pragma warning restore CA2225
+
         internal void Validate()
         {
             if (m_Valid)
@@ -125,14 +129,36 @@ namespace UnityEngine.Localization.Tables
         /// <returns></returns>
         public override string ToString()
         {
-            switch (ReferenceType)
-            {
-                case Type.Guid:
-                    return $"{nameof(TableReference)}({TableNameGuid})";
-                case Type.Name:
-                    return $"{nameof(TableReference)}({TableName})";
-            }
+            if (ReferenceType == Type.Guid)
+                return $"{nameof(TableReference)}({TableNameGuid})";
+            else if (ReferenceType == Type.Name)
+                return $"{nameof(TableReference)}({TableName})";
             return $"{nameof(TableReference)}(Empty)";
+        }
+
+        /// <summary>
+        /// Compare the TableReference to another TableReference.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            if (obj is null)
+                return false;
+            return obj is TableReference ter && Equals(ter);
+        }
+
+        /// <summary>
+        /// Returns the hash code of <see cref="TableNameGuid"/> or <see cref="TableName"/>.
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            if (ReferenceType == Type.Guid)
+                return TableNameGuid.GetHashCode();
+            else if (ReferenceType == Type.Name)
+                return TableName.GetHashCode();
+            return base.GetHashCode();
         }
 
         /// <summary>
@@ -278,6 +304,8 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         public string Key { get => m_Key; private set => m_Key = value; }
 
+        #pragma warning disable CA2225 // CA2225: Operator overloads have named alternates
+
         /// <summary>
         /// Converts a string name into a reference.
         /// </summary>
@@ -317,6 +345,8 @@ namespace UnityEngine.Localization.Tables
         {
             return tableEntryReference.KeyId;
         }
+
+        #pragma warning restore CA2225
 
         internal void Validate()
         {
@@ -372,6 +402,23 @@ namespace UnityEngine.Localization.Tables
             return $"{nameof(TableEntryReference)}(Empty)";
         }
 
+        /// <summary>
+        /// Compare the TableEntryReference to another TableEntryReference.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            if (obj is null)
+                return false;
+            return obj is TableEntryReference ter && Equals(ter);
+        }
+
+        /// <summary>
+        /// Compare the TableEntryReference to another TableEntryReference.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
         public bool Equals(TableEntryReference other)
         {
             if (ReferenceType != other.ReferenceType)
@@ -381,11 +428,28 @@ namespace UnityEngine.Localization.Tables
             {
                 return Key == other.Key;
             }
-            else if(ReferenceType == Type.Id)
+            else if (ReferenceType == Type.Id)
             {
                 return KeyId == other.KeyId;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Returns the hash code of <see cref="Key"/> or <see cref="KeyId"/>.
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            if (ReferenceType == Type.Name)
+            {
+                return Key.GetHashCode();
+            }
+            else if (ReferenceType == Type.Id)
+            {
+                return KeyId.GetHashCode();
+            }
+            return base.GetHashCode();
         }
 
         /// <summary>

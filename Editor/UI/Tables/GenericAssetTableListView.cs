@@ -349,7 +349,7 @@ namespace UnityEditor.Localization.UI
             {
                 DragAndDrop.PrepareStartDrag();
                 DragAndDrop.SetGenericData(k_DragId, draggedRows[0]);
-                DragAndDrop.objectReferences = new UnityEngine.Object[] {};  // this is required for dragging to work
+                DragAndDrop.objectReferences = new UnityEngine.Object[] {};   // this is required for dragging to work
                 DragAndDrop.StartDrag("Move Key");
             }
         }

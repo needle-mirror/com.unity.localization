@@ -49,7 +49,7 @@ namespace UnityEditor.Localization.UI
             toggle.Add(button);
         }
 
-        public MetadataItem(SerializedProperty arrayProperty)  : this()
+        public MetadataItem(SerializedProperty arrayProperty) : this()
         {
             value = arrayProperty.isExpanded;
             Asset = arrayProperty.objectReferenceValue;

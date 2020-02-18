@@ -352,6 +352,8 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
         /// </summary>
         RangeWeeks = 0x2000,
 
+        #pragma warning disable CA1707 // CA1707: Identifiers should not contain underscores
+
         /// <summary>(for internal use only)</summary>
         _Abbreviate = Abbreviate | AbbreviateOff,
 
@@ -363,6 +365,8 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
 
         /// <summary>(for internal use only)</summary>
         _Range = RangeMilliSeconds | RangeSeconds | RangeMinutes | RangeHours | RangeDays | RangeWeeks
+
+        #pragma warning restore CA1707
     }
 
     internal static class TimeSpanFormatOptionsConverter

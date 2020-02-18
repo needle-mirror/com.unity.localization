@@ -110,8 +110,8 @@ namespace UnityEngine.Localization.Settings
         {
             var initOp = LocalizationSettings.InitializationOperation;
             if (!initOp.IsDone)
-                return ResourceManager.CreateChainOperation(initOp, (op) => GetTable_LoadTable(tableReference, locale));
-            return GetTable_LoadTable(tableReference, locale);
+                return ResourceManager.CreateChainOperation(initOp, (op) => GetTableLoadTable(tableReference, locale));
+            return GetTableLoadTable(tableReference, locale);
         }
 
         /// <summary>
@@ -146,8 +146,8 @@ namespace UnityEngine.Localization.Settings
 
             var tableOp = GetTableAsync(tableReference, locale);
             if (!tableOp.IsDone)
-                return ResourceManager.CreateChainOperation(tableOp, (op) => GetTableEntry_FindEntry(tableOp, tableEntryReference));
-            return GetTableEntry_FindEntry(tableOp, tableEntryReference);
+                return ResourceManager.CreateChainOperation(tableOp, (op) => GetTableEntryFindEntry(tableOp, tableEntryReference));
+            return GetTableEntryFindEntry(tableOp, tableEntryReference);
         }
 
         /// <summary>
@@ -177,15 +177,15 @@ namespace UnityEngine.Localization.Settings
             return sharedTableDataOp;
         }
 
-        AsyncOperationHandle<TTable> GetTable_LoadTable(TableReference tableReference, Locale locale)
+        AsyncOperationHandle<TTable> GetTableLoadTable(TableReference tableReference, Locale locale)
         {
             if (tableReference.ReferenceType == TableReference.Type.Guid)
             {
                 // We need to load the SharedTableData so we can resolve the name of the table
                 var sharedTableDataOperation = GetSharedTableData(tableReference);
                 if (sharedTableDataOperation.IsDone)
-                    return GetTable_LoadTable(sharedTableDataOperation, locale);
-                return ResourceManager.CreateChainOperation(sharedTableDataOperation, op => GetTable_LoadTable(op, locale));
+                    return GetTableLoadTable(sharedTableDataOperation, locale);
+                return ResourceManager.CreateChainOperation(sharedTableDataOperation, op => GetTableLoadTable(op, locale));
             }
 
             if (TableOperations.TryGetValue((locale.Identifier, tableReference), out var asyncOp))
@@ -197,7 +197,7 @@ namespace UnityEngine.Localization.Settings
             return asyncOp;
         }
 
-        AsyncOperationHandle<TTable> GetTable_LoadTable(AsyncOperationHandle<SharedTableData> sharedTableDataOperation, Locale locale)
+        AsyncOperationHandle<TTable> GetTableLoadTable(AsyncOperationHandle<SharedTableData> sharedTableDataOperation, Locale locale)
         {
             if (sharedTableDataOperation.Status != AsyncOperationStatus.Succeeded)
             {
@@ -206,13 +206,13 @@ namespace UnityEngine.Localization.Settings
                 if (sharedTableDataOperation.OperationException != null)
                 {
                     Debug.LogException(sharedTableDataOperation.OperationException);
-                } 
+                }
                 return ResourceManager.CreateCompletedOperation(default(TTable), error);
             }
-            return GetTable_LoadTable(sharedTableDataOperation.Result.TableName, locale);
+            return GetTableLoadTable(sharedTableDataOperation.Result.TableName, locale);
         }
 
-        AsyncOperationHandle<TableEntryResult> GetTableEntry_FindEntry(AsyncOperationHandle<TTable> tableOperation, TableEntryReference tableEntryReference)
+        AsyncOperationHandle<TableEntryResult> GetTableEntryFindEntry(AsyncOperationHandle<TTable> tableOperation, TableEntryReference tableEntryReference)
         {
             if (tableOperation.Status != AsyncOperationStatus.Succeeded)
             {

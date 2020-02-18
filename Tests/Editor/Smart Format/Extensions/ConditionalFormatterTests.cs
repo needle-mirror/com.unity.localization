@@ -1,7 +1,7 @@
 using System;
 using NUnit.Framework;
-using UnityEngine.Localization.SmartFormat.Tests.TestUtils;
 using UnityEngine.Localization.SmartFormat.Net.Utilities;
+using UnityEngine.Localization.SmartFormat.Tests.TestUtils;
 
 namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
 {

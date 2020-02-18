@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
 using UnityEngine.TestTools;
+using Object = UnityEngine.Object;
 
 namespace UnityEditor.Localization.Tests
 {
@@ -55,9 +56,10 @@ namespace UnityEditor.Localization.Tests
         [Test]
         public void AddLocale_WithNonPersistentLocale_GeneratesError()
         {
-            var locale = new Locale();
+            var locale = ScriptableObject.CreateInstance<Locale>();
             LocalizationEditorSettings.AddLocale(locale, false);
             LogAssert.Expect(LogType.Error, new Regex("Only persistent assets can be addressable."));
+            Object.DestroyImmediate(locale);
         }
 
         [TestCase("Locale-en", "en")]

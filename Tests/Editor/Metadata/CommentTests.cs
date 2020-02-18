@@ -11,7 +11,7 @@ namespace UnityEditor.Localization.Tests.Metadata
         {
             var comment = new Comment();
             var difference = DateTime.Now - comment.TimeStamp;
-            Assert.Less(difference.TotalSeconds, 1.0,  "Expected Time Stamp to be current time.");
+            Assert.Less(difference.TotalSeconds, 1.0, "Expected Time Stamp to be current time.");
         }
     }
 }

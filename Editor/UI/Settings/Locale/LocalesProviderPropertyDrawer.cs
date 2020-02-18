@@ -45,7 +45,7 @@ namespace UnityEditor.Localization.UI
 
         void UndoPerformed() => m_ListView.Reload();
 
-        void Init(SerializedProperty property)
+        void Init(SerializedProperty _)
         {
             if (m_ListView != null)
                 return;

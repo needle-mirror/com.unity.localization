@@ -64,7 +64,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
             }
         }
 
-        public void AddIssue(Format parent, string issue, int startIndex, int endIndex)
+        public void AddIssue(string issue, int startIndex, int endIndex)
         {
             Issues.Add(new ParsingIssue(issue, startIndex, endIndex - startIndex));
         }

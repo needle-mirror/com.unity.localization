@@ -7,6 +7,7 @@ namespace UnityEditor.Localization
 {
     class LocalizationAssetPostProcessor : AssetPostprocessor
     {
+        #pragma warning disable CA1801 // CA1801 Review unused parameters
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
             // We need to disable Addresables settings creation here.
@@ -57,11 +58,13 @@ namespace UnityEditor.Localization
                 LocalizationEditorSettings.EnableAddressablesCreation = true;
             }
         }
+
+        #pragma warning restore CA1801
     }
 
     class LocalizationAssetModificationProcessor : AssetModificationProcessor
     {
-        static AssetDeleteResult OnWillDeleteAsset(string assetPath, RemoveAssetOptions removeAssetOptions)
+        static AssetDeleteResult OnWillDeleteAsset(string assetPath, RemoveAssetOptions _)
         {
             if (assetPath.EndsWith("asset"))
             {

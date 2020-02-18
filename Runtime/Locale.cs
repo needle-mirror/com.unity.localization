@@ -8,7 +8,7 @@ namespace UnityEngine.Localization
     /// The identifier containing the identification information for a language or regional variant.
     /// </summary>
     [Serializable]
-    public struct LocaleIdentifier
+    public struct LocaleIdentifier : IEquatable<LocaleIdentifier>
     {
         [SerializeField] string m_Code;
         CultureInfo m_CultureInfo;
@@ -90,6 +90,8 @@ namespace UnityEngine.Localization
         {
         }
 
+        #pragma warning disable CA2225 // CA2225: Operator overloads have named alternates
+
         /// <summary>
         /// Create a LocaleIdentifier from a culture code string.
         /// </summary>
@@ -112,6 +114,8 @@ namespace UnityEngine.Localization
         /// <returns></returns>
         public static implicit operator LocaleIdentifier(SystemLanguage systemLanguage) => new LocaleIdentifier(systemLanguage);
 
+        #pragma warning restore CA2225
+
         /// <summary>
         /// Returns a string representation.
         /// </summary>
@@ -125,7 +129,7 @@ namespace UnityEngine.Localization
         /// <returns></returns>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             return obj is LocaleIdentifier identifier && Equals(identifier);
         }
 

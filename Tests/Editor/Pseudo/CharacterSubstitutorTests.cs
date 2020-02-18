@@ -1,7 +1,6 @@
-﻿using NUnit.Framework;
-using UnityEngine.Localization.Pseudo;
 using System.Linq;
-using System.Collections.Generic;
+using NUnit.Framework;
+using UnityEngine.Localization.Pseudo;
 
 namespace UnityEngine.Localization.Tests.Pseudo
 {
@@ -38,7 +37,7 @@ namespace UnityEngine.Localization.Tests.Pseudo
             const char replacementChar = '_';
             var method = new CharacterSubstitutor();
             method.Method = CharacterSubstitutor.SubstitutionMethod.List;
-            method.ReplacementList = new List<char> { replacementChar };
+            method.ReplacementList.Add(replacementChar);
             var result = method.Transform(input);
             var count = result.Count(o => o == replacementChar);
             Assert.AreEqual(input.Length, count, "Expected all characters to be replaced with the same character when replacement chars only has a single value: " + result);
@@ -54,7 +53,8 @@ namespace UnityEngine.Localization.Tests.Pseudo
             var method = new CharacterSubstitutor();
             method.Method = CharacterSubstitutor.SubstitutionMethod.List;
             method.ListMode = CharacterSubstitutor.ListSelectionMethod.LoopFromStart;
-            method.ReplacementList = new List<char> { 'A', 'B', 'C' };
+            method.ReplacementList.Clear();
+            method.ReplacementList.AddRange(new [] { 'A', 'B', 'C' });
             var result = method.Transform(input);
             Assert.AreEqual(expected, result, "Expected the transformed string to match.");
         }
@@ -65,7 +65,8 @@ namespace UnityEngine.Localization.Tests.Pseudo
             var method = new CharacterSubstitutor();
             method.Method = CharacterSubstitutor.SubstitutionMethod.List;
             method.ListMode = CharacterSubstitutor.ListSelectionMethod.LoopFromPrevious;
-            method.ReplacementList = new List<char> { 'A', 'B', 'C', 'D', 'E' };
+            method.ReplacementList.Clear();
+            method.ReplacementList.AddRange(new[] { 'A', 'B', 'C', 'D', 'E' });
 
             const string input1 = "aaa";
             const string input2 = "bbbb";

@@ -1,4 +1,3 @@
-using UnityEngine;
 using UnityEngine.Localization.Settings;
 
 namespace UnityEngine.Localization.Tests

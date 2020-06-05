@@ -19,8 +19,10 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
 
         public ChooseFormatter()
         {
-            Names = new[] {"choose", "c"};
+            Names = DefaultNames;
         }
+
+        public override string[] DefaultNames => new[] {"choose", "c"};
 
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {

@@ -26,22 +26,7 @@ namespace UnityEditor.Localization.UI
 
         SerializedProperty GetProperty(string propName) => SerializedObject?.FindProperty(propName);
 
-        public Locale Reference
-        {
-            get => Property.objectReferenceValue as Locale;
-            set
-            {
-                if (Property != null)
-                {
-                    if (Property.objectReferenceValue == value)
-                        return;
-
-                    Property.objectReferenceValue = value;
-                }
-
-                m_SerializedObject = null;
-            }
-        }
+        public Locale Reference => m_SerializedObject.targetObject as Locale;
 
         const string k_NamePropertyName = "m_Name";
         const string k_IdPropertyName = "m_Identifier.m_Id";
@@ -76,15 +61,6 @@ namespace UnityEditor.Localization.UI
             {
                 if (IdentifierCodeProp != null)
                     IdentifierCodeProp.stringValue = value;
-            }
-        }
-
-        public SerializedLocaleItem(SerializedProperty prop)
-        {
-            if (prop != null)
-            {
-                Property = prop;
-                Reference = prop.objectReferenceValue as Locale;
             }
         }
 

@@ -6,7 +6,8 @@
         "Unity.Addressables.Editor",
         "Unity.ugui",
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "UnityEditor.TestRunner",
+        "Unity.Localization.Runtime.Tests"
     ],
     "includePlatforms": [
         "Editor"
@@ -27,5 +28,6 @@
             "expression": "1.0.0",
             "define": "PACKAGE_UGUI"
         }
-    ]
+    ],
+    "noEngineReferences": false
 }

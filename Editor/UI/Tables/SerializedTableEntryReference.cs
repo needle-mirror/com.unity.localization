@@ -32,7 +32,7 @@ namespace UnityEditor.Localization.UI
             else
             {
                 var keyName = key.stringValue;
-                if (string.IsNullOrEmpty(keyName))
+                if (!string.IsNullOrEmpty(keyName))
                     Reference = keyName;
             }
         }

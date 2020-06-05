@@ -18,8 +18,10 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     {
         public IsMatchFormatter()
         {
-            Names = new[] {"ismatch"};
+            Names = DefaultNames;
         }
+
+        public override string[] DefaultNames => new[] {"ismatch"};
 
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {

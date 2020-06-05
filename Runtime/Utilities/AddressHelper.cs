@@ -15,7 +15,7 @@ namespace UnityEngine.Localization
         /// <returns></returns>
         public static string GetTableAddress(string tableName, LocaleIdentifier localeId)
         {
-            return string.Intern($"{tableName}{Seperator}{localeId.Code}");
+            return $"{tableName}{Seperator}{localeId.Code}";
         }
 
         /// <summary>

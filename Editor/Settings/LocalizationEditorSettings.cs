@@ -6,10 +6,8 @@ using System.Linq;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
-using UnityEditor.Localization.UI;
 using UnityEngine;
 using UnityEngine.Localization;
-using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Pseudo;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
@@ -26,42 +24,10 @@ namespace UnityEditor.Localization
         internal const string AssetGroupName = "Localization-Assets-{0}";
         internal const string SharedAssetGroupName = "Localization-Assets-Shared";
 
-        internal const string AssetTableGroupName = "Localization-AssetTables";
-        internal const string StringTableGroupName = "Localization-StringTables";
-
-        static class Styles
-        {
-            public static readonly string progressTitle = "Generating Asset Tables";
-            public static readonly string saveTablesDialog = "Save tables to folder";
-            public static readonly string saveTableDialog = "Save Table";
-        }
-
         static LocalizationEditorSettings s_Instance;
-
-        /// <summary>
-        /// Event send in Editor when a modification is made to Localization assets.
-        /// </summary>
-        internal enum ModificationEvent
-        {
-            // Event type
-            LocaleAdded,             // Locale
-            LocaleRemoved,           // Locale
-            TableAdded,              // LocalizedTable
-            TableRemoved,            // LocalizedTable,
-            TableEntryAdded,         // Tuple<SharedTableData, SharedTableData.SharedTableEntry>
-            TableEntryRemoved,       // Tuple<SharedTableData, SharedTableData.SharedTableEntry>
-            AssetTableEntryAdded,    // Tuple<AssetTable, AssetTableEntry, string>
-            AssetTableEntryRemoved,  // Tuple<AssetTable, AssetTableEntry, string>
-            AssetAdded,              // AddressableAssetEntry
-            AssetUpdated,            // AddressableAssetEntry
-            AssetRemoved,            // AddressableAssetEntry
-        }
-        internal delegate void Modification(ModificationEvent evt, object obj);
-        event Modification m_OnModification;
 
         // Cached searches to help performance.
         ReadOnlyCollection<Locale> m_ProjectLocales;
-        Dictionary<Type, ReadOnlyCollection<AssetTableCollection>> m_TableCollections = new Dictionary<Type, ReadOnlyCollection<AssetTableCollection>>();
 
         // Allows for overriding the default behavior, used for testing.
         internal static LocalizationEditorSettings Instance
@@ -70,14 +36,7 @@ namespace UnityEditor.Localization
             set => s_Instance = value;
         }
 
-        /// <summary>
-        /// Event sent when modifications are made to Localization assets and Addressables.
-        /// </summary>
-        internal static event Modification OnModification
-        {
-            add => Instance.m_OnModification += value;
-            remove => Instance.m_OnModification -= value;
-        }
+        internal LocalizedTableCollectionCache TableCollectionCache { get; set; } = new LocalizedTableCollectionCache();
 
         /// <summary>
         /// The LocalizationSettings used for this project.
@@ -103,6 +62,11 @@ namespace UnityEditor.Localization
             set => LocalizationSettings.ShowLocaleMenuInGameView = value;
         }
 
+        /// <summary>
+        /// Localization modification events.
+        /// </summary>
+        public static LocalizationEditorEvents EditorEvents { get; internal set; } = new LocalizationEditorEvents();
+
         internal static bool EnableAddressablesCreation { get; set; } = true;
 
         /// <summary>
@@ -110,14 +74,14 @@ namespace UnityEditor.Localization
         /// </summary>
         /// <param name="locale">The <see cref="Locale"/> to add to Addressables so that it can be used by the Localization system.</param>
         /// <param name="createUndo">Used to indicate if an Undo operation should be created.</param>
-        public static void AddLocale(Locale locale, bool createUndo) => Instance.AddLocaleInternal(locale, createUndo);
+        public static void AddLocale(Locale locale, bool createUndo = false) => Instance.AddLocaleInternal(locale, createUndo);
 
         /// <summary>
         /// Removes the locale from the Addressables system.
         /// </summary>
         /// <param name="locale">The <see cref="Locale"/> to remove from Addressables so that it is no longer used by the Localization system.</param>
         /// /// <param name="createUndo">Used to indicate if an Undo operation should be created.</param>
-        public static void RemoveLocale(Locale locale, bool createUndo) => Instance.RemoveLocaleInternal(locale, createUndo);
+        public static void RemoveLocale(Locale locale, bool createUndo = false) => Instance.RemoveLocaleInternal(locale, createUndo);
 
         /// <summary>
         /// Returns all locales that are part of the Addressables system.
@@ -133,86 +97,189 @@ namespace UnityEditor.Localization
         public static Locale GetLocale(string code) => Instance.GetLocaleInternal(code);
 
         /// <summary>
-        /// Add a localized asset to the asset table.
-        /// This function will ensure the localization system adds the asset to the Addressables system and sets the asset up for use.
+        /// Returns all <see cref="StringTableCollection"/> assets in the project.
+        /// </summary>
+        /// <returns></returns>
+        public static ReadOnlyCollection<StringTableCollection> GetStringTableCollections() => Instance.TableCollectionCache.StringTableCollections.AsReadOnly();
+
+        /// <summary>
+        /// Returns a <see cref="StringTableCollection"/> with the matching <see cref="TableReference"/>.
+        /// </summary>
+        /// <param name="tableNameOrGuid"></param>
+        /// <returns>Found collection or null if one could not be found.</returns>
+        public static StringTableCollection GetStringTableCollection(TableReference tableNameOrGuid) => Instance.TableCollectionCache.FindStringTableCollection(tableNameOrGuid);
+
+        /// <summary>
+        /// Returns all <see cref="AssetTableCollection"/> assets in the project.
+        /// </summary>
+        /// <returns></returns>
+        public static ReadOnlyCollection<AssetTableCollection> GetAssetTableCollections() => Instance.TableCollectionCache.AssetTableCollections.AsReadOnly();
+
+        /// <summary>
+        /// Returns a <see cref="AssetTableCollection"/> with the matching <see cref="TableReference"/>.
+        /// </summary>
+        /// <param name="tableNameOrGuid"></param>
+        /// <returns></returns>
+        public static AssetTableCollection GetAssetTableCollection(TableReference tableNameOrGuid) => Instance.TableCollectionCache.FindAssetTableCollection(tableNameOrGuid);
+
+        /// <summary>
+        /// Returns the <see cref="LocalizedTableCollection"/> that the table is part of or null if the table has no collection.
         /// </summary>
         /// <param name="table"></param>
-        /// <param name="keyId"></param>
-        /// <param name="asset"></param>
-        /// <param name="createUndo">Used to indicate if an Undo operation should be created.</param>
-        public static void AddAssetToTable(AssetTable table, uint keyId, Object asset, bool createUndo = false)
-        {
-            Instance.AddAssetToTableInternal(table, keyId, asset, createUndo);
-        }
-
-        /// <summary>
-        /// Remove the asset mapping from the table and also cleanup the Addressables if necessary.
-        /// </summary>
-        /// <param name="table"></param>
-        /// <param name="keyId"></param>
-        /// <param name="asset"></param>
-        /// <param name="createUndo"></param>
-        public static void RemoveAssetFromTable(AssetTable table, uint keyId, Object asset, bool createUndo = false)
-        {
-            Instance.RemoveAssetFromTableInternal(table, keyId, asset, createUndo);
-        }
-
-        /// <summary>
-        /// Add or update the Addressables data for the table.
-        /// Ensures the table is in the correct group and has all the required labels.
-        /// </summary>
-        /// <param name="table"></param>
-        /// <param name="createUndo">Used to indicate if an Undo operation should be created.</param>
-        public static void AddOrUpdateTable(LocalizedTable table, bool createUndo)
-        {
-            Instance.AddOrUpdateTableInternal(table, createUndo);
-        }
-
-        /// <summary>
-        /// Remove the table from Addressables and any associated assets if they are not used elsewhere.
-        /// </summary>
-        /// <param name="table"></param>
-        /// <param name="createUndo">Used to indicate if an Undo operation should be created.</param>
-        public static void RemoveTable(LocalizedTable table, bool createUndo = false) => Instance.RemoveTableInternal(table, createUndo);
-
-        /// <summary>
-        /// Returns all asset tables in the project of type TLocalizedTable.
-        /// </summary>
-        /// <typeparam name="TLocalizedTable"></typeparam>
         /// <returns></returns>
-        public static List<AddressableAssetEntry> GetAssetTables<TLocalizedTable>() where TLocalizedTable : LocalizedTable
+        public static LocalizedTableCollection GetCollectionFromTable(LocalizedTable table) => Instance.TableCollectionCache.FindCollectionForTable(table);
+
+        /// <summary>
+        /// Returns the <see cref="LocalizedTableCollection"/> that the <see cref="SharedTableData"/> is part of or null if one could not be found.
+        /// </summary>
+        /// <param name="sharedTableData"></param>
+        /// <returns></returns>
+        public static LocalizedTableCollection GetCollectionForSharedTableData(SharedTableData sharedTableData) => Instance.TableCollectionCache.FindCollectionForSharedTableData(sharedTableData);
+
+        /// <summary>
+        /// If a table does not belong to a <see cref="LocalizedTableCollection"/> then it is considered to be loose, it has no parent collection and will be ignored.
+        /// This returns all loose tables that use the same <see cref="SharedTableData"/>, they can then be converted into a <see cref="LocalizedTableCollection"/>.
+        /// </summary>
+        /// <param name="sharedTableData"></param>
+        /// <param name="foundTables"></param>
+        public static void FindLooseStringTablesUsingSharedTableData(SharedTableData sharedTableData, IList<LocalizedTable> foundTables) => Instance.TableCollectionCache.FindLooseTablesUsingSharedTableData(sharedTableData, foundTables);
+
+        /// <summary>
+        /// Creates a <see cref="StringTableCollection"/> or <see cref="AssetTableCollection"/> from the loose tables.
+        /// </summary>
+        /// <param name="looseTables">Tables to create the collection from. All tables must be of the same type.</param>
+        /// <returns></returns>
+        public static LocalizedTableCollection CreateCollectionFromLooseTables(IList<LocalizedTable> looseTables, string path) => Instance.CreateCollectionFromLooseTablesInternal(looseTables, path);
+
+        /// <summary>
+        /// Creates a <see cref="StringTableCollection"/> using the project Locales.
+        /// </summary>
+        /// <param name="tableName">The name of the new collection.</param>
+        /// <param name="assetDirectory">The directory to save the generated assets, must be in the project Assets directory.</param>
+        /// <returns></returns>
+        public static StringTableCollection CreateStringTableCollection(string tableName, string assetDirectory) => CreateStringTableCollection(tableName, assetDirectory, GetLocales());
+
+        /// <summary>
+        /// Creates a <see cref="StringTableCollection"/> using the provided Locales.
+        /// </summary>
+        /// <param name="tableName">The name of the new collection.</param>
+        /// <param name="assetDirectory">The directory to save the generated assets, must be in the project Assets directory.</param>
+        /// <param name="selectedLocales">The locales to generate the collection with. A <see cref="StringTable"/> will be created for each Locale.</param>
+        /// <returns></returns>
+        public static StringTableCollection CreateStringTableCollection(string tableName, string assetDirectory, IList<Locale> selectedLocales) => Instance.CreateCollection(typeof(StringTableCollection), tableName, assetDirectory, selectedLocales) as StringTableCollection;
+
+        /// <summary>
+        /// Creates a <see cref="AssetTableCollection"/> using the project Locales.
+        /// </summary>
+        /// <param name="tableName">The name of the new collection.</param>
+        /// <param name="assetDirectory">The directory to save the generated assets, must be in the project Assets directory.</param>
+        /// <returns></returns>
+        public static AssetTableCollection CreateAssetTableCollection(string tableName, string assetDirectory) => CreateAssetTableCollection(tableName, assetDirectory, GetLocales());
+
+        /// <summary>
+        /// Creates a <see cref="AssetTableCollection"/> using the provided Locales.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="assetDirectory"></param>
+        /// <param name="selectedLocales">The locales to generate the collection with. A <see cref="AssetTable"/> will be created for each Locale</param>
+        /// <returns></returns>
+        public static AssetTableCollection CreateAssetTableCollection(string tableName, string assetDirectory, IList<Locale> selectedLocales) => Instance.CreateCollection(typeof(AssetTableCollection), tableName, assetDirectory, selectedLocales) as AssetTableCollection;
+
+        internal protected virtual LocalizedTableCollection CreateCollection(Type collectionType, string tableName, string assetDirectory, IList<Locale> selectedLocales)
         {
-            return Instance.GetAssetTablesInternal(typeof(TLocalizedTable));
+            if (collectionType.IsAssignableFrom(typeof(LocalizedTableCollection)))
+                throw new ArgumentException($"{collectionType.Name} Must be derived from {nameof(LocalizedTableCollection)}", nameof(collectionType));
+
+            if (string.IsNullOrEmpty(tableName))
+                throw new ArgumentException("Can not be null or empty", nameof(tableName));
+
+            var collection = ScriptableObject.CreateInstance(collectionType) as LocalizedTableCollection;
+            List<LocalizedTable> createdTables;
+
+            AssetDatabase.StartAssetEditing();
+
+            // TODO: Check that no tables already exist with the same name, locale and type.
+            var relativePath = MakePathRelative(assetDirectory);
+            Directory.CreateDirectory(relativePath);
+
+            var sharedDataPath = Path.Combine(relativePath, tableName + " Shared Data.asset");
+            var SharedTableData = ScriptableObject.CreateInstance<SharedTableData>();
+            SharedTableData.TableCollectionName = tableName;
+            CreateAsset(SharedTableData, sharedDataPath);
+            collection.SharedData = SharedTableData;
+            collection.AddSharedTableDataToAddressables();
+
+            // Extract the SharedTableData Guid and assign it so we can use it as a unique id for the table collection name.
+            var sharedDataGuid = GetAssetGuid(SharedTableData);
+            SharedTableData.TableCollectionNameGuid = Guid.Parse(sharedDataGuid);
+            EditorUtility.SetDirty(SharedTableData); // We need to set it dirty so the change to TableCollectionNameGuid is saved.
+
+            if (selectedLocales?.Count > 0)
+            {
+                createdTables = new List<LocalizedTable>(selectedLocales.Count);
+                foreach (var locale in selectedLocales)
+                {
+                    var table = ScriptableObject.CreateInstance(collection.TableType) as LocalizedTable;
+                    table.SharedData = SharedTableData;
+                    table.LocaleIdentifier = locale.Identifier;
+                    table.name = AddressHelper.GetTableAddress(tableName, locale.Identifier);
+                    createdTables.Add(table);
+                }
+
+                for (int i = 0; i < createdTables.Count; ++i)
+                {
+                    var tbl = createdTables[i];
+
+                    var assetPath = Path.Combine(relativePath, tbl.name + ".asset");
+                    assetPath = AssetDatabase.GenerateUniqueAssetPath(assetPath);
+                    CreateAsset(tbl, assetPath);
+                    collection.AddTable(tbl, false);
+                }
+            }
+
+            // Save the collection
+            collection.name = tableName;
+            var collectionPath = Path.Combine(relativePath, collection.name + ".asset");
+            CreateAsset(collection, collectionPath);
+
+            AssetDatabase.StopAssetEditing();
+
+            EditorEvents.RaiseCollectionAdded(collection);
+
+            return collection;
         }
 
         /// <summary>
-        /// Returns all asset tables in the project of type tableType.
+        /// Creates a new <see cref="StringTableCollection"/> or <see cref="AssetTableCollection"/> from the provided list of tables that do not currently belong to a collection.
         /// </summary>
-        /// <param name="tableType"></param>
+        /// <param name="looseTables"></param>
+        /// <param name="path"></param>
         /// <returns></returns>
-        public static List<AddressableAssetEntry> GetAssetTables(Type tableType)
+        protected virtual LocalizedTableCollection CreateCollectionFromLooseTablesInternal(IList<LocalizedTable> looseTables, string path)
         {
-            return Instance.GetAssetTablesInternal(tableType);
-        }
+            if (looseTables == null || looseTables.Count == 0)
+                return null;
 
-        /// <summary>
-        /// Returns all asset tables in the project sorted by type and table name.
-        /// </summary>
-        /// <typeparam name="TLocalizedTable"></typeparam>
-        /// <returns></returns>
-        public static ReadOnlyCollection<AssetTableCollection> GetAssetTablesCollection<TLocalizedTable>() where TLocalizedTable : LocalizedTable
-        {
-            return Instance.GetAssetTablesCollectionInternal(typeof(TLocalizedTable));
-        }
+            var isStringTable = typeof(StringTable).IsAssignableFrom(looseTables[0].GetType());
 
-        /// <summary>
-        /// Returns all asset tables in the project sorted by type and table name.
-        /// </summary>
-        /// <param name="tableType"></param>
-        /// <returns></returns>
-        public static ReadOnlyCollection<AssetTableCollection> GetAssetTablesCollection(Type tableType)
-        {
-            return Instance.GetAssetTablesCollectionInternal(tableType);
+            var collectionType = isStringTable ? typeof(StringTableCollection) : typeof(AssetTableCollection);
+            var collection = ScriptableObject.CreateInstance(collectionType) as LocalizedTableCollection;
+            collection.SharedData = looseTables[0].SharedData;
+
+            foreach (var table in looseTables)
+            {
+                if (table.SharedData != collection.SharedData)
+                {
+                    Debug.LogError($"Table {table.name} does not share the same Shared Table Data and can not be part of the new collection", table);
+                    continue;
+                }
+                collection.AddTable(table, postEvent: false); // Don't post the event, we will send the Collection added only event
+            }
+
+            var relativePath = MakePathRelative(path);
+            CreateAsset(collection, relativePath);
+            EditorEvents.RaiseCollectionAdded(collection);
+            return collection;
         }
 
         /// <summary>
@@ -233,6 +300,7 @@ namespace UnityEditor.Localization
         /// <returns></returns>
         public static bool GetPreloadTableFlag(LocalizedTable table)
         {
+            // TODO: We could just use the instance id so we dont need to load the whole table
             return Instance.GetPreloadTableFlagInternal(table);
         }
 
@@ -243,38 +311,10 @@ namespace UnityEditor.Localization
         /// <typeparam name="TTable"></typeparam>
         /// <param name="keyName"></param>
         /// <returns></returns>
-        public static (AssetTableCollection collection, SharedTableData.SharedTableEntry entry, int matchDistance) FindSimilarKey<TTable>(string keyName) where TTable : LocalizedTable
+        public static (StringTableCollection collection, SharedTableData.SharedTableEntry entry, int matchDistance) FindSimilarKey(string keyName)
         {
-            return Instance.FindSimilarKeyInternal<TTable>(keyName);
+            return Instance.FindSimilarKeyInternal(keyName);
         }
-
-        /// <summary>
-        /// Create a new AssetTable asset. This will create the table and ensure that the table is also added to the Addressables.
-        /// </summary>
-        /// <param name="selectedLocales">The locale the table should be created for.</param>
-        /// <param name="SharedTableData"></param>
-        /// <param name="tableType">The type of table to create. Must inherit from LocalizedTable.</param>
-        /// <param name="assetPath">The path to save the asset to.</param>
-        /// <returns></returns>
-        public static LocalizedTable CreateAssetTable(Locale selectedLocales, SharedTableData SharedTableData, Type tableType, string assetPath)
-        {
-            return Instance.CreateAssetTableInternal(selectedLocales, SharedTableData, tableType, assetPath);
-        }
-
-        /// <summary>
-        /// Creates an AssetTable of type <paramref name="tableType"/> for each of the Locales provided in <paramref name="selectedLocales"/>.
-        /// </summary>
-        /// <param name="selectedLocales">The locales to use for generating the Tables.</param>
-        /// <param name="tableName">The table name to be used for all tables.</param>
-        /// <param name="tableType">The type of table to create. Must inherit from LocalizedTable.</param>
-        /// <param name="assetDirectory">The directory to save all the generated asset files to.</param>
-        /// <returns></returns>
-        public static List<LocalizedTable> CreateAssetTableCollection(IList<Locale> selectedLocales, string tableName, Type tableType, string assetDirectory)
-        {
-            return Instance.CreateAssetTableCollectionInternal(selectedLocales, tableName, tableType, assetDirectory, false, false);
-        }
-
-        internal void SendEvent(ModificationEvent evt, object context) => m_OnModification?.Invoke(evt, context);
 
         /// <summary>
         /// <inheritdoc cref="ActiveLocalizationSettings"/>
@@ -304,18 +344,16 @@ namespace UnityEditor.Localization
             return AddressableAssetSettingsDefaultObject.GetSettings(create && EnableAddressablesCreation);
         }
 
-        /// <summary>
-        /// Returns the name of the Addressables group that the table typse should be stored in.
-        /// </summary>
-        /// <param name="tableType"></param>
-        /// <returns></returns>
-        protected virtual string GetTableGroupName(Type tableType)
+        internal virtual AddressableAssetEntry GetAssetEntry(Object asset) => GetAssetEntry(asset.GetInstanceID());
+
+        internal virtual AddressableAssetEntry GetAssetEntry(int instanceId)
         {
-            if (typeof(StringTable).IsAssignableFrom(tableType))
-                return StringTableGroupName;
-            else if (typeof(AssetTable).IsAssignableFrom(tableType))
-                return AssetTableGroupName;
-            throw new Exception($"Unknown table type \"{tableType.FullName}\"");
+            var settings = GetAddressableAssetSettings(false);
+            if (settings == null)
+                return null;
+
+            var guid = GetAssetGuid(instanceId);
+            return settings.FindAssetEntry(guid);
         }
 
         /// <summary>
@@ -326,7 +364,7 @@ namespace UnityEditor.Localization
         /// <param name="create"></param>
         /// <param name="createUndo">Used to indicate if an Undo operation should be created.</param>
         /// <returns></returns>
-        protected virtual AddressableAssetGroup GetGroup(AddressableAssetSettings settings, string groupName, bool create, bool createUndo)
+        internal protected virtual AddressableAssetGroup GetGroup(AddressableAssetSettings settings, string groupName, bool create, bool createUndo)
         {
             var group = settings.FindGroup(groupName);
             if (group == null && create)
@@ -349,7 +387,7 @@ namespace UnityEditor.Localization
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        protected virtual string FindUniqueAssetAddress(string address)
+        internal protected virtual string FindUniqueAssetAddress(string address)
         {
             var aaSettings = GetAddressableAssetSettings(false);
             if (aaSettings == null)
@@ -388,11 +426,11 @@ namespace UnityEditor.Localization
         /// <param name="createUndo"></param>
         protected virtual void AddLocaleInternal(Locale locale, bool createUndo)
         {
+            if (locale == null)
+                throw new ArgumentNullException(nameof(locale));
+
             if (!EditorUtility.IsPersistent(locale))
-            {
-                Debug.LogError($"Only persistent assets can be addressable. The asset '{locale.name}' needs to be saved on disk.");
-                return;
-            }
+                throw new AssetNotPersistentException(locale);
 
             var aaSettings = GetAddressableAssetSettings(true);
             if (aaSettings == null)
@@ -401,9 +439,7 @@ namespace UnityEditor.Localization
             if (createUndo)
                 Undo.RecordObject(aaSettings, "Add locale");
 
-            var guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(locale));
-            var assetEntry = aaSettings.FindAssetEntry(guid);
-
+            var assetEntry = GetAssetEntry(locale);
             if (assetEntry == null)
             {
                 var group = GetGroup(aaSettings, LocaleGroupName, true, createUndo);
@@ -411,6 +447,7 @@ namespace UnityEditor.Localization
                 if (createUndo)
                     Undo.RecordObject(group, "Add locale");
 
+                var guid = GetAssetGuid(locale);
                 assetEntry = aaSettings.CreateOrMoveEntry(guid, group, true);
                 assetEntry.address = locale.name;
             }
@@ -422,7 +459,7 @@ namespace UnityEditor.Localization
             {
                 aaSettings.AddLabel(LocalizationSettings.LocaleLabel);
                 assetEntry.SetLabel(LocalizationSettings.LocaleLabel, true);
-                SendEvent(ModificationEvent.LocaleAdded, locale);
+                EditorEvents.RaiseLocaleAdded(locale);
             }
         }
 
@@ -440,28 +477,27 @@ namespace UnityEditor.Localization
             if (createUndo)
                 Undo.RecordObject(aaSettings, "Remove locale");
 
-            var guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(locale));
-            if (aaSettings.FindAssetEntry(guid) == null)
+            var localeAssetEntry = GetAssetEntry(locale);
+            if (localeAssetEntry == null)
                 return;
 
             if (createUndo)
             {
-                var entry = aaSettings.FindAssetEntry(guid);
-                Undo.RecordObject(entry.parentGroup, "Remove locale");
+                Undo.RecordObject(localeAssetEntry.parentGroup, "Remove locale");
             }
 
             // Clear the locale cache
             m_ProjectLocales = null;
 
-            aaSettings.RemoveAssetEntry(guid);
-            SendEvent(ModificationEvent.LocaleRemoved, locale);
+            aaSettings.RemoveAssetEntry(localeAssetEntry.guid);
+            EditorEvents.RaiseLocaleRemoved(locale);
         }
 
         /// <summary>
         /// <inheritdoc cref="GetLocales"/>
         /// </summary>
         /// <returns></returns>
-        protected virtual ReadOnlyCollection<Locale> GetLocalesInternal()
+        internal protected virtual ReadOnlyCollection<Locale> GetLocalesInternal()
         {
             if (m_ProjectLocales != null)
                 return m_ProjectLocales;
@@ -473,7 +509,7 @@ namespace UnityEditor.Localization
                 return null;
 
             var foundAssets = new List<AddressableAssetEntry>();
-            aaSettings.GetAllAssets(foundAssets, false, null, entry =>
+            aaSettings.GetAllAssets(foundAssets, false, group => group != null, entry =>
             {
                 return entry.labels.Contains(LocalizationSettings.LocaleLabel);
             });
@@ -500,408 +536,6 @@ namespace UnityEditor.Localization
         /// <returns></returns>
         protected virtual Locale GetLocaleInternal(string code) => GetLocalesInternal().FirstOrDefault(loc => loc.Identifier.Code == code);
 
-        static string FormatAssetTableName(LocaleIdentifier localeIdentifier)
-        {
-            return string.Format(AssetGroupName, localeIdentifier.Code);
-        }
-
-        /// <summary>
-        /// <inheritdoc cref="AddAssetToTable"/>
-        /// </summary>
-        /// <param name="table"></param>
-        /// <param name="keyId"></param>
-        /// <param name="asset"></param>
-        /// <param name="createUndo"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        protected virtual void AddAssetToTableInternal(AssetTable table, uint keyId, Object asset, bool createUndo)
-        {
-            if (table == null)
-                throw new ArgumentNullException(nameof(table), "Can not add asset to null table");
-
-            if (asset == null)
-                throw new ArgumentNullException(nameof(asset), "Can not add null asset to table");
-
-            if (!EditorUtility.IsPersistent(table) || !EditorUtility.IsPersistent(asset))
-            {
-                var assetName = !EditorUtility.IsPersistent(table) ? table.name : asset.name;
-                Debug.LogError($"Only persistent assets can be addressable. The asset '{assetName}' needs to be saved on disk.");
-                return;
-            }
-
-            // Add the asset to the Addressables system and setup the table with the key to guid mapping.
-            var aaSettings = GetAddressableAssetSettings(true);
-            if (aaSettings == null)
-                return;
-
-            // Check we don't have mixed types for this entry.
-            //var typeMetadata = table.Keys.GetSharedMetadata<AssetTypeMetadata>(keyId);
-            //if (typeMetadata != null && typeMetadata.Type != asset.GetType())
-            //    throw new Exception($"Can not add asset{asset.name}, expected a type of {typeMetadata.Type.Name} but got {asset.GetType()}.");
-
-            if (createUndo)
-                Undo.RecordObject(aaSettings, "Add asset to table");
-            else
-                EditorUtility.SetDirty(aaSettings);
-
-            // Has the asset already been added? Perhaps it is being used by multiple tables or the user has added it manually.
-            var assetGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(asset));
-
-            var tableEntry = table.GetEntry(keyId);
-            if (tableEntry != null)
-            {
-                if (tableEntry.Guid == assetGuid)
-                    return;
-
-                // Remove the old asset first
-                RemoveAssetFromTableInternal(table, keyId, tableEntry.Guid, createUndo);
-            }
-
-            var entry = aaSettings.FindAssetEntry(assetGuid);
-            var entryLabel = AddressHelper.FormatAssetLabel(table.LocaleIdentifier.Code);
-            aaSettings.AddLabel(entryLabel);
-
-            if (entry == null)
-            {
-                var group = GetGroup(aaSettings, FormatAssetTableName(table.LocaleIdentifier), true, createUndo);
-
-                entry = aaSettings.CreateOrMoveEntry(assetGuid, group, true);
-                entry.SetLabel(entryLabel, true);
-                entry.address = FindUniqueAssetAddress(asset.name);
-            }
-            else
-            {
-                Undo.RecordObject(entry.parentGroup, "Add asset to table");
-                entry.SetLabel(entryLabel, true);
-                UpdateAssetGroup(aaSettings, entry, createUndo);
-            }
-
-            if (createUndo)
-            {
-                Undo.RecordObject(table, "Add asset to table");
-                Undo.RecordObject(table.SharedData, "Add asset to table");
-            }
-            else
-            {
-                EditorUtility.SetDirty(table);
-                EditorUtility.SetDirty(table.SharedData);
-            }
-
-            tableEntry = table.AddEntry(keyId, assetGuid);
-
-            // Update type metadata
-            AssetTypeMetadata entryMetadata = null;
-            AssetTypeMetadata typeMetadata = null;
-            var assetType = asset.GetType();
-            foreach (var md in table.SharedData.Metadata.MetadataEntries)
-            {
-                if (md is AssetTypeMetadata at)
-                {
-                    if (at.Contains(keyId))
-                    {
-                        if (!at.Type.IsAssignableFrom(assetType))
-                        {
-                            Debug.LogWarning($"Table entry {keyId} contains the wrong type data ({at.Type}. It has been removed.");
-                            tableEntry.RemoveSharedMetadata(at);
-                        }
-                        else
-                        {
-                            entryMetadata = at;
-                        }
-                    }
-
-                    if (at.Type == assetType)
-                        typeMetadata = at;
-                }
-            }
-            var foundMetadata = entryMetadata ?? typeMetadata;
-            if (foundMetadata == null)
-            {
-                foundMetadata = new AssetTypeMetadata() { Type = assetType };
-            }
-            tableEntry.AddSharedMetadata(foundMetadata);
-
-            //EditorUtility.SetDirty(table); // Mark the table dirty or changes will not be saved.
-
-            SendEvent(ModificationEvent.AssetTableEntryAdded, new Tuple<AssetTable, AssetTableEntry, string>(table, tableEntry, assetGuid));
-        }
-
-        /// <summary>
-        /// <inheritdoc cref="RemoveAssetFromTable"/>
-        /// </summary>
-        /// <param name="table"></param>
-        /// <param name="keyId"></param>
-        /// <param name="assetGuid"></param>
-        /// <param name="createUndo"></param>
-        protected virtual void RemoveAssetFromTableInternal(AssetTable table, uint keyId, string assetGuid, bool createUndo)
-        {
-            if (createUndo)
-                Undo.RecordObject(table, "Remove asset from table");
-            else
-                EditorUtility.SetDirty(table); // Mark the table dirty or changes will not be saved.
-
-            // Clear the asset but keep the key
-            var tableEntry = table.AddEntry(keyId, string.Empty);
-
-            var aaSettings = GetAddressableAssetSettings(false);
-            if (aaSettings == null)
-                return;
-
-            // Update type metadata
-            // We cant use a foreach here as we are sometimes inside of a loop and exceptions will be thrown (Collection was modified).
-            for (int i = 0; i < table.SharedData.Metadata.MetadataEntries.Count; ++i)
-            {
-                var md = table.SharedData.Metadata.MetadataEntries[i];
-                if (md is AssetTypeMetadata at)
-                {
-                    if (at.Contains(keyId))
-                    {
-                        tableEntry.RemoveSharedMetadata(at);
-                    }
-                }
-            }
-
-            // Determine if the asset is being referenced by any other tables with the same locale, if not then we can
-            // remove the locale label and if no other labels exist also remove the asset from the Addressables system.
-            var tableGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(table));
-            var tableGroup = GetGroup(aaSettings, AssetTableGroupName, false, createUndo);
-            if (tableGroup != null)
-            {
-                foreach (var e in tableGroup.entries)
-                {
-                    var tableToCheck = e.guid == tableGuid ? table : AssetDatabase.LoadAssetAtPath<AssetTable>(AssetDatabase.GUIDToAssetPath(e.guid));
-                    if (tableToCheck != null && tableToCheck.LocaleIdentifier == table.LocaleIdentifier)
-                    {
-                        foreach (var item in tableToCheck.Values)
-                        {
-                            // The asset is referenced elsewhere so we can not remove the label or asset.
-                            if (item.Guid == assetGuid)
-                            {
-                                // Check this is not the entry currently being removed.
-                                if (tableToCheck == table && item.Data.Id == keyId)
-                                    continue;
-
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
-
-            var assetEntry = aaSettings.FindAssetEntry(assetGuid);
-            if (assetEntry != null)
-            {
-                if (createUndo)
-                    Undo.RecordObject(assetEntry.parentGroup, "Remove asset from table");
-
-                var assetLabel = AddressHelper.FormatAssetLabel(table.LocaleIdentifier);
-                assetEntry.SetLabel(assetLabel, false);
-                UpdateAssetGroup(aaSettings, assetEntry, createUndo);
-            }
-
-            SendEvent(ModificationEvent.AssetTableEntryRemoved, new Tuple<AssetTable, AssetTableEntry, string>(table, tableEntry, assetGuid));
-        }
-
-        /// <summary>
-        /// <inheritdoc cref="RemoveAssetFromTable"/>
-        /// </summary>
-        /// <param name="table"></param>
-        /// <param name="keyId"></param>
-        /// <param name="asset"></param>
-        /// <param name="createUndo"></param>
-        /// <typeparam name="TObject"></typeparam>
-        protected virtual void RemoveAssetFromTableInternal<TObject>(AssetTable table, uint keyId, TObject asset, bool createUndo) where TObject : Object
-        {
-            var assetGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(asset));
-            RemoveAssetFromTableInternal(table, keyId, assetGuid, createUndo);
-        }
-
-        /// <summary>
-        /// Updates the group the asset should belong to.
-        /// If an asset is used by more than 1 <see cref="Locale"/> then it will be moved to the shared group.
-        /// </summary>
-        /// <param name="settings"></param>
-        /// <param name="assetEntry"></param>
-        /// <param name="createUndo">Used to indicate if an Undo operation should be created.</param>
-        protected virtual void UpdateAssetGroup(AddressableAssetSettings settings, AddressableAssetEntry assetEntry, bool createUndo)
-        {
-            if (settings == null || assetEntry == null)
-                return;
-
-            var localesUsingAsset = assetEntry.labels.Where(AddressHelper.IsLocaleLabel).ToList();
-            if (localesUsingAsset.Count == 0)
-            {
-                var oldGroup = assetEntry.parentGroup;
-                settings.RemoveAssetEntry(assetEntry.guid);
-                if (oldGroup.entries.Count == 0)
-                {
-                    if (createUndo)
-                    {
-                        // We cant use undo asset deletion so we will leave an empty group instead of deleting it.
-                        Undo.RecordObject(oldGroup, "Remove group");
-                    }
-                    else
-                    {
-                        settings.RemoveGroup(oldGroup);
-                    }
-                }
-
-                SendEvent(ModificationEvent.AssetRemoved, assetEntry);
-                return;
-            }
-
-            AddressableAssetGroup newGroup;
-            if (localesUsingAsset.Count == 1)
-            {
-                // Add to a locale specific group
-                var localeId = AddressHelper.LocaleLabelToId(localesUsingAsset[0]);
-                newGroup = GetGroup(settings, FormatAssetTableName(localeId), true, createUndo);
-            }
-            else
-            {
-                // Add to the shared assets group
-                newGroup = GetGroup(settings, SharedAssetGroupName, true, createUndo);
-            }
-
-            if (newGroup != assetEntry.parentGroup)
-            {
-                if (createUndo)
-                {
-                    Undo.RecordObject(newGroup, "Update asset group");
-                    Undo.RecordObject(assetEntry.parentGroup, "Update asset group");
-                }
-
-                var oldGroup = assetEntry.parentGroup;
-                settings.MoveEntry(assetEntry, newGroup, true);
-                if (oldGroup.entries.Count == 0)
-                {
-                    if (createUndo)
-                    {
-                        // We cant use undo asset deletion so we will leave an empty group instead of deleting it.
-                        Undo.RecordObject(oldGroup, "Remove group");
-                    }
-                    else
-                    {
-                        settings.RemoveGroup(oldGroup);
-                    }
-                }
-
-                SendEvent(ModificationEvent.AssetUpdated, assetEntry);
-            }
-        }
-
-        /// <summary>
-        /// Update the Addressables data for the table.
-        /// </summary>
-        /// <param name="table"></param>
-        /// <param name="createUndo">Used to indicate if an Undo operation should be created.</param>
-        protected virtual void AddOrUpdateTableInternal(LocalizedTable table, bool createUndo)
-        {
-            if (table == null)
-                throw new ArgumentNullException(nameof(table), "Can not update a null table");
-
-            if (!EditorUtility.IsPersistent(table))
-            {
-                Debug.LogError($"Only persistent assets can be addressable. The asset '{table.name}' needs to be saved on disk.");
-                return;
-            }
-
-            var aaSettings = GetAddressableAssetSettings(true);
-            if (aaSettings == null)
-                return;
-
-            if (createUndo)
-                Undo.RecordObject(aaSettings, "Update table");
-
-            // Add the shared table data
-            var sharedDataGuid = GetAssetGuid(table.SharedData);
-            var sharedDataEntry = aaSettings.FindAssetEntry(sharedDataGuid);
-            if (sharedDataEntry == null)
-            {
-                // Add to the shared assets group
-                var sharedGroup = GetGroup(aaSettings, SharedAssetGroupName, true, createUndo);
-                sharedDataEntry = aaSettings.CreateOrMoveEntry(sharedDataGuid, sharedGroup);
-                sharedDataEntry.address = table.SharedData.name;
-            }
-
-            // Has the asset already been added?
-            var tableGuid = GetAssetGuid(table);
-            var tableEntry = aaSettings.FindAssetEntry(tableGuid);
-            var tableAdded = tableEntry == null;
-            if (tableEntry == null)
-            {
-                var groupName = GetTableGroupName(table.GetType());
-                var group = GetGroup(aaSettings, groupName, true, createUndo);
-
-                if (createUndo)
-                    Undo.RecordObject(group, "Update table");
-
-                tableEntry = aaSettings.CreateOrMoveEntry(tableGuid, group, true);
-
-                // Clear cache
-                m_TableCollections.Clear();
-            }
-            else if (createUndo)
-            {
-                Undo.RecordObject(tableEntry.parentGroup, "Update table");
-            }
-
-            tableEntry.address = AddressHelper.GetTableAddress(table.TableName, table.LocaleIdentifier);
-            tableEntry.labels.RemoveWhere(AddressHelper.IsLocaleLabel); // Locale may have changed so clear the old ones.
-
-            // We store the SharedTableData GUID in the importer so we can search through tables without loading them.
-            var importer = AssetImporter.GetAtPath(tableEntry.AssetPath);
-            if (importer.userData != sharedDataGuid)
-            {
-                if (createUndo)
-                    Undo.RecordObject(importer, "Update table");
-                importer.userData = sharedDataGuid;
-                importer.SaveAndReimport();
-            }
-
-            // Label the locale
-            var localeLabel = AddressHelper.FormatAssetLabel(table.LocaleIdentifier);
-            aaSettings.AddLabel(localeLabel);
-            tableEntry.SetLabel(localeLabel, true);
-
-            if (tableAdded)
-                SendEvent(ModificationEvent.TableAdded, table);
-        }
-
-        /// <summary>
-        /// <inheritdoc cref=" RemoveTable"/>
-        /// </summary>
-        /// <param name="table"></param>
-        /// <param name="createUndo"></param>
-        protected virtual void RemoveTableInternal(LocalizedTable table, bool createUndo)
-        {
-            var aaSettings = GetAddressableAssetSettings(true);
-            if (aaSettings == null)
-                return;
-
-            if (createUndo)
-                Undo.RecordObject(aaSettings, "Remove table");
-
-            var assetTable = table as AssetTable;
-            if (assetTable != null)
-            {
-                foreach (var te in assetTable)
-                {
-                    RemoveAssetFromTableInternal(assetTable, te.Key, te.Value.Guid, createUndo);
-                }
-            }
-
-            // Clear cache
-            m_TableCollections.Clear();
-
-            var guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(table));
-            var entry = aaSettings.FindAssetEntry(guid);
-            if (entry != null)
-            {
-                aaSettings.RemoveAssetEntry(guid);
-                SendEvent(ModificationEvent.TableRemoved, table);
-            }
-        }
-
         /// <summary>
         /// <inheritdoc cref=" SetPreloadTable"/>
         /// </summary>
@@ -919,8 +553,7 @@ namespace UnityEditor.Localization
             if (aaSettings == null)
                 return;
 
-            var tabbleGuid = GetAssetGuid(table);
-            var tableEntry = aaSettings.FindAssetEntry(tabbleGuid);
+            var tableEntry = GetAssetEntry(table);
             if (tableEntry == null)
                 throw new AddressableEntryNotFoundException(table);
 
@@ -947,84 +580,11 @@ namespace UnityEditor.Localization
             if (aaSettings == null)
                 return false;
 
-            var tabbleGuid = GetAssetGuid(table);
-            var tableEntry = aaSettings.FindAssetEntry(tabbleGuid);
+            var tableEntry = GetAssetEntry(table);
             if (tableEntry == null)
                 throw new AddressableEntryNotFoundException(table);
 
             return tableEntry.labels.Contains(LocalizationSettings.PreloadLabel);
-        }
-
-        /// <summary>
-        /// <inheritdoc cref=" GetAssetTables"/>
-        /// </summary>
-        /// <param name="tableType"></param>
-        /// <returns></returns>
-        protected virtual List<AddressableAssetEntry> GetAssetTablesInternal(Type tableType)
-        {
-            var foundTables = new List<AddressableAssetEntry>();
-            var settings = GetAddressableAssetSettings(false);
-            if (settings == null)
-                return foundTables;
-
-            settings.GetAllAssets(foundTables, false, null, (aae) =>
-            {
-                var type = AssetDatabase.GetMainAssetTypeAtPath(aae.AssetPath);
-                return tableType.IsAssignableFrom(type);
-            });
-            return foundTables;
-        }
-
-        /// <summary>
-        /// Returns all tables for the project that are part of Addressables. Tables are collated by <see cref="TableName"/> and type.
-        /// </summary>
-        /// Use <see cref="LocalizedTable"/> to get all types, <see cref="StringTable"/> for all string tables and <see cref="AssetTable"/> for all asset tables.</typeparam>
-        /// <param name="tableType">The table base Type.</param>
-        /// <returns></returns>
-        protected virtual ReadOnlyCollection<AssetTableCollection> GetAssetTablesCollectionInternal(Type tableType)
-        {
-            if (!typeof(LocalizedTable).IsAssignableFrom(tableType))
-                throw new Exception($"{nameof(tableType)} must inherit from {nameof(LocalizedTable)}");
-
-            if (m_TableCollections.TryGetValue(tableType, out var foundCollection))
-                return foundCollection;
-
-            // We want to find all tables and sort them by type and name without loading the actual Tables(slow!).
-            var assetTablesCollection = new List<AssetTableCollection>();
-            var assetTables = GetAssetTablesInternal(tableType);
-
-            // Collate by table type and table name
-            var lookup = new Dictionary<(Type, string), AssetTableCollection>();
-            foreach (var table in assetTables)
-            {
-                // Get the table name from the meta data so we do not need to load the whole asset.
-                var importer = AssetImporter.GetAtPath(table.AssetPath);
-                var sharedDataGuid = importer.userData;
-                if (string.IsNullOrEmpty(sharedDataGuid))
-                {
-                    // Try and find the key db table name guid
-                    var loadedTable = AssetDatabase.LoadAssetAtPath<LocalizedTable>(table.AssetPath);
-                    sharedDataGuid = GetAssetGuid(loadedTable.SharedData);
-                }
-
-                var assetTableType = AssetDatabase.GetMainAssetTypeAtPath(table.AssetPath);
-                var key = (assetTableType, sharedDataGuid);
-                AssetTableCollection tableCollection;
-                if (!lookup.TryGetValue(key, out tableCollection))
-                {
-                    tableCollection = new AssetTableCollection() { TableType = assetTableType };
-                    tableCollection.SharedData = AssetDatabase.LoadAssetAtPath<SharedTableData>(AssetDatabase.GUIDToAssetPath(key.sharedDataGuid));
-
-                    assetTablesCollection.Add(tableCollection);
-                    lookup[key] = tableCollection;
-                }
-
-                tableCollection.TableEntries.Add(table);
-            }
-
-            var readOnly = new ReadOnlyCollection<AssetTableCollection>(assetTablesCollection);
-            m_TableCollections[tableType] = readOnly;
-            return readOnly;
         }
 
         /// <summary>
@@ -1033,158 +593,37 @@ namespace UnityEditor.Localization
         /// <param name="keyName"></param>
         /// <typeparam name="TTable"></typeparam>
         /// <returns></returns>
-        protected virtual (AssetTableCollection collection, SharedTableData.SharedTableEntry entry, int matchDistance) FindSimilarKeyInternal<TTable>(string keyName) where TTable : LocalizedTable
+        protected virtual (StringTableCollection collection, SharedTableData.SharedTableEntry entry, int matchDistance) FindSimilarKeyInternal(string keyName)
         {
             // Check if we can find a matching key to the key name
-            var tables = GetAssetTablesCollection<TTable>();
+            var collections = GetStringTableCollections();
+
             int currentMatchDistance = int.MaxValue;
             SharedTableData.SharedTableEntry currentEntry = null;
-            AssetTableCollection tableCollection = null;
-            foreach (var assetTableCollection in tables)
+            StringTableCollection foundCollection = null;
+            foreach (var tableCollection in collections)
             {
-                var keys = assetTableCollection.SharedData;
+                var keys = tableCollection.SharedData;
                 var foundKey = keys.FindSimilarKey(keyName, out int distance);
                 if (foundKey != null && distance < currentMatchDistance)
                 {
                     currentMatchDistance = distance;
                     currentEntry = foundKey;
-                    tableCollection = assetTableCollection;
+                    foundCollection = tableCollection;
                 }
             }
-            return (tableCollection, currentEntry, currentMatchDistance);
-        }
-
-        internal static LocalizedTable CreateAssetTableFilePanel(Locale selectedLocales, SharedTableData SharedTableData, string tableName, Type tableType, string defaultDirectory)
-        {
-            return Instance.CreateAssetTableFilePanelInternal(selectedLocales, SharedTableData, tableName, tableType, defaultDirectory);
-        }
-
-        internal static void CreateAssetTablesFolderPanel(List<Locale> selectedLocales, string tableName, string tableType)
-        {
-            Instance.CreateAssetTableCollectionInternal(selectedLocales, tableName, Type.GetType(tableType));
-        }
-
-        internal static void CreateAssetTablesFolderPanel(List<Locale> selectedLocales, string tableName, Type tableType)
-        {
-            Instance.CreateAssetTableCollectionInternal(selectedLocales, tableName, tableType);
-        }
-
-        LocalizedTable CreateAssetTableFilePanelInternal(Locale selectedLocale, SharedTableData SharedTableData, string tableName, Type tableType, string defaultDirectory)
-        {
-            var assetPath = EditorUtility.SaveFilePanel(Styles.saveTableDialog, defaultDirectory, AddressHelper.GetTableAddress(tableName, selectedLocale.Identifier), "asset");
-            return string.IsNullOrEmpty(assetPath) ? null : CreateAssetTable(selectedLocale, SharedTableData, tableType, assetPath);
-        }
-
-        /// <summary>
-        /// Creates a table using provided arguments.
-        /// </summary>
-        /// <param name="selectedLocales">The <see cref="Locale"/> the table represents.</param>
-        /// <param name="SharedTableData"></param>
-        /// <param name="tableType">The type of table, must derive from <see cref="LocalizedTable"/>.</param>
-        /// <param name="assetPath">Where to save the asset, must be inside of the project Assets folder.</param>
-        /// <returns>Returns the created table.</returns>
-        protected virtual LocalizedTable CreateAssetTableInternal(Locale selectedLocales, SharedTableData SharedTableData, Type tableType, string assetPath)
-        {
-            var relativePath = MakePathRelative(assetPath);
-            var table = (LocalizedTable)ScriptableObject.CreateInstance(tableType);
-            table.SharedData = SharedTableData;
-            table.LocaleIdentifier = selectedLocales.Identifier;
-            table.name = Path.GetFileNameWithoutExtension(assetPath);
-
-            CreateAsset(table, relativePath);
-
-            AddOrUpdateTableInternal(table, false);
-            return table;
-        }
-
-        void CreateAssetTableCollectionInternal(List<Locale> selectedLocales, string tableName, Type tableType)
-        {
-            var assetDirectory = EditorUtility.SaveFolderPanel(Styles.saveTablesDialog, "Assets/", "");
-            if (!string.IsNullOrEmpty(assetDirectory))
-                CreateAssetTableCollectionInternal(selectedLocales, tableName, tableType, assetDirectory, true, true);
-        }
-
-        /// <summary>
-        /// Create multiple tables using the provided arguments.
-        /// </summary>
-        /// <param name="selectedLocales">List of <see cref="Locale"/>, a table will be created for each one.</param>
-        /// <param name="tableName">The name of the table that will be applied to all tables.</param>
-        /// <param name="tableType">The type of table, must derive from <see cref="LocalizedTable"/>.</param>
-        /// <param name="assetDirectory">Directory where the created tables will be saved, must be in the project Assets folder.</param>
-        /// <param name="showProgressBar">Should a progress bar be shown during the creation?</param>
-        /// <param name="showInTablesWindow">Should the Asset Tables Window be opened with these new tables selected?</param>
-        /// <returns></returns>
-        protected virtual List<LocalizedTable> CreateAssetTableCollectionInternal(IList<Locale> selectedLocales, string tableName, Type tableType, string assetDirectory, bool showProgressBar, bool showInTablesWindow)
-        {
-            List<LocalizedTable> createdTables;
-
-            try
-            {
-                // TODO: Check that no tables already exist with the same name, locale and type.
-                //AssetDatabase.StartAssetEditing(); // Disabled due to test failure on 2019.3 project yamato jobs failing.
-                var relativePath = MakePathRelative(assetDirectory);
-
-                var sharedDataPath = Path.Combine(relativePath, tableName + " Shared Data.asset");
-                var SharedTableData = ScriptableObject.CreateInstance<SharedTableData>();
-                SharedTableData.TableName = tableName;
-                CreateAsset(SharedTableData, sharedDataPath);
-
-                // Extract the SharedTableData Guid and assign it so we can use it as a unique id for the table name.
-                var sharedDataGuid = GetAssetGuid(SharedTableData);
-                SharedTableData.TableNameGuid = Guid.Parse(sharedDataGuid); // We need to set it dirty so the change to TableNameGuid is saved.
-                EditorUtility.SetDirty(SharedTableData);
-
-                // Create the instances
-                if (showProgressBar)
-                    EditorUtility.DisplayProgressBar(Styles.progressTitle, "Creating Tables", 0);
-
-                createdTables = new List<LocalizedTable>(selectedLocales.Count);
-                foreach (var locale in selectedLocales)
-                {
-                    var table = (LocalizedTable)ScriptableObject.CreateInstance(tableType);
-                    table.SharedData = SharedTableData;
-                    table.LocaleIdentifier = locale.Identifier;
-                    table.name = AddressHelper.GetTableAddress(tableName, locale.Identifier);
-                    createdTables.Add(table);
-                }
-
-                // Save as assets
-                if (showProgressBar)
-                    EditorUtility.DisplayProgressBar(Styles.progressTitle, "Saving Tables", 0);
-
-                for (int i = 0; i < createdTables.Count; ++i)
-                {
-                    var tbl = createdTables[i];
-
-                    if (showProgressBar)
-                        EditorUtility.DisplayProgressBar(Styles.progressTitle, $"Saving Table {tbl.name}", i / (float)createdTables.Count);
-
-                    var assetPath = Path.Combine(relativePath, tbl.name + ".asset");
-                    assetPath = AssetDatabase.GenerateUniqueAssetPath(assetPath);
-                    CreateAsset(tbl, assetPath);
-                    AddOrUpdateTableInternal(tbl, false);
-                }
-                //AssetDatabase.StopAssetEditing();
-                AssetDatabase.SaveAssets(); // Required to ensure the change to SharedTableData is written.
-
-                if (showInTablesWindow)
-                    AssetTablesWindow.ShowWindow(createdTables[0]);
-            }
-            finally
-            {
-                if (showProgressBar)
-                    EditorUtility.ClearProgressBar();
-
-                // Clear cache
-                m_TableCollections.Clear();
-            }
-
-            return createdTables;
+            return (foundCollection, currentEntry, currentMatchDistance);
         }
 
         internal virtual void CreateAsset(Object asset, string path)
         {
             AssetDatabase.CreateAsset(asset, path);
+        }
+
+        internal virtual string GetAssetGuid(int instanceId)
+        {
+            Debug.Assert(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(instanceId, out string guid, out long _), "Failed to extract the asset Guid");
+            return guid;
         }
 
         internal virtual string GetAssetGuid(Object asset)

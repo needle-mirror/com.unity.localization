@@ -21,8 +21,7 @@ namespace UnityEditor.Localization.UI
         /// <summary>
         /// Called during the setup of the tree view.
         /// </summary>
-        /// <param name="tables"></param>
-        public virtual void Initialize(List<LocalizedTable> tables, int startIdx) {}
+        public virtual void Initialize(LocalizedTableCollection collection, int startIdx) {}
 
         /// <summary>
         /// Called before the key entry is deleted.

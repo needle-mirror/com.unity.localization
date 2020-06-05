@@ -4,7 +4,7 @@ namespace UnityEditor.Localization.UI
 {
     abstract class TableEditor : VisualElement
     {
-        public AssetTableCollection TableCollection { get; set; }
+        public LocalizedTableCollection TableCollection { get; set; }
 
         protected VisualElement m_TableContentsPanel;
         protected VisualElement m_PropertiesPanel;
@@ -21,8 +21,8 @@ namespace UnityEditor.Localization.UI
             m_PropertiesPanel = this.Q("properties-panel");
 
             m_NameField = this.Q<TextField>("table-name-field");
-            m_NameField.value = TableCollection.TableName;
-            m_NameField.RegisterCallback<ChangeEvent<string>>(TableNameChanged);
+            m_NameField.value = TableCollection.TableCollectionName;
+            m_NameField.RegisterCallback<ChangeEvent<string>>(TableCollectionNameChanged);
             m_NameField.isDelayed = true; // Prevent an undo per char change.
         }
 
@@ -31,37 +31,34 @@ namespace UnityEditor.Localization.UI
             Undo.undoRedoPerformed -= UndoRedoPerformed;
         }
 
-        void TableNameChanged(ChangeEvent<string> evt)
+        ProjectTablesPopup FindTablesPopup()
         {
-            var group = Undo.GetCurrentGroup();
-            Undo.SetCurrentGroupName("Change table collection name");
-            Undo.RecordObject(TableCollection.SharedData, "Change table collection name");
-
-            TableCollection.SharedData.TableName = evt.newValue;
-            for (int i = 0; i < TableCollection.Tables.Count; ++i)
+            // Find the root
+            var root = parent;
+            while (root.parent != null)
             {
-                var table = TableCollection.Tables[i];
-                LocalizationEditorSettings.AddOrUpdateTable(table, true);
+                root = root.parent;
             }
-            Undo.CollapseUndoOperations(group);
+            return root.Q<ProjectTablesPopup>();
+        }
+
+        void TableCollectionNameChanged(ChangeEvent<string> evt)
+        {
+            TableCollection.SetTableCollectionName(evt.newValue, true);
 
             // Force the label to update itself.
-            var atf = this.Q<ProjectTablesPopup>();
+            var atf = FindTablesPopup();
             atf?.RefreshLabels();
         }
 
         protected virtual void UndoRedoPerformed()
         {
-            // Table name
-            var name = TableCollection.TableName;
-            if (m_NameField != null && m_NameField.value != name)
-            {
-                m_NameField.SetValueWithoutNotify(name);
-                TableCollection.Tables.ForEach(tbl => LocalizationEditorSettings.AddOrUpdateTable(tbl, false));
+            TableCollection.RefreshAddressables();
 
-                var atf = this.Q<ProjectTablesPopup>();
-                atf?.RefreshLabels();
-            }
+            var name = TableCollection.TableCollectionName;
+            m_NameField?.SetValueWithoutNotify(name);
+            var atf = FindTablesPopup();
+            atf?.RefreshLabels();
         }
 
         protected virtual void TableListViewOnSelectedForEditing(ISelectable selected)

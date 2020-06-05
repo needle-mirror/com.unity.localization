@@ -9,9 +9,11 @@ using UnityEngine.Localization.Tables;
 namespace UnityEditor.Localization.UI
 {
     [CustomPropertyDrawer(typeof(LocalizedString), true)]
-    class LocalizedStringPropertyDrawer : LocalizedReferencePropertyDrawer<StringTable>
+    class LocalizedStringPropertyDrawer : LocalizedReferencePropertyDrawer<StringTableCollection>
     {
         public bool ShowPreview { get; set; } = true;
+
+        static GUIStyle s_FoldoutStyle;
 
         /// <summary>
         /// Optional arguments list.
@@ -37,28 +39,32 @@ namespace UnityEditor.Localization.UI
 
                         foreach (var locale in projectLocales)
                         {
-                            var table = SelectedTableCollection.Tables.FirstOrDefault(tbl => tbl.LocaleIdentifier == locale.Identifier);
-                            SmartFormatField smartField = null;
+                            var table = SelectedTableCollection.Tables.FirstOrDefault(tbl => tbl.asset?.LocaleIdentifier == locale.Identifier);
                             if (previewArguments == null)
                                 previewArguments = new SmartObjects();
-
-                            if (table != null)
-                            {
-                                smartField = new SmartFormatField();
-                                smartField.Table = (StringTable)table;
-                                smartField.KeyId = SelectedTableEntry.Id;
-                                smartField.RawText = SelectedTableEntry.Key;
-                                smartField.ShowMetadataButton = false;
-                                smartField.ShowPreviewTab = true;
-                                smartField.MinHeight = EditorGUIUtility.singleLineHeight;
-                                smartField.Arguments = previewArguments;
-                                smartField.RefreshData();
-                            }
-                            m_SmartFormatFields.Add((locale, false, smartField));
+                            m_SmartFormatFields.Add((locale, false, CreateSmartFormatFieldForTable(table.asset)));
                         }
                     }
                     return m_SmartFormatFields;
                 }
+            }
+
+            public SmartFormatField CreateSmartFormatFieldForTable(LocalizedTable table)
+            {
+                if (table is StringTable stringTable)
+                {
+                    var smartField = new SmartFormatField();
+                    smartField.Table = stringTable;
+                    smartField.KeyId = SelectedTableEntry.Id;
+                    smartField.RawText = SelectedTableEntry.Key;
+                    smartField.ShowMetadataButton = false;
+                    smartField.ShowPreviewTab = true;
+                    smartField.MinHeight = EditorGUIUtility.singleLineHeight;
+                    smartField.Arguments = previewArguments;
+                    smartField.RefreshData();
+                    return smartField;
+                }
+                return null;
             }
 
             public override SharedTableData.SharedTableEntry SelectedTableEntry
@@ -96,6 +102,11 @@ namespace UnityEditor.Localization.UI
             }
         }
 
+        static LocalizedStringPropertyDrawer()
+        {
+            GetProjectTableCollections = LocalizationEditorSettings.GetStringTableCollections;
+        }
+
         protected override PropertyData CreatePropertyData(SerializedProperty property)
         {
             var prop = new StringPropertyData()
@@ -114,39 +125,55 @@ namespace UnityEditor.Localization.UI
             base.DrawTableEntryDetails(ref rowPosition, position);
             var stringPropertyData = (StringPropertyData)m_Property;
 
+            // We want to clip long labels (case LOC-84)
+            if (s_FoldoutStyle == null)
+                s_FoldoutStyle = new GUIStyle(EditorStyles.foldoutHeader) { clipping = TextClipping.Clip };
+
             for (int i = 0; i < stringPropertyData.LocaleFields.Count; ++i)
             {
                 var field = stringPropertyData.LocaleFields[i];
+                var label = new GUIContent(field.locale.Identifier.ToString());
+
+                // Is this a missing table?
+                if (field.smartEditor == null)
+                {
+                    rowPosition.height = EditorGUIUtility.singleLineHeight;
+                    var buttonPosition = EditorGUI.PrefixLabel(rowPosition, label);
+                    if (GUI.Button(buttonPosition, "Create Table"))
+                    {
+                        var table = m_Property.SelectedTableCollection.AddNewTable(field.locale.Identifier);
+                        field.smartEditor = stringPropertyData.CreateSmartFormatFieldForTable(table);
+                        stringPropertyData.LocaleFields[i] = field;
+                        GUIUtility.ExitGUI();
+                    }
+                    rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
+                    continue;
+                }
 
                 // Locale label/foldout
                 rowPosition.height = EditorGUIUtility.singleLineHeight;
-                var label = new GUIContent(field.locale.Identifier.ToString());
-                field.expanded = EditorGUI.BeginFoldoutHeaderGroup(rowPosition, field.expanded, label);
+
+                float xMin = rowPosition.xMin; // Store the x position so we can restore it at the end.
+                rowPosition = EditorGUI.PrefixLabel(rowPosition, GUIContent.none);
+
+                var labelWidth = EditorGUIUtility.labelWidth - ((EditorGUI.indentLevel + 1) * 15);
+                var foldoutPos = new Rect(rowPosition.x, rowPosition.y, labelWidth, rowPosition.height);
+                var labelPos = new Rect(rowPosition.x + labelWidth, rowPosition.y, rowPosition.width - labelWidth, rowPosition.height);
+                field.expanded = EditorGUI.BeginFoldoutHeaderGroup(foldoutPos, field.expanded, label, s_FoldoutStyle);
 
                 // Preview label
-                if (field.smartEditor != null)
-                {
-                    var labelWidth = EditorGUIUtility.labelWidth - ((EditorGUI.indentLevel + 1) * 15);
-                    var labelPos = new Rect(rowPosition.x + labelWidth, rowPosition.y, rowPosition.width - labelWidth, rowPosition.height);
-                    EditorGUI.LabelField(labelPos, field.smartEditor.Label);
-                }
+                EditorGUI.LabelField(labelPos, field.smartEditor.Label);
                 rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
 
                 if (field.expanded)
                 {
-                    if (field.smartEditor != null)
-                    {
-                        rowPosition.height = field.smartEditor.Height;
-                        field.smartEditor.Draw(rowPosition);
-                        rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
-                    }
-                    else // Missing table for the locale
-                    {
-                        rowPosition.height = EditorGUIUtility.singleLineHeight;
-                    }
+                    rowPosition.height = field.smartEditor.Height;
+                    field.smartEditor.Draw(rowPosition);
+                    rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
                 }
                 EditorGUI.EndFoldoutHeaderGroup();
                 stringPropertyData.LocaleFields[i] = field;
+                rowPosition.xMin = xMin;
             }
 
             // Preview tab

@@ -63,6 +63,7 @@ namespace UnityEditor.Localization.UI
             m_Property.formattersList = new ReorderableListExtended(m_Property.formatters.serializedObject, m_Property.formatters);
             m_Property.formattersList.drawHeaderCallback = (rect) => EditorGUI.LabelField(rect, Styles.formattersHeader);
             m_Property.formattersList.onAddDropdownCallback = (rect, list) => AddClassMenu(rect, list, typeof(IFormatter));
+            m_PropertyDataPerPropertyPath[property.propertyPath] = m_Property;
         }
 
         void AddClassMenu(Rect rect, ReorderableList list, System.Type baseType)

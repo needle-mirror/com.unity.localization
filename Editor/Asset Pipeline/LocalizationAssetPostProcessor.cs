@@ -18,17 +18,25 @@ namespace UnityEditor.Localization
 
             try
             {
+                // TODO: Handle deleted assets. We should use the asset guid to determine the asset type and what we need to do if anything.
+                foreach (var assetPath in deletedAssets)
+                {
+                    if (assetPath.EndsWith("asset"))
+                    {
+                        LocalizationEditorSettings.Instance.TableCollectionCache.Clear();
+                        break;
+                    }
+                }
+
                 foreach (var assetPath in importedAssets)
                 {
                     if (assetPath.EndsWith("asset"))
                     {
                         var assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
-
-                        if (typeof(LocalizedTable).IsAssignableFrom(assetType))
+                        if (typeof(LocalizedTableCollection).IsAssignableFrom(assetType))
                         {
-                            var table = AssetDatabase.LoadAssetAtPath<LocalizedTable>(assetPath);
-                            if (table != null)
-                                LocalizationEditorSettings.AddOrUpdateTable(table, false);
+                            var collection = AssetDatabase.LoadAssetAtPath<LocalizedTableCollection>(assetPath);
+                            collection.ImportCollectionIntoProject();
                         }
                         else if (typeof(SharedTableData).IsAssignableFrom(assetType))
                         {
@@ -38,10 +46,10 @@ namespace UnityEditor.Localization
                                 Debug.Assert(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(sharedTableData, out string sharedTableDataGuid, out long _), "Failed to extract SharedTableData Guid", sharedTableData);
                                 var guid = Guid.Parse(sharedTableDataGuid);
 
-                                if (sharedTableData.TableNameGuid != Guid.Empty)
-                                    Debug.Assert(sharedTableData.TableNameGuid == guid, "SharedTableData Name Guid does not match the assets Guid. This may cause issues matching the correct TableName.", sharedTableData);
+                                if (sharedTableData.TableCollectionNameGuid != Guid.Empty)
+                                    Debug.Assert(sharedTableData.TableCollectionNameGuid == guid, "SharedTableData Name Guid does not match the assets Guid. This may cause issues matching the correct TableCollectionName.", sharedTableData);
                                 else
-                                    sharedTableData.TableNameGuid = guid;
+                                    sharedTableData.TableCollectionNameGuid = guid;
                             }
                         }
                         else if (typeof(Locale).IsAssignableFrom(assetType))
@@ -69,11 +77,22 @@ namespace UnityEditor.Localization
             if (assetPath.EndsWith("asset"))
             {
                 var assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
-
-                if (typeof(LocalizedTable).IsAssignableFrom(assetType))
+                if (typeof(LocalizedTableCollection).IsAssignableFrom(assetType))
+                {
+                    var tableCollection = AssetDatabase.LoadAssetAtPath<LocalizedTableCollection>(assetPath);
+                    tableCollection.RemoveCollectionFromProject();
+                }
+                else if (typeof(SharedTableData).IsAssignableFrom(assetType))
+                {
+                    var sharedData = AssetDatabase.LoadAssetAtPath<SharedTableData>(assetPath);
+                    var collection = LocalizationEditorSettings.GetCollectionForSharedTableData(sharedData);
+                    collection?.RemoveCollectionFromProject();
+                }
+                else if (typeof(LocalizedTable).IsAssignableFrom(assetType))
                 {
                     var table = AssetDatabase.LoadAssetAtPath<LocalizedTable>(assetPath);
-                    LocalizationEditorSettings.RemoveTable(table, false);
+                    var collection = LocalizationEditorSettings.GetCollectionFromTable(table);
+                    collection?.RemoveTable(table);
                 }
                 else if (typeof(Locale).IsAssignableFrom(assetType))
                 {

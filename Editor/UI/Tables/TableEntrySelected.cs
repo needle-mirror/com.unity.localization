@@ -51,13 +51,18 @@ namespace UnityEditor.Localization.UI
 
                 // Table data
                 var tableIndex = m_Table.TableData.FindIndex(d => d.Id == m_KeyId);
+                var tableSerializedObject = new SerializedObject(m_Table);
                 if (tableIndex == -1)
                 {
-                    m_Table.TableData.Add(new TableEntryData(m_KeyId));
-                    tableIndex = m_Table.TableData.Count - 1;
+                    EditorUtility.SetDirty(m_Table);
+                    m_Table.CreateEmpty(m_KeyId);
+                    tableSerializedObject.Update();
+
+                    tableIndex = m_Table.TableData.FindIndex(d => d.Id == m_KeyId);
+                    if (tableIndex == -1)
+                        throw new System.Exception($"Failed to create or find a new entry for {m_KeyId} in the table");
                 }
 
-                var tableSerializedObject = new SerializedObject(m_Table);
                 var tableEntryProperty = tableSerializedObject.FindProperty($"m_TableData.Array.data[{tableIndex}].m_Metadata");
                 var tableSerializedEditor = new MetadataCollectionField(){ Type = m_MetadataType };
                 var tableLabel = new GUIContent($"{m_Locale?.ToString()} Entry Metadata");

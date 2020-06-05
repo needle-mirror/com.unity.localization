@@ -1,23 +1,20 @@
 using System;
-using System.Collections.Generic;
 using System.Reflection;
-using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Localization.Metadata;
 
 namespace UnityEditor.Localization.UI
 {
-    [CustomPropertyDrawer(typeof(MetadataTypeAttribute))]
-    class MetadataCollectionField : PropertyDrawer
+    class MetadataCollectionFieldPropertyData
     {
-        class PropertyData
-        {
-            public Type DefferedAdd { get; set; }
-            public ReorderableListExtended List { get; set; }
-        }
+        public SerializedProperty m_ItemsProperty;
+        public Type m_DeferredAdd;
+        public ReorderableListExtended m_List;
+    }
 
-        Dictionary<string, PropertyData> m_PropertyDataPerPropertyPath = new Dictionary<string, PropertyData>();
-        PropertyData m_Property;
+    [CustomPropertyDrawer(typeof(MetadataTypeAttribute))]
+    class MetadataCollectionField : PropertyDrawerExtended<MetadataCollectionFieldPropertyData>
+    {
         MetadataTypeAttribute m_MetadataType;
 
         public MetadataTypeAttribute Type
@@ -26,25 +23,61 @@ namespace UnityEditor.Localization.UI
             set => m_MetadataType = value;
         }
 
-        public MetadataCollectionField()
+        public override MetadataCollectionFieldPropertyData CreatePropertyData(SerializedProperty property)
         {
+            var data = new MetadataCollectionFieldPropertyData
+            {
+                m_ItemsProperty = property.FindPropertyRelative("m_Items"),
+            };
+
+            data.m_List = new ReorderableListExtended(property.serializedObject, data.m_ItemsProperty);
+            data.m_List.onAddDropdownCallback = (rect, _) => AddItem(rect, data);
+            data.m_List.headerHeight = 2;
+            return data;
         }
 
-        void Init(SerializedProperty property)
+        public override void OnGUI(MetadataCollectionFieldPropertyData data, Rect position, SerializedProperty property, GUIContent label)
         {
-            if (m_PropertyDataPerPropertyPath.TryGetValue(property.propertyPath, out m_Property))
-                return;
+            // Label
+            var rowPosition = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
+            data.m_ItemsProperty.isExpanded = EditorGUI.Foldout(rowPosition, data.m_ItemsProperty.isExpanded, label);
+            rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
 
-            m_Property = new PropertyData();
-            var list = new ReorderableListExtended(property.serializedObject, property);
-            list.headerHeight = 2;
-            list.onAddDropdownCallback = AddItem;
+            // Adding a new item is deferred so that Undo will work.
+            if (data.m_DeferredAdd != null)
+            {
+                try
+                {
+                    var item = data.m_ItemsProperty.AddArrayElement();
+                    var instance = Activator.CreateInstance(data.m_DeferredAdd);
+                    item.managedReferenceValue = instance;
+                }
+                finally
+                {
+                    data.m_DeferredAdd = null;
+                }
+            }
 
-            m_Property.List = list;
-            m_PropertyDataPerPropertyPath.Add(property.propertyPath, m_Property);
+            if (data.m_ItemsProperty.isExpanded)
+            {
+                rowPosition.height = position.height - rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
+                data.m_List.DoList(rowPosition);
+            }
         }
 
-        void AddItem(Rect rect, ReorderableList list)
+        public override float GetPropertyHeight(MetadataCollectionFieldPropertyData data, SerializedProperty property, GUIContent label)
+        {
+            // Label
+            var height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+
+            // List
+            if (data.m_ItemsProperty.isExpanded)
+                height += data.m_List.GetHeight();
+
+            return height;
+        }
+
+        void AddItem(Rect rect, MetadataCollectionFieldPropertyData data)
         {
             var menu = new GenericMenu();
             var metadataTypes = TypeCache.GetTypesDerivedFrom<IMetadata>();
@@ -79,62 +112,14 @@ namespace UnityEditor.Localization.UI
                 var name = itemAttribute.MenuItem;
                 if (string.IsNullOrEmpty(name))
                     name = ObjectNames.NicifyVariableName(md.Name);
-                var prop = m_Property;
+
                 menu.AddItem(new GUIContent(name), false, () =>
                 {
-                    prop.DefferedAdd = md;
+                    data.m_DeferredAdd = md;
                 });
             }
 
             menu.DropDown(rect);
-        }
-
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-        {
-            var prop = property.FindPropertyRelative("m_Items");
-            Init(prop);
-
-            // Label
-            var rowPosition = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
-            prop.isExpanded = EditorGUI.Foldout(rowPosition, prop.isExpanded, label);
-            rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
-
-            if (m_Property.DefferedAdd != null)
-            {
-                try
-                {
-                    prop.InsertArrayElementAtIndex(prop.arraySize);
-                    var item = prop.GetArrayElementAtIndex(prop.arraySize - 1);
-
-                    var instance = Activator.CreateInstance(m_Property.DefferedAdd);
-                    item.managedReferenceValue = instance;
-                }
-                finally
-                {
-                    m_Property.DefferedAdd = null;
-                }
-            }
-
-            if (prop.isExpanded)
-            {
-                rowPosition.height = position.height - rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
-                m_Property.List.DoList(rowPosition);
-            }
-        }
-
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            var prop = property.FindPropertyRelative("m_Items");
-            Init(prop);
-
-            // Label
-            var height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
-
-            // List
-            if (prop.isExpanded)
-                height += m_Property.List.GetHeight();
-
-            return height;
         }
     }
 }

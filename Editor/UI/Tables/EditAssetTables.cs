@@ -1,7 +1,6 @@
 using System;
 using System.Reflection;
 using UnityEngine;
-using UnityEngine.Localization.Tables;
 using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.UI
@@ -23,13 +22,9 @@ namespace UnityEditor.Localization.UI
             m_AssetTablesField = this.Q<ProjectTablesPopup>();
             m_AssetTablesField.RegisterValueChangedCallback((evt) => TableCollectionSelected(evt.newValue));
             TableCollectionSelected(m_AssetTablesField.value);
-
-            LocalizationEditorSettings.OnModification += LocalizationEditorSettingsOnOnModification;
         }
 
-        ~EditAssetTables() => LocalizationEditorSettings.OnModification -= LocalizationEditorSettingsOnOnModification;
-
-        void TableCollectionSelected(AssetTableCollection atc)
+        void TableCollectionSelected(LocalizedTableCollection ltc)
         {
             m_TableContents.Clear();
 
@@ -38,31 +33,27 @@ namespace UnityEditor.Localization.UI
                 m_CurrentEditor.OnDisable();
             }
 
-            if (atc == null || atc.TableType == null)
+            if (ltc == null || ltc.TableType == null)
                 return;
 
-            var editorType = GetEditorType(atc.TableType);
+            var editorType = GetEditorTypeForCollection(ltc.GetType());
             if (editorType == null)
                 return;
 
             m_CurrentEditor = (TableEditor)Activator.CreateInstance(editorType);
-            m_CurrentEditor.TableCollection = atc;
-
-            if (m_CurrentEditor != null)
-            {
-                m_TableContents.Add(m_CurrentEditor);
-                m_CurrentEditor.StretchToParentSize();
-                m_CurrentEditor.OnEnable();
-            }
+            m_CurrentEditor.TableCollection = ltc;
+            m_TableContents.Add(m_CurrentEditor);
+            m_CurrentEditor.StretchToParentSize();
+            m_CurrentEditor.OnEnable();
         }
 
-        static Type GetEditorType(Type tableType)
+        static Type GetEditorTypeForCollection(Type tableType)
         {
-            var editors = TypeCache.GetTypesWithAttribute<TableEditorAttribute>();
+            var editors = TypeCache.GetTypesWithAttribute<TableCollectionEditorAttribute>();
             Type editorType = null;
             foreach (var e in editors)
             {
-                var attribute = e.GetCustomAttribute<TableEditorAttribute>();
+                var attribute = e.GetCustomAttribute<TableCollectionEditorAttribute>();
                 if (attribute.EditorTargetType == tableType)
                 {
                     editorType = e;
@@ -76,18 +67,6 @@ namespace UnityEditor.Localization.UI
             return editorType;
         }
 
-        void LocalizationEditorSettingsOnOnModification(LocalizationEditorSettings.ModificationEvent evt, object obj)
-        {
-            m_AssetTablesField.RefreshLabels();
-        }
-
-        /// <summary>
-        /// TODO: DOC
-        /// </summary>
-        /// <param name="table"></param>
-        public void Select(LocalizedTable table)
-        {
-            m_AssetTablesField.SetValueFromTable(table);
-        }
+        public void Select(LocalizedTableCollection collection) => m_AssetTablesField.value = collection;
     }
 }

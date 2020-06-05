@@ -1,9 +1,10 @@
 using System;
+using UnityEngine.Serialization;
 
 namespace UnityEngine.Localization.Tables
 {
     /// <summary>
-    /// It is possible to reference a table via either the table name of the table name guid.
+    /// It is possible to reference a table via either the table collection name of the table collection name guid.
     /// The TableReference provides a flexible way to reference via either of these methods and also includes editor functionality.
     /// </summary>
     [Serializable]
@@ -20,7 +21,7 @@ namespace UnityEngine.Localization.Tables
             Empty,
 
             /// <summary>
-            /// A table is referenced by its table name guid.
+            /// A table is referenced by its table collection name guid.
             /// </summary>
             Guid,
 
@@ -31,7 +32,8 @@ namespace UnityEngine.Localization.Tables
         }
 
         [SerializeField]
-        string m_TableName;
+        [FormerlySerializedAs("m_TableName")]
+        string m_TableCollectionName;
 
         bool m_Valid;
 
@@ -43,53 +45,62 @@ namespace UnityEngine.Localization.Tables
         public Type ReferenceType { get; private set; }
 
         /// <summary>
-        /// The table name guid when <see cref="ReferenceType"/> is <see cref="Type.Guid"/>.
+        /// The table collection name guid when <see cref="ReferenceType"/> is <see cref="Type.Guid"/>.
         /// </summary>
-        public Guid TableNameGuid { get; set; }
+        public Guid TableCollectionNameGuid { get; private set; }
 
         /// <summary>
-        /// The table name when <see cref="ReferenceType"/> is <see cref="Type.String"/>.
+        /// The table collection name when <see cref="ReferenceType"/> is <see cref="Type.String"/>.
         /// </summary>
-        public string TableName { get => m_TableName; private set => m_TableName = value; }
+        public string TableCollectionName
+        {
+            get
+            {
+                if (ReferenceType == Type.Name)
+                    return m_TableCollectionName;
+                return null;
+            }
+            private set => m_TableCollectionName = value;
+        }
 
         #pragma warning disable CA2225 // CA2225: Operator overloads have named alternates
 
         /// <summary>
-        /// Convert a table name into a <see cref="TableReference"/>.
+        /// Convert a table collection name into a <see cref="TableReference"/>.
         /// </summary>
-        /// <param name="tableName">The name of the table.</param>
-        public static implicit operator TableReference(string tableName)
+        /// <param name="tableCollectionName">The name of the table.</param>
+        public static implicit operator TableReference(string tableCollectionName)
         {
-            return new TableReference() { TableName = tableName, ReferenceType = Type.Name };
+            return new TableReference() { TableCollectionName = tableCollectionName, ReferenceType = Type.Name };
         }
 
         /// <summary>
-        /// Convert a table name guid into a <see cref="TableReference"/>.
+        /// Convert a table collection name guid into a <see cref="TableReference"/>.
         /// </summary>
-        /// <param name="tableNameGuid">The table name guid.</param>
-        public static implicit operator TableReference(Guid tableNameGuid)
+        /// <param name="tableCollectionNameGuid">The table collection name guid.</param>
+        public static implicit operator TableReference(Guid tableCollectionNameGuid)
         {
-            return new TableReference() { TableNameGuid = tableNameGuid, ReferenceType = Type.Guid };
+            return new TableReference() { TableCollectionNameGuid = tableCollectionNameGuid, ReferenceType = Type.Guid };
         }
 
         /// <summary>
-        /// Returns <see cref="TableName"/>.
+        /// Returns <see cref="TableCollectionName"/>.
         /// </summary>
         /// <param name="tableReference"></param>
         /// <returns></returns>
         public static implicit operator string(TableReference tableReference)
         {
-            return tableReference.TableName;
+            return tableReference.TableCollectionName;
         }
 
         /// <summary>
-        /// Returns <see cref="TableNameGuid"/>.
+        /// Returns <see cref="TableCollectionNameGuid"/>.
         /// </summary>
         /// <param name="tableReference"></param>
         /// <returns></returns>
         public static implicit operator Guid(TableReference tableReference)
         {
-            return tableReference.TableNameGuid;
+            return tableReference.TableCollectionNameGuid;
         }
 
         #pragma warning restore CA2225
@@ -102,15 +113,15 @@ namespace UnityEngine.Localization.Tables
             switch (ReferenceType)
             {
                 case Type.Empty:
-                    throw new ArgumentException("Empty Table Reference. Must contain a Guid or Table Name");
+                    throw new ArgumentException("Empty Table Reference. Must contain a Guid or Table Collection Name");
 
                 case Type.Guid:
-                    if (TableNameGuid == Guid.Empty)
-                        throw new ArgumentException("Must use a valid Table Name Guid, can not be Empty.");
+                    if (TableCollectionNameGuid == Guid.Empty)
+                        throw new ArgumentException("Must use a valid Table Collection Name Guid, can not be Empty.");
                     break;
                 case Type.Name:
-                    if (string.IsNullOrWhiteSpace(TableName))
-                        throw new ArgumentException($"Table name can not be null or empty.");
+                    if (string.IsNullOrWhiteSpace(TableCollectionName))
+                        throw new ArgumentException($"Table Collection Name can not be null or empty.");
                     break;
             }
             m_Valid = true;
@@ -119,8 +130,8 @@ namespace UnityEngine.Localization.Tables
         internal string GetSerializedString()
         {
             if (ReferenceType == Type.Guid)
-                return $"{k_GuidTag}{StringFromGuid(TableNameGuid)}";
-            return TableName;
+                return $"{k_GuidTag}{StringFromGuid(TableCollectionNameGuid)}";
+            return TableCollectionName;
         }
 
         /// <summary>
@@ -130,9 +141,9 @@ namespace UnityEngine.Localization.Tables
         public override string ToString()
         {
             if (ReferenceType == Type.Guid)
-                return $"{nameof(TableReference)}({TableNameGuid})";
-            else if (ReferenceType == Type.Name)
-                return $"{nameof(TableReference)}({TableName})";
+                return $"{nameof(TableReference)}({TableCollectionNameGuid})";
+            if (ReferenceType == Type.Name)
+                return $"{nameof(TableReference)}({TableCollectionName})";
             return $"{nameof(TableReference)}(Empty)";
         }
 
@@ -149,15 +160,15 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Returns the hash code of <see cref="TableNameGuid"/> or <see cref="TableName"/>.
+        /// Returns the hash code of <see cref="TableCollectionNameGuid"/> or <see cref="TableCollectionName"/>.
         /// </summary>
         /// <returns></returns>
         public override int GetHashCode()
         {
             if (ReferenceType == Type.Guid)
-                return TableNameGuid.GetHashCode();
-            else if (ReferenceType == Type.Name)
-                return TableName.GetHashCode();
+                return TableCollectionNameGuid.GetHashCode();
+            if (ReferenceType == Type.Name)
+                return TableCollectionName.GetHashCode();
             return base.GetHashCode();
         }
 
@@ -173,11 +184,11 @@ namespace UnityEngine.Localization.Tables
 
             if (ReferenceType == Type.Guid)
             {
-                return TableNameGuid == other.TableNameGuid;
+                return TableCollectionNameGuid == other.TableCollectionNameGuid;
             }
-            else if (ReferenceType == Type.Name)
+            if (ReferenceType == Type.Name)
             {
-                return TableName == other.TableName;
+                return TableCollectionName == other.TableCollectionName;
             }
             return true;
         }
@@ -205,7 +216,7 @@ namespace UnityEngine.Localization.Tables
         /// <summary>
         /// Converts a string into a a <see cref="TableReference"/>.
         /// </summary>
-        /// <param name="value">The string to convert. The string can either be a table name or a GUID identified by prepending the <see cref="k_GuidTag"/> tag.</param>
+        /// <param name="value">The string to convert. The string can either be a table collection name or a GUID identified by prepending the <see cref="k_GuidTag"/> tag.</param>
         /// <returns></returns>
         internal static TableReference TableReferenceFromString(string value)
         {
@@ -222,7 +233,9 @@ namespace UnityEngine.Localization.Tables
         /// <returns></returns>
         internal static bool IsGuid(string value)
         {
-            return value.StartsWith(k_GuidTag);
+            if (string.IsNullOrEmpty(value))
+                return false;
+            return value.StartsWith(k_GuidTag, StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -230,7 +243,7 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         public void OnBeforeSerialize()
         {
-            m_TableName = GetSerializedString();
+            m_TableCollectionName = GetSerializedString();
         }
 
         /// <summary>
@@ -238,14 +251,15 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         public void OnAfterDeserialize()
         {
-            if (string.IsNullOrEmpty(m_TableName))
+            if (string.IsNullOrEmpty(m_TableCollectionName))
             {
                 ReferenceType = Type.Empty;
             }
-            else if (IsGuid(m_TableName))
+            else if (IsGuid(m_TableCollectionName))
             {
-                TableNameGuid = GuidFromString(m_TableName);
+                TableCollectionNameGuid = GuidFromString(m_TableCollectionName);
                 ReferenceType = Type.Guid;
+                m_TableCollectionName = null; // Clear the name.
             }
             else
             {
@@ -313,7 +327,9 @@ namespace UnityEngine.Localization.Tables
         /// <returns></returns>
         public static implicit operator TableEntryReference(string key)
         {
-            return new TableEntryReference() { Key = key, ReferenceType = Type.Name };
+            if (!string.IsNullOrWhiteSpace(key))
+                return new TableEntryReference() { Key = key, ReferenceType = Type.Name };
+            return new TableEntryReference(); // Empty
         }
 
         /// <summary>
@@ -323,7 +339,9 @@ namespace UnityEngine.Localization.Tables
         /// <returns></returns>
         public static implicit operator TableEntryReference(uint keyId)
         {
-            return new TableEntryReference() { KeyId = keyId, ReferenceType = Type.Id };
+            if (keyId != SharedTableData.EmptyId)
+                return new TableEntryReference() { KeyId = keyId, ReferenceType = Type.Id };
+            return new TableEntryReference(); // Empty
         }
 
         /// <summary>
@@ -375,15 +393,15 @@ namespace UnityEngine.Localization.Tables
         /// If <see cref="ReferenceType"/> is <see cref="Type.Name"/> then <see cref="Key"/> will be returned.
         /// If <see cref="ReferenceType"/> is <see cref="Type.Id"/> then <paramref name="sharedData"/> will be used to extract the name.
         /// </summary>
-        /// <param name="sharedData">The <see cref="SharedTableData"/> to use if the key name is not stored in the reference.</param>
+        /// <param name="sharedData">The <see cref="SharedTableData"/> to use if the key name is not stored in the reference or null if it could not br resolbved.</param>
         /// <returns></returns>
         public string ResolveKeyName(SharedTableData sharedData)
         {
             if (ReferenceType == Type.Name)
                 return Key;
-            else if (ReferenceType == Type.Id)
+            if (ReferenceType == Type.Id)
                 return sharedData != null ? sharedData.GetKey(KeyId) : $"Key Id {KeyId}";
-            return "None";
+            return null;
         }
 
         /// <summary>
@@ -428,7 +446,7 @@ namespace UnityEngine.Localization.Tables
             {
                 return Key == other.Key;
             }
-            else if (ReferenceType == Type.Id)
+            if (ReferenceType == Type.Id)
             {
                 return KeyId == other.KeyId;
             }
@@ -445,7 +463,7 @@ namespace UnityEngine.Localization.Tables
             {
                 return Key.GetHashCode();
             }
-            else if (ReferenceType == Type.Id)
+            if (ReferenceType == Type.Id)
             {
                 return KeyId.GetHashCode();
             }

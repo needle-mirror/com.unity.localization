@@ -27,20 +27,18 @@ Use the Locale Selectors to determine which Locale your application uses by defa
 
 ![The Locale selection UI Dropdown menu.](images/UIDropdownMenu.png)
 
-## 4. Texture Localization: Create an Asset Table
+## 4. Texture Localization: Create an Asset Table Collection
 There are many reasons you might need to localize an Asset. For example, you might want to play a different piece of voiceover audio or music, or change a texture that contains written text (such as a signpost). The localization system uses Asset Tables to support this.
 
 This demonstrates changing an Asset's Texture to the flag of that Locale's country.
 
-First, you need to create an Asset Table. To do this, open the **Asset Tables** window (menu: **Window > Asset Management > Localization Tables**).
+First, you need to create an Asset Table. To do this, open the **Localization Tables Window** (menu: **Window > Asset Management > Localization Tables**).
 
-In the Asset Tables window, select the **New Table** tab. Select which Locales you want to generate tables for, give the table a name and select the **Asset Table** table type.
-
-Finally select **Create** and choose a directory to generate the Asset Table Assets.
+In the Asset Tables window, select the New **Table Collection tab**. Select which Locales you want to generate tables for, give the collection a name and click the Create Asset Table Collection e button  and choose a directory to generate the assets.
 
 ![Creating Texture2D Asset Tables.](images/TutorialTextureTableCreation.png)
 
-Click **Edit Table** and select the **My Assets** table.
+Click **Edit Table Collection** and select the **My Assets** table.
 
 A table contains a **Key** field and a value field for each Locale. Unity uses the Key to identify the localized Asset. For this tutorial, name the Key **Country Flag** and use + button to add the key entry.
 
@@ -49,7 +47,7 @@ Select the Texture you want Unity to display for each Locale, and then drag and 
 ![Asset Table with one Texture entry.](images/AssetTables_EditTextureFlags.png)
 
 ## 5. Texture Localization: Use the localized Asset
-There are multiple ways for Unity to access a localized Asset. This tutorial use components provided by the localization system, so you do not need to write any scripts.
+There are multiple ways for Unity to access a localized Asset. This tutorial uses components provided by the localization system, so you do not need to write any scripts.
 
 Add a UI **Raw Image** component to the Scene, you will need the **Unity UI** package installed in the project to use a **Raw Image**.
 Add the **Raw Image**, go to **GameObject > UI > Raw Image**. To localize a Raw Image component, right-click the component and then click **Localize**.
@@ -82,17 +80,16 @@ To localize Audio Clips, we could follow the same process as localizing the Text
 
 ![Audio clip localizing.](images/LocalizedAudioClipEditor.gif)
 
-## 7. String Localization: Create a String Table
+## 7. String Localization: Create a String Table Collection
 
-To create a String Table, open the **New Tables** tab and select the String Table type, provide a name and click **Create**.
-To add a entry to the table press the *Add New Entry* button and give it a name.
+To create a String Table, open the New **Table Collection tab**, provide a name and click **Create String Table Collection**. To add an entry to the table press the **Add New Entry** button and give it a name.
 
 ![Press the Add New Entry button to create a new String Table entry.](images/StringTables_EntryProperties.png)
 
 Enable the **Smart** option to mark the entry as a [Smart String](SmartStrings.md).
 In this example we will use the Smart String reflection and plural features to print out a variable from the following script:
 
-```
+```C#
 using UnityEngine;
 
 public class Apples : MonoBehaviour

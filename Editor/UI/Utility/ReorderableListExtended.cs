@@ -8,6 +8,9 @@ namespace UnityEditor.Localization.UI
     {
         Type m_AddType;
 
+        /// <summary>
+        /// The label displayed for the whole list.
+        /// </summary>
         public GUIContent Header
         {
             set
@@ -16,6 +19,9 @@ namespace UnityEditor.Localization.UI
             }
         }
 
+        /// <summary>
+        /// Use to populate the Add item button. All non abstract classes that derive from this will be shown.
+        /// </summary>
         public Type AddMenuType
         {
             set
@@ -24,6 +30,27 @@ namespace UnityEditor.Localization.UI
                 onAddDropdownCallback = ShowAddMenu;
             }
         }
+
+        /// <summary>
+        /// Called before showing the menu so that additional menu items can be added.
+        /// </summary>
+        public Action<GenericMenu> AddMenuItems { get; set; }
+
+        /// <summary>
+        /// Called to create a new instance of the object when it is about to be added to the list.
+        /// By default it will just use the default constructor however you may wish to use a custom one or do some initialization.
+        /// </summary>
+        public Func<Type, object> CreateNewInstance { get; set; } = (t) => Activator.CreateInstance(t);
+
+        /// <summary>
+        /// If set then when populating the list of types that can be added they will also need to include this attribute.
+        /// </summary>
+        public Type RequiredAttribute { get; set; }
+
+        /// <summary>
+        /// Displayed when no items are available to add.
+        /// </summary>
+        public GUIContent NoItemMenuItem { get; set; }
 
         public ReorderableListExtended(SerializedObject serializedObject, SerializedProperty elements) :
             base(serializedObject, elements)
@@ -41,25 +68,8 @@ namespace UnityEditor.Localization.UI
 
             EditorGUI.BeginDisabledGroup(disabled);
 
-            // Get the class name only
-            var name = element.managedReferenceFullTypename;
-            var namespaceIndex = name.LastIndexOf('.');
-
-            if (namespaceIndex == -1)
-            {
-                // No namespace, so just remove the assembly name instead
-                namespaceIndex = name.LastIndexOf(' ');
-            }
-
-            if (namespaceIndex > 0)
-            {
-                name = name.Substring(namespaceIndex + 1, name.Length - namespaceIndex - 1);
-            }
-
-            name = ObjectNames.NicifyVariableName(name);
-
-            var label = new GUIContent(name);
-            rect.xMin += 8; // Prevent the foldout arrow(>) being drawn over the reorder icon(=)
+            var label = ManagedReferenceUtility.GetDisplayName(element.managedReferenceFullTypename);
+            rect.xMin += 8; // Prevent the foldout arrow(>) being drawn over the reorder icon(=) when showning LocalizationSettings in the inspector.
             EditorGUI.PropertyField(rect, element, label, true);
             EditorGUI.EndDisabledGroup();
         }
@@ -81,11 +91,10 @@ namespace UnityEditor.Localization.UI
             bool isReadOnly = false;
             if (!string.IsNullOrEmpty(prop.managedReferenceFullTypename))
             {
-                var typeNames = prop.managedReferenceFullTypename.Split(' ');
-                if (typeNames?.Length == 2)
+                var type = ManagedReferenceUtility.GetType(prop.managedReferenceFullTypename);
+                if (type != null)
                 {
-                    var typ = Type.GetType($"{typeNames[1]}, {typeNames[0]}");
-                    isReadOnly = Attribute.IsDefined(typ, typeof(HideInInspector));
+                    isReadOnly = Attribute.IsDefined(type, typeof(HideInInspector));
                 }
             }
             return isReadOnly;
@@ -103,13 +112,22 @@ namespace UnityEditor.Localization.UI
                 if (type.IsAbstract)
                     continue;
 
+                if (RequiredAttribute != null && !Attribute.IsDefined(type, RequiredAttribute))
+                    continue;
+
                 menu.AddItem(new GUIContent(ObjectNames.NicifyVariableName(type.Name)), false, () =>
                 {
                     var element = serializedProperty.AddArrayElement();
-                    element.managedReferenceValue = Activator.CreateInstance(type);
+                    element.managedReferenceValue = CreateNewInstance(type);
                     serializedProperty.serializedObject.ApplyModifiedProperties();
                 });
             }
+
+            AddMenuItems?.Invoke(menu);
+
+            if (menu.GetItemCount() == 0 && NoItemMenuItem != null)
+                menu.AddDisabledItem(NoItemMenuItem);
+
             menu.ShowAsContext();
         }
     }

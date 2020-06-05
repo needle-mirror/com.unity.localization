@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.Localization.Metadata;
+using UnityEngine.Serialization;
 
 namespace UnityEngine.Localization.Tables
 {
@@ -59,23 +60,25 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         public const uint EmptyId = 0;
 
-        [SerializeField, HideInInspector]
+        [SerializeField]
         uint m_NextAvailableId = 1;
 
-        [SerializeField, HideInInspector]
-        string m_TableName;
+        [FormerlySerializedAs("m_TableName")]
+        [SerializeField]
+        string m_TableCollectionName;
 
-        [SerializeField, HideInInspector]
-        string m_TableNameGuidString;
+        [FormerlySerializedAs("m_TableNameGuidString")]
+        [SerializeField]
+        string m_TableCollectionNameGuidString;
 
-        [SerializeField, HideInInspector]
+        [SerializeField]
         List<SharedTableEntry> m_Entries = new List<SharedTableEntry>();
 
         [SerializeField]
         [MetadataType(MetadataType.SharedTableData)]
         MetadataCollection m_Metadata;
 
-        Guid m_TableNameGuid;
+        Guid m_TableCollectionNameGuid;
 
         // Used for fast lookup. Only generated when required.
         Dictionary<uint, SharedTableEntry> m_IdDictionary = new Dictionary<uint, SharedTableEntry>();
@@ -90,20 +93,20 @@ namespace UnityEngine.Localization.Tables
         /// The name of this table collection.
         /// All <see cref="LocalizedTable"/> that use this SharedTableData will have this name.
         /// </summary>
-        public string TableName
+        public string TableCollectionName
         {
-            get => m_TableName;
-            set => m_TableName = value;
+            get => m_TableCollectionName;
+            internal set => m_TableCollectionName = value;
         }
 
         /// <summary>
         /// A unique Id that will never change. Comes from the SharedTableData asset Guid.
-        /// Provides a way to reference a table that will not be broken if the table name was to be changed.
+        /// Provides a way to reference a table that will not be broken if the table collection name was to be changed.
         /// </summary>
-        public Guid TableNameGuid
+        public Guid TableCollectionNameGuid
         {
-            get => m_TableNameGuid;
-            internal set => m_TableNameGuid = value;
+            get => m_TableCollectionNameGuid;
+            internal set => m_TableCollectionNameGuid = value;
         }
 
         /// <summary>
@@ -164,7 +167,7 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         /// <param name="id">Id the key belongs to.</param>
         /// <returns>The found key entry or null if one can not be found.</returns>
-        public SharedTableEntry GetEntry(TableEntryReference tableEntryReference)
+        public SharedTableEntry GetEntryFromReference(TableEntryReference tableEntryReference)
         {
             if (tableEntryReference.ReferenceType == TableEntryReference.Type.Name)
                 return GetEntry(tableEntryReference.Key);
@@ -209,8 +212,21 @@ namespace UnityEngine.Localization.Tables
         /// Adds a new key to this SharedTableData if one does not already exists with the same value. Duplicates are not allowed.
         /// </summary>
         /// <param name="key"></param>
-        /// /// <returns>The new key or null if the key already exists.</returns>
+        /// <returns>The new key or null if the key is already in use.</returns>
         public SharedTableEntry AddKey(string key) => !Contains(key) ? AddKeyInternal(key) : null;
+
+        /// <summary>
+        /// Adds a new key to this SharedTableData if one does not already exists with the same name and id. Duplicates are not allowed.
+        /// </summary>
+        /// <param name="key">The unique key name to assign to the entry.</param>
+        /// <param name="id">The unique id to assign to the key.</param>
+        /// <returns>The new entry or null if an entry already exists with the key or id.</returns>
+        public SharedTableEntry AddKey(string key, uint id)
+        {
+            if (!Contains(id) && !Contains(id))
+                return AddKeyInternal(key, id);
+            return null;
+        }
 
         /// <summary>
         /// Adds a new key to this SharedTableData with a default name.
@@ -373,6 +389,22 @@ namespace UnityEngine.Localization.Tables
             return newEntry;
         }
 
+        SharedTableEntry AddKeyInternal(string key, uint id)
+        {
+            // The next available id should always be the highest.
+            m_NextAvailableId = Math.Max(m_NextAvailableId, id + 1);
+
+            var newEntry = new SharedTableEntry() { Id = id, Key = key };
+            Entries.Add(newEntry);
+
+            if (m_IdDictionary.Count > 0)
+                m_IdDictionary[newEntry.Id] = newEntry;
+            if (m_KeyDictionary.Count > 0)
+                m_KeyDictionary[key] = newEntry;
+
+            return newEntry;
+        }
+
         void RenameKeyInternal(SharedTableEntry entry, string newValue)
         {
             if (m_KeyDictionary.Count > 0)
@@ -426,12 +458,14 @@ namespace UnityEngine.Localization.Tables
             return foundPair;
         }
 
+        public override string ToString() => $"{TableCollectionName}(Shared Table Data)";
+
         /// <summary>
         /// Converts the Guid into a serializable string.
         /// </summary>
         public void OnBeforeSerialize()
         {
-            m_TableNameGuidString = TableReference.StringFromGuid(m_TableNameGuid);
+            m_TableCollectionNameGuidString = TableReference.StringFromGuid(m_TableCollectionNameGuid);
         }
 
         /// <summary>
@@ -442,7 +476,7 @@ namespace UnityEngine.Localization.Tables
             m_IdDictionary.Clear();
             m_KeyDictionary.Clear();
 
-            m_TableNameGuid = string.IsNullOrEmpty(m_TableNameGuidString) ? Guid.Empty : Guid.Parse(m_TableNameGuidString);
+            m_TableCollectionNameGuid = string.IsNullOrEmpty(m_TableCollectionNameGuidString) ? Guid.Empty : Guid.Parse(m_TableCollectionNameGuidString);
         }
     }
 }

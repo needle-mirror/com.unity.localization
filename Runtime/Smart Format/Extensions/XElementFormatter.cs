@@ -10,8 +10,10 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     {
         public XElementFormatter()
         {
-            Names = new[] {"xelement", "xml", "x", ""};
+            Names = DefaultNames;
         }
+
+        public override string[] DefaultNames => new[] {"xelement", "xml", "x", ""};
 
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {

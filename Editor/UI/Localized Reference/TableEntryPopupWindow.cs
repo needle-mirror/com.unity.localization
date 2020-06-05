@@ -67,13 +67,13 @@ namespace UnityEditor.Localization.UI
     /// </summary>
     class TableEntryTreeViewItem : TreeViewItem
     {
-        public AssetTableCollection TableCollection { get; set; }
+        public LocalizedTableCollection TableCollection { get; set; }
         public SharedTableData.SharedTableEntry SharedEntry { get; set; }
 
-        public TableEntryTreeViewItem(AssetTableCollection table, SharedTableData.SharedTableEntry sharedEntry, int id, int depth) :
+        public TableEntryTreeViewItem(LocalizedTableCollection collection, SharedTableData.SharedTableEntry sharedEntry, int id, int depth) :
             base(id, depth)
         {
-            TableCollection = table;
+            TableCollection = collection;
             if (sharedEntry != null)
             {
                 SharedEntry = sharedEntry;
@@ -88,9 +88,9 @@ namespace UnityEditor.Localization.UI
     class TableEntryReferenceTreeView : TreeView
     {
         readonly Type m_AssetType;
-        readonly Action<AssetTableCollection, SharedTableData.SharedTableEntry> m_SelectionHandler;
+        readonly Action<LocalizedTableCollection, SharedTableData.SharedTableEntry> m_SelectionHandler;
 
-        public TableEntryReferenceTreeView(Type assetType, Action<AssetTableCollection, SharedTableData.SharedTableEntry> selectionHandler)
+        public TableEntryReferenceTreeView(Type assetType, Action<LocalizedTableCollection, SharedTableData.SharedTableEntry> selectionHandler)
             : base(new TreeViewState())
         {
             m_AssetType = assetType;
@@ -112,41 +112,41 @@ namespace UnityEditor.Localization.UI
 
             if (m_AssetType == typeof(string))
             {
-                var tables = LocalizationEditorSettings.GetAssetTablesCollection<StringTable>();
-                foreach (var table in tables)
+                var stringTableCollections = LocalizationEditorSettings.GetStringTableCollections();
+                foreach (var collection in stringTableCollections)
                 {
-                    var tableNode = new TreeViewItem(id++, 0, table.TableName)
+                    var tableNode = new TreeViewItem(id++, 0, collection.TableCollectionName)
                     {
-                        icon = AssetDatabase.GetCachedIcon(AssetDatabase.GetAssetPath(table.Tables[0])) as Texture2D
+                        icon = AssetDatabase.GetCachedIcon(AssetDatabase.GetAssetPath(collection)) as Texture2D
                     };
                     root.AddChild(tableNode);
 
-                    var sharedData = table.SharedData;
+                    var sharedData = collection.SharedData;
                     foreach (var entry in sharedData.Entries)
                     {
-                        tableNode.AddChild(new TableEntryTreeViewItem(table, entry, id++, 1));
+                        tableNode.AddChild(new TableEntryTreeViewItem(collection, entry, id++, 1));
                     }
                 }
             }
             else
             {
-                var tables = LocalizationEditorSettings.GetAssetTablesCollection<AssetTable>();
-                foreach (var table in tables)
+                var assetTableCollections = LocalizationEditorSettings.GetAssetTableCollections();
+                foreach (var collection in assetTableCollections)
                 {
-                    var tableNode = new TreeViewItem(id++, 0, table.TableName)
+                    var tableNode = new TreeViewItem(id++, 0, collection.TableCollectionName)
                     {
-                        icon = AssetDatabase.GetCachedIcon(AssetDatabase.GetAssetPath(table.Tables[0])) as Texture2D
+                        icon = AssetDatabase.GetCachedIcon(AssetDatabase.GetAssetPath(collection)) as Texture2D
                     };
                     root.AddChild(tableNode);
 
                     // Only show keys that have a compatible type.
-                    var sharedData = table.SharedData;
+                    var sharedData = collection.SharedData;
                     foreach (var entry in sharedData.Entries)
                     {
                         var typeMetadata = entry.Metadata.GetMetadata<AssetTypeMetadata>();
                         if (typeMetadata == null || m_AssetType.IsAssignableFrom(typeMetadata.Type))
                         {
-                            tableNode.AddChild(new TableEntryTreeViewItem(table, entry, id++, 1));
+                            tableNode.AddChild(new TableEntryTreeViewItem(collection, entry, id++, 1));
                         }
                     }
                 }

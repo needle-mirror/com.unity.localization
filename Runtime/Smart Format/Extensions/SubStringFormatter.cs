@@ -17,8 +17,10 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
 
         public SubStringFormatter()
         {
-            Names = new[] {"substr"};
+            Names = DefaultNames;
         }
+
+        public override string[] DefaultNames => new[] {"substr"};
 
         /// <summary>
         /// The delimiter to separate parameters, defaults to comma.

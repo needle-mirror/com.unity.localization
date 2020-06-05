@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization.UI
 {
-    abstract class LocalizedReferencePropertyDrawer<TTable> : PropertyDrawer where TTable : LocalizedTable
+    abstract class LocalizedReferencePropertyDrawer<TCollection> : PropertyDrawer where TCollection : LocalizedTableCollection
     {
         protected static class Styles
         {
@@ -15,12 +17,14 @@ namespace UnityEditor.Localization.UI
             public static readonly GUIContent addTableCollection = new GUIContent("Create Table Collection", "Create a new table collection for every Locale in the project");
             public static readonly GUIContent addTableEntry = new GUIContent("Add Table Entry", "Create a new table entry in the selected table collection.");
             public static readonly GUIContent entryName = new GUIContent("Entry Name", "The name or key of the selected table entry");
-            public static readonly GUIContent noTableSelected = new GUIContent("None(Asset Table Collection)");
+            public static readonly GUIContent noTableSelected = new GUIContent($"None({typeof(TCollection).Name})");
             public static readonly GUIContent previewArguments = new GUIContent("Preview Arguments", "Arguments to pass to the string formatter. These are for preview purposes only and are not stored.");
             public static readonly GUIContent selectedTable = new GUIContent("Table Collection");
         }
 
-        internal class PropertyData
+        protected static Func<ReadOnlyCollection<TCollection>> GetProjectTableCollections { get; set; }
+
+        protected class PropertyData
         {
             public SerializedObject serializedObject;
             public SerializedTableReference tableReference;
@@ -30,7 +34,7 @@ namespace UnityEditor.Localization.UI
 
             GUIContent m_FieldLabel;
             SharedTableData.SharedTableEntry m_SelectedEntry;
-            AssetTableCollection m_SelectedTableCollection;
+            TCollection m_SelectedTableCollection;
             int m_SelectedTableIdx = -1;
 
             public int SelectedTableIndex
@@ -47,7 +51,7 @@ namespace UnityEditor.Localization.UI
                         {
                             for (int i = 1; i < ProjectTableLabels.Length; ++i)
                             {
-                                if (SelectedTableCollection.TableName == ProjectTableLabels[i].text)
+                                if (SelectedTableCollection.TableCollectionName == ProjectTableLabels[i].text)
                                 {
                                     m_SelectedTableIdx = i;
                                     break;
@@ -65,20 +69,20 @@ namespace UnityEditor.Localization.UI
                 }
             }
 
-            public AssetTableCollection SelectedTableCollection
+            public TCollection SelectedTableCollection
             {
                 get
                 {
                     if (m_SelectedTableCollection == null)
                     {
-                        var tableCollections = LocalizationEditorSettings.GetAssetTablesCollection<TTable>();
+                        var tableCollections = GetProjectTableCollections();
                         if (tableReference.Reference.ReferenceType == TableReference.Type.Name)
                         {
-                            m_SelectedTableCollection = tableCollections.FirstOrDefault(t => t.TableName == tableReference.Reference);
+                            m_SelectedTableCollection = tableCollections.FirstOrDefault(t => t.TableCollectionName == tableReference.Reference);
                         }
                         else if (tableReference.Reference.ReferenceType == TableReference.Type.Guid)
                         {
-                            m_SelectedTableCollection = tableCollections.FirstOrDefault(t => t.SharedData.TableNameGuid == tableReference.Reference);
+                            m_SelectedTableCollection = tableCollections.FirstOrDefault(t => t.SharedData.TableCollectionNameGuid == tableReference.Reference);
                         }
                     }
                     return m_SelectedTableCollection;
@@ -89,7 +93,7 @@ namespace UnityEditor.Localization.UI
                     m_SelectedTableIdx = -1;
                     SelectedTableEntry = null;
                     if (value != null)
-                        tableReference.Reference = value.SharedData.TableNameGuid;
+                        tableReference.Reference = value.SharedData.TableCollectionNameGuid;
                     else
                         tableReference.Reference = string.Empty;
                 }
@@ -101,7 +105,7 @@ namespace UnityEditor.Localization.UI
                 {
                     if (m_SelectedEntry == null && SelectedTableCollection != null)
                     {
-                        m_SelectedEntry = m_SelectedTableCollection.SharedData.GetEntry(tableEntryReference.Reference);
+                        m_SelectedEntry = m_SelectedTableCollection.SharedData.GetEntryFromReference(tableEntryReference.Reference);
                     }
                     return m_SelectedEntry;
                 }
@@ -126,10 +130,10 @@ namespace UnityEditor.Localization.UI
                             var eol = key.IndexOf('\n');
                             if (eol > 0)
                             {
-                                // We dont want a multiline label as it overflows in the UI.
+                                // We don't want a multiline label as it overflows in the UI.
                                 key = key.Substring(0, eol);
                             }
-                            m_FieldLabel = new GUIContent($"{SelectedTableCollection.TableName}/{key}", icon.image);
+                            m_FieldLabel = new GUIContent($"{SelectedTableCollection.TableCollectionName}/{key}", icon.image);
                         }
                         else
                         {
@@ -142,9 +146,8 @@ namespace UnityEditor.Localization.UI
         }
 
         static GUIContent[] s_TableChoicesLabels;
-        static AssetTableCollection[] s_TableChoices;
+        static TCollection[] s_TableChoices;
 
-        const float k_TableEntryBoxPadding = 2;
         const float k_OpenTableEditorButtonWidth = 30;
 
         // Its possible that the PropertyDrawer may be used to draw more than one item (arrays, lists)
@@ -157,16 +160,16 @@ namespace UnityEditor.Localization.UI
             {
                 if (s_TableChoicesLabels == null)
                 {
-                    var assetTables = LocalizationEditorSettings.GetAssetTablesCollection<TTable>();
+                    var assetTables = GetProjectTableCollections();
 
-                    s_TableChoices = new AssetTableCollection[assetTables.Count + 1];
+                    s_TableChoices = new TCollection[assetTables.Count + 1];
                     assetTables.CopyTo(s_TableChoices, 1);
 
                     s_TableChoicesLabels = new GUIContent[assetTables.Count + 1];
                     s_TableChoicesLabels[0] = Styles.noTableSelected;
                     for (int i = 0; i < assetTables.Count; ++i)
                     {
-                        s_TableChoicesLabels[i + 1] = new GUIContent(assetTables[i].TableName);
+                        s_TableChoicesLabels[i + 1] = new GUIContent(assetTables[i].TableCollectionName);
                     }
                 }
                 return s_TableChoicesLabels;
@@ -175,13 +178,21 @@ namespace UnityEditor.Localization.UI
 
         public LocalizedReferencePropertyDrawer()
         {
-            LocalizationEditorSettings.OnModification += OnAssetModiciation;
+            LocalizationEditorSettings.EditorEvents.CollectionAdded += EditorEvents_CollectionModified;
+            LocalizationEditorSettings.EditorEvents.CollectionRemoved += EditorEvents_CollectionModified;
+            LocalizationEditorSettings.EditorEvents.CollectionModified += EditorEvents_CollectionModifiedWithSender;
+            LocalizationEditorSettings.EditorEvents.LocaleAdded += EditorEvents_LocaleAddedOrRemoved;
+            LocalizationEditorSettings.EditorEvents.LocaleRemoved += EditorEvents_LocaleAddedOrRemoved;
             Undo.undoRedoPerformed += ClearPropertyDataCache;
         }
 
         ~LocalizedReferencePropertyDrawer()
         {
-            LocalizationEditorSettings.OnModification -= OnAssetModiciation;
+            LocalizationEditorSettings.EditorEvents.CollectionAdded -= EditorEvents_CollectionModified;
+            LocalizationEditorSettings.EditorEvents.CollectionRemoved -= EditorEvents_CollectionModified;
+            LocalizationEditorSettings.EditorEvents.CollectionModified -= EditorEvents_CollectionModifiedWithSender;
+            LocalizationEditorSettings.EditorEvents.LocaleAdded -= EditorEvents_LocaleAddedOrRemoved;
+            LocalizationEditorSettings.EditorEvents.LocaleRemoved -= EditorEvents_LocaleAddedOrRemoved;
             Undo.undoRedoPerformed -= ClearPropertyDataCache;
         }
 
@@ -190,13 +201,23 @@ namespace UnityEditor.Localization.UI
             m_PropertyDataPerPropertyPath.Clear();
         }
 
-        void OnAssetModiciation(LocalizationEditorSettings.ModificationEvent evt, object obj)
+        void EditorEvents_CollectionModifiedWithSender(object sender, LocalizedTableCollection collection)
         {
-            if (evt == LocalizationEditorSettings.ModificationEvent.TableAdded || evt == LocalizationEditorSettings.ModificationEvent.TableRemoved)
-            {
-                s_TableChoicesLabels = null;
-                s_TableChoices = null;
-            }
+            if (sender != this)
+                EditorEvents_CollectionModified(collection);
+        }
+
+        void EditorEvents_CollectionModified(LocalizedTableCollection obj)
+        {
+            s_TableChoicesLabels = null;
+            s_TableChoices = null;
+            ClearPropertyDataCache();
+        }
+
+        void EditorEvents_LocaleAddedOrRemoved(Locale obj)
+        {
+            s_TableChoicesLabels = null;
+            s_TableChoices = null;
             ClearPropertyDataCache();
         }
 
@@ -236,9 +257,9 @@ namespace UnityEditor.Localization.UI
             if (EditorGUI.DropdownButton(dropDownPosition, m_Property.FieldLabel, FocusType.Passive))
             {
                 var propertyData = m_Property;
-                var treeSelection = new TableEntryReferenceTreeView(propertyData.assetType, (tbl, entry) =>
+                var treeSelection = new TableEntryReferenceTreeView(propertyData.assetType, (collection, entry) =>
                 {
-                    propertyData.SelectedTableCollection = tbl;
+                    propertyData.SelectedTableCollection = collection as TCollection;
                     propertyData.SelectedTableEntry = entry;
 
                     // Will be called outside of OnGUI so we need to call ApplyModifiedProperties.
@@ -256,7 +277,6 @@ namespace UnityEditor.Localization.UI
             if (!property.isExpanded)
                 return;
 
-            // indent. We don't use the indent level as it confuses the rows that have more than 1 element.
             EditorGUI.indentLevel++;
 
             // Table selection
@@ -271,9 +291,9 @@ namespace UnityEditor.Localization.UI
             if (m_Property.SelectedTableIndex != 0)
             {
                 var openTableEditorPos = new Rect(tableSelectionPos.xMax, tableSelectionPos.y, k_OpenTableEditorButtonWidth, tableSelectionPos.height);
-                if (GUI.Button(openTableEditorPos, typeof(StringTable).IsAssignableFrom(typeof(TTable)) ? EditorIcons.StringTable : EditorIcons.StringTable))
+                if (GUI.Button(openTableEditorPos, EditorIcons.StringTable))
                 {
-                    AssetTablesWindow.ShowWindow(m_Property.SelectedTableCollection.Tables[0]);
+                    LocalizationTablesWindow.ShowWindow(m_Property.SelectedTableCollection);
                 }
             }
 
@@ -283,7 +303,7 @@ namespace UnityEditor.Localization.UI
             {
                 if (GUI.Button(buttonPos, Styles.addTableCollection, EditorStyles.miniButton))
                 {
-                    AssetTablesWindow.ShowTableCreator();
+                    LocalizationTablesWindow.ShowTableCreator();
                 }
             }
             else
@@ -311,8 +331,7 @@ namespace UnityEditor.Localization.UI
                         }
                     }
                     m_Property.SelectedTableEntry = entry;
-                    var eventData = new Tuple<SharedTableData, SharedTableData.SharedTableEntry>(keys, entry);
-                    LocalizationEditorSettings.Instance.SendEvent(LocalizationEditorSettings.ModificationEvent.TableEntryAdded, eventData);
+                    LocalizationEditorSettings.EditorEvents.RaiseTableEntryAdded(m_Property.SelectedTableCollection, entry);
                 }
             }
 

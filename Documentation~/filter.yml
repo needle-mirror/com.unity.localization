@@ -1,0 +1,26 @@
+apiRules:
+  - exclude:
+      # inherited Object methods
+      uidRegex: ^System\.Object\..*$
+      type: Method
+  - exclude:
+      # mentioning types from System.* namespace
+      uidRegex: ^System\..*$
+      type: Type
+  - exclude:
+      hasAttribute:
+        uid: System.ComponentModel.EditorBrowsableAttribute
+        ctorArguments:
+          - System.ComponentModel.EditorBrowsableState.Never
+  - exclude:
+      # Tests
+      uidRegex: Localization\.Tests*
+      type: Namespace
+  - exclude:
+      # Smart Format Tests
+      uidRegex: Localization\.SmartFormat\.Tests*
+      type: Namespace
+  - exclude:
+      # Samples.
+      uidRegex: Localization\.Samples*
+      type: Namespace

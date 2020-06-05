@@ -54,7 +54,7 @@ namespace UnityEngine.Localization.Tests.Pseudo
             method.Method = CharacterSubstitutor.SubstitutionMethod.List;
             method.ListMode = CharacterSubstitutor.ListSelectionMethod.LoopFromStart;
             method.ReplacementList.Clear();
-            method.ReplacementList.AddRange(new [] { 'A', 'B', 'C' });
+            method.ReplacementList.AddRange(new[] { 'A', 'B', 'C' });
             var result = method.Transform(input);
             Assert.AreEqual(expected, result, "Expected the transformed string to match.");
         }

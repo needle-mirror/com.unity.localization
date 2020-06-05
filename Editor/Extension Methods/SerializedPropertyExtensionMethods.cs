@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Linq;
 
 namespace UnityEditor.Localization
@@ -27,6 +28,11 @@ namespace UnityEditor.Localization
                 {
                     var index = Convert.ToInt32(new string(property.propertyPath.Where(char.IsDigit).ToArray()));
                     actualObject = ((TObject[])obj)[index];
+                }
+                else if (typeof(IList).IsAssignableFrom(obj.GetType()))
+                {
+                    var index = Convert.ToInt32(new string(property.propertyPath.Where(char.IsDigit).ToArray()));
+                    actualObject = ((IList)obj)[index] as TObject;
                 }
                 else
                 {

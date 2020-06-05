@@ -12,13 +12,15 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     {
         public ConditionalFormatter()
         {
-            Names = new[] {"conditional", "cond", ""};
+            Names = DefaultNames;
         }
 
         private static readonly Regex _complexConditionPattern
             = new Regex(@"^  (?:   ([&/]?)   ([<>=!]=?)   ([0-9.-]+)   )+   \?",
             //   Description:      and/or    comparator     value
             RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled);
+
+        public override string[] DefaultNames => new[] {"conditional", "cond", ""};
 
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {

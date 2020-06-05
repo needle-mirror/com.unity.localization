@@ -7,8 +7,47 @@ namespace UnityEngine.Localization
     /// <summary>
     /// The identifier containing the identification information for a language or regional variant.
     /// </summary>
+    /// <example>
+    /// This example shows the various ways to create a LocaleIdentifier.
+    /// <code>
+    /// public class LocaleIdentifierIdExample1 : MonoBehaviour
+    /// {
+    ///     void Start()
+    ///     {
+    ///         // Create a locale identifier to represent English
+    ///         var localeEnglishSystemLanguage = new LocaleIdentifier(SystemLanguage.English);
+    ///         var localeEnglishCode = new LocaleIdentifier("en");
+    ///         var localeEnglishCi = new LocaleIdentifier(CultureInfo.GetCultureInfo("en"));
+    ///
+    ///         Debug.Log(localeEnglishSystemLanguage);
+    ///         Debug.Log(localeEnglishCode);
+    ///         Debug.Log(localeEnglishCi);
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    /// <example>
+    /// This shows how to create a Locale for English and a regional Locale for English(UK).
+    /// <code>
+    /// public class LocaleIdentifierIdExample2 : MonoBehaviour
+    /// {
+    ///     void Start()
+    ///     {
+    ///         // Create a Locale to represent English.
+    ///         var localeId = new LocaleIdentifier(SystemLanguage.English);
+    ///         var locale = Locale.CreateLocale(localeId);
+    ///         Debug.Log("English locale: " + locale);
+    ///
+    ///         // Create a regional Locale to represent English UK.
+    ///         var regionalLocaleId = new LocaleIdentifier("en-GB");
+    ///         var regionalLocale = Locale.CreateLocale(regionalLocaleId);
+    ///         Debug.Log("English(en-GB) locale: " + regionalLocale);
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     [Serializable]
-    public struct LocaleIdentifier : IEquatable<LocaleIdentifier>
+    public struct LocaleIdentifier : IEquatable<LocaleIdentifier>, IComparable<LocaleIdentifier>
     {
         [SerializeField] string m_Code;
         CultureInfo m_CultureInfo;
@@ -28,15 +67,26 @@ namespace UnityEngine.Localization
 
         /// <summary>
         /// A <see cref="CultureInfo"/> representation of the Locale.
+        /// The <see cref="Code"/> is used to query for a valid <see cref="CultureInfo"/>.
         /// </summary>
-        /// <remarks>
-        /// The id is used to query for a <see cref="CultureInfo"/> unless its value is 0, in which case the <see cref="Code"/> will be used.
-        /// </remarks>
+        /// <example>
+        /// This example shows how the CultureInfo can be retrieved after creating a LocaleIdentifier using a Code.
+        /// <code>
+        /// public class LocaleIdentifierCultureInfoExample : MonoBehaviour
+        /// {
+        ///     void Start()
+        ///     {
+        ///         var localeIdentifier = new LocaleIdentifier("en");
+        ///         Debug.Log("Code 'en' maps to the CultureInfo: " + localeIdentifier.CultureInfo.EnglishName);
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         public CultureInfo CultureInfo
         {
             get
             {
-                if (m_CultureInfo == null)
+                if (m_CultureInfo == null && m_Code != null)
                 {
                     try
                     {
@@ -152,6 +202,19 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
+        /// Compare to another LocaleIdentifer.
+        /// Performs a comparison against the <see cref="CultureInfo.EnglishName"/> property.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public int CompareTo(LocaleIdentifier other)
+        {
+            if (CultureInfo == null || other.CultureInfo == null)
+                return 1;
+            return string.Compare(CultureInfo.EnglishName, other.CultureInfo.EnglishName);
+        }
+
+        /// <summary>
         /// Compare the LocaleIdentifier to another LocaleIdentifier.
         /// </summary>
         /// <param name="l1"></param>
@@ -169,7 +232,7 @@ namespace UnityEngine.Localization
     }
 
     /// <summary>
-    /// A Locale represents a language. It supports regional variations and can be configured with an optional fallback locale via metadata.
+    /// A Locale represents a language. It supports regional variations and can be configured with an optional fallback Locale via metadata.
     /// </summary>
     public class Locale : ScriptableObject, IComparable<Locale>
     {

@@ -1,4 +1,3 @@
-using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
@@ -28,7 +27,7 @@ namespace UnityEditor.Localization.UI
             };
         }
 
-        LocalesProviderListView m_ListView;
+        public LocalesProviderListView ListView { get; set; }
 
         const float k_MinListHeight = 200;
         const float k_ToolbarHeight = 20;
@@ -36,21 +35,30 @@ namespace UnityEditor.Localization.UI
         public LocalesProviderPropertyDrawer()
         {
             Undo.undoRedoPerformed += UndoPerformed;
+            LocalizationEditorSettings.EditorEvents.LocaleAdded += EditorEvents_LocaleAddedOrRemoved;
+            LocalizationEditorSettings.EditorEvents.LocaleRemoved += EditorEvents_LocaleAddedOrRemoved;
+        }
+
+        void EditorEvents_LocaleAddedOrRemoved(Locale obj)
+        {
+            ListView?.Reload();
         }
 
         ~LocalesProviderPropertyDrawer()
         {
             Undo.undoRedoPerformed -= UndoPerformed;
+            LocalizationEditorSettings.EditorEvents.LocaleAdded -= EditorEvents_LocaleAddedOrRemoved;
+            LocalizationEditorSettings.EditorEvents.LocaleRemoved -= EditorEvents_LocaleAddedOrRemoved;
         }
 
-        void UndoPerformed() => m_ListView.Reload();
+        void UndoPerformed() => ListView.Reload();
 
         void Init(SerializedProperty _)
         {
-            if (m_ListView != null)
+            if (ListView != null)
                 return;
 
-            m_ListView = new LocalesProviderListView();
+            ListView = new LocalesProviderListView();
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -61,9 +69,9 @@ namespace UnityEditor.Localization.UI
             EditorGUI.LabelField(position, label);
             position.y += position.height + EditorGUIUtility.standardVerticalSpacing;
 
-            position.height = Mathf.Max(k_MinListHeight, m_ListView.totalHeight);
+            position.height = Mathf.Max(k_MinListHeight, ListView.totalHeight);
             var listPos = EditorGUI.PrefixLabel(position, GUIContent.none);
-            m_ListView.OnGUI(listPos);
+            ListView.OnGUI(listPos);
             position.y += position.height;
 
             position.height = k_ToolbarHeight;
@@ -74,7 +82,7 @@ namespace UnityEditor.Localization.UI
         {
             Init(property);
             float height = EditorStyles.label.lineHeight; // Header
-            height += Mathf.Max(k_MinListHeight, m_ListView.totalHeight) + EditorGUIUtility.standardVerticalSpacing; // List
+            height += Mathf.Max(k_MinListHeight, ListView.totalHeight) + EditorGUIUtility.standardVerticalSpacing; // List
             height += k_ToolbarHeight + EditorGUIUtility.standardVerticalSpacing; // Toolbar
             return height;
         }
@@ -93,14 +101,14 @@ namespace UnityEditor.Localization.UI
                     break;
                 case ToolBarChoices.RemoveSelected:
                 {
-                    var selectedLocales = m_ListView.GetSelection();
+                    var selectedLocales = ListView.GetSelection();
                     for (int i = selectedLocales.Count - 1; i >= 0; --i)
                     {
-                        var item = m_ListView.GetRows()[selectedLocales[i]] as SerializedLocaleItem;
+                        var item = ListView.GetRows()[selectedLocales[i]] as SerializedLocaleItem;
                         LocalizationEditorSettings.RemoveLocale(item.SerializedObject.targetObject as Locale, true);
                     }
-                    m_ListView.SetSelection(new int[0]);
-                    m_ListView.Reload();
+                    ListView.SetSelection(new int[0]);
+                    ListView.Reload();
                 }
                 break;
                 case ToolBarChoices.AddAsset:
@@ -113,7 +121,7 @@ namespace UnityEditor.Localization.UI
                     {
                         LocalizationEditorSettings.AddLocale(AssetDatabase.LoadAssetAtPath<Locale>(AssetDatabase.GUIDToAssetPath(assets[i])), true);
                     }
-                    m_ListView.Reload();
+                    ListView.Reload();
                 }
                 break;
             }
@@ -121,7 +129,7 @@ namespace UnityEditor.Localization.UI
             if (commandName == "ObjectSelectorClosed" && EditorGUIUtility.GetObjectPickerControlID() == controlId && EditorGUIUtility.GetObjectPickerObject() != null)
             {
                 LocalizationEditorSettings.AddLocale(EditorGUIUtility.GetObjectPickerObject() as Locale, true);
-                m_ListView.Reload();
+                ListView.Reload();
             }
         }
     }

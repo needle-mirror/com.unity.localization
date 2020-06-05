@@ -85,7 +85,7 @@ namespace UnityEngine.Localization.Settings
         }
 
         /// <summary>
-        /// The default table to use when no table name is provided.
+        /// The default table to use when no table collection name is provided.
         /// </summary>
         public TableReference DefaultTable
         {
@@ -103,11 +103,14 @@ namespace UnityEngine.Localization.Settings
         /// This function is asynchronous and may not have an immediate result available.
         /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
         /// </summary>
-        /// <param name="tableReference">The table identifier. Can be either the name of the table or the table name Guid.</param>
+        /// <param name="tableReference">The table identifier. Can be either the name of the table or the table collection name Guid.</param>
         /// <param name="locale">The <see cref="Locale"/> to load the table from if you do not wish to use <see cref="LocalizationSettings.SelectedLocale"/>.</param>
         /// <returns></returns>
-        public AsyncOperationHandle<TTable> GetTableAsync(TableReference tableReference, Locale locale)
+        public virtual AsyncOperationHandle<TTable> GetTableAsync(TableReference tableReference, Locale locale)
         {
+            if (locale == null)
+                throw new ArgumentNullException(nameof(locale));
+
             var initOp = LocalizationSettings.InitializationOperation;
             if (!initOp.IsDone)
                 return ResourceManager.CreateChainOperation(initOp, (op) => GetTableLoadTable(tableReference, locale));
@@ -119,11 +122,13 @@ namespace UnityEngine.Localization.Settings
         /// This function is asynchronous and may not have an immediate result available.
         /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
         /// </summary>
-        /// <param name="tableReference">The table identifier. Can be either the name of the table or the table name Guid.</param>
+        /// <param name="tableReference">The table identifier. Can be either the name of the table or the table collection name Guid.</param>
         /// <returns></returns>
         public AsyncOperationHandle<TTable> GetTableAsync(TableReference tableReference)
         {
-            // We need to initialize before we can use .LocalizationSettings.SelectedLocale.
+            tableReference.Validate();
+
+            // We need to initialize before we can use LocalizationSettings.SelectedLocale.
             var initOp = LocalizationSettings.InitializationOperation;
             if (!initOp.IsDone)
                 return ResourceManager.CreateChainOperation(initOp, (op) => GetTableAsync(tableReference, LocalizationSettings.SelectedLocale));
@@ -135,15 +140,12 @@ namespace UnityEngine.Localization.Settings
         /// This function is asynchronous and may not have an immediate result available.
         /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
         /// </summary>
-        /// <param name="tableReference">The table identifier. Can be either the name of the table or the table name Guid.</param>
+        /// <param name="tableReference">The table identifier. Can be either the name of the table or the table collection name Guid.</param>
         /// <param name="tableEntryReference">A reference to the entry in the table.</param>
         /// <param name="locale">The <see cref="Locale"/> to load the table from if you do not wish to use <see cref="LocalizationSettings.SelectedLocale"/>.</param>
         /// <returns></returns>
         public AsyncOperationHandle<TableEntryResult> GetTableEntryAsync(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale)
         {
-            tableReference.Validate();
-            tableEntryReference.Validate();
-
             var tableOp = GetTableAsync(tableReference, locale);
             if (!tableOp.IsDone)
                 return ResourceManager.CreateChainOperation(tableOp, (op) => GetTableEntryFindEntry(tableOp, tableEntryReference));
@@ -155,16 +157,15 @@ namespace UnityEngine.Localization.Settings
         /// This function is asynchronous and may not have an immediate result available.
         /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
         /// </summary>
-        /// <param name="tableReference">The table identifier. Can be either the name of the table or the table name Guid.</param>
+        /// <param name="tableReference">The table identifier. Can be either the name of the table or the table collection name Guid.</param>
         /// <param name="tableEntryReference">A reference to the entry in the table.</param>
         /// <returns></returns>
-        public AsyncOperationHandle<TableEntryResult> GetTableEntryAsync(TableReference tableReference, TableEntryReference tableEntryReference)
+        public virtual AsyncOperationHandle<TableEntryResult> GetTableEntryAsync(TableReference tableReference, TableEntryReference tableEntryReference)
         {
-            // We need to initialize before we can use .LocalizationSettings.SelectedLocale.
-            var initOp = LocalizationSettings.InitializationOperation;
-            if (!initOp.IsDone)
-                return ResourceManager.CreateChainOperation(initOp, (op) => GetTableEntryAsync(tableReference, tableEntryReference, LocalizationSettings.SelectedLocale));
-            return GetTableEntryAsync(tableReference, tableEntryReference, LocalizationSettings.SelectedLocale);
+            var selectedLocaleOp = LocalizationSettings.SelectedLocaleAsync;
+            if (!selectedLocaleOp.IsDone)
+                return ResourceManager.CreateChainOperation(selectedLocaleOp, (op) => GetTableEntryAsync(tableReference, tableEntryReference, selectedLocaleOp.Result));
+            return GetTableEntryAsync(tableReference, tableEntryReference, selectedLocaleOp.Result);
         }
 
         AsyncOperationHandle<SharedTableData> GetSharedTableData(Guid tableNameGuid)
@@ -193,7 +194,7 @@ namespace UnityEngine.Localization.Settings
 
             var tableAddress = AddressHelper.GetTableAddress(tableReference, locale.Identifier);
             asyncOp = Addressables.LoadAssetAsync<TTable>(tableAddress);
-            RegisterTableOperation(asyncOp, locale.Identifier, tableReference.TableName);
+            RegisterTableOperation(asyncOp, locale.Identifier, tableReference.TableCollectionName);
             return asyncOp;
         }
 
@@ -209,7 +210,7 @@ namespace UnityEngine.Localization.Settings
                 }
                 return ResourceManager.CreateCompletedOperation(default(TTable), error);
             }
-            return GetTableLoadTable(sharedTableDataOperation.Result.TableName, locale);
+            return GetTableLoadTable(sharedTableDataOperation.Result.TableCollectionName, locale);
         }
 
         AsyncOperationHandle<TableEntryResult> GetTableEntryFindEntry(AsyncOperationHandle<TTable> tableOperation, TableEntryReference tableEntryReference)
@@ -228,6 +229,7 @@ namespace UnityEngine.Localization.Settings
             var table = tableOperation.Result;
 
             // We need either a key of keyId. If the key is null then we use the keyId.
+            tableEntryReference.Validate();
             var entry = tableEntryReference.ReferenceType == TableEntryReference.Type.Name ? table.GetEntry(tableEntryReference.Key) : table.GetEntry(tableEntryReference.KeyId);
 
             // TODO: Fallback if null

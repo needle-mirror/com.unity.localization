@@ -34,27 +34,18 @@ namespace UnityEditor.Localization.Tests
         }
 
         [Test]
-        public void TableName_ThrowsExceptionWhenSharedTableDataIsNull()
+        public void TableCollectionName_ThrowsExceptionWhenSharedTableDataIsNull()
         {
             m_Table.SharedData = null;
-            Assert.Throws<NullReferenceException>(() => Assert.NotNull(m_Table.TableName));
-            Assert.Throws<NullReferenceException>(() => m_Table.TableName = "");
+            Assert.Throws<NullReferenceException>(() => Assert.NotNull(m_Table.TableCollectionName));
         }
 
         [Test]
-        public void TableName_MatchesSharedTableData()
+        public void TableCollectionName_MatchesSharedTableData()
         {
             const string tableName = "My Table 1";
-            m_SharedTableData.TableName = tableName;
-            Assert.AreEqual(tableName, m_Table.TableName, $"Expected table name to match the {nameof(SharedTableData)}.");
-        }
-
-        [Test]
-        public void TableName_ChangesAreAppliedToSharedTableData()
-        {
-            const string tableName = "My Table 2";
-            m_Table.TableName = tableName;
-            Assert.AreEqual(tableName, m_SharedTableData.TableName, $"Expected table name to match the {nameof(SharedTableData)}.");
+            m_SharedTableData.TableCollectionName = tableName;
+            Assert.AreEqual(tableName, m_Table.TableCollectionName, $"Expected table collection name to match the {nameof(SharedTableData)}.");
         }
 
         [Test]

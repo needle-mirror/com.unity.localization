@@ -29,8 +29,10 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
 
         public PluralLocalizationFormatter()
         {
-            Names = new[] {"plural", "p", ""};
+            Names = DefaultNames;
         }
+
+        public override string[] DefaultNames => new[] { "plural", "p", "" };
 
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {
@@ -97,8 +99,14 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                 return culturePluralRule;
             }
 
-            // Use the selected Locale
-            var selectedLocale = LocalizationSettings.SelectedLocale;
+            // If the AvailableLocales requires preloading and it is not ready then we can not get the SelectedLocale and must skip this step.
+            Locale selectedLocale = null;
+            var localeOp = LocalizationSettings.SelectedLocaleAsync;
+            if (localeOp.IsDone)
+            {
+                selectedLocale = localeOp.Result;
+            }
+
             if (selectedLocale != null)
             {
                 string isoCode;

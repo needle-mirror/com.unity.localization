@@ -1,6 +1,7 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor.UIElements;
-using UnityEngine.Localization.Tables;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.UI
@@ -8,53 +9,57 @@ namespace UnityEditor.Localization.UI
     /// <summary>
     /// Displays all the asset tables for the project collated by type.
     /// </summary>
-    class ProjectTablesPopup : PopupField<AssetTableCollection>
+    class ProjectTablesPopup : PopupField<LocalizedTableCollection>
     {
+        class NoTables : LocalizedTableCollection
+        {
+            public override string DefaultTableGroupName => null;
+            protected internal override Type TableType => null;
+            protected internal override Type RequiredExtensionAttribute => null;
+            public override string ToString() => k_NoTablesMessage;
+        }
+
         const string k_EditorPrefValueKey = "Localization-SelectedAssetTable";
         const string k_NoTablesMessage = "No Asset Tables Found. Please Create One";
 
-        class NoTables : AssetTableCollection
-        {
-            public override string ToString()
-            {
-                return k_NoTablesMessage;
-            }
-        }
-
         public new class UxmlFactory : UxmlFactory<ProjectTablesPopup> {}
 
-        static List<AssetTableCollection> s_Tables;
+        static readonly NoTables k_NoTables = NoTables.CreateInstance<NoTables>();
+        static List<LocalizedTableCollection> s_Tables;
 
         public ProjectTablesPopup()
             : base(GetChoices(), GetDefaultIndex())
         {
-            label = "Selected Table";
+            label = "Selected Table Collection";
             formatSelectedValueCallback = FormatSelectedLabel;
             formatListItemCallback = FormatListLabel;
 
-            LocalizationEditorSettings.OnModification += LocalizationSettingsModification;
+            LocalizationEditorSettings.EditorEvents.CollectionAdded += OnCollectionAdded;
+            LocalizationEditorSettings.EditorEvents.CollectionRemoved += OnCollectionRemoved;
         }
 
-        ~ProjectTablesPopup() => LocalizationEditorSettings.OnModification -= LocalizationSettingsModification;
-
-        void LocalizationSettingsModification(LocalizationEditorSettings.ModificationEvent evt, object obj)
+        void OnCollectionAdded(LocalizedTableCollection col)
         {
-            if (evt == LocalizationEditorSettings.ModificationEvent.TableAdded)
-            {
-                GetChoices();
-                SetValueFromTable((LocalizedTable)obj);
-            }
-            else if (evt == LocalizationEditorSettings.ModificationEvent.TableRemoved)
-            {
-                var choices = GetChoices();
+            bool isEmpty = value is NoTables;
+            GetChoices();
 
-                // Check if the table is currently selected.
-                var table = (LocalizedTable)obj;
-                if (value.TableType == table.GetType() && value.TableName == table.TableName)
-                {
-                    value = choices[0];
-                }
-            }
+            // If we currently have no tables then select the new collection.
+            if (isEmpty)
+                value = col;
+        }
+
+        void OnCollectionRemoved(LocalizedTableCollection col)
+        {
+            var choices = GetChoices();
+
+            if (value == col)
+                value = choices[0];
+        }
+
+        ~ProjectTablesPopup()
+        {
+            LocalizationEditorSettings.EditorEvents.CollectionAdded -= OnCollectionAdded;
+            LocalizationEditorSettings.EditorEvents.CollectionRemoved -= OnCollectionRemoved;
         }
 
         static int GetDefaultIndex()
@@ -64,7 +69,7 @@ namespace UnityEditor.Localization.UI
             {
                 for (int i = 0; i < s_Tables.Count; ++i)
                 {
-                    if (s_Tables[i].ToString() == selection)
+                    if (s_Tables[i]?.ToString() == selection)
                         return i;
                 }
             }
@@ -72,7 +77,7 @@ namespace UnityEditor.Localization.UI
             return 0;
         }
 
-        public override AssetTableCollection value
+        public override LocalizedTableCollection value
         {
             get => base.value;
             set
@@ -88,45 +93,28 @@ namespace UnityEditor.Localization.UI
         public void RefreshLabels()
         {
             GetChoices();
-            var newValue = s_Tables.FindIndex(o => value.Equals(o));
-            SetValueWithoutNotify(s_Tables[newValue > 0 ? newValue : 0]);
+            var newValue = Mathf.Clamp(s_Tables.FindIndex(o => value.Equals(o)), 0, s_Tables.Count);
+            SetValueWithoutNotify(s_Tables[newValue]);
         }
 
-        /// <summary>
-        /// Searches for the selectedTable in the AssetTableCollection list, if found it selects this collection and sends the value changed event.
-        /// </summary>
-        /// <param name="selectedTable">Table to search for.</param>
-        public void SetValueFromTable(LocalizedTable selectedTable)
+        static string FormatListLabel(LocalizedTableCollection atc)
         {
-            var choices = GetChoices();
-            foreach (var assetTableCollection in choices)
-            {
-                if (assetTableCollection.TableType == selectedTable.GetType() && assetTableCollection.TableName == selectedTable.TableName)
-                {
-                    value = assetTableCollection;
-                    return;
-                }
-            }
+            return atc is NoTables ? atc.ToString() : ObjectNames.NicifyVariableName(atc.TableType.Name) + "/" + atc.TableCollectionName;
         }
 
-        static string FormatListLabel(AssetTableCollection atc)
-        {
-            return atc is NoTables ? atc.ToString() : ObjectNames.NicifyVariableName(atc.TableType.Name) + "/" + atc.TableName;
-        }
+        static string FormatSelectedLabel(LocalizedTableCollection atc) => atc.ToString();
 
-        static string FormatSelectedLabel(AssetTableCollection atc) => atc.ToString();
-
-        static List<AssetTableCollection> GetChoices()
+        static List<LocalizedTableCollection> GetChoices()
         {
             if (s_Tables == null)
-                s_Tables = new List<AssetTableCollection>();
+                s_Tables = new List<LocalizedTableCollection>();
             s_Tables.Clear();
 
-            s_Tables.AddRange(LocalizationEditorSettings.GetAssetTablesCollection<StringTable>());
-            s_Tables.AddRange(LocalizationEditorSettings.GetAssetTablesCollection<AssetTable>());
+            s_Tables.AddRange(LocalizationEditorSettings.Instance.TableCollectionCache.StringTableCollections);
+            s_Tables.AddRange(LocalizationEditorSettings.Instance.TableCollectionCache.AssetTableCollections);
 
             if (s_Tables.Count == 0)
-                s_Tables.Add(new NoTables());
+                s_Tables.Add(k_NoTables);
             return s_Tables;
         }
     }

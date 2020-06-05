@@ -34,8 +34,10 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         public TemplateFormatter(SmartFormatter formatter)
         {
             m_Formatter = formatter;
-            Names = new[] { "template", "t" };
+            Names = DefaultNames;
         }
+
+        public override string[] DefaultNames => new[] { "template", "t" };
 
         /// <summary>
         /// This method is called by the <see cref="SmartFormatter" /> to obtain the formatting result of this extension.

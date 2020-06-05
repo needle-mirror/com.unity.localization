@@ -18,7 +18,7 @@ You can also create the settings Asset through the Assets menu. Navigate to **As
 By default, this uses the Addressable system to fetch Locales. However, you can also create a class that implements *ILocalesProvider* to completely customize this (see [Built-in Locales Provider Example ](Example-BuiltinLocalesProvider.md)).
 
 ### Locale Generator window
-To create a Locale, click the *Locale Generator** button in the Available Locales editor.
+To create a Locale, click the **Locale Generator** button in the Available Locales editor.
 
 ![Locale Generator window.](images/Create_Locale_Window.png)
 

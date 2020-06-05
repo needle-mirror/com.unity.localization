@@ -18,5 +18,12 @@ namespace UnityEditor.Localization.Tests
         {
             Assert.IsNull(LocaleIdentifier.Undefined.CultureInfo, "Expected undefined to have no CultureInfo.");
         }
+
+        [Test]
+        public void GetCultureInfoReturnsNullWhenCodeIsNull()
+        {
+            LocaleIdentifier id = new LocaleIdentifier((string)null);
+            Assert.IsNull(id.CultureInfo);
+        }
     }
 }

@@ -9,6 +9,11 @@
     * [Localization Tables Window](LocalizationTablesWindow.md)
     * [String Tables](StringTables.md)
     * [Asset Tables](AssetTables.md)
+  * Extensions
+    * [Google Sheets](Google-Sheets.md)
+      * [Sheets Service Provider](Google-Sheets-Sheets-Service-Provider.md)
+      * [Configuring Authentication](Google-Sheets-Configuring-Authentication.md)
+      * [Syncing String Table Collections](Google-Sheets-Syncing-StringTableCollections.md)
   * [Metadata](Metadata.md)
   * [Smart Strings](SmartStrings.md)
     * [Common Pitfalls](Common-Pitfalls.md)

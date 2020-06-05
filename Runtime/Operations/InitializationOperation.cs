@@ -44,24 +44,15 @@ namespace UnityEngine.Localization
 
         void LoadLocales()
         {
-            // First time initialization requires loading locales and selecting the startup locale without sending a locale changed event.
-            if (m_Settings.GetSelectedLocale() == null)
+            var localeOp = m_Settings.GetSelectedLocaleAsync();
+            if (!localeOp.IsDone)
             {
-                // Load Locales
-                if (m_Settings.GetAvailableLocales() is IPreloadRequired locales && !locales.PreloadOperation.IsDone)
-                {
-                    locales.PreloadOperation.Completed += (async) =>
-                    {
-                        m_Settings.InitializeSelectedLocale();
-                        PreLoadTables();
-                    };
-                    return;
-                }
-
-                m_Settings.InitializeSelectedLocale();
+                localeOp.Completed += async => PreLoadTables();
             }
-
-            PreLoadTables();
+            else
+            {
+                PreLoadTables();
+            }
         }
 
         void PreloadOperationCompleted(AsyncOperationHandle asyncOperation)

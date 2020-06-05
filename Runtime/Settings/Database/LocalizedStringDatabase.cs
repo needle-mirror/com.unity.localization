@@ -47,7 +47,7 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference)
         {
-            return GetLocalizedStringAsync(tableEntryReference, LocalizationSettings.SelectedLocale, null);
+            return GetLocalizedStringAsync(DefaultTable, tableEntryReference);
         }
 
         /// <summary>
@@ -60,7 +60,10 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference, Locale locale)
         {
-            return GetLocalizedStringAsync(tableEntryReference, locale, null);
+            if (locale == null)
+                throw new ArgumentNullException(nameof(locale));
+
+            return GetLocalizedStringAsync(DefaultTable, tableEntryReference, locale, null);
         }
 
         /// <summary>
@@ -73,7 +76,7 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference, params object[] arguments)
         {
-            return GetLocalizedStringAsync(DefaultTable, tableEntryReference, LocalizationSettings.SelectedLocale, arguments);
+            return GetLocalizedStringAsync(DefaultTable, tableEntryReference, arguments);
         }
 
         /// <summary>
@@ -87,6 +90,9 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference, Locale locale, params object[] arguments)
         {
+            if (locale == null)
+                throw new ArgumentNullException(nameof(locale));
+
             return GetLocalizedStringAsync(DefaultTable, tableEntryReference, locale, arguments);
         }
 
@@ -100,7 +106,7 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference)
         {
-            return GetLocalizedStringAsync(tableReference, tableEntryReference, LocalizationSettings.SelectedLocale, null);
+            return GetLocalizedStringAsync(tableReference, tableEntryReference, (object[])null);
         }
 
         /// <summary>
@@ -114,6 +120,9 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale)
         {
+            if (locale == null)
+                throw new ArgumentNullException(nameof(locale));
+
             return GetLocalizedStringAsync(tableReference, tableEntryReference, locale, null);
         }
 
@@ -129,7 +138,10 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference, params object[] arguments)
         {
-            return GetLocalizedStringAsync(tableReference, tableEntryReference, LocalizationSettings.SelectedLocale, arguments);
+            var localeOp = LocalizationSettings.SelectedLocaleAsync;
+            if (!localeOp.IsDone)
+                return ResourceManager.CreateChainOperation(localeOp, (op) => GetLocalizedStringAsync(tableReference, tableEntryReference, localeOp.Result, arguments));
+            return GetLocalizedStringAsync(tableReference, tableEntryReference, localeOp.Result, arguments);
         }
 
         /// <summary>
@@ -145,8 +157,8 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale, params object[] arguments)
         {
-            tableReference.Validate();
-            tableEntryReference.Validate();
+            if (locale == null)
+                throw new ArgumentNullException(nameof(locale));
 
             var initOp = LocalizationSettings.InitializationOperation;
             if (!initOp.IsDone)
@@ -173,6 +185,8 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         internal protected virtual AsyncOperationHandle<string> GetLocalizedStringProcessTableEntry(AsyncOperationHandle<TableEntryResult> entryOp, TableEntryReference tableEntryReference, Locale locale, object[] arguments)
         {
+            tableEntryReference.Validate();
+
             if (entryOp.Status != AsyncOperationStatus.Succeeded || entryOp.Result.Entry == null)
             {
                 string key = tableEntryReference.ResolveKeyName(entryOp.Result.Table?.SharedData);

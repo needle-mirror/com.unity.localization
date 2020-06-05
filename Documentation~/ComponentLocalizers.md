@@ -1,46 +1,33 @@
 # Component Localizers
 
-Component Localizers are [MonoBehaviours](https://docs.unity3d.com/ScriptReference/MonoBehaviour.html) which can be connected to other components/scripts through [UnityEvents](https://docs.unity3d.com/ScriptReference/Events.UnityEvent.html). Component Localizers allow for localizing without the need to write any scripts.
+Component Localizers are [MonoBehaviours](https://docs.unity3d.com/ScriptReference/MonoBehaviour.html) which you can connected to other components/scripts through [UnityEvents](https://docs.unity3d.com/ScriptReference/Events.UnityEvent.html). Component Localizers allow for localizing without the need to write any scripts.
 
-## LocalizedString
+## LocalizeStringEvent
 
-The LocalizedString Component Localizer can be used to localize string components and provide additional arguments when using [Smart Strings](SmartStrings.md) or *String.Format*.
-In the inspector, *Format Arguments* must be *UnityEngine.Objects* however it is possible to pass any type through as an argument via script.
-The LocalizedString editor can be used to edit tables, localized strings and preview them after formatting.
+The LocalizeStringEvent Component Localizer localizes strings and provides additional arguments when using [Smart Strings](SmartStrings.md) or [String.Format](https://docs.microsoft.com/dotnet/api/system.string.format). In the Inspector, **Format Arguments** must be [UnityEngine.Objects](https://docs.unity3d.com/ScriptReference/Object.html); however, it is possible to pass any type through as an argument via script. You can also use the LocalizeStringEvent editor to edit tables and Localized strings, and preview them after formatting.
 
 ![Localize String Editor.](images/LocalizedString_Editor.gif)
 
-## LocalizedAssetBehaviour
+## LocalizedAssetEvent
 
-LocalizedAssetBehaviour can be used to Localize a Unity asset, such as a Texture or Audio clip. LocalizedAssetBehaviour is an abstract class that should be inherited from in order to set the Asset type.
-The Localization System currently features some implemented versions of LocalizedAssetBehaviour for **Texture(LocalizeTextureBehaviour)** and **Audio Clip(LocalizeAudioClipBehaviour)**.
+LocalizeAssetEvent can localize a Unity asset, such as a Texture or Audio clip. LocalizedAssetEventis an abstract class that should be inherited from in order to set the Asset type. The Localization System currently features some implemented versions of LocalizedAssetBehaviour for **Texture(LocalizeTextureEvent)** and **Audio Clip(LocalizeAudioClipEvent)**.
 
 ![Localize Texture Editor.](images/Component_LocalizeTexture.png)
 
 This example shows how support could be added for the Sprite asset.
 
-```
+```C#
 using System;
 using UnityEngine.Events;
 
-public class LocalizeSpriteBehaviour : LocalizedAssetBehaviour<Sprite>
+public class LocalizeSpriteBehaviour : LocalizedAssetEvent<Sprite>
 {
-    [Serializable]
-    public class UnityEventSprite : UnityEvent<Sprite> { }
-
-    [SerializeField]
-    UnityEventSprite m_UpdateAsset = new UnityEventSprite();
-
-    protected override void UpdateAsset(Sprite localizedAsset)
-    {
-        OnUpdateAsset.Invoke(localizedAsset);
-    }
 }
 ```
 
 ## Automatic Setup
 
-Some Unity Components can be automatically set up with a Component Localizer. These Components will have a *Localize* option in their context menus. A new Component Localizer will be added and its events hooked up to the target component, when using String Component Localizers the closest table and key will also be selected.
+Some Unity components allow you to add an automatic Component Localizer to them. These components have a **Localize** option in their context menus. When you select this, Unity adds a new Component Localizer and hook its events up to the target component. If you use String Component Localizers, Unity also selects the table and key that most closely matches the text.
 
 ![Localize Component menu.](images/Component_LocalizeMenu.png)
 

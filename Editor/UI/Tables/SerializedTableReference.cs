@@ -19,7 +19,7 @@ namespace UnityEditor.Localization.UI
 
         public SerializedTableReference(SerializedProperty property)
         {
-            tableName = property.FindPropertyRelative("m_TableName");
+            tableName = property.FindPropertyRelative("m_TableCollectionName");
             Reference = TableReference.TableReferenceFromString(tableName.stringValue);
         }
     }

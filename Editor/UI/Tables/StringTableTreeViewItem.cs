@@ -12,18 +12,17 @@ namespace UnityEditor.Localization.UI
 
         (SmartFormatField editor, ISelectable selected)[] m_TableProperties;
 
-        public override void Initialize(List<LocalizedTable> tables, int startIdx)
+        public override void Initialize(LocalizedTableCollection collection, int startIdx)
         {
-            m_TableProperties = new(SmartFormatField, ISelectable)[startIdx + tables.Count];
+            m_TableProperties = new(SmartFormatField, ISelectable)[startIdx + collection.Tables.Count];
 
             // Get the shared data
-            if (tables.Count > 0)
-                m_SharedTableData = tables[0].SharedData;
+            m_SharedTableData = collection.SharedData;
 
             Debug.Assert(m_SharedTableData != null);
             for (int i = startIdx; i < m_TableProperties.Length; ++i)
             {
-                var table = tables[i - startIdx] as StringTable;
+                var table = collection.Tables[i - startIdx].asset as StringTable;
                 var smartEditor = new SmartFormatField();
                 smartEditor.KeyId = KeyId;
                 smartEditor.Table = table;
@@ -86,6 +85,10 @@ namespace UnityEditor.Localization.UI
         {
             foreach (var tableField in m_TableProperties)
             {
+                // If the column is selected then we need to disable it, so we are not trying to edit data that has been removed.
+                if (tableField.selected != null)
+                    tableField.selected.Selected = false;
+
                 tableField.editor?.Table.RemoveEntry(KeyId);
             }
         }

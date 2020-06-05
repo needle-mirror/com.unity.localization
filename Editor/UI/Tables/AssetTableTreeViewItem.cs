@@ -17,6 +17,7 @@ namespace UnityEditor.Localization.UI
 
         SharedTableData m_SharedTableData;
         AssetTypeMetadata m_AssetTypeMetadata;
+        AssetTableCollection m_AssetTableCollection;
 
         public Type AssetType => m_AssetTypeMetadata == null ? typeof(Object) : m_AssetTypeMetadata.Type;
 
@@ -35,18 +36,18 @@ namespace UnityEditor.Localization.UI
             return asset;
         }
 
-        public override void Initialize(List<LocalizedTable> tables, int startIdx)
+        public override void Initialize(LocalizedTableCollection collection, int startIdx)
         {
-            m_TableProperties = new(ISelectable, Object, AssetTable)[startIdx + tables.Count];
+            m_AssetTableCollection = collection as AssetTableCollection;
+            m_TableProperties = new(ISelectable, Object, AssetTable)[startIdx + collection.Tables.Count];
 
             // Get the shared data
-            if (tables.Count > 0)
-                m_SharedTableData = tables[0].SharedData;
+            m_SharedTableData = collection.SharedData;
 
             Debug.Assert(m_SharedTableData != null);
             for (int i = startIdx; i < m_TableProperties.Length; ++i)
             {
-                m_TableProperties[i] = (null, null, tables[i - startIdx] as AssetTable);
+                m_TableProperties[i] = (null, null, collection.Tables[i - startIdx].asset as AssetTable);
             }
             RefreshFields();
         }
@@ -111,31 +112,32 @@ namespace UnityEditor.Localization.UI
 
         public void SetAsset(Object asset, int colIdx)
         {
-            var group = Undo.GetCurrentGroup();
-            Undo.SetCurrentGroupName("Set asset");
             if (asset == null)
             {
-                LocalizationEditorSettings.RemoveAssetFromTable(m_TableProperties[colIdx].table, KeyId, m_TableProperties[colIdx].value, true);
+                m_AssetTableCollection.RemoveAssetFromTable(m_TableProperties[colIdx].table, KeyId, true);
             }
             else
             {
-                LocalizationEditorSettings.AddAssetToTable(m_TableProperties[colIdx].table, KeyId, asset, true);
+                m_AssetTableCollection.AddAssetToTable(m_TableProperties[colIdx].table, KeyId, asset, true);
             }
 
             m_TableProperties[colIdx].value = asset;
 
             UpdateType();
             UpdateSearchString();
-            Undo.CollapseUndoOperations(group);
         }
 
         public override void OnDeleteKey()
         {
             foreach (var tableProperties in m_TableProperties)
             {
+                // If the column is selected then we need to disable it, so we are not trying to edit data that has been removed.
+                if (tableProperties.selected != null)
+                    tableProperties.selected.Selected = false;
+
                 if (tableProperties.table != null && tableProperties.value != null)
                 {
-                    LocalizationEditorSettings.RemoveAssetFromTable(tableProperties.table, KeyId, tableProperties.value);
+                    m_AssetTableCollection.RemoveAssetFromTable(tableProperties.table, KeyId, true);
                 }
             }
         }

@@ -1,11 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.Localization.Tables;
 using UnityEngine.UIElements;
-using Object = UnityEngine.Object;
 
 namespace UnityEditor.Localization.UI
 {
@@ -25,9 +23,9 @@ namespace UnityEditor.Localization.UI
 
         static readonly GUIContent newEntry = new GUIContent("Add New Entry");
 
-        protected string TableName => TableCollection.TableName;
+        protected string TableCollectionName => TableCollection.TableCollectionName;
 
-        public AssetTableCollection TableCollection { get; private set; }
+        public LocalizedTableCollection TableCollection { get; private set; }
 
         public ISelectable Selected
         {
@@ -61,21 +59,75 @@ namespace UnityEditor.Localization.UI
         TreeViewItem m_AddKeyItem;
         SearchField m_SearchField;
 
-        protected GenericAssetTableListView(AssetTableCollection tableCollection) :
+        protected GenericAssetTableListView(LocalizedTableCollection tableCollection) :
             base(new TreeViewState())
         {
             TableCollection = tableCollection;
             m_SearchField = new SearchField();
             m_SearchField.downOrUpArrowKeyPressed += SetFocusAndEnsureSelectedItem;
             Undo.undoRedoPerformed += UndoRedoPerformed;
-            LocalizationEditorSettings.OnModification += LocalizationEditorSettings_OnModification;
+            LocalizationEditorSettings.EditorEvents.TableEntryAdded += EditorEvents_TableEntryModified;
+            LocalizationEditorSettings.EditorEvents.TableEntryRemoved += EditorEvents_TableEntryModified;
+            LocalizationEditorSettings.EditorEvents.AssetTableEntryAdded += EditorEvents_AssetTableEntryAdded;
+            LocalizationEditorSettings.EditorEvents.AssetTableEntryRemoved += EditorEvents_AssetTableEntryRemoved;
+            LocalizationEditorSettings.EditorEvents.TableAddedToCollection += EditorEvents_TableAddedOrRemoveFromCollection;
+            LocalizationEditorSettings.EditorEvents.TableRemovedFromCollection += EditorEvents_TableAddedOrRemoveFromCollection;
+            LocalizationEditorSettings.EditorEvents.CollectionModified += EditorEvents_CollectionModified;
+
             rowHeight = EditorStyles.textArea.lineHeight;
         }
 
         ~GenericAssetTableListView()
         {
             Undo.undoRedoPerformed -= UndoRedoPerformed;
-            LocalizationEditorSettings.OnModification -= LocalizationEditorSettings_OnModification;
+            LocalizationEditorSettings.EditorEvents.TableEntryAdded -= EditorEvents_TableEntryModified;
+            LocalizationEditorSettings.EditorEvents.TableEntryRemoved -= EditorEvents_TableEntryModified;
+            LocalizationEditorSettings.EditorEvents.AssetTableEntryAdded -= EditorEvents_AssetTableEntryAdded;
+            LocalizationEditorSettings.EditorEvents.AssetTableEntryRemoved -= EditorEvents_AssetTableEntryRemoved;
+            LocalizationEditorSettings.EditorEvents.TableAddedToCollection -= EditorEvents_TableAddedOrRemoveFromCollection;
+            LocalizationEditorSettings.EditorEvents.TableRemovedFromCollection -= EditorEvents_TableAddedOrRemoveFromCollection;
+            LocalizationEditorSettings.EditorEvents.CollectionModified -= EditorEvents_CollectionModified;
+        }
+
+        void EditorEvents_CollectionModified(object sender, LocalizedTableCollection collection)
+        {
+            if (sender != this && collection == TableCollection)
+                Reload();
+        }
+
+        void EditorEvents_TableEntryModified(LocalizedTableCollection collection, SharedTableData.SharedTableEntry entry)
+        {
+            if (collection == TableCollection)
+                Reload();
+        }
+
+        void EditorEvents_AssetTableEntryAdded(AssetTableCollection collection, AssetTable table, AssetTableEntry entry)
+        {
+            if (collection == TableCollection)
+            {
+                // If the changed item is being displayed then force a refresh.
+                var item = rootItem.children.FirstOrDefault(tbl => tbl is AssetTableTreeViewItem at && at.KeyId == entry.KeyId) as AssetTableTreeViewItem;
+                item?.RefreshFields();
+            }
+        }
+
+        void EditorEvents_AssetTableEntryRemoved(AssetTableCollection collection, AssetTable table, AssetTableEntry entry, string removedAssetGuid)
+        {
+            if (collection == TableCollection)
+            {
+                // If the changed item is being displayed then force a refresh.
+                var item = rootItem.children.FirstOrDefault(tbl => tbl is AssetTableTreeViewItem at && at.KeyId == entry.KeyId) as AssetTableTreeViewItem;
+                item?.RefreshFields();
+            }
+        }
+
+        void EditorEvents_TableAddedOrRemoveFromCollection(LocalizedTableCollection collection, LocalizedTable table)
+        {
+            if (collection == TableCollection)
+            {
+                Initialize();
+                Reload();
+            }
         }
 
         protected override float GetCustomRowHeight(int row, TreeViewItem item)
@@ -86,30 +138,6 @@ namespace UnityEditor.Localization.UI
                 return EditorStyles.textArea.CalcSize(new GUIContent(i.Key)).y;
             }
             return base.GetCustomRowHeight(row, item);
-        }
-
-        void LocalizationEditorSettings_OnModification(LocalizationEditorSettings.ModificationEvent evt, object obj)
-        {
-            if (evt == LocalizationEditorSettings.ModificationEvent.TableEntryAdded)
-            {
-                var eventData = (Tuple<SharedTableData, SharedTableData.SharedTableEntry>)obj;
-                if (eventData.Item1 == TableCollection.SharedData)
-                    Reload();
-                return;
-            }
-
-            if (evt == LocalizationEditorSettings.ModificationEvent.AssetTableEntryAdded ||
-                evt == LocalizationEditorSettings.ModificationEvent.AssetTableEntryRemoved)
-            {
-                var eventData = (Tuple<AssetTable, AssetTableEntry, string>)obj;
-                if (eventData.Item1.TableName != TableName)
-                    return;
-
-                // If the changed item is being displayed then force a refresh.
-                var item = rootItem.children.FirstOrDefault(tbl => ((AssetTableTreeViewItem)tbl).KeyId == eventData.Item2.Data.Id) as AssetTableTreeViewItem;
-                item?.RefreshFields();
-                return;
-            }
         }
 
         protected virtual void UndoRedoPerformed()
@@ -142,24 +170,15 @@ namespace UnityEditor.Localization.UI
             var locales = LocalizationEditorSettings.GetLocales().ToList();
             foreach (var t in TableCollection.Tables)
             {
-                var foundLocale = locales.FirstOrDefault(o => o.Identifier.Code == t.LocaleIdentifier.Code);
+                var foundLocale = locales.FirstOrDefault(o => o.Identifier.Code == t.asset.LocaleIdentifier.Code);
                 locales.Remove(foundLocale);
-                columns.Add(new TableColumn<T1>(TableCollection, t, foundLocale));
+                columns.Add(new TableColumn<T1>(TableCollection, t.asset, foundLocale));
             }
 
             // Add columns for the missing locales.
             locales.ForEach(l => columns.Add(new MissingTableColumn(l)));
 
             var multiColState = new MultiColumnHeaderState(columns.ToArray());
-
-            var visibleColumns = new List<int>();
-            for (int i = 0; i < columns.Count; ++i)
-            {
-                if (columns[i] is VisibleColumn col && col.Visible)
-                    visibleColumns.Add(i);
-            }
-
-            multiColState.visibleColumns = visibleColumns.ToArray();
             multiColumnHeader = new GenericAssetTableListViewMultiColumnHeader<T1, T2>(multiColState, this, TableCollection);
             multiColumnHeader.visibleColumnsChanged += (header) => RefreshCustomRowHeights();
             multiColumnHeader.ResizeToFit();
@@ -168,7 +187,7 @@ namespace UnityEditor.Localization.UI
         protected virtual T2 CreateTreeViewItem(int index, SharedTableData.SharedTableEntry entry)
         {
             var item = new T2() { id = index, SharedEntry = entry };
-            item.Initialize(TableCollection.Tables, k_TableStartIndex);
+            item.Initialize(TableCollection, k_TableStartIndex);
             return item;
         }
 
@@ -179,7 +198,7 @@ namespace UnityEditor.Localization.UI
 
             if (TableCollection.SharedData == null)
             {
-                Debug.LogError($"No {nameof(SharedTableData)} assigned to Table: " + TableName);
+                Debug.LogError($"No {nameof(SharedTableData)} assigned to Table: " + TableCollectionName);
                 SetupParentsAndChildrenFromDepths(root, items);
                 return root;
             }
@@ -300,13 +319,15 @@ namespace UnityEditor.Localization.UI
 
             if (GUI.Button(removeKeyButtonRect, "-"))
             {
-                var objects = new List<Object>(TableCollection.Tables);
-                objects.Add(TableCollection.SharedData);
-
-                Undo.RecordObjects(objects.ToArray(), "Remove key");
+                var objects = new Object[TableCollection.Tables.Count + 1];
+                for (int i = 0; i < TableCollection.Tables.Count; ++i)
+                {
+                    objects[i] = TableCollection.Tables[i].asset;
+                }
+                objects[TableCollection.Tables.Count] = TableCollection.SharedData;
+                Undo.RecordObjects(objects, "Remove key from collection");
                 keyItem.OnDeleteKey();
                 TableCollection.SharedData.RemoveKey(keyItem.KeyId);
-                EditorUtility.SetDirty(TableCollection.SharedData);
                 Reload();
             }
         }

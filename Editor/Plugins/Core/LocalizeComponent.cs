@@ -18,7 +18,7 @@ namespace UnityEditor.Localization
 
         public static MonoBehaviour SetupForLocalization(AudioSource target)
         {
-            var comp = Undo.AddComponent(target.gameObject, typeof(LocalizeAudioClipBehaviour)) as LocalizeAudioClipBehaviour;
+            var comp = Undo.AddComponent(target.gameObject, typeof(LocalizeAudioClipEvent)) as LocalizeAudioClipEvent;
             var setTextureMethod = target.GetType().GetProperty("clip").GetSetMethod();
             var methodDelegate = System.Delegate.CreateDelegate(typeof(UnityAction<AudioClip>), target, setTextureMethod) as UnityAction<AudioClip>;
 

@@ -307,7 +307,9 @@ namespace UnityEditor.Localization.UI
             }
 
             EditorGUI.BeginChangeCheck();
-            var smartFormatRect = new Rect(rect.x + (ShowMetadataButton ? metaDataButtonWidth + 2 : 0), rect.y, 100, k_ToolbarHeight);
+
+            var smartFormatFieldWidth = rect.width - (ShowMetadataButton ? metaDataButtonWidth + 2 : 0);
+            var smartFormatRect = new Rect(rect.x + (ShowMetadataButton ? metaDataButtonWidth + 2 : 0), rect.y, smartFormatFieldWidth, k_ToolbarHeight);
             smartFormatRect = EditorGUI.PrefixLabel(smartFormatRect, GUIContent.none);
             var newIsSmart = GUI.Toggle(smartFormatRect, IsSmart, "Smart");
             if (EditorGUI.EndChangeCheck())

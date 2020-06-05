@@ -3,7 +3,7 @@ using UnityEngine.Localization.Components;
 
 namespace UnityEditor.Localization.UI
 {
-    [CustomEditor(typeof(LocalizeStringBehaviour))]
+    [CustomEditor(typeof(LocalizeStringEvent))]
     class LocalizeStringEditor : UnityEditor.Editor
     {
         SerializedProperty m_StringReference;

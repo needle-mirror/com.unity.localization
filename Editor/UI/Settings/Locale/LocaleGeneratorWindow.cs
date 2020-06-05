@@ -132,6 +132,11 @@ namespace UnityEditor.Localization.UI
                 // Set up fallbacks
                 foreach (var locale in allLocales)
                 {
+                    // A custom locale may not have a CultureInfo.
+                    var cultureInfo = locale.Identifier.CultureInfo;
+                    if (cultureInfo == null)
+                        continue;
+
                     var localeParentCultureInfo = locale.Identifier.CultureInfo.Parent;
                     Locale foundParent = null;
                     while (localeParentCultureInfo != CultureInfo.InvariantCulture && foundParent == null)

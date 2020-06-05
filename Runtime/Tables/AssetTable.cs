@@ -27,6 +27,23 @@ namespace UnityEngine.Localization.Tables
         internal AssetTableEntry()
         {
         }
+
+        /// <summary>
+        /// Attempts to remove the entry from the <see cref="AssetTable"/> that it belongs to.
+        /// If <see cref="TableEntry.Table"/> is null then a warning will be produced.
+        /// </summary>
+        public void RemoveFromTable()
+        {
+            var assetTable = Table as AssetTable;
+            if (assetTable == null)
+            {
+                Debug.LogWarning($"Failed to remove {nameof(AssetTableEntry)} with id {KeyId} and asset guid `{Guid}` as it does not belong to a table.");
+            }
+            else
+            {
+                assetTable.Remove(KeyId);
+            }
+        }
     }
 
     /// <summary>

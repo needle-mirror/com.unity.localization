@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Localization;
@@ -9,8 +8,13 @@ using Object = UnityEngine.Object;
 namespace UnityEditor.Localization.UI
 {
     [CustomPropertyDrawer(typeof(LocalizedAsset<>), true)]
-    class LocalizedAssetPropertyDrawer : LocalizedReferencePropertyDrawer<AssetTable>
+    class LocalizedAssetPropertyDrawer : LocalizedReferencePropertyDrawer<AssetTableCollection>
     {
+        static LocalizedAssetPropertyDrawer()
+        {
+            GetProjectTableCollections = LocalizationEditorSettings.GetAssetTableCollections;
+        }
+
         protected override PropertyData CreatePropertyData(SerializedProperty property)
         {
             var prop = base.CreatePropertyData(property);
@@ -36,25 +40,14 @@ namespace UnityEditor.Localization.UI
         {
             base.DrawTableEntryDetails(ref rowPosition, position);
 
-            rowPosition.xMin += EditorGUI.indentLevel * 15;
-
-            var labelWidth = EditorGUIUtility.labelWidth - ((EditorGUI.indentLevel + 1) * 15);
-            var labelRect = new Rect(rowPosition.x, rowPosition.y, labelWidth, EditorGUIUtility.singleLineHeight);
-            var fieldRect = new Rect(labelRect.xMax, rowPosition.y, rowPosition.width - labelRect.width, labelRect.height);
-
             var projectLocales = LocalizationEditorSettings.GetLocales();
 
             foreach (var locale in projectLocales)
             {
-                var table = m_Property.SelectedTableCollection.Tables.FirstOrDefault(tbl => tbl.LocaleIdentifier == locale.Identifier) as AssetTable;
+                var table = m_Property.SelectedTableCollection.Tables.FirstOrDefault(tbl => tbl.asset?.LocaleIdentifier == locale.Identifier).asset as AssetTable;
 
                 if (table != null)
                 {
-                    if (GUI.Button(labelRect, locale.Identifier.ToString(), EditorStyles.label))
-                    {
-                        EditorGUIUtility.PingObject(table);
-                    }
-
                     var tableEntry = table.GetEntry(m_Property.SelectedTableEntry.Id);
                     Object asset = null;
                     if (tableEntry != null && !tableEntry.IsEmpty)
@@ -63,30 +56,26 @@ namespace UnityEditor.Localization.UI
                     }
 
                     EditorGUI.BeginChangeCheck();
-                    var newAsset = EditorGUI.ObjectField(fieldRect, asset, m_Property.assetType, false);
+                    var newAsset = EditorGUI.ObjectField(rowPosition, locale.Identifier.ToString(), asset, m_Property.assetType, false);
                     if (EditorGUI.EndChangeCheck())
                     {
                         if (newAsset != null)
-                            LocalizationEditorSettings.AddAssetToTable(table, m_Property.SelectedTableEntry.Id, newAsset, true);
+                            m_Property.SelectedTableCollection.AddAssetToTable(table, m_Property.SelectedTableEntry.Id, newAsset, true);
                         else
-                            LocalizationEditorSettings.RemoveAssetFromTable(table, m_Property.SelectedTableEntry.Id, asset, true);
+                            m_Property.SelectedTableCollection.RemoveAssetFromTable(table, m_Property.SelectedTableEntry.Id, true);
                     }
                 }
                 else
                 {
-                    EditorGUI.LabelField(labelRect, locale.Identifier.ToString());
-                    if (GUI.Button(fieldRect, "Add Table"))
+                    var buttonPosition = EditorGUI.PrefixLabel(rowPosition, new GUIContent(locale.Identifier.ToString()));
+                    if (GUI.Button(buttonPosition, "Create Table"))
                     {
-                        // Get the path of one of the tables so we can start the file picker in the directory.
-                        var tableToCopyPath = m_Property.SelectedTableCollection.TableEntries[0].AssetPath;
-                        string tableToCopyDir = Path.GetDirectoryName(tableToCopyPath);
-                        var tc = m_Property.SelectedTableCollection;
-                        LocalizationEditorSettings.CreateAssetTableFilePanel(locale, tc.SharedData, tc.TableName, tc.TableType, tableToCopyDir);
+                        m_Property.SelectedTableCollection.AddNewTable(locale.Identifier);
+                        GUIUtility.ExitGUI();
                     }
                 }
 
-                labelRect.y += labelRect.height + EditorGUIUtility.standardVerticalSpacing;
-                fieldRect.y += fieldRect.height + EditorGUIUtility.standardVerticalSpacing;
+                rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
             }
         }
 

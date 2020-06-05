@@ -1,9 +1,8 @@
-using UnityEngine.Localization.Tables;
 using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.UI
 {
-    [TableEditor(typeof(AssetTable))]
+    [TableCollectionEditor(typeof(AssetTableCollection))]
     class AssetTableEditor : TableEditor
     {
         IMGUIContainer m_ImguiContainer;
@@ -21,7 +20,7 @@ namespace UnityEditor.Localization.UI
         {
             base.UndoRedoPerformed();
 
-            // Because we store the table name in the meta data we can not just use the Undo system.
+            // TODO: We only need to do this when an item is added or removed from the list. Can we be more efficient?
             m_AssetTableListView?.Reload();
         }
 
@@ -29,7 +28,7 @@ namespace UnityEditor.Localization.UI
         {
             if (m_AssetTableListView == null)
             {
-                m_AssetTableListView = new LocalizedAssetTableListView(TableCollection);
+                m_AssetTableListView = new LocalizedAssetTableListView(TableCollection as AssetTableCollection);
                 m_AssetTableListView.Initialize();
                 m_AssetTableListView.Reload();
 

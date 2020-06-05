@@ -17,18 +17,6 @@ namespace UnityEngine.Localization.Settings
         Locale GetLocale(LocaleIdentifier id);
 
         /// <summary>
-        /// Attempt to retrieve a Locale using a Code.
-        /// </summary>
-        /// <param name="code">If no Locale can be found then null is returned.</param>
-        Locale GetLocale(string code);
-
-        /// <summary>
-        /// Attempt to retrieve a Locale using a <see cref="SystemLanguage"/>.
-        /// </summary>
-        /// <returns>If no Locale can be found then null is returned.</returns>
-        Locale GetLocale(SystemLanguage systemLanguage);
-
-        /// <summary>
         /// Add a Locale to allow support for a specific language.
         /// </summary>
         void AddLocale(Locale locale);

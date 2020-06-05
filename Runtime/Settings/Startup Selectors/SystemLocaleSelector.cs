@@ -20,33 +20,36 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public Locale GetStartupLocale(ILocalesProvider availableLocales)
         {
-            Locale locale = null;
-            if (Application.systemLanguage != SystemLanguage.Unknown)
-            {
-                locale = availableLocales.GetLocale(Application.systemLanguage);
-            }
-
+            // We first check the CultureInfo as this is more accurate and contains regional information.
+            var cultureInfo = GetSystemCulture();
+            var locale = availableLocales.GetLocale(cultureInfo);
             if (locale == null)
             {
-                var cultureInfo = CultureInfo.CurrentUICulture;
-                var identifier = new LocaleIdentifier(cultureInfo);
-                locale = availableLocales.GetLocale(identifier);
-                if (locale == null)
+                // Attempt to use CultureInfo fallbacks to find the closest locale
+                while (cultureInfo != CultureInfo.InvariantCulture && locale == null)
                 {
-                    // Attempt to use CultureInfo fallbacks to find the closest locale
-                    while (!Equals(cultureInfo, CultureInfo.InvariantCulture) && locale == null)
-                    {
-                        locale = availableLocales.GetLocale(identifier);
-                        cultureInfo = cultureInfo.Parent;
-                    }
+                    locale = availableLocales.GetLocale(cultureInfo);
+                    cultureInfo = cultureInfo.Parent;
+                }
 
-                    if (locale != null)
-                    {
-                        Debug.Log($"Locale '{CultureInfo.CurrentUICulture}' is not supported, however the parent locale '{locale.Identifier.CultureInfo}' is.");
-                    }
+                if (locale != null)
+                {
+                    Debug.Log($"The Locale '{CultureInfo.CurrentUICulture}' is not available, however the parent locale '{locale.Identifier.CultureInfo}' is available.");
                 }
             }
+
+            // Fallback to Application.systemLanguage
+            var systemLanguage = GetApplicationSystemLanguage();
+            if (locale == null && systemLanguage != SystemLanguage.Unknown)
+            {
+                locale = availableLocales.GetLocale(systemLanguage);
+            }
+
             return locale;
         }
+
+        protected virtual CultureInfo GetSystemCulture() => CultureInfo.CurrentUICulture;
+
+        protected virtual SystemLanguage GetApplicationSystemLanguage() => Application.systemLanguage;
     }
 }

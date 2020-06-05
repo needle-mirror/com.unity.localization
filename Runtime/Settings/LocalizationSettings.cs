@@ -39,6 +39,7 @@ namespace UnityEngine.Localization.Settings
         InitializationOperation m_InitializingOperation;
         AsyncOperationHandle<LocalizationSettings>? m_InitializingOperationHandle;
 
+        AsyncOperationHandle<Locale>? m_SelectedLocaleAsync;
         Locale m_SelectedLocale;
 
         static LocalizationSettings s_Instance;
@@ -50,7 +51,7 @@ namespace UnityEngine.Localization.Settings
         public event Action<Locale> OnSelectedLocaleChanged;
 
         /// <summary>
-        /// Indicates if there is a LocalizationSettings present. If one is not found will attempt to find one however
+        /// Indicates if there is a LocalizationSettings present. If one is not found then it will attempt to find one however
         /// unlike <see cref="Instance"/> it will not create a default, if one can not be found.
         /// </summary>
         /// <value><c>true</c> if has settings; otherwise, <c>false</c>.</value>
@@ -123,12 +124,24 @@ namespace UnityEngine.Localization.Settings
         }
 
         /// <summary>
-        /// The current selected locale. This is the locale that will be used when localizing assets.
+        /// The current selected <see cref="Locale"/>. This is the Locale that will be used by default when localizing assets and strings.
+        /// If you are calling this before <see cref="InitializationOperation"/> has been completed then a null value may be returned.
+        /// See <see cref="SelectedLocaleAsync"/> for a version that will ensure the Locale is not null(when possible).
         /// </summary>
         public static Locale SelectedLocale
         {
             get => Instance.GetSelectedLocale();
             set => Instance.SetSelectedLocale(value);
+        }
+
+        /// <summary>
+        /// The current selected Locale. This is the Locale that will be used by default when localizing assets and strings.
+        /// If <see cref="InitializationOperation"/> has not been completed yet then this will wait for the <see cref="AvailableLocales"/> part to complete first.
+        /// It will not wait for the entire <see cref="InitializationOperation"/> but just the part that initializes the Locales.
+        /// </summary>
+        public static AsyncOperationHandle<Locale> SelectedLocaleAsync
+        {
+            get => Instance.GetSelectedLocaleAsync();
         }
 
         /// <summary>
@@ -155,6 +168,7 @@ namespace UnityEngine.Localization.Settings
             #if UNITY_EDITOR
             // Properties may persist during runs in the editor, so we reset them here to keep each play consistent.
             m_SelectedLocale = null;
+            m_SelectedLocaleAsync = null;
             m_InitializingOperationHandle = null;
             #endif
         }
@@ -164,6 +178,7 @@ namespace UnityEngine.Localization.Settings
         {
             // Properties may persist during runs in the editor, so we reset them here to keep each play consistent.
             m_SelectedLocale = null;
+            m_SelectedLocaleAsync = null;
             m_InitializingOperationHandle = null;
         }
 
@@ -186,7 +201,7 @@ namespace UnityEngine.Localization.Settings
         /// <inheritdoc cref="InitializationOperation"/>
         /// </summary>
         /// <returns></returns>
-        public AsyncOperationHandle<LocalizationSettings> GetInitializationOperation()
+        public virtual AsyncOperationHandle<LocalizationSettings> GetInitializationOperation()
         {
             if (m_InitializingOperationHandle == null)
             {
@@ -227,7 +242,7 @@ namespace UnityEngine.Localization.Settings
         /// <inheritdoc cref="AssetDatabase"/>
         /// </summary>
         /// <returns></returns>
-        public LocalizedAssetDatabase GetAssetDatabase() => m_AssetDatabase;
+        public virtual LocalizedAssetDatabase GetAssetDatabase() => m_AssetDatabase;
 
         /// <summary>
         /// Sets the string database to be used for localizing all strings.
@@ -239,7 +254,7 @@ namespace UnityEngine.Localization.Settings
         /// Returns the string database being used to localize all strings.
         /// </summary>
         /// <returns>The string database.</returns>
-        public LocalizedStringDatabase GetStringDatabase() => m_StringDatabase;
+        public virtual LocalizedStringDatabase GetStringDatabase() => m_StringDatabase;
 
         /// <summary>
         /// Sends out notifications when the locale has changed. Ensures the the events are sent in the correct order.
@@ -275,7 +290,12 @@ namespace UnityEngine.Localization.Settings
         /// </summary>
         internal void InitializeSelectedLocale()
         {
-            Debug.Assert(m_AvailableLocales != null, "Available locales is null, can not pick a locale.");
+            if (m_AvailableLocales == null)
+            {
+                Debug.LogWarning("Available locales is null, can not pick a locale.");
+                return;
+            }
+
             m_SelectedLocale = null;
             foreach (var sel in m_StartupSelectors)
             {
@@ -327,16 +347,55 @@ namespace UnityEngine.Localization.Settings
             if (!ReferenceEquals(m_SelectedLocale, locale))
             {
                 m_SelectedLocale = locale;
+
+                if (locale == null)
+                    m_SelectedLocaleAsync = null;
+                else
+                    m_SelectedLocaleAsync = ResourceManager.CreateCompletedOperation(m_SelectedLocale, null);
+
                 SendLocaleChangedEvents(locale);
             }
+        }
+
+        /// <summary>
+        /// <inheritdoc cref="SelectedLocaleAsync"/>
+        /// </summary>
+        /// <returns></returns>
+        public virtual AsyncOperationHandle<Locale> GetSelectedLocaleAsync()
+        {
+            if (!Application.isPlaying)
+                return ResourceManager.CreateCompletedOperation<Locale>(null, null);
+
+            if (!m_SelectedLocaleAsync.HasValue)
+            {
+                if (m_AvailableLocales is IPreloadRequired localesProvider && !localesProvider.PreloadOperation.IsDone)
+                {
+                    m_SelectedLocaleAsync = ResourceManager.CreateChainOperation<Locale>(localesProvider.PreloadOperation, (op) => ResourceManager.CreateCompletedOperation(GetSelectedLocale(), null));
+                }
+                else
+                {
+                    m_SelectedLocaleAsync = ResourceManager.CreateCompletedOperation(GetSelectedLocale(), null);
+                }
+            }
+            return m_SelectedLocaleAsync.Value;
         }
 
         /// <summary>
         /// <inheritdoc cref="SelectedLocale"/>
         /// </summary>
         /// <returns>\</returns>
-        public Locale GetSelectedLocale()
+        public virtual Locale GetSelectedLocale()
         {
+            if (m_SelectedLocale != null)
+                return m_SelectedLocale;
+
+            if (m_AvailableLocales is IPreloadRequired localesProvider && !localesProvider.PreloadOperation.IsDone)
+            {
+                Debug.LogWarning("Calling GetSelectedLocale when AvailableLocales preloading has not completed. Consider using SelectedLocaleAsync.");
+                return null;
+            }
+
+            InitializeSelectedLocale();
             return m_SelectedLocale;
         }
 
@@ -347,7 +406,7 @@ namespace UnityEngine.Localization.Settings
         /// <param name="locale"></param>
         public void OnLocaleRemoved(Locale locale)
         {
-            if (locale == GetSelectedLocale())
+            if (ReferenceEquals(m_SelectedLocale, locale))
                 SetSelectedLocale(null);
         }
 

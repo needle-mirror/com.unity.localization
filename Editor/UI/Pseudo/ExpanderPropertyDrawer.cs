@@ -3,14 +3,17 @@ using UnityEngine.Localization.Pseudo;
 
 namespace UnityEditor.Localization.UI
 {
-    [CustomPropertyDrawer(typeof(Expander))]
-    class ExpanderPropertyDrawer : PropertyDrawer
+    class ExpanderPropertyDrawerData
     {
-        SerializedProperty m_ExpansionRules;
-        SerializedProperty m_Location;
-        SerializedProperty m_MinimumStringLength;
-        SerializedProperty m_PaddingCharacters;
+        public SerializedProperty expansionRules;
+        public SerializedProperty location;
+        public SerializedProperty minimumStringLength;
+        public SerializedProperty paddingCharacters;
+    }
 
+    [CustomPropertyDrawer(typeof(Expander))]
+    class ExpanderPropertyDrawer : PropertyDrawerExtended<ExpanderPropertyDrawerData>
+    {
         const float k_DefaultExpansion = 0.3f;
         const float k_RemoveButtonSize = 20;
 
@@ -30,18 +33,19 @@ namespace UnityEditor.Localization.UI
             return (min, max, rate);
         }
 
-        void Init(SerializedProperty property)
+        public override ExpanderPropertyDrawerData CreatePropertyData(SerializedProperty property)
         {
-            m_ExpansionRules = property.FindPropertyRelative("m_ExpansionRules");
-            m_Location = property.FindPropertyRelative("m_Location");
-            m_MinimumStringLength = property.FindPropertyRelative("m_MinimumStringLength");
-            m_PaddingCharacters = property.FindPropertyRelative("m_PaddingCharacters");
+            return new ExpanderPropertyDrawerData
+            {
+                expansionRules = property.FindPropertyRelative("m_ExpansionRules"),
+                location = property.FindPropertyRelative("m_Location"),
+                minimumStringLength = property.FindPropertyRelative("m_MinimumStringLength"),
+                paddingCharacters = property.FindPropertyRelative("m_PaddingCharacters")
+            };
         }
 
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        public override void OnGUI(ExpanderPropertyDrawerData data, Rect position, SerializedProperty property, GUIContent label)
         {
-            Init(property);
-
             position.height = EditorGUIUtility.singleLineHeight;
             property.isExpanded = EditorGUI.Foldout(position, property.isExpanded, label);
             position.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
@@ -49,21 +53,21 @@ namespace UnityEditor.Localization.UI
             if (property.isExpanded)
             {
                 EditorGUI.indentLevel++;
-                position = DrawExpansionRules(position);
+                position = DrawExpansionRules(position, data);
 
-                EditorGUI.PropertyField(position, m_Location);
+                EditorGUI.PropertyField(position, data.location);
                 position.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 
-                EditorGUI.PropertyField(position, m_MinimumStringLength);
+                EditorGUI.PropertyField(position, data.minimumStringLength);
                 position.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 
-                position.height = EditorGUI.GetPropertyHeight(m_PaddingCharacters, true);
-                EditorGUI.PropertyField(position, m_PaddingCharacters, true);
+                position.height = EditorGUI.GetPropertyHeight(data.paddingCharacters, true);
+                EditorGUI.PropertyField(position, data.paddingCharacters, true);
                 EditorGUI.indentLevel--;
             }
         }
 
-        Rect DrawExpansionRules(Rect position)
+        Rect DrawExpansionRules(Rect position, ExpanderPropertyDrawerData data)
         {
             // Header
             float indent = EditorGUI.indentLevel * 15;
@@ -76,11 +80,11 @@ namespace UnityEditor.Localization.UI
             position.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 
             // Always have at least 1 item
-            if (m_ExpansionRules.arraySize == 0)
+            if (data.expansionRules.arraySize == 0)
             {
                 // Add defaults
-                m_ExpansionRules.InsertArrayElementAtIndex(0);
-                var properties = ExtractExpansionRuleProperties(m_ExpansionRules.GetArrayElementAtIndex(0));
+                data.expansionRules.InsertArrayElementAtIndex(0);
+                var properties = ExtractExpansionRuleProperties(data.expansionRules.GetArrayElementAtIndex(0));
                 properties.min.intValue = 0;
                 properties.max.intValue = int.MaxValue;
                 properties.rate.floatValue = k_DefaultExpansion;
@@ -89,22 +93,22 @@ namespace UnityEditor.Localization.UI
             // Add button
             if (GUI.Button(addBtnPos, Styles.addItem))
             {
-                var addedItem = ExtractExpansionRuleProperties(m_ExpansionRules.AddArrayElement());
+                var addedItem = ExtractExpansionRuleProperties(data.expansionRules.AddArrayElement());
                 addedItem.max.intValue = int.MaxValue;
             }
 
-            for (int i = 0; i < m_ExpansionRules.arraySize; ++i)
+            for (int i = 0; i < data.expansionRules.arraySize; ++i)
             {
-                DrawExpansionRuleItem(position, i);
+                DrawExpansionRuleItem(position, i, data);
                 position.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
             }
 
             return position;
         }
 
-        void DrawExpansionRuleItem(Rect position, int index)
+        void DrawExpansionRuleItem(Rect position, int index, ExpanderPropertyDrawerData data)
         {
-            var properties = ExtractExpansionRuleProperties(m_ExpansionRules.GetArrayElementAtIndex(index));
+            var properties = ExtractExpansionRuleProperties(data.expansionRules.GetArrayElementAtIndex(index));
 
             EditorGUI.BeginChangeCheck();
 
@@ -115,7 +119,7 @@ namespace UnityEditor.Localization.UI
             int prevMaxValue = 0;
             if (index > 0)
             {
-                var previous = ExtractExpansionRuleProperties(m_ExpansionRules.GetArrayElementAtIndex(index - 1));
+                var previous = ExtractExpansionRuleProperties(data.expansionRules.GetArrayElementAtIndex(index - 1));
                 prevMaxValue = previous.max.intValue;
 
                 if (prevMaxValue > properties.min.intValue)
@@ -135,22 +139,20 @@ namespace UnityEditor.Localization.UI
 
             if (GUI.Button(removeBtnPos, Styles.removeItem))
             {
-                m_ExpansionRules.DeleteArrayElementAtIndex(index);
+                data.expansionRules.DeleteArrayElementAtIndex(index);
             }
         }
 
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        public override float GetPropertyHeight(ExpanderPropertyDrawerData data, SerializedProperty property, GUIContent label)
         {
-            Init(property);
-
             float height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 
             if (property.isExpanded)
             {
                 height += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * 2;
-                height += EditorGUI.GetPropertyHeight(m_PaddingCharacters, true) + EditorGUIUtility.standardVerticalSpacing;
+                height += EditorGUI.GetPropertyHeight(data.paddingCharacters, true) + EditorGUIUtility.standardVerticalSpacing;
                 height += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing); // Rule header and + button
-                height += m_ExpansionRules.arraySize * (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
+                height += data.expansionRules.arraySize * (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
             }
             return height;
         }

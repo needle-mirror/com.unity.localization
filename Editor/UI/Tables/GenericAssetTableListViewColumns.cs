@@ -1,4 +1,4 @@
-using System.IO;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -19,16 +19,26 @@ namespace UnityEditor.Localization.UI
 
         static readonly GUIContent k_MetadataIcon = new GUIContent(AssetDatabase.LoadAssetAtPath<Texture>("Packages/com.unity.localization/Editor/Icons/Localization_AssetTable.png"), "Edit Table Metadata");
 
-        AssetTableCollection TableCollection { get; set; }
+        LocalizedTableCollection TableCollection { get; set; }
 
         GenericAssetTableListView<T1, T2> m_Parent;
 
-        public GenericAssetTableListViewMultiColumnHeader(MultiColumnHeaderState state, GenericAssetTableListView<T1, T2> parent, AssetTableCollection collection)
+        public GenericAssetTableListViewMultiColumnHeader(MultiColumnHeaderState state, GenericAssetTableListView<T1, T2> parent, LocalizedTableCollection collection)
             : base(state)
         {
             height += k_MetadataLabelHeight;
             m_Parent = parent;
             TableCollection = collection;
+
+            var visibleColumns = new List<int>();
+            for (int i = 0; i < state.columns.Length; ++i)
+            {
+                if (state.columns[i] is VisibleColumn col && col.Visible)
+                    visibleColumns.Add(i);
+                else if (state.columns[i] is MissingTableColumn && MissingTableColumn.Visible)
+                    visibleColumns.Add(i);
+            }
+            state.visibleColumns = visibleColumns.ToArray();
         }
 
         protected override void AddColumnHeaderContextMenuItems(GenericMenu menu)
@@ -64,11 +74,16 @@ namespace UnityEditor.Localization.UI
 
         void ToggleMissingTableColumnsVisibility()
         {
+            var show = !MissingTableColumn.Visible;
+            MissingTableColumn.Visible = show;
             for (int i = 0; i < state.columns.Length; ++i)
             {
                 var column = state.columns[i];
                 if (column is MissingTableColumn)
-                    ToggleVisibility(i);
+                {
+                    if (show != IsColumnVisible(i))
+                        ToggleVisibility(i);
+                }
             }
         }
 
@@ -108,9 +123,7 @@ namespace UnityEditor.Localization.UI
 
         void CreateMissingTable(MissingTableColumn mtc)
         {
-            var tableToCopyPath = TableCollection.TableEntries[0].AssetPath;
-            string tableToCopyDir = Path.GetDirectoryName(tableToCopyPath);
-            LocalizationEditorSettings.CreateAssetTableFilePanel(mtc.TableLocale, TableCollection.SharedData, TableCollection.TableName, TableCollection.TableType, tableToCopyDir);
+            TableCollection.AddNewTable(mtc.TableLocale.Identifier);
         }
     }
 
@@ -136,12 +149,12 @@ namespace UnityEditor.Localization.UI
         public Locale TableLocale { get; set; }
         public bool Selected { get; set; }
 
-        AssetTableCollection m_TableCollection;
+        LocalizedTableCollection m_TableCollection;
         bool m_PreloadAllMixedValues;
         bool m_PreloadAllToggle;
         bool m_PreloadSelectedToggle;
 
-        public TableColumn(AssetTableCollection collection, LocalizedTable table, Locale locale)
+        public TableColumn(LocalizedTableCollection collection, LocalizedTable table, Locale locale)
         {
             m_TableCollection = collection;
             minWidth = 100;
@@ -163,7 +176,8 @@ namespace UnityEditor.Localization.UI
 
         void RefreshPreloadToggle()
         {
-            int preloadCount = m_TableCollection.Tables.Count(LocalizationEditorSettings.GetPreloadTableFlag);
+            // TODO: We could use the instanceId instead of the asset so that we do not need to load the asset. (e.g for hidden columns)
+            int preloadCount = m_TableCollection.Tables.Count(tbl => LocalizationEditorSettings.GetPreloadTableFlag(tbl.asset));
             if (preloadCount == 0)
             {
                 m_PreloadAllToggle = false;
@@ -200,7 +214,7 @@ namespace UnityEditor.Localization.UI
                     Undo.SetCurrentGroupName("Set Preload flag");
                     foreach (var table in m_TableCollection.Tables)
                     {
-                        LocalizationEditorSettings.SetPreloadTableFlag(table, m_PreloadAllToggle, true);
+                        LocalizationEditorSettings.SetPreloadTableFlag(table.asset, m_PreloadAllToggle, true);
                     }
                     Undo.CollapseUndoOperations(group);
                     RefreshPreloadToggle();
@@ -289,7 +303,15 @@ namespace UnityEditor.Localization.UI
 
     class MissingTableColumn : MultiColumnHeaderState.Column
     {
+        const string k_ColumnVisiblePref = "Localization-Table-Window-{0}";
+
         public Locale TableLocale { get; }
+
+        public static bool Visible
+        {
+            get => EditorPrefs.GetBool(string.Format(k_ColumnVisiblePref, "Missing Tables"), false);
+            set => EditorPrefs.SetBool(string.Format(k_ColumnVisiblePref, "Missing Tables"), value);
+        }
 
         public MissingTableColumn(Locale locale)
         {

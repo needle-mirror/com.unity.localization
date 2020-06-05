@@ -3,14 +3,32 @@ using UnityEngine.Localization.Pseudo;
 
 namespace UnityEditor.Localization.UI
 {
-    [CustomPropertyDrawer(typeof(CharacterSubstitutor))]
-    class CharacterSubstitutorPropertyDrawer : PropertyDrawer
+    class CharacterSubstitutorPropertyDrawerData
     {
-        SerializedProperty m_SubstitutionMethod;
-        SerializedProperty m_ReplacementsMap;
-        SerializedProperty m_ReplacementList;
-        SerializedProperty m_ListMode;
-        bool m_IsAccenter;
+        public SerializedProperty substitutionMethod;
+        public SerializedProperty replacementsMap;
+        public SerializedProperty replacementList;
+        public SerializedProperty listMode;
+        public bool m_IsAccenter;
+    }
+
+    [CustomPropertyDrawer(typeof(CharacterSubstitutor))]
+    class CharacterSubstitutorPropertyDrawer : PropertyDrawerExtended<CharacterSubstitutorPropertyDrawerData>
+    {
+        public override CharacterSubstitutorPropertyDrawerData CreatePropertyData(SerializedProperty property)
+        {
+            var data = new CharacterSubstitutorPropertyDrawerData
+            {
+                substitutionMethod = property.FindPropertyRelative("m_SubstitutionMethod"),
+                replacementsMap = property.FindPropertyRelative("m_ReplacementsMap"),
+                replacementList = property.FindPropertyRelative("m_ReplacementList"),
+                listMode = property.FindPropertyRelative("m_ListMode")
+            };
+
+            var type = ManagedReferenceUtility.GetType(property.managedReferenceFullTypename);
+            data.m_IsAccenter = type == typeof(Accenter);
+            return data;
+        }
 
         const float k_RemoveButtonSize = 20;
 
@@ -26,20 +44,8 @@ namespace UnityEditor.Localization.UI
             public static readonly GUIContent replacementCharacters = new GUIContent("Replacement Characters");
         }
 
-        void Init(SerializedProperty property)
+        public override void OnGUI(CharacterSubstitutorPropertyDrawerData data, Rect position, SerializedProperty property, GUIContent label)
         {
-            // Don't cache as it causes issues when using PropertyField with a list
-            m_SubstitutionMethod = property.FindPropertyRelative("m_SubstitutionMethod");
-            m_ReplacementsMap = property.FindPropertyRelative("m_ReplacementsMap");
-            m_ReplacementList = property.FindPropertyRelative("m_ReplacementList");
-            m_ListMode = property.FindPropertyRelative("m_ListMode");
-            m_IsAccenter = property.managedReferenceFullTypename.EndsWith("Accenter");
-        }
-
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-        {
-            Init(property);
-
             position.height = EditorGUIUtility.singleLineHeight;
             property.isExpanded = EditorGUI.Foldout(position, property.isExpanded, label);
             position.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
@@ -48,33 +54,33 @@ namespace UnityEditor.Localization.UI
             {
                 EditorGUI.indentLevel++;
 
-                if (!m_IsAccenter)
+                if (!data.m_IsAccenter)
                 {
-                    EditorGUI.PropertyField(position, m_SubstitutionMethod);
+                    EditorGUI.PropertyField(position, data.substitutionMethod);
                     position.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
                 }
 
-                var method = (CharacterSubstitutor.SubstitutionMethod)m_SubstitutionMethod.intValue;
+                var method = (CharacterSubstitutor.SubstitutionMethod)data.substitutionMethod.intValue;
                 if (method == CharacterSubstitutor.SubstitutionMethod.Map)
                 {
-                    DrawReplacementRules(position, m_ReplacementsMap);
+                    DrawReplacementRules(position, data.replacementsMap);
                 }
                 else if (method == CharacterSubstitutor.SubstitutionMethod.List)
                 {
-                    EditorGUI.BeginDisabledGroup(m_ReplacementList.arraySize <= 1);
-                    EditorGUI.PropertyField(position, m_ListMode);
+                    EditorGUI.BeginDisabledGroup(data.replacementList.arraySize <= 1);
+                    EditorGUI.PropertyField(position, data.listMode);
                     EditorGUI.EndDisabledGroup();
                     position.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 
                     // Add typical characters button
-                    EditorGUI.PropertyField(position, m_ReplacementList, true);
-                    position.y += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * (2 + m_ReplacementList.arraySize);
+                    EditorGUI.PropertyField(position, data.replacementList, true);
+                    position.y += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * (2 + data.replacementList.arraySize);
 
                     if (s_DefferedAddTypicalCharacters != null)
                     {
                         foreach (var c in s_DefferedAddTypicalCharacters)
                         {
-                            var element = m_ReplacementList.AddArrayElement();
+                            var element = data.replacementList.AddArrayElement();
                             element.intValue = c;
                         }
 
@@ -150,33 +156,31 @@ namespace UnityEditor.Localization.UI
             return position;
         }
 
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        public override float GetPropertyHeight(CharacterSubstitutorPropertyDrawerData data, SerializedProperty property, GUIContent label)
         {
-            Init(property);
-
             float height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 
             if (property.isExpanded)
             {
-                if (!m_IsAccenter)
+                if (!data.m_IsAccenter)
                     height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 
-                var method = (CharacterSubstitutor.SubstitutionMethod)m_SubstitutionMethod.intValue;
+                var method = (CharacterSubstitutor.SubstitutionMethod)data.substitutionMethod.intValue;
 
                 if (method == CharacterSubstitutor.SubstitutionMethod.Map)
                 {
                     height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
-                    if (m_ReplacementsMap.isExpanded)
+                    if (data.replacementsMap.isExpanded)
                     {
-                        height += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * (1 + m_ReplacementsMap.arraySize);
+                        height += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * (1 + data.replacementsMap.arraySize);
                     }
                 }
                 else if (method == CharacterSubstitutor.SubstitutionMethod.List)
                 {
                     height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 
-                    height += EditorGUI.GetPropertyHeight(m_ReplacementList, true);
-                    if (m_ReplacementList.isExpanded)
+                    height += EditorGUI.GetPropertyHeight(data.replacementList, true);
+                    if (data.replacementList.isExpanded)
                     {
                         height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
                     }

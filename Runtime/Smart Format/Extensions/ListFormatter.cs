@@ -34,18 +34,19 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     /// In this example, format = "{Width}x{Height}".  Notice the nested braces.
     /// </summary>
     [Serializable]
-    public class ListFormatter : IFormatter, ISource
+    public class ListFormatter : FormatterBase, ISource
     {
         [SerializeReference, HideInInspector]
         SmartSettings m_SmartSettings;
-
-        public string[] Names { get; set; } = {"list", "l", ""};
 
         public ListFormatter(SmartFormatter formatter)
         {
             formatter.Parser.AddOperators("[]()");
             m_SmartSettings = formatter.Settings;
+            Names = DefaultNames;
         }
+
+        public override string[] DefaultNames => new[] {"list", "l", ""};
 
         /// <summary>
         /// This allows an integer to be used as a selector to index an array (or list).
@@ -137,7 +138,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             set { _collectionIndex.Value = value; }
         }
 #endif
-        public bool TryEvaluateFormat(IFormattingInfo formattingInfo)
+        public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {
             var format = formattingInfo.Format;
             var current = formattingInfo.CurrentValue;

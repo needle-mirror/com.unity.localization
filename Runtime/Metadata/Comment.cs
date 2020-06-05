@@ -10,19 +10,11 @@ namespace UnityEngine.Localization.Metadata
     /// </summary>
     [Metadata]
     [Serializable]
-    public class Comment : IMetadata, ISerializationCallbackReceiver
+    public class Comment : IMetadata
     {
-        [SerializeField]
-        string m_TimeStamp;
-
         [SerializeField]
         [TextArea(1, int.MaxValue)]
         string m_CommentText = "Comment Text";
-
-        /// <summary>
-        /// A time stamp to indicate when the comment was created.
-        /// </summary>
-        public DateTime TimeStamp { get; set; } = DateTime.Now;
 
         /// <summary>
         /// The comment text.
@@ -31,17 +23,6 @@ namespace UnityEngine.Localization.Metadata
         {
             get => m_CommentText;
             set => m_CommentText = value;
-        }
-
-        public void OnAfterDeserialize()
-        {
-            if (DateTime.TryParse(m_TimeStamp, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime time))
-                TimeStamp = time;
-        }
-
-        public void OnBeforeSerialize()
-        {
-            m_TimeStamp = TimeStamp.ToString("HH:mm:ss.ffffff");
         }
     }
 }

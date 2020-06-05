@@ -1,32 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
-using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
 namespace UnityEditor.Localization.Tests
 {
     public class LocalizationEditorSettingsTests
     {
-        protected FakedLocalizationEditorSettings Settings { get; set; }
-
-        [SetUp]
-        public void Init()
-        {
-            Settings = new FakedLocalizationEditorSettings();
-            LocalizationEditorSettings.Instance = Settings;
-        }
-
-        [TearDown]
-        public void Teardown()
-        {
-            LocalizationEditorSettings.Instance = null;
-        }
-
         protected static List<Locale> GenerateSampleLocales()
         {
             return new List<Locale>()
@@ -39,26 +22,11 @@ namespace UnityEditor.Localization.Tests
             };
         }
 
-        [TestCase(typeof(AssetTable))]
-        [TestCase(typeof(StringTable))]
-        public void CreateTables_AssignsTableNameToAllNewTables(Type tableType)
-        {
-            Assert.IsEmpty(Settings.CreatedSharedTableDatas);
-            const string tableName = nameof(CreateTables_AssignsTableNameToAllNewTables);
-            var createdTables = LocalizationEditorSettings.CreateAssetTableCollection(GenerateSampleLocales(), tableName, tableType, "");
-
-            foreach (var table in createdTables)
-            {
-                Assert.AreEqual(tableName, table.TableName, "Expected the table name to be :" + tableName);
-            }
-        }
-
         [Test]
         public void AddLocale_WithNonPersistentLocale_GeneratesError()
         {
             var locale = ScriptableObject.CreateInstance<Locale>();
-            LocalizationEditorSettings.AddLocale(locale, false);
-            LogAssert.Expect(LogType.Error, new Regex("Only persistent assets can be addressable."));
+            Assert.Throws<AssetNotPersistentException>(() => LocalizationEditorSettings.AddLocale(locale));
             Object.DestroyImmediate(locale);
         }
 
@@ -85,6 +53,19 @@ namespace UnityEditor.Localization.Tests
         {
             var label = AddressHelper.FormatAssetLabel(locale.Identifier);
             Assert.IsTrue(AddressHelper.IsLocaleLabel(label), "Expected the Addressables Locale label to be recognized by IsLocaleLabel.");
+        }
+
+        [Test]
+        public void CreateCollectionThrowsExceptionIfTypeIsNotDerivedFromLocalizedTableCollection()
+        {
+            Assert.Throws<ArgumentException>(() => LocalizationEditorSettings.Instance.CreateCollection(typeof(StringTable), null, null, null));
+        }
+
+        [Test]
+        public void CreateCollectionThrowsExceptionIfTableCollectionNameIsNullOrEmpty()
+        {
+            Assert.Throws<ArgumentException>(() => LocalizationEditorSettings.Instance.CreateCollection(typeof(StringTableCollection), null, null, null));
+            Assert.Throws<ArgumentException>(() => LocalizationEditorSettings.Instance.CreateCollection(typeof(StringTableCollection), "", null, null));
         }
     }
 }

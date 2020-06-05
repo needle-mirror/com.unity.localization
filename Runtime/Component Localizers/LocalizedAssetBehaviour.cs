@@ -19,24 +19,23 @@ namespace UnityEngine.Localization.Components
         public TReference AssetReference
         {
             get => m_LocalizedAssetReference;
-            set => m_LocalizedAssetReference = value;
+            set
+            {
+                m_LocalizedAssetReference.ClearChangeHandler();
+                m_LocalizedAssetReference = value;
+                m_LocalizedAssetReference.RegisterChangeHandler(UpdateAsset);
+            }
         }
 
         /// <summary>
         /// Starts listening for changes to <see cref="AssetReference"/>.
         /// </summary>
-        protected virtual void OnEnable()
-        {
-            AssetReference.RegisterChangeHandler(UpdateAsset);
-        }
+        protected virtual void OnEnable() => AssetReference.RegisterChangeHandler(UpdateAsset);
 
         /// <summary>
         /// Stops listening for changes to <see cref="AssetReference"/>.
         /// </summary>
-        protected virtual void OnDisable()
-        {
-            AssetReference.ClearChangeHandler();
-        }
+        protected virtual void OnDisable() => AssetReference.ClearChangeHandler();
 
         /// <summary>
         /// Called whenever the localized asset is updated, such as when the Locale changes or when initializing.
@@ -51,7 +50,7 @@ namespace UnityEngine.Localization.Components
     /// <typeparam name="TObject"></typeparam>
     /// <typeparam name="TReference"></typeparam>
     /// <typeparam name="TEvent"></typeparam>
-    public class LocalizedAssetBehaviourEvent<TObject, TReference, TEvent> : LocalizedAssetBehaviour<TObject, TReference>
+    public class LocalizedAssetEvent<TObject, TReference, TEvent> : LocalizedAssetBehaviour<TObject, TReference>
         where TObject : Object
         where TReference : LocalizedAsset<TObject>, new()
         where TEvent : UnityEvent<TObject>, new()

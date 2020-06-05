@@ -12,6 +12,6 @@
                         UnityEditor.PackageManager.UI ../../../../../UIElementsSchema/UnityEditor.PackageManager.UI.xsd
 "
 >
-  <editor:PropertyField name="m_TableName" label="Table Name:" binding-path="m_TableName" />
+  <editor:PropertyField name="m_TableCollectionName" label="Table Collection Name:" binding-path="m_TableCollectionName" />
   <engine:VisualElement name="tableContainer" />
   </engine:UXML>

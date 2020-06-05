@@ -1,0 +1,9 @@
+<UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <uie:Toolbar style="flex-direction: row;">
+        <uie:ToolbarToggle text="New Table Collection" name="new-table-tab" />
+        <uie:ToolbarToggle text="Edit Table Collection" name="edit-table-tab" />
+        <uie:ToolbarSpacer style="flex-grow: 1;"/>
+    </uie:Toolbar>
+    <UnityEditor.Localization.UI.TableCreator name="new-table-tab-panel" style="flex-grow: 1;"/>
+    <UnityEditor.Localization.UI.EditAssetTables name="edit-table-tab-panel" style="flex-grow: 1;"/>
+</UXML>

@@ -26,7 +26,7 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableEntryReference tableEntryReference) where TObject : Object
         {
-            return GetLocalizedAssetAsync<TObject>(DefaultTable, tableEntryReference, LocalizationSettings.SelectedLocale);
+            return GetLocalizedAssetAsync<TObject>(DefaultTable, tableEntryReference);
         }
 
         /// <summary>
@@ -39,6 +39,9 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableEntryReference tableEntryReference, Locale locale) where TObject : Object
         {
+            if (locale == null)
+                throw new ArgumentNullException(nameof(locale));
+
             return GetLocalizedAssetAsync<TObject>(DefaultTable, tableEntryReference, locale);
         }
 
@@ -50,9 +53,12 @@ namespace UnityEngine.Localization.Settings
         /// <typeparam name="TObject">The type of asset that should be loaded.</typeparam>
         /// <param name="tableReference">A reference to the table that the asset should be loaded from.</param>
         /// <param name="tableEntryReference">A reference to the entry in the table.</param>
-        public AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableReference tableReference, TableEntryReference tableEntryReference) where TObject : Object
+        public virtual AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableReference tableReference, TableEntryReference tableEntryReference) where TObject : Object
         {
-            return GetLocalizedAssetAsync<TObject>(tableReference, tableEntryReference, LocalizationSettings.SelectedLocale);
+            var locale = LocalizationSettings.SelectedLocaleAsync;
+            if (!locale.IsDone)
+                return ResourceManager.CreateChainOperation(locale, (op) => GetLocalizedAssetAsync<TObject>(tableReference, tableEntryReference, op.Result));
+            return GetLocalizedAssetAsync<TObject>(tableReference, tableEntryReference, locale.Result);
         }
 
         /// <summary>
@@ -66,8 +72,8 @@ namespace UnityEngine.Localization.Settings
         /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
         public AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale) where TObject : Object
         {
-            tableReference.Validate();
-            tableEntryReference.Validate();
+            if (locale == null)
+                throw new ArgumentNullException(nameof(locale));
             return GetLocalizedAssetAsyncInternal<TObject>(tableReference, tableEntryReference, locale);
         }
 
@@ -93,8 +99,10 @@ namespace UnityEngine.Localization.Settings
         /// <param name="entryOp">The table entry operation returned from <see cref="LocalizedAssetDatabase.GetTableEntryAsync"/></param>
         /// <param name="tableEntryReference">A reference to the entry in the table.</param>
         /// <returns></returns>
-        protected virtual AsyncOperationHandle<TObject> GetLocalizedAssetLoadAsset<TObject>(AsyncOperationHandle<TableEntryResult> entryOp, TableEntryReference tableEntryReference) where TObject : Object
+        internal protected virtual AsyncOperationHandle<TObject> GetLocalizedAssetLoadAsset<TObject>(AsyncOperationHandle<TableEntryResult> entryOp, TableEntryReference tableEntryReference) where TObject : Object
         {
+            tableEntryReference.Validate();
+
             if (entryOp.Status != AsyncOperationStatus.Succeeded || entryOp.Result.Entry == null)
             {
                 // Find the key so we can provide a better error message.

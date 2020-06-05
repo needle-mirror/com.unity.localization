@@ -16,8 +16,10 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
 
         public TimeFormatter()
         {
-            Names = new[] {"timespan", "time", "t", ""};
+            Names = DefaultNames;
         }
+
+        public override string[] DefaultNames => new[] {"timespan", "time", "t", ""};
 
         /// <summary>
         /// Determines the options for time formatting.

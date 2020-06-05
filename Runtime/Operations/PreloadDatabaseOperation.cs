@@ -105,8 +105,8 @@ namespace UnityEngine.Localization
             // Iterate through the loaded tables, add them to our known tables and preload the actual table contents if required.
             foreach (var table in loadTablesOperation.Result)
             {
-                Debug.Assert(!m_Database.TableOperations.ContainsKey((table.LocaleIdentifier, table.TableName)), $"A table with the same key `{table.TableName}` already exists. Something went wrong during preloading.");
-                m_Database.RegisterTableOperation(LocalizationSettings.ResourceManager.CreateCompletedOperation(table, null), table.LocaleIdentifier, table.TableName);
+                Debug.Assert(!m_Database.TableOperations.ContainsKey((table.LocaleIdentifier, table.TableCollectionName)), $"A table with the same key `{table.TableCollectionName}` already exists. Something went wrong during preloading.");
+                m_Database.RegisterTableOperation(LocalizationSettings.ResourceManager.CreateCompletedOperation(table, null), table.LocaleIdentifier, table.TableCollectionName);
 
                 if (table is IPreloadRequired preloadRequired)
                 {

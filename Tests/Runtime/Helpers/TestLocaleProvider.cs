@@ -3,7 +3,7 @@ using UnityEngine.Localization.Settings;
 
 namespace UnityEngine.Localization.Tests
 {
-    class TestLocaleProvider : ILocalesProvider
+    public class TestLocaleProvider : ILocalesProvider
     {
         public List<Locale> Locales { get; set; } = new List<Locale>();
 

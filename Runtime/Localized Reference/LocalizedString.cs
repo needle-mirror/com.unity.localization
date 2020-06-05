@@ -47,6 +47,40 @@ namespace UnityEngine.Localization
         /// <seealso cref="LoadAssetAsync"/> when not using a change handler.
         /// </summary>
         /// <param name="handler"></param>
+        /// <example>
+        /// This example shows how we can fetch and update a single string value.
+        /// <code>
+        /// public class LocalizedStringWithChangeHandlerExample : MonoBehaviour
+        /// {
+        ///     // A LocalizedString provides an interface to retrieving translated strings.
+        ///     // This example assumes a String Table Collection with the name "My String Table" and an entry with the Key "Hello World" exists.
+        ///     // You can change the Table Collection and Entry target in the inspector.
+        ///     public LocalizedString stringRef = new LocalizedString() { TableReference = "My String Table", TableEntryReference = "Hello World" };
+        ///     string m_TranslatedString;
+        ///
+        ///     void OnEnable()
+        ///     {
+        ///         stringRef.RegisterChangeHandler(UpdateString);
+        ///     }
+        ///
+        ///     void OnDisable()
+        ///     {
+        ///         stringRef.ClearChangeHandler();
+        ///     }
+        ///
+        ///     void UpdateString(string translatedValue)
+        ///     {
+        ///         m_TranslatedString = translatedValue;
+        ///         Debug.Log("Translated Value Updated: " + translatedValue);
+        ///     }
+        ///
+        ///     void OnGUI()
+        ///     {
+        ///         GUILayout.Label(m_TranslatedString);
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         public void RegisterChangeHandler(ChangeHandler handler)
         {
             if (handler == null)
@@ -108,6 +142,22 @@ namespace UnityEngine.Localization
         /// string is immediately available.
         /// </summary>
         /// <returns></returns>
+        /// <example>
+        /// <code>
+        /// // A LocalizedString provides an interface to retrieving translated strings.
+        /// // This example assumes a String Table Collection with the name "My String Table" and an entry with the Key "Hello World" exists.
+        /// // You can change the Table Collection and Entry target in the inspector.
+        /// public LocalizedString stringRef = new LocalizedString() { TableReference = "My String Table", TableEntryReference = "Hello World" };
+        ///
+        /// void OnGUI()
+        /// {
+        ///     // This will make a request to the StringDatabase each time using the LocalizedString properties.
+        ///     var stringOperation = stringRef.GetLocalizedString();
+        ///     if (stringOperation.IsDone && stringOperation.Status == AsyncOperationStatus.Succeeded)
+        ///         GUILayout.Label(stringOperation.Result);
+        /// }
+        /// </code>
+        /// </example>
         public AsyncOperationHandle<string> GetLocalizedString()
         {
             LocalizationSettings.ValidateSettingsExist();
@@ -142,6 +192,10 @@ namespace UnityEngine.Localization
         {
             // Cancel any previous loading operations.
             ClearLoadingOperation();
+
+            // Don't try and load empty references.
+            if (IsEmpty)
+                return;
 
             CurrentLoadingOperation = LocalizationSettings.StringDatabase.GetTableEntryAsync(TableReference, TableEntryReference);
             if (CurrentLoadingOperation.Value.IsDone)

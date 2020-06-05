@@ -17,7 +17,7 @@ namespace UnityEngine.Localization
 
         /// <summary>
         /// A reference to the <see cref="LocalizedTable"/>.
-        /// A table reference can be either the name of the table or the table name Guid.
+        /// A table reference can be either the name of the table or the table collection name Guid.
         /// </summary>
         public TableReference TableReference
         {
@@ -50,6 +50,11 @@ namespace UnityEngine.Localization
                 ForceUpdate();
             }
         }
+
+        /// <summary>
+        /// Does both <see cref="TableReference"/> and <see cref="TableEntryReference"/> contain valid references or is one of them Empty?
+        /// </summary>
+        public bool IsEmpty => TableReference.ReferenceType == TableReference.Type.Empty || TableEntryReference.ReferenceType == TableEntryReference.Type.Empty;
 
         /// <summary>
         /// Sets both the <see cref="TableReference"/> and <see cref="TableEntryReference"/>

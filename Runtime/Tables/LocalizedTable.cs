@@ -9,7 +9,7 @@ namespace UnityEngine.Localization.Tables
     /// Abstract base class for all tables.
     /// Contains common functionality.
     /// </summary>
-    public abstract class LocalizedTable : ScriptableObject, IMetadataCollection
+    public abstract class LocalizedTable : ScriptableObject, IMetadataCollection, IComparable<LocalizedTable>
     {
         [SerializeField]
         LocaleIdentifier m_LocaleId;
@@ -36,17 +36,12 @@ namespace UnityEngine.Localization.Tables
         /// <summary>
         /// The name of this asset table collection.
         /// </summary>
-        public string TableName
+        public string TableCollectionName
         {
             get
             {
                 VerifySharedTableDataIsNotNull();
-                return SharedData.TableName;
-            }
-            set
-            {
-                VerifySharedTableDataIsNotNull();
-                SharedData.TableName = value;
+                return SharedData.TableCollectionName;
             }
         }
 
@@ -65,7 +60,6 @@ namespace UnityEngine.Localization.Tables
         internal List<TableEntryData> TableData
         {
             get => m_TableData;
-            set => m_TableData = value;
         }
 
         /// <summary>
@@ -136,15 +130,21 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
+        /// Create an empty entry in the table at the specified entry.
+        /// </summary>
+        /// <param name="entryReference"></param>
+        public abstract void CreateEmpty(TableEntryReference entryReference);
+
+        /// <summary>
         /// Returns the key with the matching name from the <see cref="SharedTableData"/>, if one exists.
         /// </summary>
         /// <param name="key"></param>
         /// <returns>The found key or null if one could not be found.</returns>
         /// <exception cref="Exception">Thrown if the <see cref="SharedTableData"/> is null.</exception>
-        protected uint FindKeyId(string key)
+        protected uint FindKeyId(string key, bool addKey)
         {
             VerifySharedTableDataIsNotNull();
-            return SharedData.GetId(key, true);
+            return SharedData.GetId(key, addKey);
         }
 
         void VerifySharedTableDataIsNotNull()
@@ -154,9 +154,22 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Returns a string representation of the table in the format "{TableName}({LocaleIdentifier})".
+        /// Returns a string representation of the table in the format "{TableCollectionName}({LocaleIdentifier})".
         /// </summary>
         /// <returns></returns>
-        public override string ToString() => $"{TableName}({LocaleIdentifier})";
+        public override string ToString() => $"{TableCollectionName}({LocaleIdentifier})";
+
+        /// <summary>
+        /// Compare to another LocalizedTable.
+        /// Performs a comparison against the <see cref="LocaleIdentifier"/> property.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public int CompareTo(LocalizedTable other)
+        {
+            if (other == null)
+                return 1;
+            return LocaleIdentifier.CompareTo(other.LocaleIdentifier);
+        }
     }
 }

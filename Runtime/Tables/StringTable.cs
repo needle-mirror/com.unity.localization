@@ -49,6 +49,23 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
+        /// Attempts to remove the entry from the <see cref="StringTable"/> that it belongs to.
+        /// If <see cref="TableEntry.Table"/> is null then a warning will be produced.
+        /// </summary>
+        public void RemoveFromTable()
+        {
+            var stringTable = Table as StringTable;
+            if (stringTable == null)
+            {
+                Debug.LogWarning($"Failed to remove {nameof(StringTableEntry)} with id {KeyId} and value `{Value}` as it does not belong to a table.");
+            }
+            else
+            {
+                stringTable.Remove(KeyId);
+            }
+        }
+
+        /// <summary>
         /// Returns the raw localized value without any formatting applied.
         /// </summary>
         /// <returns></returns>

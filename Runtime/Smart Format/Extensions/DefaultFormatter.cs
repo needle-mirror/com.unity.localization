@@ -11,8 +11,10 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     {
         public DefaultFormatter()
         {
-            Names = new[] {"default", "d", ""};
+            Names = DefaultNames;
         }
+
+        public override string[] DefaultNames => new[] {"default", "d", ""};
 
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {

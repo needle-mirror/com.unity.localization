@@ -6,15 +6,23 @@
         "Unity.Addressables",
         "Unity.ResourceManager",
         "Unity.TextMeshPro",
-        "Unity.ugui"
+        "Unity.ugui",
+        "Unity.Nuget.NewtonsoftJson.EditorTests"
     ],
     "includePlatforms": [
         "Editor"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Google.Apis.Sheets.v4.dll",
+        "Google.Apis.dll",
+        "Google.Apis.Core.dll",
+        "Google.Apis.Auth.dll",
+        "Newtonsoft.Json.dll",
+        "Google.Apis.Auth.PlatformServices.dll"
+    ],
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [

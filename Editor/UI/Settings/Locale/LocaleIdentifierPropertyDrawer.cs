@@ -1,23 +1,18 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Localization;
 
 namespace UnityEditor.Localization.UI
 {
-    [CustomPropertyDrawer(typeof(LocaleIdentifier))]
-    class LocaleIdentifierPropertyDrawer : PropertyDrawer
+    class LocaleIdentifierPropertyDrawerData
     {
-        class PropertyData
-        {
-            public Locale selectedLocale;
-            public SerializedProperty code;
-            public bool undoPerformed;
-        }
+        public Locale selectedLocale;
+        public SerializedProperty code;
+        public bool undoPerformed;
+    }
 
-        // Its possible that the PropertyDrawer may be used to draw more than one item(arrays, lists)
-        Dictionary<string, PropertyData> m_PropertyDataPerPropertyPath = new Dictionary<string, PropertyData>();
-        PropertyData m_Property;
-
+    [CustomPropertyDrawer(typeof(LocaleIdentifier))]
+    class LocaleIdentifierPropertyDrawer : PropertyDrawerExtended<LocaleIdentifierPropertyDrawerData>
+    {
         readonly float k_ExpandedHeight = (2.0f * EditorGUIUtility.singleLineHeight) + (2.0f * EditorGUIUtility.standardVerticalSpacing);
 
         public LocaleIdentifierPropertyDrawer() => Undo.undoRedoPerformed += UndoRedoPerformed;
@@ -26,31 +21,25 @@ namespace UnityEditor.Localization.UI
 
         void UndoRedoPerformed()
         {
-            foreach (var propertyData in m_PropertyDataPerPropertyPath)
+            foreach (var propertyData in PropertyData)
             {
                 propertyData.Value.undoPerformed = true;
             }
         }
 
-        void Init(SerializedProperty property)
+        public override LocaleIdentifierPropertyDrawerData CreatePropertyData(SerializedProperty property)
         {
-            // We use both the property name and the serialized object hash for the key as its possible the serialized object may have been disposed.
-            var propertyKey = property.serializedObject.GetHashCode() + property.propertyPath;
-
-            if (m_PropertyDataPerPropertyPath.TryGetValue(propertyKey, out m_Property))
-                return;
-
-            m_Property = new PropertyData
+            var data =  new LocaleIdentifierPropertyDrawerData
             {
-                code = property.FindPropertyRelative("m_Code"),
+                code = property.FindPropertyRelative("m_Code")
             };
-            FindLocaleFromIdentifier();
-            m_PropertyDataPerPropertyPath.Add(propertyKey, m_Property);
+            FindLocaleFromIdentifier(data);
+            return data;
         }
 
-        void FindLocaleFromIdentifier()
+        void FindLocaleFromIdentifier(LocaleIdentifierPropertyDrawerData data)
         {
-            m_Property.undoPerformed = false;
+            data.undoPerformed = false;
 
             var assets = AssetDatabase.FindAssets("t:Locale");
             foreach (var assetGuid in assets)
@@ -58,32 +47,30 @@ namespace UnityEditor.Localization.UI
                 var path = AssetDatabase.GUIDToAssetPath(assetGuid);
                 var locale = AssetDatabase.LoadAssetAtPath<Locale>(path);
 
-                if (m_Property.code.stringValue == locale.Identifier.Code)
+                if (data.code.stringValue == locale.Identifier.Code)
                 {
-                    m_Property.selectedLocale = locale;
+                    data.selectedLocale = locale;
                     return;
                 }
             }
 
-            m_Property.selectedLocale = null;
+            data.selectedLocale = null;
         }
 
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        public override void OnGUI(LocaleIdentifierPropertyDrawerData data, Rect position, SerializedProperty property, GUIContent label)
         {
-            Init(property);
-
             var foldRect = new Rect(position.x, position.y, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight);
             property.isExpanded = EditorGUI.Foldout(foldRect, property.isExpanded, label);
 
             EditorGUI.BeginChangeCheck();
             EditorGUI.BeginProperty(foldRect, GUIContent.none, property);
             var localeRect = new Rect(position.x + EditorGUIUtility.labelWidth, position.y, position.width - foldRect.width, foldRect.height);
-            var newSelectedLocale = EditorGUI.ObjectField(localeRect, m_Property.selectedLocale, typeof(Locale), false);
+            var newSelectedLocale = EditorGUI.ObjectField(localeRect, data.selectedLocale, typeof(Locale), false);
             EditorGUI.EndProperty();
             if (EditorGUI.EndChangeCheck())
             {
-                m_Property.selectedLocale = newSelectedLocale as Locale;
-                m_Property.code.stringValue = m_Property.selectedLocale != null ? m_Property.selectedLocale.Identifier.Code : string.Empty;
+                data.selectedLocale = newSelectedLocale as Locale;
+                data.code.stringValue = data.selectedLocale != null ? data.selectedLocale.Identifier.Code : string.Empty;
             }
 
             if (property.isExpanded)
@@ -93,16 +80,16 @@ namespace UnityEditor.Localization.UI
 
                 EditorGUI.BeginChangeCheck();
                 position.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
-                EditorGUI.PropertyField(position, m_Property.code);
-                if (EditorGUI.EndChangeCheck() || m_Property.undoPerformed)
+                EditorGUI.PropertyField(position, data.code);
+                if (EditorGUI.EndChangeCheck() || data.undoPerformed)
                 {
-                    FindLocaleFromIdentifier();
+                    FindLocaleFromIdentifier(data);
                 }
                 EditorGUI.indentLevel--;
             }
         }
 
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        public override float GetPropertyHeight(LocaleIdentifierPropertyDrawerData data, SerializedProperty property, GUIContent label)
         {
             return property.isExpanded ? k_ExpandedHeight : EditorGUIUtility.singleLineHeight;
         }

@@ -1,31 +1,78 @@
 # Changelog
 All notable changes to this package will be documented in this file.
 
+## [0.7.1] - 2020-06-05
+
+### Added
+
+- Added `StringTableCollection` and `AssetTableCollection`. These are editor only assets for controlling a collection of string or asset tables. Tables that are not part of a collection will now be ignored. To upgrade old table assets select one and press the `Create Collection` button in the inspector.
+- Added Google Sheets support. A `StringTableCollection` can by pushed and pulled by using the `Google Sheets Extension` in the editor or through script with the `GoogleSheets` class. Table entry values, comments and metadata can be synced to a Google Sheet. This is currently an Editor only feature.
+- Added `DisplayName` attribute. This is an optional attribute for `Metadata` and `CollectionExtensions` so that a custom name that can be displayed in the editor instead of the class name.
+- Added `LocalizationSettings.SelectedLocaleAsync`. This is a safer alternative to `LocalizationSettings.SelectedLocale` as it will ensure that the `AvailableLocales` is initialized.
+
+### Changed
+- Renamed `LocalizeStringBehaviour` to `LocalizeStringEvent`.
+- Renamed `LocalizeAudioClipBehaviour` to `LocalizeAudioClipEvent`.
+- Renamed `LocalizeTextureBehaviour` to `LocalizeTextureEvent`.
+- Renamed `TableName` to `TableCollectionName`.
+- The editor class `AssetTableCollection` has been repurposed. Please see the new `StringTableCollection` and `AssetTableCollection` assets.
+- `LocalizationEditorSettings` has changed:
+  - Replaced `ModificationEvent` with `EditorEvents` class
+  - `AddAssetToTable` and `RemoveAssetFromTable` have been moved to `AssetTableCollection`
+  - Added `GetStringTableCollection`, `GetStringTableCollections`, `GetAssetTableCollection` and `GetAssetTableCollections`.
+  - Removed `RemoveTable`, `GetAssetTables`, `GetAssetTablesCollection`. These features are replaced by  `StringTableCollection` and `AssetTableCollection`.
+  - Simplified `ILocalesProvider` interface Only 1 `GetLocale` function is now required.
+  - Updated code Samples to include Creating Locales, Loading Strings, Google Sheets and a Language selection menu example.
+  
+### Fixed
+- Fixed `Asset Tables Window` throwing `NullReferenceException` when editing Metadata for an entry that does not exist in the selected table.
+- Fixed incorrect installation instructions in documentation.
+- Fixed `SerializedTableEntryReference` not handling key names correctly, which could cause issues with LocalizedString and LocalizedAsset. (case 1230444)
+- Fixed `TableReference` returning invalid value for TableName when type is Guid.
+- Fixed `UpdateString` not being called When a new `LocalizedString` was assigned to `LocalizeStringEvent.StringReference`.
+- Fixed `UpdateAsset` not being called When a new `LocalizedAsset` was assigned to `LocalizeStringEvent.AssetReference`.
+- Fixed `LocalizedString` and `LocalizedAsset` trying to localize when they are empty. (case LOC-88)
+- Localized String editor now clips Locale labels instead of letting them overlap into the preview label. (case LOC-84)
+- Fixed Available Locales List is not updating when a Locale is added or removed from the project. (case LOC-79)
+- Fixed `LocalizedAsset` and `LocalizedString` editor not updating when a Locale is added or removed from the project.
+- Fixed `SharedTableData` Metadata child properties not being visible or editable in the Table Window. (case LOC-85)
+- Fixed Smart Format toggle field overflowing into Metadata button when Table Window columns were narrow. (case LOC-95)
+- Fixed `LocalizedStringDatabase` and `LocalizedAssetDatabase` using the `SelectedLocale` before `AvailableLocales` was initialized. (case 1225937)
+- Fixed Asset Tables losing data due to not being set dirty when a change was made. (case LOC-82)
+- Fixed ListFormatter Names property going null in player builds.
+
 ## [0.6.1] - 2020-02-18
+
 ### Added
 - Added IEquatable to LocaleIdentifier.
+
 ### Changed
 - Changed collection properties to be read only (rule CA2227).
 - Made AddressableEntryNotFoundException public.
+
 ### Fixed
-- Fixed **LocalizedAssetTexture** and **LocalizeAudioClipBehaviour** not serializing the asset reference field. (case 1216072)
+- SystemLocaleSelector will now check the CultureInfo before checking Application.SystemLanguage to allow for selecting regional languages first.
+- Fixed `LocalizedAssetTexture` and `LocalizeAudioClipBehaviour` not serializing the asset reference field. (case 1216072)
 
 ## [0.6.0] - 2020-01-27
+
 ### Added
 - Added PseudoLocale and Pseudo-localization methods(Accenter, CharacterSubstitutor, Encapsulator and Expander). This is used to generate Pseudo-localization using various methods during runtime(See docs for further info).
-- Added support for loading multiple Locales from String and Asset Databases. By Default the **LocalizationSettings.SelectedLocale** will be used however it is now possible to provide a Locale as an argument. This means Localization data for multiple Locales can exist which allows for fallback Locales or just showing multiple languages at once.
+- Added support for loading multiple Locales from String and Asset Databases. By Default the `LocalizationSettings.SelectedLocale` will be used however it is now possible to provide a Locale as an argument. This means Localization data for multiple Locales can exist which allows for fallback Locales or just showing multiple languages at once.
 - Added exception to LocalizedTable.TableName if the SharedTableData is null.
-- Added **Locale Generator** button to **New Table** tab.
+- Added `Locale Generator` button to `New Table` tab.
+
 ### Changed
-- Renamed **KeyDatabase** to **SharedTableData**.
-- Changed **Comment** metadata TimeStamp property type to DateTime.
+- Renamed `KeyDatabase` to `SharedTableData`.
+- Changed `Comment` metadata TimeStamp property type to DateTime.
 - Disabled Addressables Settings asset creation during Localization OnPostprocessAllAssets. This could cause corruption of Addressables data due to OnPostprocessAllAssets execution order when importing a project for the first time.
 - Updated to Addressables version *1.5.1*.
 - Addressable groups now use the NoHash BundleNamingStyle by default.
+
 ### Fixed
-- Fixed **NullReferenceException** sometimes being thrown by LocalizedString or LocalizedAsset during *ClearLoadingOperation*.
-- Fixed **NullReferenceException** when adding SmartFormatter Source in String Database inspector.
-- Fixed **ArgumentOutOfRangeException:** in StringTables when enabling a Missing Tables column.
+- Fixed `NullReferenceException` sometimes being thrown by LocalizedString or LocalizedAsset during *ClearLoadingOperation*.
+- Fixed `NullReferenceException` when adding SmartFormatter Source in String Database inspector.
+- Fixed `ArgumentOutOfRangeException:` in StringTables when enabling a Missing Tables column.
 - Fixed LocalizedReference field label overflowing when a selected key had multiple lines.
 - Fixed LocalizedString property drawer adding too much vertical whitespace.
 - Fixed items in Reorderable Lists ignoring the right border.
@@ -33,13 +80,13 @@ All notable changes to this package will be documented in this file.
 - Fixed GameViewLanguageMenu causing LocalizationSettings to Initialize when there was no Addressables/Locales in the project.
 - Fixed Key name being unchangeable when its name was empty in the Asset Tables window.
 - Fixed Search field border being too small in the Asset Tables Window.
-- Fixed **New Table - Create** button being enabled when no locales were selected or existed in the project.
-- Fixed **LocalizedString** and **LocalizedAsset** not automatically updating when the **TableReference** or **TableEntryReference** was changed and a **ChangeHandler** was being used.
-- Fixed Addressable flags including **Preload** being removed during AddOrUpdateTable.
+- Fixed `New Table - Create` button being enabled when no locales were selected or existed in the project.
+- Fixed `LocalizedString` and `LocalizedAsset` not automatically updating when the `TableReference` or `TableEntryReference` was changed and a `ChangeHandler` was being used.
+- Fixed Addressable flags including `Preload` being removed during AddOrUpdateTable.
 
 ## [0.5.1] - 2019-11-22
 - Updated to Addressables version *1.3.8*.
-- Fixed **ArgumentOutOfRangeException:** in the Tables window when only 1 string or asset table existed.
+- Fixed `ArgumentOutOfRangeException:` in the Tables window when only 1 string or asset table existed.
 - Exposed *CreateAssetTableCollection* in *LocalizationEditorSettings*.
 - Implemented *IDictionary* to *LocalizedTableT* and Removed *TableEntries* property.
 - Fixed LocalizedTableT not serializing changes made when using the Dictionary interface.
@@ -64,7 +111,7 @@ All notable changes to this package will be documented in this file.
 - Added Comment Metadata. This can be added to any Metadata to provide comments. In the future these comments will be extracted when exporting to external formats.
 - Added SmartFormat for StringTables. This allows for advanced formatting of strings. Comes with support for named placeholders, lists, pluralization, gender, code reflection support and much more.
 - Added Table Name Guid. Table Names can now be referenced by a Guid so that changes to the name do not break references.
-- Fixed Locale Generator Window button **Generate Locales** staying disabled when using **Select All**.
+- Fixed Locale Generator Window button `Generate Locales` staying disabled when using `Select All`.
 - LocaleGeneratorListView now shows Locales that are already in the project.
 - New Locales are now added to Addressables when created.
 - Changed the name format for Tables for Addressables and asset creation to start with the name followed by the locale.
@@ -98,7 +145,7 @@ All notable changes to this package will be documented in this file.
 - Fixed UIElements issues in 2019.1+.
 - Merged LocalizationPlayerSettings into LocalizationEditorSettings.
 - Removed AddressableAssetTableT.GetAsset. GetAssetAsync should be used instead.
-- Added option in **Asset Tables Windows** to add a missing table if a table does not exist for all available Locales.
+- Added option in `Asset Tables Windows` to add a missing table if a table does not exist for all available Locales.
 - Fixed UIElements compilation issues in 2019.1+
 - Updated to Addressables version '0.7.5-preview'.
 - Removed support for .Net 3.5, this is due to a limitation in Addressables.
@@ -116,7 +163,7 @@ All notable changes to this package will be documented in this file.
 - Fixed NullRefException when opening the Asset Tables window and no Asset Tables exist in the project
 
 ## [0.2.1] - 2018-12-14
-- Removed stray file **README - External.md**
+- Removed stray file `README - External.md`
 
 ## [0.2.0] - 2018-12-11
 

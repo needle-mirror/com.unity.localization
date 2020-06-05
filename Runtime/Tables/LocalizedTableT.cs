@@ -22,6 +22,16 @@ namespace UnityEngine.Localization.Tables
         internal TableEntryData Data { get; set; }
 
         /// <summary>
+        /// Key Id for this table entry.
+        /// </summary>
+        public uint KeyId => Data.Id;
+
+        /// <summary>
+        /// Raw localized value.
+        /// </summary>
+        public string LocalizedValue => Data.Localized;
+
+        /// <summary>
         /// The Metadata for this table entry.
         /// </summary>
         public IList<IMetadata> MetadataEntries => Data.Metadata.MetadataEntries;
@@ -255,7 +265,7 @@ namespace UnityEngine.Localization.Tables
                 if (value.Table != this)
                     throw new ArgumentException("Table entry does not belong to this table. Table entries can not be shared across tables.");
 
-                var key = FindKeyId(keyName);
+                var key = FindKeyId(keyName, true);
                 this[key] = value;
             }
         }
@@ -273,6 +283,12 @@ namespace UnityEngine.Localization.Tables
             return entry;
         }
 
+        /// <inheritdoc/>
+        public override void CreateEmpty(TableEntryReference entryReference)
+        {
+            AddEntryFromReference(entryReference, string.Empty);
+        }
+
         /// <summary>
         /// Add or update an entry in the table.
         /// </summary>
@@ -281,7 +297,7 @@ namespace UnityEngine.Localization.Tables
         /// <returns></returns>
         public TEntry AddEntry(string key, string localized)
         {
-            var keyId = FindKeyId(key);
+            var keyId = FindKeyId(key, true);
             return keyId == 0 ? null : AddEntry(keyId, localized);
         }
 
@@ -294,7 +310,7 @@ namespace UnityEngine.Localization.Tables
         public virtual TEntry AddEntry(uint keyId, string localized)
         {
             if (keyId == SharedTableData.EmptyId)
-                throw new ArgumentException("Key Id value 0, is not valid. All Key Id's must be non-zero.", nameof(keyId));
+                throw new ArgumentException($"Key Id value {nameof(SharedTableData.EmptyId)}({SharedTableData.EmptyId}), is not valid. All Key Id's must be non-zero.", nameof(keyId));
 
             if (!m_TableEntries.TryGetValue(keyId, out var tableEntry))
             {
@@ -308,13 +324,28 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
+        /// Add or update an entry in the table.
+        /// </summary>
+        /// <param name="entryReference">The <see cref="TableEntryReference"/> containing a valid Key or Key Id.</param>
+        /// <param name="localized">The localized item, a string for <see cref="StringTable"/> or asset guid for <see cref="AssetTable"/></param>
+        /// <returns></returns>
+        public TEntry AddEntryFromReference(TableEntryReference entryReference, string localized)
+        {
+            if (entryReference.ReferenceType == TableEntryReference.Type.Id)
+                return AddEntry(entryReference.KeyId, localized);
+            else if (entryReference.ReferenceType == TableEntryReference.Type.Name)
+                return AddEntry(entryReference.Key, localized);
+            throw new ArgumentException($"{nameof(TableEntryReference)} should not be Empty", nameof(entryReference));
+        }
+
+        /// <summary>
         /// Remove an entry from the table if it exists.
         /// </summary>
         /// <param name="key">The name of the key.</param>
         /// <returns>True if the entry was found and removed.</returns>
         public bool RemoveEntry(string key)
         {
-            var keyId = FindKeyId(key);
+            var keyId = FindKeyId(key, false);
             return keyId == 0 ? false : RemoveEntry(keyId);
         }
 
@@ -328,10 +359,25 @@ namespace UnityEngine.Localization.Tables
             if (m_TableEntries.TryGetValue(keyId, out var item))
             {
                 item.Data.Id = SharedTableData.EmptyId;
+                item.Table = null;
                 return m_TableEntries.Remove(keyId);
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Returns the entry reference or null if one does not exist.
+        /// </summary>
+        /// <param name="entryReference"></param>
+        /// <returns></returns>
+        public TEntry GetEntryFromReference(TableEntryReference entryReference)
+        {
+            if (entryReference.ReferenceType == TableEntryReference.Type.Id)
+                return GetEntry(entryReference.KeyId);
+            else if (entryReference.ReferenceType == TableEntryReference.Type.Name)
+                return GetEntry(entryReference.Key);
+            return null;
         }
 
         /// <summary>
@@ -341,7 +387,7 @@ namespace UnityEngine.Localization.Tables
         /// <returns></returns>
         public TEntry GetEntry(string key)
         {
-            var keyId = FindKeyId(key);
+            var keyId = FindKeyId(key, false);
             return keyId == 0 ? null : GetEntry(keyId);
         }
 
@@ -381,6 +427,21 @@ namespace UnityEngine.Localization.Tables
         /// <param name="keyId"></param>
         /// <returns></returns>
         public bool ContainsKey(uint keyId) => m_TableEntries.ContainsKey(keyId);
+
+        /// <summary>
+        /// Returns true if the table contains an entry with the same value.
+        /// </summary>
+        /// <param name="localized">The value to check for in all table entries.</param>
+        /// <returns>True if a match was found else false.</returns>
+        public bool ContainsValue(string localized)
+        {
+            foreach (var entry in m_TableEntries.Values)
+            {
+                if (entry.Data.Localized == localized)
+                    return true;
+            }
+            return false;
+        }
 
         /// <summary>
         /// Returns true if the table contains the item.
@@ -450,10 +511,10 @@ namespace UnityEngine.Localization.Tables
         IEnumerator IEnumerable.GetEnumerator() => m_TableEntries.GetEnumerator();
 
         /// <summary>
-        /// Creates a string representation of the table as "{TableName}({LocaleIdentifier})".
+        /// Creates a string representation of the table as "{TableCollectionName}({LocaleIdentifier})".
         /// </summary>
         /// <returns></returns>
-        public override string ToString() => $"{TableName}({LocaleIdentifier})";
+        public override string ToString() => $"{TableCollectionName}({LocaleIdentifier})";
 
         /// <summary>
         /// Does nothing but required for <see cref="OnAfterDeserialize"/>.
@@ -481,7 +542,7 @@ namespace UnityEngine.Localization.Tables
             }
             catch (Exception e)
             {
-                var error = $"Error Deserializing Table Data \"{TableName}({LocaleIdentifier})\".\n{e.Message}\n{e.InnerException}";
+                var error = $"Error Deserializing Table Data \"{TableCollectionName}({LocaleIdentifier})\".\n{e.Message}\n{e.InnerException}";
                 Debug.LogError(error, this);
             }
         }

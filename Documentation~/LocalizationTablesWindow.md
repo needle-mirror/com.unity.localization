@@ -1,25 +1,20 @@
 # Localization Tables Window
 
-The Localization Tables Window is used for creating and editing Localization Tables such as [String Tables](StringTables.md) and [Asset Tables](AssetTables.md).
-
+Use the Localization Tables Window to create and edit Localization Table Collections such as [String Tables Collections](StringTables.md) and [Asset Table Collections](AssetTables.md).
 
 ![The Asset Tables window's Create Tables tab.](images/AssetTables_CreateTableTab.png)
 
-To open the Asset Tables window, navigate to **Window > Asset Management > Localization Tables**.
-Use this window to create and manage the Project's localization Tables. The window consists of two tabs:
+To open the Localization Tables window, navigate to **Window > Asset Management > Localization Tables**. Use this window to create and manage the Project's Localization Table Collections. The window consists of two tabs:
+- **New Table Collection:** Use this tab to create new Table Collections for Strings or Assets..
+- **Edit Table Collection:** Use this tab to make changes to existing Table Collections within the Project.
 
-+ **Create Table:** Use this tab to create new Tables.
-+ **Edit Table:** Use this tab to make changes to existing Tables within the Project.
+To create a new Table Collection, follow these steps:
+- Select the Locales that you want to generate a table for. Unity creates one table per selected Locale. You can add additional Locales after you have created a Table Collection.
+- Provide a Table Collection Name. This is the name you use to refer to the Table when querying the Localization Database.
+- Click **Create** for either a String Table or an Asset Table Collection **String Table** for localizing strings or text, or **Asset Table** for localizing Unity assets such as Textures, Audio etc.
 
-To create a Table, follow these steps:
+Once you have created a table, you can edit it in the **Edit Table** tab. Here, you can access all Asset Tables within the project. Use the **Selected Table Collection** dropdown menu to select a Table Collection to view and edit. Unity displays the Table for editing in the lower portion of the window. Different Tables have different editors, depending on the type of information they contain. Right-click the header for individual Table columns to toggle their display. 
 
-+ Select the Locales that you want to generate a table for. Unity creates one table per selected Locale.
-+ Provide a table name. This is the name you use to refer to the table when querying the Localization Database.
-+ Select the Table Type, String Table for localizing strings or text and Asset Table for localizing Unity assets such as Textures, Audio etc.
-+ Click Create. This creates an Asset Table Collection, an Asset Table for each Locale.
+If the table collection does not have a table for all the Locales in the project, then it displays additional columns to allow for the addition of a new table to the collection for the missing Locale.
 
-Once you have created a table, you can edit it in the **Edit Table** tab. Here, you can access all Asset Tables within the project. Use the **Selected Table** dropdown menu to select a table collection to view and edit. Unity displays the table for editing in the lower portion of the Asset Tables window. Different Tables have different editors, depending on the type of information they contain.
-Individual table columns can be toggled to show/hide by right clicking the column header.
-If the table collection does not have a table for all the Locales in the project then additional columns will be shown to allow for adding a new table to the collection for the missing Locale.
-
-![Asset Table with one Texture item.](images/AssetTables_TableProperties.png)
+![The Asset Tables window's Edit Tables tab.](images/AssetTables_TableProperties.png)

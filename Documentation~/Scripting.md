@@ -15,7 +15,7 @@ A TableEntryReference refers to a specific entry within a Table. It is possible 
 
 ### LocalizedString
 The LocalizedString is a Localized Reference that can be used to reference a [String Table](StringTables.md) entry.
-The LocalizedString editor allows for selecting String Table Entries, Creating new Table entires, Creating new String Tables and new Locales.
+The LocalizedString editor allows for selecting String Table Entries, Creating new Table entries, Creating new String Tables and new Locales.
 
 ![The LocalizedString editor.](images/LocalizedString_Inspector.png)
 

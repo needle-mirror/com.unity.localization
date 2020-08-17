@@ -15,7 +15,7 @@ namespace UnityEditor.Localization.UI
             {
                 m_Reference = value;
                 key.stringValue = m_Reference.Key;
-                keyId.intValue = (int)m_Reference.KeyId;
+                keyId.longValue = m_Reference.KeyId;
             }
         }
 
@@ -24,7 +24,7 @@ namespace UnityEditor.Localization.UI
             key = property.FindPropertyRelative("m_Key");
             keyId = property.FindPropertyRelative("m_KeyId");
 
-            var id = (uint)keyId.intValue;
+            var id = keyId.longValue;
             if (id != SharedTableData.EmptyId)
             {
                 Reference = id;

@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using UnityEngine.Localization.Pseudo;
 
-namespace UnityEngine.Localization.Tests.Pseudo
+namespace UnityEditor.Localization.Tests.Pseudo
 {
     public class AccenterTests
     {
@@ -20,8 +20,11 @@ namespace UnityEngine.Localization.Tests.Pseudo
         [TestCase("SoME SyMbOlS ~{}-=@£$%^&*", "ŠöṀÉ ŠýṀƀÖļŠ ˞{}‐≂՞£€‰˄⅋⁎")]
         public void CharactersAreAccented(string input, string expected)
         {
-            var result = m_Method.Transform(input);
-            Assert.AreEqual(expected, result, "Expected the transformed string to match.");
+            var message = Message.CreateMessage(input);
+            m_Method.Transform(message);
+
+            Assert.AreEqual(expected, message.ToString(), "Expected the transformed string to match.");
+            message.Release();
         }
     }
 }

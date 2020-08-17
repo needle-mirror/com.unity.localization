@@ -7,6 +7,7 @@ The following table demonstrates the output of each Method.
 | **Method**                 | **Output** | **Description** |
 | -------------------------- | ---------- | --------------- |
 | None applied               | `This is an example string. The quick brown fox jumps over the lazy dog.` | Plain text before any Pseudo-Locale Method is applied.
+| **Preserve Tags**          | `Ţĥîš îš åñ <color=red>éẋåɱþļé</color> šţŕîñĝ· Ţĥé ǫûîçķ ƀŕöŵñ ƒöẋ ĵûɱþš öṽéŕ ţĥé ļåžý ðöĝ·` | **Preserve Tags** preserves any opening and closing tags in the string, so that any following Pseudo Localization Methods do not modify the tags. By default, this preserves any XML/rich text tags (that is, tags that begin with **<** and and with **>**).
 | **Character Substitutor**  | `_________________________`<br>`____________________________`<br>`______________________` | **Character Substitutor** replaces characters in a string with other characters. In this example, letters are replaced with underscores. This is a useful Method to find text that is hard-coded into the UI, and therefore does not go through the localization system.
 | **Accenter**               | `Ţĥîš îš åñ éẋåɱþļé šţŕîñĝ· Ţĥé ǫûîçķ ƀŕöŵñ ƒöẋ ĵûɱþš öṽéŕ ţĥé ļåžý ðöĝ·` | **Accenter** replaces all characters with accented versions. This helps to identify characters that are not supported by the font, and to indicate where accented text might not fit in the space.
 | **Encapsulator**           | `[This is an example string. The quick brown fox jumps over the lazy dog.]` | **Encapsulator** brackets around each string. This helps to indicate where text is truncated or is concatenated together.
@@ -17,7 +18,16 @@ You can also combine Methods. The Pseudo-Localization system applies these Metho
 
 [Ţĥîš îš åñ éẋåɱþļé šţŕîñĝ· Ţĥé ǫûîçķ ƀŕöŵñ ƒöẋ ĵûɱþš öṽéŕ ţĥé ļåžý ðöĝ·,ŕÅŔ⁆⁄ĜÐçÛ⁏″Ķ⑨Ẋ⅋‐ļ‰Ñĵ∖]
 
-The following example shows some typical uses of Pseudo-Localization when testing a UI.
+## Preserve Tags
+
+The **Preserve Tags** method prevents any subsequent methods from modifying text that matches its criteria. The criteria is defined as any tag that starts with the Opening value and close with the Closing value. Pseudo Localization marks any text between the Opening and Closing value as read-only, so that subsequent Pseudo Localization methods do not modify it. This is useful to to prevent Pseudo Localization from modifying XML, Rich Text and other types of tags.
+
+![Preserve Tags Inspector View](images/PseudoLocalization_PreserveTags.png)
+
+| **Property**               | **Description** |
+| -------------------------- | --------------- |
+| **Opening**                | The opening character that indicates the start of the tag.
+| **Closing**                | The closing character that indicates the end of the tag.
 
 ## Character Substitutor
 

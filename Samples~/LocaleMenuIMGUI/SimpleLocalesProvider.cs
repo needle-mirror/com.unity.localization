@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine.Localization.Settings;
 
-namespace UnityEngine.Localization.Samples.SimpleLanguageSelectionMenu
+namespace UnityEngine.Localization.Samples
 {
     /// <summary>
     /// This class shows how a custom <see cref="ILocalesProvider"/> can be created to provide the Locales that are supported by

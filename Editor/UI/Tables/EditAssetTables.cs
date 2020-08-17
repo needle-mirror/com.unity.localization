@@ -24,7 +24,7 @@ namespace UnityEditor.Localization.UI
             TableCollectionSelected(m_AssetTablesField.value);
         }
 
-        void TableCollectionSelected(LocalizedTableCollection ltc)
+        void TableCollectionSelected(LocalizationTableCollection ltc)
         {
             m_TableContents.Clear();
 
@@ -67,6 +67,6 @@ namespace UnityEditor.Localization.UI
             return editorType;
         }
 
-        public void Select(LocalizedTableCollection collection) => m_AssetTablesField.value = collection;
+        public void Select(LocalizationTableCollection collection) => m_AssetTablesField.value = collection;
     }
 }

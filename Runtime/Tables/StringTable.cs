@@ -100,7 +100,7 @@ namespace UnityEngine.Localization.Tables
     /// <summary>
     /// A table that stores localized strings for a specific <see cref="Locale"/>.
     /// </summary>
-    public class StringTable : LocalizedTableT<StringTableEntry>
+    public class StringTable : DetailedLocalizationTable<StringTableEntry>
     {
         /// <summary>
         /// Creates a new, empty StringTableEntry.

@@ -9,6 +9,7 @@
     * [Localization Tables Window](LocalizationTablesWindow.md)
     * [String Tables](StringTables.md)
     * [Asset Tables](AssetTables.md)
+    * [Table Keys](TableEntryKeys.md)
   * Extensions
     * [Google Sheets](Google-Sheets.md)
       * [Sheets Service Provider](Google-Sheets-Sheets-Service-Provider.md)

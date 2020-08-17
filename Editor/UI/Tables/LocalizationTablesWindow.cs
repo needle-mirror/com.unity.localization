@@ -28,7 +28,7 @@ namespace UnityEditor.Localization.UI
             window.Show();
         }
 
-        public static void ShowWindow(LocalizedTableCollection selectedcollection)
+        public static void ShowWindow(LocalizationTableCollection selectedcollection)
         {
             var window = GetWindow<LocalizationTablesWindow>(false, k_WindowTitle, true);
             window.titleContent = new GUIContent("Localization Tables", EditorIcons.LocalizationSettings.image);
@@ -47,7 +47,7 @@ namespace UnityEditor.Localization.UI
             }
         }
 
-        public void EditCollection(LocalizedTableCollection selectedCollection)
+        public void EditCollection(LocalizationTableCollection selectedCollection)
         {
             int idx = m_TabPanels.FindIndex(p => p is EditAssetTables);
             TabSelected(idx);

@@ -15,7 +15,7 @@ namespace UnityEditor.Localization.UI
             GetProjectTableCollections = LocalizationEditorSettings.GetAssetTableCollections;
         }
 
-        protected override PropertyData CreatePropertyData(SerializedProperty property)
+        public override Data CreatePropertyData(SerializedProperty property)
         {
             var prop = base.CreatePropertyData(property);
 
@@ -36,19 +36,19 @@ namespace UnityEditor.Localization.UI
             return prop;
         }
 
-        protected override void DrawTableEntryDetails(ref Rect rowPosition, Rect position)
+        protected override void DrawTableEntryDetails(ref Rect rowPosition, Data data, Rect position)
         {
-            base.DrawTableEntryDetails(ref rowPosition, position);
+            base.DrawTableEntryDetails(ref rowPosition, data, position);
 
             var projectLocales = LocalizationEditorSettings.GetLocales();
 
             foreach (var locale in projectLocales)
             {
-                var table = m_Property.SelectedTableCollection.Tables.FirstOrDefault(tbl => tbl.asset?.LocaleIdentifier == locale.Identifier).asset as AssetTable;
+                var table = data.SelectedTableCollection.Tables.FirstOrDefault(tbl => tbl.asset?.LocaleIdentifier == locale.Identifier).asset as AssetTable;
 
                 if (table != null)
                 {
-                    var tableEntry = table.GetEntry(m_Property.SelectedTableEntry.Id);
+                    var tableEntry = table.GetEntry(data.SelectedTableEntry.Id);
                     Object asset = null;
                     if (tableEntry != null && !tableEntry.IsEmpty)
                     {
@@ -56,13 +56,13 @@ namespace UnityEditor.Localization.UI
                     }
 
                     EditorGUI.BeginChangeCheck();
-                    var newAsset = EditorGUI.ObjectField(rowPosition, locale.Identifier.ToString(), asset, m_Property.assetType, false);
+                    var newAsset = EditorGUI.ObjectField(rowPosition, locale.Identifier.ToString(), asset, data.assetType, false);
                     if (EditorGUI.EndChangeCheck())
                     {
                         if (newAsset != null)
-                            m_Property.SelectedTableCollection.AddAssetToTable(table, m_Property.SelectedTableEntry.Id, newAsset, true);
+                            data.SelectedTableCollection.AddAssetToTable(table, data.SelectedTableEntry.Id, newAsset, true);
                         else
-                            m_Property.SelectedTableCollection.RemoveAssetFromTable(table, m_Property.SelectedTableEntry.Id, true);
+                            data.SelectedTableCollection.RemoveAssetFromTable(table, data.SelectedTableEntry.Id, true);
                     }
                 }
                 else
@@ -70,7 +70,7 @@ namespace UnityEditor.Localization.UI
                     var buttonPosition = EditorGUI.PrefixLabel(rowPosition, new GUIContent(locale.Identifier.ToString()));
                     if (GUI.Button(buttonPosition, "Create Table"))
                     {
-                        m_Property.SelectedTableCollection.AddNewTable(locale.Identifier);
+                        data.SelectedTableCollection.AddNewTable(locale.Identifier);
                         GUIUtility.ExitGUI();
                     }
                 }
@@ -79,11 +79,11 @@ namespace UnityEditor.Localization.UI
             }
         }
 
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        public override float GetPropertyHeight(Data data, SerializedProperty property, GUIContent label)
         {
-            float height = base.GetPropertyHeight(property, label);
+            float height = base.GetPropertyHeight(data, property, label);
 
-            if (property.isExpanded && m_Property.SelectedTableEntry != null)
+            if (property.isExpanded && data.SelectedTableEntry != null)
             {
                 height += LocalizationEditorSettings.GetLocales().Count * (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
             }

@@ -8,18 +8,18 @@ namespace UnityEngine.Localization.Metadata
         /// </summary>
         /// <param name="keyId"></param>
         /// <returns></returns>
-        bool Contains(uint keyId);
+        bool Contains(long keyId);
 
         /// <summary>
         /// Mark the entry as using this shared metadata.
         /// </summary>
         /// <param name="keyId"></param>
-        void AddEntry(uint keyId);
+        void AddEntry(long keyId);
 
         /// <summary>
         /// Remove the entry from the shared metadata.
         /// </summary>
         /// <param name="keyId"></param>
-        void RemoveEntry(uint keyId);
+        void RemoveEntry(long keyId);
     }
 }

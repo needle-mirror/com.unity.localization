@@ -19,7 +19,7 @@ namespace UnityEngine.Localization.Tables
         public class SharedTableEntry
         {
             [SerializeField]
-            uint m_Id;
+            long m_Id;
 
             [SerializeField]
             string m_Key;
@@ -30,7 +30,7 @@ namespace UnityEngine.Localization.Tables
             /// <summary>
             /// Unique id(to this SharedTableData).
             /// </summary>
-            public uint Id
+            public long Id
             {
                 get => m_Id;
                 internal set => m_Id = value;
@@ -53,15 +53,14 @@ namespace UnityEngine.Localization.Tables
                 get => m_Metadata;
                 set => m_Metadata = value;
             }
+
+            public override string ToString() => $"{Id} - {Key}";
         }
 
         /// <summary>
         /// Represents an empty or null Key Id.
         /// </summary>
-        public const uint EmptyId = 0;
-
-        [SerializeField]
-        uint m_NextAvailableId = 1;
+        public const long EmptyId = 0;
 
         [FormerlySerializedAs("m_TableName")]
         [SerializeField]
@@ -78,10 +77,13 @@ namespace UnityEngine.Localization.Tables
         [MetadataType(MetadataType.SharedTableData)]
         MetadataCollection m_Metadata;
 
+        [SerializeReference]
+        IKeyGenerator m_KeyGenerator = new DistributedUIDGenerator();
+
         Guid m_TableCollectionNameGuid;
 
         // Used for fast lookup. Only generated when required.
-        Dictionary<uint, SharedTableEntry> m_IdDictionary = new Dictionary<uint, SharedTableEntry>();
+        Dictionary<long, SharedTableEntry> m_IdDictionary = new Dictionary<long, SharedTableEntry>();
         Dictionary<string, SharedTableEntry> m_KeyDictionary = new Dictionary<string, SharedTableEntry>();
 
         /// <summary>
@@ -91,7 +93,7 @@ namespace UnityEngine.Localization.Tables
 
         /// <summary>
         /// The name of this table collection.
-        /// All <see cref="LocalizedTable"/> that use this SharedTableData will have this name.
+        /// All <see cref="LocalizationTable"/> that use this SharedTableData will have this name.
         /// </summary>
         public string TableCollectionName
         {
@@ -119,11 +121,21 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
+        /// The Key Generator to use when adding new entries.
+        /// By default this will use <see cref="DistributedUIDGenerator"/>.
+        /// </summary>
+        public IKeyGenerator KeyGenerator
+        {
+            get => m_KeyGenerator;
+            set => m_KeyGenerator = value;
+        }
+
+        /// <summary>
         /// Get the key associated with the id.
         /// </summary>
         /// <param name="id">Id the key belongs to.</param>
         /// <returns>The found key or null if one can not be found.</returns>
-        public string GetKey(uint id)
+        public string GetKey(long id)
         {
             var foundPair = FindWithId(id);
             return foundPair?.Key;
@@ -134,7 +146,7 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         /// <param name="key">The key whose id is being requested.</param>
         /// <returns>The keys id value or <see cref="EmptyId"/> if one does not exist.</returns>
-        public uint GetId(string key)
+        public long GetId(string key)
         {
             var foundPair = FindWithKey(key);
             return foundPair?.Id ?? 0;
@@ -145,8 +157,8 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         /// <param name="key"></param>
         /// <param name="addNewKey"></param>
-        /// <returns></returns>
-        public uint GetId(string key, bool addNewKey)
+        /// <returns>Id of the Key that exists else the Id of the newly created Key if addNewKey is True or EmptyId.</returns>
+        public long GetId(string key, bool addNewKey)
         {
             var foundPair = FindWithKey(key);
             var foundId = EmptyId;
@@ -179,7 +191,7 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         /// <param name="id">Id the key belongs to.</param>
         /// <returns>The found key entry or null if one can not be found.</returns>
-        public SharedTableEntry GetEntry(uint id)
+        public SharedTableEntry GetEntry(long id)
         {
             return FindWithId(id);
         }
@@ -199,7 +211,7 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         /// <param name="id">Id to check.</param>
         /// <returns></returns>
-        public bool Contains(uint id) => FindWithId(id) != null;
+        public bool Contains(long id) => FindWithId(id) != null;
 
         /// <summary>
         /// Is the key value used by any entries in this SharedTableData?
@@ -221,7 +233,7 @@ namespace UnityEngine.Localization.Tables
         /// <param name="key">The unique key name to assign to the entry.</param>
         /// <param name="id">The unique id to assign to the key.</param>
         /// <returns>The new entry or null if an entry already exists with the key or id.</returns>
-        public SharedTableEntry AddKey(string key, uint id)
+        public SharedTableEntry AddKey(string key, long id)
         {
             if (!Contains(id) && !Contains(id))
                 return AddKeyInternal(key, id);
@@ -257,7 +269,7 @@ namespace UnityEngine.Localization.Tables
         /// Attempts to remove the key with provided id.
         /// </summary>
         /// <param name="id"></param>
-        public void RemoveKey(uint id)
+        public void RemoveKey(long id)
         {
             var foundEntry = FindWithId(id);
             if (foundEntry != null)
@@ -280,7 +292,7 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         /// <param name="id"></param>
         /// <param name="newValue"></param>
-        public void RenameKey(uint id, string newValue)
+        public void RenameKey(long id, string newValue)
         {
             var foundEntry = FindWithId(id);
             if (foundEntry != null)
@@ -297,6 +309,28 @@ namespace UnityEngine.Localization.Tables
             var foundEntry = FindWithKey(oldValue);
             if (foundEntry != null)
                 RenameKeyInternal(foundEntry, newValue);
+        }
+
+        /// <summary>
+        /// Attempts to change the Id of an entry.
+        /// </summary>
+        /// <param name="currentId">The current Id that should be changed. Must exist.</param>
+        /// <param name="newId">The new Id to use. Must not already be in use.</param>
+        /// <returns>True is the Id was changed successfully.</returns>
+        public bool RemapId(long currentId, long newId)
+        {
+            // Is the new id in use?
+            if (FindWithId(newId) != null)
+                return false;
+
+            var foundEntry = FindWithId(currentId);
+            if (foundEntry == null)
+                return false;
+
+            foundEntry.Id = newId;
+            m_IdDictionary.Remove(currentId);
+            m_IdDictionary[newId] = foundEntry;
+            return true;
         }
 
         /// <summary>
@@ -370,15 +404,9 @@ namespace UnityEngine.Localization.Tables
 
         #pragma warning restore CA1814
 
-        /// <summary>
-        /// Returns a new unique id for this SharedTableData.
-        /// </summary>
-        /// <returns></returns>
-        protected virtual uint GenerateUniqueId() => m_NextAvailableId++;
-
         SharedTableEntry AddKeyInternal(string key)
         {
-            var newEntry = new SharedTableEntry() { Id = GenerateUniqueId(), Key = key };
+            var newEntry = new SharedTableEntry() { Id = m_KeyGenerator.GetNextKey(), Key = key };
             Entries.Add(newEntry);
 
             if (m_IdDictionary.Count > 0)
@@ -389,11 +417,8 @@ namespace UnityEngine.Localization.Tables
             return newEntry;
         }
 
-        SharedTableEntry AddKeyInternal(string key, uint id)
+        SharedTableEntry AddKeyInternal(string key, long id)
         {
-            // The next available id should always be the highest.
-            m_NextAvailableId = Math.Max(m_NextAvailableId, id + 1);
-
             var newEntry = new SharedTableEntry() { Id = id, Key = key };
             Entries.Add(newEntry);
 
@@ -427,7 +452,7 @@ namespace UnityEngine.Localization.Tables
             Entries.Remove(entry);
         }
 
-        SharedTableEntry FindWithId(uint id)
+        SharedTableEntry FindWithId(long id)
         {
             if (id == EmptyId)
                 return null;

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
@@ -10,8 +12,6 @@ namespace UnityEditor.Localization.UI
         enum ToolBarChoices
         {
             LocaleGeneratorWindow,
-            RemoveSelected,
-            AddAsset,
             AddAllAssets
         }
 
@@ -21,15 +21,14 @@ namespace UnityEditor.Localization.UI
             public static readonly GUIContent[] toolbarButtons =
             {
                 new GUIContent("Locale Generator", "Opens the Locale Generator window."),
-                new GUIContent("Remove Selected"),
-                new GUIContent("Add", "Add a new Locale asset."),
                 new GUIContent("Add All", "Add all Locale assets from the project.")
             };
         }
 
-        public LocalesProviderListView ListView { get; set; }
+        public ReorderableList LocalesList { get; set; }
 
-        const float k_MinListHeight = 200;
+        int m_ControlId;
+
         const float k_ToolbarHeight = 20;
 
         public LocalesProviderPropertyDrawer()
@@ -41,7 +40,7 @@ namespace UnityEditor.Localization.UI
 
         void EditorEvents_LocaleAddedOrRemoved(Locale obj)
         {
-            ListView?.Reload();
+            RefreshLocalesList();
         }
 
         ~LocalesProviderPropertyDrawer()
@@ -51,14 +50,31 @@ namespace UnityEditor.Localization.UI
             LocalizationEditorSettings.EditorEvents.LocaleRemoved -= EditorEvents_LocaleAddedOrRemoved;
         }
 
-        void UndoPerformed() => ListView.Reload();
+        void UndoPerformed() => RefreshLocalesList();
+
+        void RefreshLocalesList()
+        {
+            var serializedLocales = new List<SerializedLocaleItem>();
+            foreach (var locale in LocalizationEditorSettings.GetLocales())
+            {
+                serializedLocales.Add(new SerializedLocaleItem(locale));
+            }
+            LocalesList.list = serializedLocales;
+        }
 
         void Init(SerializedProperty _)
         {
-            if (ListView != null)
+            if (LocalesList != null)
                 return;
 
-            ListView = new LocalesProviderListView();
+            LocalesList = new ReorderableList(null, typeof(Locale));
+            RefreshLocalesList();
+            LocalesList.onAddCallback = AddLocale;
+            LocalesList.onRemoveCallback = RemoveSelectedLocale;
+            LocalesList.drawElementCallback = DrawLocaleElement;
+            LocalesList.onReorderCallback = ListReordered;
+            LocalesList.onSelectCallback = SelectLocale;
+            LocalesList.headerHeight = 2;
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -69,9 +85,9 @@ namespace UnityEditor.Localization.UI
             EditorGUI.LabelField(position, label);
             position.y += position.height + EditorGUIUtility.standardVerticalSpacing;
 
-            position.height = Mathf.Max(k_MinListHeight, ListView.totalHeight);
+            position.height = LocalesList.GetHeight();
             var listPos = EditorGUI.PrefixLabel(position, GUIContent.none);
-            ListView.OnGUI(listPos);
+            LocalesList.DoList(listPos);
             position.y += position.height;
 
             position.height = k_ToolbarHeight;
@@ -82,7 +98,7 @@ namespace UnityEditor.Localization.UI
         {
             Init(property);
             float height = EditorStyles.label.lineHeight; // Header
-            height += Mathf.Max(k_MinListHeight, ListView.totalHeight) + EditorGUIUtility.standardVerticalSpacing; // List
+            height += LocalesList.GetHeight();
             height += k_ToolbarHeight + EditorGUIUtility.standardVerticalSpacing; // Toolbar
             return height;
         }
@@ -90,7 +106,7 @@ namespace UnityEditor.Localization.UI
         void DrawToolbar(Rect rect)
         {
             var commandName = Event.current.commandName;
-            var controlId = GUIUtility.GetControlID(FocusType.Passive);
+            m_ControlId = GUIUtility.GetControlID(FocusType.Passive);
 
             var fieldPos = EditorGUI.PrefixLabel(rect, GUIContent.none);
             var selection = (ToolBarChoices)GUI.Toolbar(fieldPos, -1, Styles.toolbarButtons);
@@ -99,21 +115,6 @@ namespace UnityEditor.Localization.UI
                 case ToolBarChoices.LocaleGeneratorWindow:
                     LocaleGeneratorWindow.ShowWindow();
                     break;
-                case ToolBarChoices.RemoveSelected:
-                {
-                    var selectedLocales = ListView.GetSelection();
-                    for (int i = selectedLocales.Count - 1; i >= 0; --i)
-                    {
-                        var item = ListView.GetRows()[selectedLocales[i]] as SerializedLocaleItem;
-                        LocalizationEditorSettings.RemoveLocale(item.SerializedObject.targetObject as Locale, true);
-                    }
-                    ListView.SetSelection(new int[0]);
-                    ListView.Reload();
-                }
-                break;
-                case ToolBarChoices.AddAsset:
-                    EditorGUIUtility.ShowObjectPicker<Locale>(null, false, string.Empty, controlId);
-                    break;
                 case ToolBarChoices.AddAllAssets:
                 {
                     var assets = AssetDatabase.FindAssets("t:Locale");
@@ -121,15 +122,63 @@ namespace UnityEditor.Localization.UI
                     {
                         LocalizationEditorSettings.AddLocale(AssetDatabase.LoadAssetAtPath<Locale>(AssetDatabase.GUIDToAssetPath(assets[i])), true);
                     }
-                    ListView.Reload();
                 }
                 break;
             }
 
-            if (commandName == "ObjectSelectorClosed" && EditorGUIUtility.GetObjectPickerControlID() == controlId && EditorGUIUtility.GetObjectPickerObject() != null)
+            if (commandName == "ObjectSelectorClosed" && EditorGUIUtility.GetObjectPickerControlID() == m_ControlId && EditorGUIUtility.GetObjectPickerObject() != null)
             {
                 LocalizationEditorSettings.AddLocale(EditorGUIUtility.GetObjectPickerObject() as Locale, true);
-                ListView.Reload();
+            }
+        }
+
+        void AddLocale(ReorderableList list)
+        {
+            EditorGUIUtility.ShowObjectPicker<Locale>(null, false, string.Empty, m_ControlId);
+        }
+
+        void RemoveSelectedLocale(ReorderableList localesList)
+        {
+            var selectedLocale = localesList.list[localesList.index] as SerializedLocaleItem;
+            if (selectedLocale == null)
+                return;
+
+            LocalizationEditorSettings.RemoveLocale(selectedLocale.Reference, true);
+            RefreshLocalesList();
+        }
+
+        void DrawLocaleElement(Rect rect, int index, bool isActive, bool isFocused)
+        {
+            var locale = LocalesList.list[index] as SerializedLocaleItem;
+            if (locale == null)
+                return;
+
+            var split = rect.SplitHorizontal(0.75f);
+            locale.SerializedObject.Update();
+            EditorGUI.PropertyField(split.left, locale.NameProp, GUIContent.none);
+            EditorGUI.PropertyField(split.right, locale.IdentifierCodeProp, GUIContent.none);
+            locale.SerializedObject.ApplyModifiedProperties();
+        }
+
+        void ListReordered(ReorderableList localesList)
+        {
+            for (int i = 0; i < localesList.list.Count; ++i)
+            {
+                var serializedLocale = localesList.list[i] as SerializedLocaleItem;
+                serializedLocale.SortOrderProp.intValue = i;
+                serializedLocale.SerializedObject.ApplyModifiedProperties();
+            }
+
+            var selected = localesList.list[localesList.index] as SerializedLocaleItem;
+            LocalizationEditorSettings.EditorEvents.RaiseLocaleSortOrderChanged(this, selected.Reference);
+        }
+
+        void SelectLocale(ReorderableList localesList)
+        {
+            if (localesList.index != -1)
+            {
+                var locale = localesList.list[localesList.index] as SerializedLocaleItem;
+                EditorGUIUtility.PingObject(locale.Reference);
             }
         }
     }

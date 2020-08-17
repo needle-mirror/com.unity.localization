@@ -37,7 +37,7 @@ namespace UnityEditor.Localization.Tests
             Assert.IsTrue(m_SharedTableData.Contains(keyName), "Expected the key to be contained in the  shared table data.");
         }
 
-        uint GetKeyIdAndVerifyItIsValid(string keyName)
+        long GetKeyIdAndVerifyItIsValid(string keyName)
         {
             var keyId = m_SharedTableData.GetId(keyName);
             Assert.IsTrue(keyId != SharedTableData.EmptyId, "Failed to find the id of the added key");
@@ -47,7 +47,7 @@ namespace UnityEditor.Localization.Tests
         [Test]
         public void All_KeyIds_AreUnique()
         {
-            HashSet<uint> usedKeys = new HashSet<uint>();
+            HashSet<long> usedKeys = new HashSet<long>();
             foreach (var entry in m_SharedTableData.Entries)
             {
                 Assert.IsFalse(usedKeys.Contains(entry.Id), "Expected all key ids to be unique, however this key has already been used: " + entry.Id);
@@ -99,7 +99,7 @@ namespace UnityEditor.Localization.Tests
         {
             const string keyName = "Remove Key By Name";
             AddAndVerifyKeyIsAdded(keyName);
-            uint addedKeyId = GetKeyIdAndVerifyItIsValid(keyName);
+            var addedKeyId = GetKeyIdAndVerifyItIsValid(keyName);
 
             m_SharedTableData.RemoveKey(addedKeyId);
             Assert.IsFalse(m_SharedTableData.Contains(keyName), "Expected the key to not be contained when it has been removed from the shared table data.");
@@ -130,7 +130,7 @@ namespace UnityEditor.Localization.Tests
         public void KeyHasTheSameIdAfterRename_UsingKeyToRename(string originalName, string newName)
         {
             AddAndVerifyKeyIsAdded(originalName);
-            uint keyId = GetKeyIdAndVerifyItIsValid(originalName);
+            var keyId = GetKeyIdAndVerifyItIsValid(originalName);
 
             m_SharedTableData.RenameKey(originalName, newName);
             Assert.AreEqual(keyId, GetKeyIdAndVerifyItIsValid(newName), "Expected renamed key to have the same id.");
@@ -144,10 +144,41 @@ namespace UnityEditor.Localization.Tests
         public void KeyHasTheSameIdAfterRename_UsingKeyIdToRename(string originalName, string newName)
         {
             AddAndVerifyKeyIsAdded(originalName);
-            uint keyId = GetKeyIdAndVerifyItIsValid(originalName);
+            var keyId = GetKeyIdAndVerifyItIsValid(originalName);
 
             m_SharedTableData.RenameKey(keyId, newName);
             Assert.AreEqual(keyId, GetKeyIdAndVerifyItIsValid(newName), "Expected renamed key to have the same id.");
+        }
+
+        [Test]
+        public void RemapChangesKeyIdWhenNewKeyIsNotUsed()
+        {
+            var newEntry = m_SharedTableData.AddKey();
+
+            // Now remap to a negative version which should not be in use.
+            var id = newEntry.Id;
+            var newKey = -newEntry.Id;
+
+            Assert.IsTrue(m_SharedTableData.RemapId(id, newKey), "Expected Remap to return true.");
+            Assert.AreEqual(newKey, newEntry.Id, "Expected entry key to be changed to the new key.");
+            Assert.IsNull(m_SharedTableData.GetEntry(id), "Expected no entry to exist for old key.");
+            Assert.IsNotNull(m_SharedTableData.GetEntry(newKey), "Expected an entry to exist for the new key.");
+        }
+
+        [Test]
+        public void RemapDoesNotChangeKeyIdWhenNewKeyIsInUse()
+        {
+            var newEntry1 = m_SharedTableData.AddKey();
+            var newEntry2 = m_SharedTableData.AddKey();
+
+            // Now remap to an already used id
+            var id = newEntry1.Id;
+            var newKey = newEntry2.Id;
+
+            Assert.IsFalse(m_SharedTableData.RemapId(id, newKey), "Expected Remap to return false when new key is already in use.");
+            Assert.AreEqual(id, newEntry1.Id, "Expected entry key to have not been changed.");
+            Assert.AreSame(newEntry1, m_SharedTableData.GetEntry(id), "Expected same entry to still exist for old key.");
+            Assert.AreSame(newEntry2, m_SharedTableData.GetEntry(newKey), "Expected same entry to still exist for new key.");
         }
     }
 }

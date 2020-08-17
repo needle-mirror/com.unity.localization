@@ -296,7 +296,7 @@ namespace UnityEngine.Localization.Tables
         }
 
         [SerializeField]
-        uint m_KeyId;
+        long m_KeyId;
 
         [SerializeField]
         string m_Key;
@@ -311,7 +311,7 @@ namespace UnityEngine.Localization.Tables
         /// <summary>
         /// The Key Id when <see cref="ReferenceType"/> is <see cref="Type.Id"/>.
         /// </summary>
-        public uint KeyId { get => m_KeyId; private set => m_KeyId = value; }
+        public long KeyId { get => m_KeyId; private set => m_KeyId = value; }
 
         /// <summary>
         /// The key name when <see cref="ReferenceType"/> is <see cref="Type.Name"/>.
@@ -337,7 +337,7 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         /// <param name="keyId"></param>
         /// <returns></returns>
-        public static implicit operator TableEntryReference(uint keyId)
+        public static implicit operator TableEntryReference(long keyId)
         {
             if (keyId != SharedTableData.EmptyId)
                 return new TableEntryReference() { KeyId = keyId, ReferenceType = Type.Id };
@@ -359,7 +359,7 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         /// <param name="tableEntryReference"></param>
         /// <returns></returns>
-        public static implicit operator uint(TableEntryReference tableEntryReference)
+        public static implicit operator long(TableEntryReference tableEntryReference)
         {
             return tableEntryReference.KeyId;
         }

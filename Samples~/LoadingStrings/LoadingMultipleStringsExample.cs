@@ -5,15 +5,16 @@ using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace UnityEditor.Localization.Samples.LoadingStrings
+namespace UnityEditor.Localization.Samples
 {
     /// <summary>
-    /// This example shows how a **StringTable** can be used directly in order to get translated strings for multiple entries.
+    /// This example shows how a <see cref="StringTable"/> can be used directly in order to get translated strings for multiple entries.
+    /// <seealso cref="LocalizedStringTableExample"/>
     /// </summary>
     public class LoadingMultipleStringsExample : MonoBehaviour
     {
         // A LocalizedStringReference provides a simple interface to retrieving translated strings and their tables.
-        public string m_StringTableCollectionName = "My Strings";
+        public string stringTableCollectionName = "My Strings";
 
         // We will cache our translated strings
         string m_TranslatedStringHello;
@@ -40,7 +41,7 @@ namespace UnityEditor.Localization.Samples.LoadingStrings
         IEnumerator LoadStrings()
         {
             // A string table may not be immediately available such as during initialization of the localization system or when a table has not been loaded yet.
-            var loadingOperation = LocalizationSettings.StringDatabase.GetTableAsync(m_StringTableCollectionName);
+            var loadingOperation = LocalizationSettings.StringDatabase.GetTableAsync(stringTableCollectionName);
             yield return loadingOperation;
 
             if (loadingOperation.Status == AsyncOperationStatus.Succeeded)

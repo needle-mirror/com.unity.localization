@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using UnityEngine;
@@ -8,7 +7,7 @@ using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization.UI
 {
-    abstract class LocalizedReferencePropertyDrawer<TCollection> : PropertyDrawer where TCollection : LocalizedTableCollection
+    abstract class LocalizedReferencePropertyDrawer<TCollection> : PropertyDrawerExtended<LocalizedReferencePropertyDrawer<TCollection>.Data> where TCollection : LocalizationTableCollection
     {
         protected static class Styles
         {
@@ -24,7 +23,7 @@ namespace UnityEditor.Localization.UI
 
         protected static Func<ReadOnlyCollection<TCollection>> GetProjectTableCollections { get; set; }
 
-        protected class PropertyData
+        public class Data
         {
             public SerializedObject serializedObject;
             public SerializedTableReference tableReference;
@@ -36,6 +35,8 @@ namespace UnityEditor.Localization.UI
             SharedTableData.SharedTableEntry m_SelectedEntry;
             TCollection m_SelectedTableCollection;
             int m_SelectedTableIdx = -1;
+
+            public bool NeedsInitializing { get; protected set; } = true;
 
             public int SelectedTableIndex
             {
@@ -143,16 +144,35 @@ namespace UnityEditor.Localization.UI
                     return m_FieldLabel;
                 }
             }
+
+            public virtual void Reset()
+            {
+                serializedObject = null;
+                tableReference = null;
+                tableEntryReference = null;
+
+                // Clear cached values
+                m_FieldLabel = null;
+                m_SelectedEntry = null;
+                m_SelectedTableCollection = null;
+                m_SelectedTableIdx = -1;
+
+                NeedsInitializing = true;
+            }
+
+            public virtual void Init(SerializedProperty property)
+            {
+                serializedObject = property.serializedObject;
+                tableReference = new SerializedTableReference(property.FindPropertyRelative("m_TableReference"));
+                tableEntryReference = new SerializedTableEntryReference(property.FindPropertyRelative("m_TableEntryReference"));
+                NeedsInitializing = false;
+            }
         }
 
         static GUIContent[] s_TableChoicesLabels;
         static TCollection[] s_TableChoices;
 
         const float k_OpenTableEditorButtonWidth = 30;
-
-        // Its possible that the PropertyDrawer may be used to draw more than one item (arrays, lists)
-        Dictionary<string, PropertyData> m_PropertyDataPerPropertyPath = new Dictionary<string, PropertyData>();
-        protected PropertyData m_Property;
 
         static GUIContent[] ProjectTableLabels
         {
@@ -183,7 +203,7 @@ namespace UnityEditor.Localization.UI
             LocalizationEditorSettings.EditorEvents.CollectionModified += EditorEvents_CollectionModifiedWithSender;
             LocalizationEditorSettings.EditorEvents.LocaleAdded += EditorEvents_LocaleAddedOrRemoved;
             LocalizationEditorSettings.EditorEvents.LocaleRemoved += EditorEvents_LocaleAddedOrRemoved;
-            Undo.undoRedoPerformed += ClearPropertyDataCache;
+            Undo.undoRedoPerformed += UndoRedoPerformed;
         }
 
         ~LocalizedReferencePropertyDrawer()
@@ -193,21 +213,24 @@ namespace UnityEditor.Localization.UI
             LocalizationEditorSettings.EditorEvents.CollectionModified -= EditorEvents_CollectionModifiedWithSender;
             LocalizationEditorSettings.EditorEvents.LocaleAdded -= EditorEvents_LocaleAddedOrRemoved;
             LocalizationEditorSettings.EditorEvents.LocaleRemoved -= EditorEvents_LocaleAddedOrRemoved;
-            Undo.undoRedoPerformed -= ClearPropertyDataCache;
+            Undo.undoRedoPerformed -= UndoRedoPerformed;
         }
 
-        void ClearPropertyDataCache()
+        void UndoRedoPerformed()
         {
-            m_PropertyDataPerPropertyPath.Clear();
+            foreach (var prop in PropertyData.Values)
+            {
+                prop.Reset();
+            }
         }
 
-        void EditorEvents_CollectionModifiedWithSender(object sender, LocalizedTableCollection collection)
+        void EditorEvents_CollectionModifiedWithSender(object sender, LocalizationTableCollection collection)
         {
             if (sender != this)
                 EditorEvents_CollectionModified(collection);
         }
 
-        void EditorEvents_CollectionModified(LocalizedTableCollection obj)
+        void EditorEvents_CollectionModified(LocalizationTableCollection obj)
         {
             s_TableChoicesLabels = null;
             s_TableChoices = null;
@@ -221,58 +244,43 @@ namespace UnityEditor.Localization.UI
             ClearPropertyDataCache();
         }
 
-        void Init(SerializedProperty property)
+        public override Data GetDataForProperty(SerializedProperty property)
         {
-            if (m_PropertyDataPerPropertyPath.TryGetValue(property.propertyPath, out m_Property))
-                return;
-
-            m_Property = CreatePropertyData(property);
-            Debug.Assert(m_Property.assetType != null);
-            m_PropertyDataPerPropertyPath[property.propertyPath] = m_Property;
+            var data = base.GetDataForProperty(property);
+            if (data.NeedsInitializing)
+                data.Init(property);
+            return data;
         }
 
-        protected virtual PropertyData CreatePropertyData(SerializedProperty property)
-        {
-            var prop = new PropertyData()
-            {
-                serializedObject = property.serializedObject,
-                tableReference = new SerializedTableReference(property.FindPropertyRelative("m_TableReference")),
-                tableEntryReference = new SerializedTableEntryReference(property.FindPropertyRelative("m_TableEntryReference")),
-                entryNameLabel = Styles.entryName,
-            };
-            return prop;
-        }
+        public override Data CreatePropertyData(SerializedProperty property) => new Data { entryNameLabel = Styles.entryName };
 
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        public override void OnGUI(Data data, Rect position, SerializedProperty property, GUIContent label)
         {
-            Init(property);
-
             var rowPosition = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
 
             var foldoutRect = new Rect(rowPosition.x, rowPosition.y, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight);
             var dropDownPosition = new Rect(foldoutRect.xMax, rowPosition.y, rowPosition.width - EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight);
             rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
-            property.isExpanded = EditorGUI.Foldout(foldoutRect, property.isExpanded, label);
+            property.isExpanded = EditorGUI.Foldout(foldoutRect, property.isExpanded, label, true);
 
-            if (EditorGUI.DropdownButton(dropDownPosition, m_Property.FieldLabel, FocusType.Passive))
+            if (EditorGUI.DropdownButton(dropDownPosition, data.FieldLabel, FocusType.Passive))
             {
-                var propertyData = m_Property;
-                var treeSelection = new TableEntryReferenceTreeView(propertyData.assetType, (collection, entry) =>
+                var treeSelection = new TableEntryTreeView(data.assetType, (collection, entry) =>
                 {
-                    propertyData.SelectedTableCollection = collection as TCollection;
-                    propertyData.SelectedTableEntry = entry;
+                    data.SelectedTableCollection = collection as TCollection;
+                    data.SelectedTableEntry = entry;
 
                     // Will be called outside of OnGUI so we need to call ApplyModifiedProperties.
-                    propertyData.serializedObject.ApplyModifiedProperties();
+                    data.serializedObject.ApplyModifiedProperties();
                 });
 
-                PopupWindow.Show(dropDownPosition, new TableEntryPopupWindow(treeSelection) { Width = dropDownPosition.width });
+                PopupWindow.Show(dropDownPosition, new TreeViewPopupWindow(treeSelection) { Width = dropDownPosition.width });
             }
 
-            DrawTableDetails(position, rowPosition, property);
+            DrawTableDetails(position, rowPosition, data, property);
         }
 
-        void DrawTableDetails(Rect position, Rect rowPosition, SerializedProperty property)
+        void DrawTableDetails(Rect position, Rect rowPosition, Data data, SerializedProperty property)
         {
             if (!property.isExpanded)
                 return;
@@ -280,20 +288,20 @@ namespace UnityEditor.Localization.UI
             EditorGUI.indentLevel++;
 
             // Table selection
-            var tableSelectionPos = m_Property.SelectedTableIndex != 0 ? new Rect(rowPosition.x, rowPosition.y, rowPosition.width - k_OpenTableEditorButtonWidth, rowPosition.height) : rowPosition;
+            var tableSelectionPos = data.SelectedTableIndex != 0 ? new Rect(rowPosition.x, rowPosition.y, rowPosition.width - k_OpenTableEditorButtonWidth, rowPosition.height) : rowPosition;
             EditorGUI.BeginChangeCheck();
-            var selectedTableIndex = EditorGUI.Popup(tableSelectionPos, Styles.selectedTable, m_Property.SelectedTableIndex, ProjectTableLabels);
+            var selectedTableIndex = EditorGUI.Popup(tableSelectionPos, Styles.selectedTable, data.SelectedTableIndex, ProjectTableLabels);
             if (EditorGUI.EndChangeCheck())
             {
-                m_Property.SelectedTableIndex = selectedTableIndex;
+                data.SelectedTableIndex = selectedTableIndex;
             }
 
-            if (m_Property.SelectedTableIndex != 0)
+            if (data.SelectedTableIndex != 0)
             {
                 var openTableEditorPos = new Rect(tableSelectionPos.xMax, tableSelectionPos.y, k_OpenTableEditorButtonWidth, tableSelectionPos.height);
                 if (GUI.Button(openTableEditorPos, EditorIcons.StringTable))
                 {
-                    LocalizationTablesWindow.ShowWindow(m_Property.SelectedTableCollection);
+                    LocalizationTablesWindow.ShowWindow(data.SelectedTableCollection);
                 }
             }
 
@@ -311,7 +319,7 @@ namespace UnityEditor.Localization.UI
                 if (GUI.Button(buttonPos, Styles.addTableEntry, EditorStyles.miniButton))
                 {
                     // Attempt to create a new key with a set default name
-                    var keys = m_Property.SelectedTableCollection.SharedData;
+                    var keys = data.SelectedTableCollection.SharedData;
 
                     const string newKeyName = "New Entry";
                     var keyToTry = newKeyName;
@@ -330,8 +338,8 @@ namespace UnityEditor.Localization.UI
                             EditorUtility.SetDirty(keys);
                         }
                     }
-                    m_Property.SelectedTableEntry = entry;
-                    LocalizationEditorSettings.EditorEvents.RaiseTableEntryAdded(m_Property.SelectedTableCollection, entry);
+                    data.SelectedTableEntry = entry;
+                    LocalizationEditorSettings.EditorEvents.RaiseTableEntryAdded(data.SelectedTableCollection, entry);
                 }
             }
 
@@ -343,45 +351,44 @@ namespace UnityEditor.Localization.UI
             }
             rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
 
-            if (m_Property.SelectedTableEntry != null)
-                DrawTableEntryDetails(ref rowPosition, position);
+            if (data.SelectedTableEntry != null)
+                DrawTableEntryDetails(ref rowPosition, data, position);
             EditorGUI.indentLevel--;
         }
 
-        protected virtual void DrawTableEntryDetails(ref Rect rowPosition, Rect position)
+        protected virtual void DrawTableEntryDetails(ref Rect rowPosition, Data data, Rect position)
         {
             // Entry name
             EditorGUI.BeginChangeCheck();
-            rowPosition.height = EditorStyles.textField.CalcHeight(new GUIContent(m_Property.SelectedTableEntry?.Key), rowPosition.width);
-            var newName = EditorGUI.TextField(rowPosition, m_Property.entryNameLabel, m_Property.SelectedTableEntry?.Key);
+            rowPosition.height = EditorStyles.textField.CalcHeight(new GUIContent(data.SelectedTableEntry?.Key), rowPosition.width);
+            var newName = EditorGUI.TextField(rowPosition, data.entryNameLabel, data.SelectedTableEntry?.Key);
             rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
-            if (EditorGUI.EndChangeCheck() && m_Property.SelectedTableCollection != null)
+            if (EditorGUI.EndChangeCheck() && data.SelectedTableCollection != null)
             {
                 // Prevent renaming to a new that is already taken.
-                var sharedData = m_Property.SelectedTableCollection.SharedData;
+                var sharedData = data.SelectedTableCollection.SharedData;
                 var entry = sharedData.GetEntry(newName);
 
                 if (string.IsNullOrEmpty(newName))
                 {
-                    m_Property.entryNameLabel = new GUIContent(Styles.entryName.text, EditorIcons.WarningIcon, "Names can not be empty.");
+                    data.entryNameLabel = new GUIContent(Styles.entryName.text, EditorIcons.WarningIcon, "Names can not be empty.");
                 }
-                else if (entry == null || m_Property.SelectedTableEntry == entry)
+                else if (entry == null || data.SelectedTableEntry == entry)
                 {
                     Undo.RecordObject(sharedData, "Rename key entry");
-                    sharedData.RenameKey(m_Property.SelectedTableEntry.Key, newName);
+                    sharedData.RenameKey(data.SelectedTableEntry.Key, newName);
                     EditorUtility.SetDirty(sharedData);
-                    m_Property.entryNameLabel = Styles.entryName;
+                    data.entryNameLabel = Styles.entryName;
                 }
                 else
                 {
-                    m_Property.entryNameLabel = new GUIContent(Styles.entryName.text, EditorIcons.WarningIcon, $"Can not rename key to '{newName}', the name is already in use by Key Id {entry.Id}.");
+                    data.entryNameLabel = new GUIContent(Styles.entryName.text, EditorIcons.WarningIcon, $"Can not rename key to '{newName}', the name is already in use by Key Id {entry.Id}.");
                 }
             }
         }
 
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        public override float GetPropertyHeight(Data data, SerializedProperty property, GUIContent label)
         {
-            Init(property);
             float height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing; // Foldout field height
             if (property.isExpanded)
             {
@@ -389,10 +396,10 @@ namespace UnityEditor.Localization.UI
                 height += EditorGUIUtility.singleLineHeight; // create table/add entry button
                 height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing; // Add locale button
 
-                if (m_Property.SelectedTableEntry != null)
+                if (data.SelectedTableEntry != null)
                 {
                     // Entry name
-                    height += EditorStyles.textField.CalcHeight(new GUIContent(m_Property.SelectedTableEntry?.Key), EditorGUIUtility.currentViewWidth) + EditorGUIUtility.standardVerticalSpacing;
+                    height += EditorStyles.textField.CalcHeight(new GUIContent(data.SelectedTableEntry?.Key), EditorGUIUtility.currentViewWidth) + EditorGUIUtility.standardVerticalSpacing;
                 }
             }
             return height;

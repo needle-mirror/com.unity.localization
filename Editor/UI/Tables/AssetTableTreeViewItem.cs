@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Metadata;
@@ -36,10 +35,10 @@ namespace UnityEditor.Localization.UI
             return asset;
         }
 
-        public override void Initialize(LocalizedTableCollection collection, int startIdx)
+        public override void Initialize(LocalizationTableCollection collection, int startIdx, List<LocalizationTable> sortedTables)
         {
             m_AssetTableCollection = collection as AssetTableCollection;
-            m_TableProperties = new(ISelectable, Object, AssetTable)[startIdx + collection.Tables.Count];
+            m_TableProperties = new(ISelectable, Object, AssetTable)[startIdx + sortedTables.Count];
 
             // Get the shared data
             m_SharedTableData = collection.SharedData;
@@ -47,7 +46,7 @@ namespace UnityEditor.Localization.UI
             Debug.Assert(m_SharedTableData != null);
             for (int i = startIdx; i < m_TableProperties.Length; ++i)
             {
-                m_TableProperties[i] = (null, null, collection.Tables[i - startIdx].asset as AssetTable);
+                m_TableProperties[i] = (null, null, sortedTables[i - startIdx] as AssetTable);
             }
             RefreshFields();
         }
@@ -144,17 +143,20 @@ namespace UnityEditor.Localization.UI
 
         void UpdateSearchString()
         {
-            var sb = new StringBuilder();
-            sb.AppendLine(SharedEntry.Key);
-            foreach (var tableAsset in m_TableProperties)
+            using (StringBuilderPool.Get(out var sb))
             {
-                if (tableAsset.value != null)
+                sb.AppendLine(SharedEntry.Id.ToString());
+                sb.AppendLine(SharedEntry.Key);
+                foreach (var tableAsset in m_TableProperties)
                 {
-                    sb.AppendLine(tableAsset.value.name);
+                    if (tableAsset.value != null)
+                    {
+                        sb.AppendLine(tableAsset.value.name);
+                    }
                 }
-            }
 
-            displayName = sb.ToString();
+                displayName = sb.ToString();
+            }
         }
     }
 }

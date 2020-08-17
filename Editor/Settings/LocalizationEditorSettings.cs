@@ -11,6 +11,7 @@ using UnityEngine.Localization;
 using UnityEngine.Localization.Pseudo;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
+using UnityEngine.Pool;
 using Object = UnityEngine.Object;
 
 namespace UnityEditor.Localization
@@ -24,6 +25,8 @@ namespace UnityEditor.Localization
         internal const string AssetGroupName = "Localization-Assets-{0}";
         internal const string SharedAssetGroupName = "Localization-Assets-Shared";
 
+        internal const string k_GameViewPref = "Localization-ShowLocaleMenuInGameView";
+
         static LocalizationEditorSettings s_Instance;
 
         // Cached searches to help performance.
@@ -36,7 +39,7 @@ namespace UnityEditor.Localization
             set => s_Instance = value;
         }
 
-        internal LocalizedTableCollectionCache TableCollectionCache { get; set; } = new LocalizedTableCollectionCache();
+        internal LocalizationTableCollectionCache TableCollectionCache { get; set; } = new LocalizationTableCollectionCache();
 
         /// <summary>
         /// The LocalizationSettings used for this project.
@@ -58,8 +61,8 @@ namespace UnityEditor.Localization
         /// </summary>
         public static bool ShowLocaleMenuInGameView
         {
-            get => LocalizationSettings.ShowLocaleMenuInGameView;
-            set => LocalizationSettings.ShowLocaleMenuInGameView = value;
+            get => EditorPrefs.GetBool(k_GameViewPref, true);
+            set => EditorPrefs.SetBool(k_GameViewPref, value);
         }
 
         /// <summary>
@@ -68,6 +71,17 @@ namespace UnityEditor.Localization
         public static LocalizationEditorEvents EditorEvents { get; internal set; } = new LocalizationEditorEvents();
 
         internal static bool EnableAddressablesCreation { get; set; } = true;
+
+        public LocalizationEditorSettings()
+        {
+            EditorEvents.LocaleSortOrderChanged += (sender, locale) => SortLocales();
+            Undo.undoRedoPerformed += UndoRedoPerformed;
+        }
+
+        ~LocalizationEditorSettings()
+        {
+            Undo.undoRedoPerformed -= UndoRedoPerformed;
+        }
 
         /// <summary>
         /// Add the Locale to the Addressables system, so that it can be used by the Localization system during runtime.
@@ -123,33 +137,33 @@ namespace UnityEditor.Localization
         public static AssetTableCollection GetAssetTableCollection(TableReference tableNameOrGuid) => Instance.TableCollectionCache.FindAssetTableCollection(tableNameOrGuid);
 
         /// <summary>
-        /// Returns the <see cref="LocalizedTableCollection"/> that the table is part of or null if the table has no collection.
+        /// Returns the <see cref="LocalizationTableCollection"/> that the table is part of or null if the table has no collection.
         /// </summary>
         /// <param name="table"></param>
         /// <returns></returns>
-        public static LocalizedTableCollection GetCollectionFromTable(LocalizedTable table) => Instance.TableCollectionCache.FindCollectionForTable(table);
+        public static LocalizationTableCollection GetCollectionFromTable(LocalizationTable table) => Instance.TableCollectionCache.FindCollectionForTable(table);
 
         /// <summary>
-        /// Returns the <see cref="LocalizedTableCollection"/> that the <see cref="SharedTableData"/> is part of or null if one could not be found.
+        /// Returns the <see cref="LocalizationTableCollection"/> that the <see cref="SharedTableData"/> is part of or null if one could not be found.
         /// </summary>
         /// <param name="sharedTableData"></param>
         /// <returns></returns>
-        public static LocalizedTableCollection GetCollectionForSharedTableData(SharedTableData sharedTableData) => Instance.TableCollectionCache.FindCollectionForSharedTableData(sharedTableData);
+        public static LocalizationTableCollection GetCollectionForSharedTableData(SharedTableData sharedTableData) => Instance.TableCollectionCache.FindCollectionForSharedTableData(sharedTableData);
 
         /// <summary>
-        /// If a table does not belong to a <see cref="LocalizedTableCollection"/> then it is considered to be loose, it has no parent collection and will be ignored.
-        /// This returns all loose tables that use the same <see cref="SharedTableData"/>, they can then be converted into a <see cref="LocalizedTableCollection"/>.
+        /// If a table does not belong to a <see cref="LocalizationTableCollection"/> then it is considered to be loose, it has no parent collection and will be ignored.
+        /// This returns all loose tables that use the same <see cref="SharedTableData"/>, they can then be converted into a <see cref="LocalizationTableCollection"/>.
         /// </summary>
         /// <param name="sharedTableData"></param>
         /// <param name="foundTables"></param>
-        public static void FindLooseStringTablesUsingSharedTableData(SharedTableData sharedTableData, IList<LocalizedTable> foundTables) => Instance.TableCollectionCache.FindLooseTablesUsingSharedTableData(sharedTableData, foundTables);
+        public static void FindLooseStringTablesUsingSharedTableData(SharedTableData sharedTableData, IList<LocalizationTable> foundTables) => Instance.TableCollectionCache.FindLooseTablesUsingSharedTableData(sharedTableData, foundTables);
 
         /// <summary>
         /// Creates a <see cref="StringTableCollection"/> or <see cref="AssetTableCollection"/> from the loose tables.
         /// </summary>
         /// <param name="looseTables">Tables to create the collection from. All tables must be of the same type.</param>
         /// <returns></returns>
-        public static LocalizedTableCollection CreateCollectionFromLooseTables(IList<LocalizedTable> looseTables, string path) => Instance.CreateCollectionFromLooseTablesInternal(looseTables, path);
+        public static LocalizationTableCollection CreateCollectionFromLooseTables(IList<LocalizationTable> looseTables, string path) => Instance.CreateCollectionFromLooseTablesInternal(looseTables, path);
 
         /// <summary>
         /// Creates a <see cref="StringTableCollection"/> using the project Locales.
@@ -185,16 +199,16 @@ namespace UnityEditor.Localization
         /// <returns></returns>
         public static AssetTableCollection CreateAssetTableCollection(string tableName, string assetDirectory, IList<Locale> selectedLocales) => Instance.CreateCollection(typeof(AssetTableCollection), tableName, assetDirectory, selectedLocales) as AssetTableCollection;
 
-        internal protected virtual LocalizedTableCollection CreateCollection(Type collectionType, string tableName, string assetDirectory, IList<Locale> selectedLocales)
+        internal protected virtual LocalizationTableCollection CreateCollection(Type collectionType, string tableName, string assetDirectory, IList<Locale> selectedLocales)
         {
-            if (collectionType.IsAssignableFrom(typeof(LocalizedTableCollection)))
-                throw new ArgumentException($"{collectionType.Name} Must be derived from {nameof(LocalizedTableCollection)}", nameof(collectionType));
+            if (collectionType.IsAssignableFrom(typeof(LocalizationTableCollection)))
+                throw new ArgumentException($"{collectionType.Name} Must be derived from {nameof(LocalizationTableCollection)}", nameof(collectionType));
 
             if (string.IsNullOrEmpty(tableName))
                 throw new ArgumentException("Can not be null or empty", nameof(tableName));
 
-            var collection = ScriptableObject.CreateInstance(collectionType) as LocalizedTableCollection;
-            List<LocalizedTable> createdTables;
+            var collection = ScriptableObject.CreateInstance(collectionType) as LocalizationTableCollection;
+            List<LocalizationTable> createdTables;
 
             AssetDatabase.StartAssetEditing();
 
@@ -216,10 +230,10 @@ namespace UnityEditor.Localization
 
             if (selectedLocales?.Count > 0)
             {
-                createdTables = new List<LocalizedTable>(selectedLocales.Count);
+                createdTables = new List<LocalizationTable>(selectedLocales.Count);
                 foreach (var locale in selectedLocales)
                 {
-                    var table = ScriptableObject.CreateInstance(collection.TableType) as LocalizedTable;
+                    var table = ScriptableObject.CreateInstance(collection.TableType) as LocalizationTable;
                     table.SharedData = SharedTableData;
                     table.LocaleIdentifier = locale.Identifier;
                     table.name = AddressHelper.GetTableAddress(tableName, locale.Identifier);
@@ -233,7 +247,7 @@ namespace UnityEditor.Localization
                     var assetPath = Path.Combine(relativePath, tbl.name + ".asset");
                     assetPath = AssetDatabase.GenerateUniqueAssetPath(assetPath);
                     CreateAsset(tbl, assetPath);
-                    collection.AddTable(tbl, false);
+                    collection.AddTable(tbl, postEvent: false);
                 }
             }
 
@@ -255,7 +269,7 @@ namespace UnityEditor.Localization
         /// <param name="looseTables"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        protected virtual LocalizedTableCollection CreateCollectionFromLooseTablesInternal(IList<LocalizedTable> looseTables, string path)
+        protected virtual LocalizationTableCollection CreateCollectionFromLooseTablesInternal(IList<LocalizationTable> looseTables, string path)
         {
             if (looseTables == null || looseTables.Count == 0)
                 return null;
@@ -263,7 +277,7 @@ namespace UnityEditor.Localization
             var isStringTable = typeof(StringTable).IsAssignableFrom(looseTables[0].GetType());
 
             var collectionType = isStringTable ? typeof(StringTableCollection) : typeof(AssetTableCollection);
-            var collection = ScriptableObject.CreateInstance(collectionType) as LocalizedTableCollection;
+            var collection = ScriptableObject.CreateInstance(collectionType) as LocalizationTableCollection;
             collection.SharedData = looseTables[0].SharedData;
 
             foreach (var table in looseTables)
@@ -288,7 +302,7 @@ namespace UnityEditor.Localization
         /// <param name="table"></param>
         /// <param name="preload"></param>
         /// <param name="createUndo"></param>
-        public static void SetPreloadTableFlag(LocalizedTable table, bool preload, bool createUndo = false)
+        public static void SetPreloadTableFlag(LocalizationTable table, bool preload, bool createUndo = false)
         {
             Instance.SetPreloadTableInternal(table, preload, createUndo);
         }
@@ -298,7 +312,7 @@ namespace UnityEditor.Localization
         /// </summary>
         /// <param name="table"></param>
         /// <returns></returns>
-        public static bool GetPreloadTableFlag(LocalizedTable table)
+        public static bool GetPreloadTableFlag(LocalizationTable table)
         {
             // TODO: We could just use the instance id so we dont need to load the whole table
             return Instance.GetPreloadTableFlagInternal(table);
@@ -536,6 +550,16 @@ namespace UnityEditor.Localization
         /// <returns></returns>
         protected virtual Locale GetLocaleInternal(string code) => GetLocalesInternal().FirstOrDefault(loc => loc.Identifier.Code == code);
 
+        void SortLocales()
+        {
+            if (m_ProjectLocales != null)
+            {
+                var localesList = m_ProjectLocales.ToList();
+                localesList.Sort();
+                m_ProjectLocales = localesList.AsReadOnly();
+            }
+        }
+
         /// <summary>
         /// <inheritdoc cref=" SetPreloadTable"/>
         /// </summary>
@@ -544,7 +568,7 @@ namespace UnityEditor.Localization
         /// <param name="createUndo"></param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="AddressableEntryNotFoundException"></exception>
-        protected virtual void SetPreloadTableInternal(LocalizedTable table, bool preload, bool createUndo = false)
+        protected virtual void SetPreloadTableInternal(LocalizationTable table, bool preload, bool createUndo = false)
         {
             if (table == null)
                 throw new ArgumentNullException(nameof(table), "Can not set preload flag on a null table");
@@ -571,7 +595,7 @@ namespace UnityEditor.Localization
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="AddressableEntryNotFoundException"></exception>
-        protected virtual bool GetPreloadTableFlagInternal(LocalizedTable table)
+        protected virtual bool GetPreloadTableFlagInternal(LocalizationTable table)
         {
             if (table == null)
                 throw new ArgumentNullException(nameof(table), "Can not get preload flag from a null table");
@@ -613,6 +637,12 @@ namespace UnityEditor.Localization
                 }
             }
             return (foundCollection, currentEntry, currentMatchDistance);
+        }
+
+        void UndoRedoPerformed()
+        {
+            // Reset the locales as adding/removing a locale may have been undone.
+            m_ProjectLocales = null;
         }
 
         internal virtual void CreateAsset(Object asset, string path)

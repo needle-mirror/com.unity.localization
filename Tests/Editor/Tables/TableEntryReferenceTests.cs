@@ -30,9 +30,9 @@ namespace UnityEditor.Localization.Tests
         [Test]
         public void AssigningIntId_ReturnsTheSameIdWithImplicitConversion()
         {
-            const uint id = 432;
+            const long id = 432;
             TableEntryReference tableEntryReference = id;
-            uint implicitId = tableEntryReference;
+            long implicitId = tableEntryReference;
             Assert.AreEqual(id, implicitId, "Expected the same id to be returned when assigning a TableEntryReference to a uint.");
         }
 

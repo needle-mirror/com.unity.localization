@@ -9,7 +9,7 @@ namespace UnityEngine.Localization.Settings
 {
     [Serializable]
     public abstract class LocalizedDatabase<TTable, TEntry> : IPreloadRequired
-        where TTable : LocalizedTableT<TEntry>
+        where TTable : DetailedLocalizationTable<TEntry>
         where TEntry : TableEntry
     {
         /// <summary>
@@ -96,6 +96,22 @@ namespace UnityEngine.Localization.Settings
         internal void RegisterTableOperation(AsyncOperationHandle<TTable> handle, LocaleIdentifier localeIdentifier, string tableName)
         {
             TableOperations[(localeIdentifier, tableName)] = handle;
+
+            if (handle.IsDone)
+                RegisterSharedTableDataOperation(handle);
+            else
+                handle.Completed += RegisterSharedTableDataOperation;
+        }
+
+        void RegisterSharedTableDataOperation(AsyncOperationHandle<TTable> tableOperation)
+        {
+            if (tableOperation.Result != null)
+            {
+                var sharedTableData = tableOperation.Result.SharedData;
+                var tableNameGuid = sharedTableData.TableCollectionNameGuid;
+                if (!SharedTableDataOperations.ContainsKey(tableNameGuid))
+                    SharedTableDataOperations[tableNameGuid] = ResourceManager.CreateCompletedOperation(sharedTableData, null);
+            }
         }
 
         /// <summary>

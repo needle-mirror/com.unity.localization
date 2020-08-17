@@ -285,28 +285,58 @@ namespace UnityEngine.Localization.Settings
         }
 
         /// <summary>
-        /// Uses the Startup locale selector to select the most appropriate locale.
-        /// Does not send the locale changed event.
+        /// Uses <see cref="StartupLocaleSelectors"/> to select the most appropriate <see cref="Locale"/>.
         /// </summary>
-        internal void InitializeSelectedLocale()
+        protected virtual Locale SelectLocale()
         {
             if (m_AvailableLocales == null)
             {
-                Debug.LogWarning("Available locales is null, can not pick a locale.");
-                return;
+                Debug.LogError("AvailableLocales is null, can not pick a Locale.");
+                return null;
             }
 
-            m_SelectedLocale = null;
+            if (m_AvailableLocales.Locales == null)
+            {
+                Debug.LogError("AvailableLocales.Locales is null, can not pick a Locale.");
+                return null;
+            }
+
             foreach (var sel in m_StartupSelectors)
             {
                 var locale = sel.GetStartupLocale(m_AvailableLocales);
                 if (locale != null)
                 {
-                    m_SelectedLocale = locale;
-                    return;
+                    return locale;
                 }
             }
-            Debug.Assert(m_SelectedLocale != null, "No locale could be selected. Please check available locales and startup selector.");
+
+            using (StringBuilderPool.Get(out var sb))
+            {
+                sb.AppendLine("No Locale could be selected:");
+
+                if (m_AvailableLocales.Locales.Count == 0)
+                {
+                    sb.AppendLine("No Locales were available. Did you build the Addressables?");
+                }
+                else
+                {
+                    sb.AppendLine($"The following ({m_AvailableLocales.Locales.Count}) Locales were considered:");
+                    foreach (var locale in m_AvailableLocales.Locales)
+                    {
+                        sb.AppendLine($"\t{locale}");
+                    }
+                }
+
+                sb.AppendLine($"The following ({m_StartupSelectors.Count}) IStartupLocaleSelectors were used:");
+                foreach (var selector in m_StartupSelectors)
+                {
+                    sb.AppendLine($"\t{selector}");
+                }
+
+                Debug.LogError(sb.ToString(), this);
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -395,7 +425,7 @@ namespace UnityEngine.Localization.Settings
                 return null;
             }
 
-            InitializeSelectedLocale();
+            m_SelectedLocale = SelectLocale();
             return m_SelectedLocale;
         }
 

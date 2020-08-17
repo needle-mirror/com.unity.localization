@@ -11,7 +11,7 @@ namespace UnityEditor.Localization.UI
     {
         protected Dictionary<string, TData> PropertyData = new Dictionary<string, TData>();
 
-        TData GetDataForProperty(SerializedProperty property)
+        public virtual TData GetDataForProperty(SerializedProperty property)
         {
             // We use both the property name and the serialized object hash for the key as its possible the serialized object may have been disposed.
             var propertyKey = property.serializedObject.GetHashCode() + property.propertyPath;
@@ -38,5 +38,7 @@ namespace UnityEditor.Localization.UI
             var data = GetDataForProperty(property);
             return GetPropertyHeight(data, property, label);
         }
+
+        protected void ClearPropertyDataCache() => PropertyData.Clear();
     }
 }

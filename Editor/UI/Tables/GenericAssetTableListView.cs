@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
+using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
+using UnityEngine.Pool;
 using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.UI
@@ -15,7 +17,7 @@ namespace UnityEditor.Localization.UI
     }
 
     abstract class GenericAssetTableListView<T1, T2> : TreeView
-        where T1 : LocalizedTable
+        where T1 : LocalizationTable
         where T2 : GenericAssetTableTreeViewItem<T1>, new()
     {
         const string k_DragId = "GenericAssetTableListViewDragging";
@@ -25,7 +27,7 @@ namespace UnityEditor.Localization.UI
 
         protected string TableCollectionName => TableCollection.TableCollectionName;
 
-        public LocalizedTableCollection TableCollection { get; private set; }
+        public LocalizationTableCollection TableCollection { get; private set; }
 
         public ISelectable Selected
         {
@@ -59,7 +61,9 @@ namespace UnityEditor.Localization.UI
         TreeViewItem m_AddKeyItem;
         SearchField m_SearchField;
 
-        protected GenericAssetTableListView(LocalizedTableCollection tableCollection) :
+        List<LocalizationTable> m_SortedTables = new List<LocalizationTable>();
+
+        protected GenericAssetTableListView(LocalizationTableCollection tableCollection) :
             base(new TreeViewState())
         {
             TableCollection = tableCollection;
@@ -73,6 +77,7 @@ namespace UnityEditor.Localization.UI
             LocalizationEditorSettings.EditorEvents.TableAddedToCollection += EditorEvents_TableAddedOrRemoveFromCollection;
             LocalizationEditorSettings.EditorEvents.TableRemovedFromCollection += EditorEvents_TableAddedOrRemoveFromCollection;
             LocalizationEditorSettings.EditorEvents.CollectionModified += EditorEvents_CollectionModified;
+            LocalizationEditorSettings.EditorEvents.LocaleSortOrderChanged += EditorEvents_LocaleSortOrderChanged;
 
             rowHeight = EditorStyles.textArea.lineHeight;
         }
@@ -87,15 +92,16 @@ namespace UnityEditor.Localization.UI
             LocalizationEditorSettings.EditorEvents.TableAddedToCollection -= EditorEvents_TableAddedOrRemoveFromCollection;
             LocalizationEditorSettings.EditorEvents.TableRemovedFromCollection -= EditorEvents_TableAddedOrRemoveFromCollection;
             LocalizationEditorSettings.EditorEvents.CollectionModified -= EditorEvents_CollectionModified;
+            LocalizationEditorSettings.EditorEvents.LocaleSortOrderChanged -= EditorEvents_LocaleSortOrderChanged;
         }
 
-        void EditorEvents_CollectionModified(object sender, LocalizedTableCollection collection)
+        void EditorEvents_CollectionModified(object sender, LocalizationTableCollection collection)
         {
             if (sender != this && collection == TableCollection)
                 Reload();
         }
 
-        void EditorEvents_TableEntryModified(LocalizedTableCollection collection, SharedTableData.SharedTableEntry entry)
+        void EditorEvents_TableEntryModified(LocalizationTableCollection collection, SharedTableData.SharedTableEntry entry)
         {
             if (collection == TableCollection)
                 Reload();
@@ -121,13 +127,19 @@ namespace UnityEditor.Localization.UI
             }
         }
 
-        void EditorEvents_TableAddedOrRemoveFromCollection(LocalizedTableCollection collection, LocalizedTable table)
+        void EditorEvents_TableAddedOrRemoveFromCollection(LocalizationTableCollection collection, LocalizationTable table)
         {
             if (collection == TableCollection)
             {
                 Initialize();
                 Reload();
             }
+        }
+
+        void EditorEvents_LocaleSortOrderChanged(object sender, Locale locale)
+        {
+            InitializeColumns();
+            Reload();
         }
 
         protected override float GetCustomRowHeight(int row, TreeViewItem item)
@@ -140,10 +152,7 @@ namespace UnityEditor.Localization.UI
             return base.GetCustomRowHeight(row, item);
         }
 
-        protected virtual void UndoRedoPerformed()
-        {
-            RefreshCustomRowHeights();
-        }
+        protected virtual void UndoRedoPerformed() => RefreshCustomRowHeights();
 
         public virtual void Initialize()
         {
@@ -166,28 +175,47 @@ namespace UnityEditor.Localization.UI
                 new KeyIdColumn(keys)
             };
 
-            // Update column labels if possible
-            var locales = LocalizationEditorSettings.GetLocales().ToList();
-            foreach (var t in TableCollection.Tables)
+            var localesWithNoMatchingTable = ListPool<Locale>.Get();
+            var projectTables = ListPool<LazyLoadReference<LocalizationTable>>.Get();
+            projectTables.AddRange(TableCollection.Tables);
+            m_SortedTables.Clear();
+
+            // Add the tables in the order of Locales so Locale sorting order is respected.
+            foreach (var locale in LocalizationEditorSettings.GetLocales())
             {
-                var foundLocale = locales.FirstOrDefault(o => o.Identifier.Code == t.asset.LocaleIdentifier.Code);
-                locales.Remove(foundLocale);
-                columns.Add(new TableColumn<T1>(TableCollection, t.asset, foundLocale));
+                var matchingTableIdx = projectTables.FindIndex(tbl => tbl.asset.LocaleIdentifier.Code == locale.Identifier.Code);
+                if (matchingTableIdx != -1)
+                {
+                    var table = projectTables[matchingTableIdx];
+                    m_SortedTables.Add(table.asset);
+                    projectTables.RemoveAt(matchingTableIdx);
+                    columns.Add(new TableColumn<T1>(TableCollection, table.asset, locale));
+                }
+                else
+                {
+                    localesWithNoMatchingTable.Add(locale);
+                }
             }
 
-            // Add columns for the missing locales.
-            locales.ForEach(l => columns.Add(new MissingTableColumn(l)));
+            // Tables with missing Locales
+            projectTables.ForEach(tbl => columns.Add(new TableColumn<T1>(TableCollection, tbl.asset, null)));
+
+            // Locales with no matching tables
+            localesWithNoMatchingTable.ForEach(l => columns.Add(new MissingTableColumn(l)));
 
             var multiColState = new MultiColumnHeaderState(columns.ToArray());
             multiColumnHeader = new GenericAssetTableListViewMultiColumnHeader<T1, T2>(multiColState, this, TableCollection);
             multiColumnHeader.visibleColumnsChanged += (header) => RefreshCustomRowHeights();
             multiColumnHeader.ResizeToFit();
+
+            ListPool<Locale>.Release(localesWithNoMatchingTable);
+            ListPool<LazyLoadReference<LocalizationTable>>.Release(projectTables);
         }
 
         protected virtual T2 CreateTreeViewItem(int index, SharedTableData.SharedTableEntry entry)
         {
             var item = new T2() { id = index, SharedEntry = entry };
-            item.Initialize(TableCollection, k_TableStartIndex);
+            item.Initialize(TableCollection, k_TableStartIndex, m_SortedTables);
             return item;
         }
 

@@ -16,12 +16,12 @@ namespace UnityEngine.Localization.Metadata
         class Item
         {
             [SerializeField]
-            uint m_KeyId;
+            long m_KeyId;
 
             [SerializeField]
             List<string> m_TableCodes = new List<string>();
 
-            public uint KeyId
+            public long KeyId
             {
                 get => m_KeyId;
                 set => m_KeyId = value;
@@ -37,7 +37,7 @@ namespace UnityEngine.Localization.Metadata
         [SerializeField, HideInInspector]
         List<Item> m_Entries = new List<Item>();
 
-        Dictionary<uint, HashSet<string>> m_EntriesLookup = new Dictionary<uint, HashSet<string>>();
+        Dictionary<long, HashSet<string>> m_EntriesLookup = new Dictionary<long, HashSet<string>>();
 
         /// <summary>
         /// Are any table entries currently associated to this Metadata?
@@ -49,7 +49,7 @@ namespace UnityEngine.Localization.Metadata
         /// </summary>
         /// <param name="keyId"></param>
         /// <returns></returns>
-        public bool Contains(uint keyId)
+        public bool Contains(long keyId)
         {
             return m_EntriesLookup.ContainsKey(keyId);
         }
@@ -60,7 +60,7 @@ namespace UnityEngine.Localization.Metadata
         /// <param name="keyId"></param>
         /// <param name="code"></param>
         /// <returns></returns>
-        public bool Contains(uint keyId, string code)
+        public bool Contains(long keyId, string code)
         {
             return m_EntriesLookup.TryGetValue(keyId, out var codes) && codes.Contains(code);
         }
@@ -70,7 +70,7 @@ namespace UnityEngine.Localization.Metadata
         /// </summary>
         /// <param name="keyId">The Id of the table entry.</param>
         /// <param name="code">The table culture code.</param>
-        public void AddEntry(uint keyId, string code)
+        public void AddEntry(long keyId, string code)
         {
             m_EntriesLookup.TryGetValue(keyId, out var item);
             if (item == null)
@@ -87,7 +87,7 @@ namespace UnityEngine.Localization.Metadata
         /// </summary>
         /// <param name="keyId"></param>
         /// <param name="code"></param>
-        public void RemoveEntry(uint keyId, string code)
+        public void RemoveEntry(long keyId, string code)
         {
             if (m_EntriesLookup.TryGetValue(keyId, out var item))
             {
@@ -115,7 +115,7 @@ namespace UnityEngine.Localization.Metadata
         /// </summary>
         public virtual void OnAfterDeserialize()
         {
-            m_EntriesLookup = new Dictionary<uint, HashSet<string>>();
+            m_EntriesLookup = new Dictionary<long, HashSet<string>>();
             foreach (var entry in m_Entries)
             {
                 m_EntriesLookup[entry.KeyId] = new HashSet<string>(entry.Tables);

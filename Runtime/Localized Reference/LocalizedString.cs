@@ -10,11 +10,11 @@ namespace UnityEngine.Localization
     /// This provides a centralized way to work with localized strings.
     /// </summary>
     [Serializable]
-    public class LocalizedString : LocalizedReference
+    public partial class LocalizedString : LocalizedReference
     {
         ChangeHandler m_ChangeHandler;
-
         AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult>? m_CurrentLoadingOperation;
+        string m_CurrentStringChangedValue;
 
         /// <summary>
         /// Arguments that will be passed through to Smart Format. These arguments are not serialized and will need to be set during play mode.
@@ -28,8 +28,8 @@ namespace UnityEngine.Localization
         public delegate void ChangeHandler(string value);
 
         /// <summary>
-        /// The current loading operation for the string. A string may not be immediately available,
-        /// such as when loading the <see cref="StringTable"/>, so all string operations are wrapped
+        /// The current loading operation for the string when using <see cref="StringChanged"/>.
+        /// A string may not be immediately available, such as when loading the <see cref="StringTable"/>, so all string operations are wrapped
         /// with an <see cref="AsyncOperationHandle"/>.
         /// See also <seealso cref="RefreshString"/>
         /// </summary>
@@ -40,13 +40,13 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// Register a handler that will be called whenever a localized string is available.
-        /// When a handler is registered, the string will then be automatically loaded whenever the
-        /// <see cref="LocalizationSettings.SelectedLocaleChanged"/> is changed, during initialization and if
-        /// <see cref="RefreshString"/> is called.
-        /// <seealso cref="LoadAssetAsync"/> when not using a change handler.
+        /// Called whenever a localized string is available.
+        /// When the first <see cref="ChangeHandler"/> is added, a loading operation will automatically start and the localized string value will be sent to the event when completed.
+        /// Any adding additional subscribers added after loading has completed will also be sent the latest localized string value when they are added.
+        /// This ensures that a subscriber will always have the correct localized value regardless of when it was added.
+        /// The string will be refreshed whenever <see cref="LocalizationSettings.SelectedLocaleChanged"/> is changed and when <see cref="RefreshString"/> is called.
+        /// <seealso cref="GetLocalizedString"/> when not using the event.
         /// </summary>
-        /// <param name="handler"></param>
         /// <example>
         /// This example shows how we can fetch and update a single string value.
         /// <code>
@@ -60,12 +60,12 @@ namespace UnityEngine.Localization
         ///
         ///     void OnEnable()
         ///     {
-        ///         stringRef.RegisterChangeHandler(UpdateString);
+        ///         stringRef.StringChanged += UpdateString;
         ///     }
         ///
         ///     void OnDisable()
         ///     {
-        ///         stringRef.ClearChangeHandler();
+        ///         stringRef.StringChanged -= UpdateString;
         ///     }
         ///
         ///     void UpdateString(string translatedValue)
@@ -81,39 +81,53 @@ namespace UnityEngine.Localization
         /// }
         /// </code>
         /// </example>
-        public void RegisterChangeHandler(ChangeHandler handler)
+        public event ChangeHandler StringChanged
         {
-            if (handler == null)
-                throw new ArgumentNullException(nameof(handler));
+            add
+            {
+                if (value == null)
+                    throw new ArgumentNullException();
 
-            ClearChangeHandler();
-            m_ChangeHandler = handler ?? throw new ArgumentNullException(nameof(handler), "Handler must not be null");
-            LocalizationSettings.SelectedLocaleChanged += HandleLocaleChange;
+                bool wasEmpty = m_ChangeHandler == null;
+                m_ChangeHandler += value;
 
-            ForceUpdate();
+                if (wasEmpty)
+                {
+                    LocalizationSettings.ValidateSettingsExist();
+                    LocalizationSettings.SelectedLocaleChanged += HandleLocaleChange;
+                    ForceUpdate();
+                }
+                else if (CurrentLoadingOperation.HasValue && CurrentLoadingOperation.Value.IsDone)
+                {
+                    // Call the event with the latest value.
+                    value(m_CurrentStringChangedValue);
+                }
+            }
+            remove
+            {
+                if (value == null)
+                    throw new ArgumentNullException();
+
+                m_ChangeHandler -= value;
+
+                if (m_ChangeHandler == null)
+                {
+                    LocalizationSettings.SelectedLocaleChanged -= HandleLocaleChange;
+                    ClearLoadingOperation();
+                }
+            }
         }
 
         /// <summary>
-        /// Removes the handler and stops listening to changes to <see cref="LocalizationSettings.SelectedLocaleChanged"/>.
-        /// </summary>
-        public void ClearChangeHandler()
-        {
-            LocalizationSettings.ValidateSettingsExist();
-            LocalizationSettings.SelectedLocaleChanged -= HandleLocaleChange;
-            m_ChangeHandler = null;
-            ClearLoadingOperation();
-        }
-
-        /// <summary>
-        /// Forces a refresh of the string when using a <see cref="ChangeHandler"/>.
+        /// Forces a refresh of the string when using <see cref="StringChanged"/>.
         /// Note, this will only only force the refresh if there is currently no loading operation, if one is still being executed then it will be ignored and false will be returned.
-        /// If a string is not static and will change during game play, such as when using format arguments, then this can be used to force the string update itself.
+        /// If a string is not static and will change during game play, such as when using format arguments, then this can be used to force the string to update itself.
         /// </summary>
         /// <returns>True if a refresh was requested or false if it could not.</returns>
         public bool RefreshString()
         {
             if (m_ChangeHandler == null)
-                throw new Exception($"{nameof(RefreshString)} should be used with {nameof(RegisterChangeHandler)} however no change handler has been registered.");
+                throw new Exception($"{nameof(RefreshString)} should be used with {nameof(StringChanged)} however no change handler has been registered.");
 
             if (m_CurrentLoadingOperation == null || !m_CurrentLoadingOperation.Value.IsDone)
                 return false;
@@ -129,7 +143,9 @@ namespace UnityEngine.Localization
                 var table = m_CurrentLoadingOperation.Value.Result.Table;
                 translatedText = LocalizationSettings.StringDatabase?.ProcessUntranslatedText(TableEntryReference.ResolveKeyName(table?.SharedData));
             }
-            m_ChangeHandler(translatedText);
+
+            m_CurrentStringChangedValue = translatedText;
+            m_ChangeHandler(m_CurrentStringChangedValue);
             return true;
         }
 
@@ -161,7 +177,7 @@ namespace UnityEngine.Localization
         public AsyncOperationHandle<string> GetLocalizedString()
         {
             LocalizationSettings.ValidateSettingsExist();
-            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference);
+            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, Arguments);
         }
 
         /// <summary>
@@ -190,6 +206,8 @@ namespace UnityEngine.Localization
 
         void HandleLocaleChange(Locale _)
         {
+            m_CurrentStringChangedValue = null;
+
             // Cancel any previous loading operations.
             ClearLoadingOperation();
 

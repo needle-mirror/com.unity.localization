@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using UnityEngine.Localization.Metadata;
+using UnityEngine.Localization.Pseudo;
 
 namespace UnityEngine.Localization
 {
@@ -243,6 +244,9 @@ namespace UnityEngine.Localization
         [MetadataType(MetadataType.Locale)]
         MetadataCollection m_Metadata = new MetadataCollection();
 
+        [SerializeField]
+        ushort m_SortOrder = 10000; // Default to a large value so new Locales are always at the end of a list.
+
         /// <summary>
         /// The identifier contains the identifying information such as the id and culture Code for this Locale.
         /// </summary>
@@ -260,6 +264,16 @@ namespace UnityEngine.Localization
         {
             get => m_Metadata;
             set => m_Metadata = value;
+        }
+
+        /// <summary>
+        /// The sort order can be used to override the order of Locales when sorted in a list.
+        /// If Locales both have the same SortOrder then they will be sorted by name.
+        /// </summary>
+        public ushort SortOrder
+        {
+            get => m_SortOrder;
+            set => m_SortOrder = value;
         }
 
         /// <summary>
@@ -321,7 +335,22 @@ namespace UnityEngine.Localization
         /// <returns></returns>
         public int CompareTo(Locale other)
         {
-            return string.Compare(name, other.name);
+            // Sort by the sort order if they are different
+            if (SortOrder != other.SortOrder)
+            {
+                return SortOrder.CompareTo(other.SortOrder);
+            }
+
+            // If they are both the same type then use the name to sort
+            if (GetType() == other.GetType())
+            {
+                return string.Compare(name, other.name);
+            }
+
+            // Normal Locale's go before PseudoLocale's
+            if (other is PseudoLocale)
+                return -1;
+            return 1;
         }
 
         /// <summary>

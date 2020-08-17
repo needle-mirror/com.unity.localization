@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Localization;
 
-namespace UnityEditor.Localization.Samples.LoadingStrings
+namespace UnityEditor.Localization.Samples
 {
     /// <summary>
     /// This sample shows how to use the LocalizedString ChangeHandler to get a notification whenever a new translated string is available.
@@ -17,12 +17,12 @@ namespace UnityEditor.Localization.Samples.LoadingStrings
 
         void OnEnable()
         {
-            stringRef.RegisterChangeHandler(UpdateString);
+            stringRef.StringChanged += UpdateString;
         }
 
         void OnDisable()
         {
-            stringRef.ClearChangeHandler();
+            stringRef.StringChanged -= UpdateString;
         }
 
         void UpdateString(string translatedValue)

@@ -7,7 +7,7 @@ namespace UnityEngine.Localization.Tables
     class TableEntryData
     {
         [SerializeField]
-        uint m_Id;
+        long m_Id;
 
         [SerializeField]
         string m_Localized;
@@ -18,14 +18,14 @@ namespace UnityEngine.Localization.Tables
         /// <summary>
         /// The Key for this table entry. Must be unique for each table.
         /// </summary>
-        public uint Id
+        public long Id
         {
             get => m_Id;
             set => m_Id = value;
         }
 
         /// <summary>
-        /// Localized table entry. This can be either a translated string or for assets the guid.
+        /// This can be either a translated string or for assets the guid.
         /// </summary>
         public string Localized
         {
@@ -34,7 +34,7 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// TODO: DOC
+        /// The metadata for this entry.
         /// </summary>
         public MetadataCollection Metadata
         {
@@ -48,14 +48,14 @@ namespace UnityEngine.Localization.Tables
         /// TODO: DOC
         /// </summary>
         /// <param name="id"></param>
-        public TableEntryData(uint id) => Id = id;
+        public TableEntryData(long id) => Id = id;
 
         /// <summary>
         /// TODO: DOC
         /// </summary>
         /// <param name="id"></param>
         /// <param name="localized"></param>
-        public TableEntryData(uint id, string localized) : this(id)
+        public TableEntryData(long id, string localized) : this(id)
         {
             Localized = localized;
         }

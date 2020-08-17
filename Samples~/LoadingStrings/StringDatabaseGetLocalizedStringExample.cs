@@ -4,7 +4,7 @@ using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace UnityEditor.Localization.Samples.LoadingStrings
+namespace UnityEditor.Localization.Samples
 {
     /// <summary>
     /// This example shows how to get a localized string using the StringDatabase.

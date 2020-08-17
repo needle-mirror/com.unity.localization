@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace UnityEditor.Localization.Samples.LoadingStrings
+namespace UnityEditor.Localization.Samples
 {
     /// <summary>
     /// This example shows how to use GetLocalizedString to retrieve a localized string.

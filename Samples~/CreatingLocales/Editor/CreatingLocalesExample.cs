@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Localization;
 
-namespace UnityEditor.Localization.Samples.CreatingLocales
+namespace UnityEditor.Localization.Samples
 {
     /// <summary>
     /// If the Locale Generator does not contain a particular Locale you need then a Custom Locale can be created.

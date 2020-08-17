@@ -2,7 +2,7 @@ using System.Linq;
 using NUnit.Framework;
 using UnityEngine.Localization.Pseudo;
 
-namespace UnityEngine.Localization.Tests.Pseudo
+namespace UnityEditor.Localization.Tests.Pseudo
 {
     public class ExpanderTests
     {
@@ -29,32 +29,42 @@ namespace UnityEngine.Localization.Tests.Pseudo
         [TestCaseSource("TestCases")]
         public void Length_IsIncreased(string input)
         {
-            var result = m_Method.Transform(input);
-            Assert.Greater(result.Length, input.Length, "Expected the string to be increased in length but it was not.");
+            var message = Message.CreateMessage(input);
+            m_Method.Transform(message);
+            Assert.Greater(message.ToString().Length, input.Length, "Expected the string to be increased in length but it was not.");
+            message.Release();
         }
 
         [TestCaseSource("TestCases")]
         public void Length_DoesNotChange_WhenExpandAmountIsNegative(string input)
         {
             m_Method.SetConstantExpansion(-1);
-            var result = m_Method.Transform(input);
-            Assert.AreEqual(input.Length, result.Length, "Expected the length to not change when using a negative value.");
+            var message = Message.CreateMessage(input);
+            m_Method.Transform(message);
+            Assert.AreEqual(input.Length, message.ToString().Length, "Expected the length to not change when using a negative value.");
+            message.Release();
         }
 
         [TestCaseSource("TestCases")]
         public void PaddingIsAddedToStart_WhenPseudoCharactersLocation_Front(string input)
         {
             m_Method.Location = Expander.InsertLocation.Start;
-            var result = m_Method.Transform(input);
-            Assert.IsTrue(result.EndsWith(input), "Expected the result to end with the input string when adding padding at the start");
+
+            var message = Message.CreateMessage(input);
+            m_Method.Transform(message);
+            Assert.IsTrue(message.ToString().EndsWith(input), "Expected the result to end with the input string when adding padding at the start");
+            message.Release();
         }
 
         [TestCaseSource("TestCases")]
         public void PaddingIsAddedToEnd_WhenPseudoCharactersLocation_Back(string input)
         {
             m_Method.Location = Expander.InsertLocation.End;
-            var result = m_Method.Transform(input);
-            Assert.IsTrue(result.StartsWith(input), "Expected the result to start with the input string when adding padding at the end");
+
+            var message = Message.CreateMessage(input);
+            m_Method.Transform(message);
+            Assert.IsTrue(message.ToString().StartsWith(input), "Expected the result to start with the input string when adding padding at the end");
+            message.Release();
         }
 
         [Test]
@@ -62,11 +72,15 @@ namespace UnityEngine.Localization.Tests.Pseudo
         {
             const string testString = "TEST";
             m_Method.Location = Expander.InsertLocation.Both;
-            var result = m_Method.Transform(testString);
 
+            var message = Message.CreateMessage(testString);
+            m_Method.Transform(message);
+
+            var result = message.ToString();
             Assert.IsFalse(result.StartsWith(testString), "Expected the result to not end with the input string when adding padding is at both ends.");
             Assert.IsFalse(result.EndsWith(testString), "Expected the result to not end with the input string when adding padding is at both ends.");
             Assert.IsTrue(result.Contains(testString), "Expected the result to contain the original string when adding padding at both ends.");
+            message.Release();
         }
 
         [TestCaseSource("TestCases")]
@@ -77,18 +91,27 @@ namespace UnityEngine.Localization.Tests.Pseudo
             m_Method.PaddingCharacters.Add(character);
             m_Method.MinimumStringLength = 10;
 
-            var result = m_Method.Transform(input);
+            var message = Message.CreateMessage(input);
+            m_Method.Transform(message);
+            var result = message.ToString();
+
             var insertedCharacters = result.Count(o => o == character);
             var expected = result.Length - input.Length;
             Assert.AreEqual(expected, insertedCharacters, "Expected all the inserted characters to be the same");
+            message.Release();
         }
 
         [TestCaseSource("TestCases")]
         public void SameRandomCharactersAreUsedEachTime(string input)
         {
-            var result1 = m_Method.Transform(input);
-            var result2 = m_Method.Transform(input);
-            Assert.AreEqual(result1, result2, "Expected the same pseudo random string to be generated each time.");
+            var message1 = Message.CreateMessage(input);
+            var message2 = Message.CreateMessage(input);
+
+            m_Method.Transform(message1);
+            m_Method.Transform(message2);
+            Assert.AreEqual(message1.ToString(), message1.ToString(), "Expected the same pseudo random string to be generated each time.");
+            message1.Release();
+            message2.Release();
         }
 
         [TestCase(5, 1.0f)]

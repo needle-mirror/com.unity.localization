@@ -8,6 +8,7 @@ using Google.Apis.Sheets.v4.Data;
 using UnityEditor.Localization.Plugins.Google.Columns;
 using UnityEditor.Localization.Reporting;
 using UnityEngine;
+using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
 using static Google.Apis.Sheets.v4.SpreadsheetsResource;
 using Data = Google.Apis.Sheets.v4.Data;
@@ -386,35 +387,60 @@ namespace UnityEditor.Localization.Plugins.Google
 
             // Populate the requests from the string tables
             var currentTableRow = new StringTableEntry[sortedTableEntries.Count];
-            foreach (var keyRow in sortedKeyEntries)
+            using (StringBuilderPool.Get(out var warningMessage))
             {
-                // Extract the string table entries for this row
-                for (int i = 0; i < currentTableRow.Length; ++i)
+                foreach (var keyRow in sortedKeyEntries)
                 {
-                    var tableRowItr = currentTableRowIterator[i];
-                    if (tableRowItr.Current?.KeyId == keyRow.Id)
+                    // Extract the string table entries for this row
+                    for (int i = 0; i < currentTableRow.Length; ++i)
                     {
-                        currentTableRow[i] = tableRowItr.Current;
-                        tableRowItr.MoveNext();
+                        var tableRowItr = currentTableRowIterator[i];
+
+                        // Skip any table entries that may not not exist in Shared Data
+                        while (tableRowItr != null && tableRowItr.Current?.KeyId < keyRow.Id)
+                        {
+                            warningMessage.AppendLine($"{tableRowItr.Current.Table.name} - {tableRowItr.Current.KeyId} - {tableRowItr.Current.Value}");
+                            if (!tableRowItr.MoveNext())
+                            {
+                                currentTableRowIterator[i] = null;
+                                break;
+                            }
+                        }
+
+                        if (tableRowItr?.Current?.KeyId == keyRow.Id)
+                        {
+                            currentTableRow[i] = tableRowItr.Current;
+                            if (!tableRowItr.MoveNext())
+                            {
+                                currentTableRowIterator[i] = null;
+                            }
+                        }
+                        else
+                        {
+                            currentTableRow[i] = null;
+                        }
                     }
-                    else
+
+                    // Now process each sheet column so they can update their requests.
+                    foreach (var colReq in columnSheetRequests)
                     {
-                        currentTableRow[i] = null;
+                        colReq.Column.PushCellData(keyRow, currentTableRow, out var value, out var note);
+                        colReq.AddRow(value, note);
                     }
                 }
 
-                // Now process each sheet column so they can update their requests.
-                foreach (var colReq in columnSheetRequests)
+                foreach (var col in columnSheetRequests)
                 {
-                    colReq.Column.PushCellData(keyRow, currentTableRow, out var value, out var note);
-                    colReq.AddRow(value, note);
+                    col.Column.PushEnd();
+                    requestsToSend.AddRange(col.Requests);
                 }
-            }
 
-            foreach (var col in columnSheetRequests)
-            {
-                col.Column.PushEnd();
-                requestsToSend.AddRange(col.Requests);
+                // Any warning messages?
+                if (warningMessage.Length > 0)
+                {
+                    warningMessage.Insert(0, "Found entries in String Tables that are missing a Shared Table Data Entry. These entries will be ignored:\n");
+                    Debug.LogWarning(warningMessage.ToString(), collection);
+                }
             }
         }
 
@@ -465,10 +491,8 @@ namespace UnityEditor.Localization.Plugins.Google
 
                 MergePull(sheet, collection, columnMapping, removeMissingEntries, reporter);
 
-                if (!createUndo)
-                {
-                    modifiedAssets.ForEach(EditorUtility.SetDirty);
-                }
+                // There is a bug that causes Undo to not set assets dirty (case 1240528) so we always set the asset dirty.
+                modifiedAssets.ForEach(EditorUtility.SetDirty);
 
                 LocalizationEditorSettings.EditorEvents.RaiseCollectionModified(this, collection);
             }
@@ -544,8 +568,8 @@ namespace UnityEditor.Localization.Plugins.Google
             }
 
             reporter?.ReportProgress("Merging response into collection", 0.6f);
-            var keysProcessed = new HashSet<uint>();
-            uint totalCellsProcessed = 0;
+            var keysProcessed = new HashSet<long>();
+            long totalCellsProcessed = 0;
 
             for (int row = 0; row < rowCount; row++)
             {
@@ -588,7 +612,7 @@ namespace UnityEditor.Localization.Plugins.Google
             reporter?.Completed($"Completed merge of {rowCount} rows and {totalCellsProcessed} cells from {columnMapping.Count} columns successfully.\n{messages.ToString()}");
         }
 
-        void RemoveMissingEntries(HashSet<uint> entriesToKeep, StringTableCollection collection, StringBuilder removedEntriesLog)
+        void RemoveMissingEntries(HashSet<long> entriesToKeep, StringTableCollection collection, StringBuilder removedEntriesLog)
         {
             var stringTables = collection.StringTables;
 

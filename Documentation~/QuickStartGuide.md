@@ -64,9 +64,9 @@ Use the **Localized Asset Reference** field to select the **Country Flag** Key y
 
 Run the Scene and use the Game View Locale selection dropdown to change the **Locale**. If everything is configured correctly, the country flag changes to the assigned Texture in the Asset Table. If the Game View menu does not appear it can be enabled from the **Localization Project Settings**.
 
-![The Game View Locale Menu can be used to quickly change the language in the editor.](images/ocaleGameViewMenu.gif)
+The **Locale Game View Menu** can be used to quickly change the language in the editor. It can be enabled and disabled through **Edit/Preferences/Localization**.
 
-![Game View Locale Menu option](images/LocaleGameViewMenuOption.png)
+![Game View Locale Menu option](images/LocalizationPreferences.png)
 
 ## 6. Audio Localization: Use the localized Asset
 To localize Audio Clips, we could follow the same process as localizing the Texture however it is also possible to create and edit the localized assets in the inspector as follows:
@@ -105,7 +105,7 @@ public class Apples : MonoBehaviour
 To add a UI Text element to the Scene, go to **GameObject > UI > Text**.
 
 Right-click the Text component and select the **Localize** option. Unity adds a **Localize String** component and automatically configures it for the GameObject it is attached to. If the Text component contains a string value that is also in a String Table, then Unity automatically assigns this during the setup. If it does not, you can assign a value using the **String Reference** field pop-up.
-Add a reference to tge GameObject that contains the *Apples* component.
+Add a reference to the GameObject that contains the Apples component.
 
 ![Unity finds and pairs the table with the matching Key during setup.](images/LocalizeStringComponent.png)
 
@@ -113,7 +113,7 @@ Add a reference to tge GameObject that contains the *Apples* component.
 
 ## 9. Build Preview and configuration
 The Addressables player content must be built in order to use the localized assets in the player.
-This can be done through the Addressables window **Window/Asset Management/Addressable Assets** by clicking **Build/Build Player Content**.
+This can be done through the Addressables window **Window/Asset Management/Addressable Assets/Groups** by clicking **Build/New Build/Default Build Script**.
 The Addressables window can also be used to control how the assets will be packaged and hosted(such as local storage or via a remote web server).
 
 ![Use the Addressable system to preview and configure localization data.](images/AddressablesBuildOutput.png)

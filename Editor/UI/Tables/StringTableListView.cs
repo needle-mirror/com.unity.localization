@@ -8,7 +8,7 @@ namespace UnityEditor.Localization.UI
     {
         protected static readonly Color k_SelectedColor = new Color(0.37f, 0.41f, 0.7f);
 
-        public StringTableListView(LocalizedTableCollection tableCollection) :
+        public StringTableListView(LocalizationTableCollection tableCollection) :
             base(tableCollection)
         {
         }

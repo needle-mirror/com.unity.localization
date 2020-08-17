@@ -1,6 +1,48 @@
 # Changelog
 All notable changes to this package will be documented in this file.
 
+## [0.8.0] - 2020-08-17
+
+### Added
+- Added `IKeyGenerator` to `SharedTableData`. This is now used to generate the unique ids for each key. By default `DistributedUIDGenerator` will be used to generate the keys however it is possible to change it back to Sequential by assigning `SequentialIDGenerator` to `SharedTableData.KeyGenerator`. See docs for further details.
+- Added `PreserveTags` Pseudo-localization method. This will prevent tags such as rich text or xml from being modified by any subsequent Pseudo-localization methods. ([LOC-86](https://issuetracker.unity3d.com/issues/pseudo-localization-methods-are-applied-to-the-whole-string-when-using-rich-text-tags))
+- Added `PreserveTags` Pseudo-localization method. This will prevent tags such as rich text or xml from being modified by any subsequent Pseudo-localization methods. (case [LOC-86](https://issuetracker.unity3d.com/issues/pseudo-localization-methods-are-applied-to-the-whole-string-when-using-rich-text-tags)).
+- Added `LocalizeSpriteEvent` component. This can be used for Localizing `Sprite` assets.
+- Added `Localize` context menu item for UGUI `Image` component. This will add and setup a `LocalizeSpriteEvent` component.
+- Added `Group` property to `StringTableCollection`and `AssetTableCollection`, This can be used to customize the menu grouping when selecting a Table Collection.
+- Locales can now be sorted in the Localization project settings view.
+- Added `SortOrder` property to `Locale`. This can be used to override the default sorting order. This value is set automatically when changing the order in the editor.
+- Added `CheckForMissingSharedTableDataEntries` to `StringTable` and `AssetTable`. This will find any entries in the table that are missing matching Shared Table Entries. These missing entries can be repaired with the `MissingEntryAction` parameter.
+- Added `RemapKey` to `SharedTableData`. This will let the Id of a key be changed.
+- Added `LocalizedStringTable` and `LocalizedAssetTable`. These work in a similar way to `LocalizedString` and `LocalizedAsset` but will return a Table instead of a single table entry.
+- Added new Sample: Simple Language Selection Menu (IMGUI). Includes 2 different examples of a Locale selection menu.
+
+### Changed
+- Changed Table Entry Key Id data type from `uint` to `long`. All Methods that were using a `uint` now require a `long`.
+- `IPseudoLocalizationMethod` method `Transform` now passes a `Message` instead of a string.
+- The Locale column order in the `Localization Tables` window is now determined by the Locale's order.
+- Upgraded to latest `Newtonsoft Json` package `2.0.0`.
+- Renamed `LocalizedTable` to `LocalizationTable`.
+- Renamed `LocalizedTableT` to `DetailedLocalizationTable`
+- Renamed `LocalizedTableCollection` to `LocalizationTableCollection`
+- Improved error message when a Locale can not be selected during initialization.
+- Replaced `LocalizedString` `RegisterChangeHandler` and `ClearChangeHandler` with the event `StringChanged`.
+- Replaced `LocalizedAsset` `RegisterChangeHandler` and `ClearChangeHandler` with the event `AssetChanged`.
+
+### Fixed
+- Fixed StringTableCollection assets not being set dirty when pulling from a Google Sheet in the editor. ([1240528](https://issuetracker.unity3d.com/issues/undo-does-not-set-assets-dirty-when-using-iserializationcallbackreceiver))
+- Fixed StringTableCollection assets not being set dirty when pulling from a Google Sheet in the editor.
+- Fixed `LocalizedString.GetLocalizedString` not using the argument provided in `LocalizedString.Arguments`.
+- Fixed serialization errors `Should not occur! Internal logic error: please report bug.` when `Comment Metadata` was attached to the table or shared table data. (LOC-104)
+- Fixed `LocalizedDatabase.GetTableAsync` trying to load an already loaded `LocalizedTable` when using a GUID TableReference. This was causing preloaded tables to still require some loading.
+- Fixed "LocalizationSettings has a different serialization layout" error. Moved the `Locale GameView Menu` property from LocalizationSettings to EditorPrefs and moved the menu option into `Preference/Localization`. (LOC-99)
+- Fixed `GoogleSheets` push not handling Table entries that were missing matching Shared Table Entries, this would cause future rows to be blank. ([LOC-102](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-102))
+- Fixed `NullReferenceException` in `Localization Settings` when Editor window focus was lost and Smart Format properties field was visible. ([LOC-101](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-101))
+- Fixed `Available Locales` not updating when performing an Undo/Redo after adding or removing a Locale.
+- Fixed `GoogleSheets` push not handling Table entries that were missing matching Shared Table Entries, this would cause future rows to be blank. [LOC-102](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-102)
+- `LocalizedString` and `LocalizedAsset` property drawers now remember the expanded state of each Locale field when an Undo/Redo occurs. ([LOC-105](https://issuetracker.unity3d.com/issues/undoing-a-change-to-a-language-in-the-localizedstring-inspector-resets-the-folded-state))
+- Added Undo support when adding and removing a table from a `StringTableCollection` or `AssetTableCollection`. When Undo is not used the asset will be set dirty so changes are not lost. ([LOC-107](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-107))
+
 ## [0.7.1] - 2020-06-05
 
 ### Added

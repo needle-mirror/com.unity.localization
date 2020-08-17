@@ -18,7 +18,7 @@
 //        public void DoesNotThrowException_WhenNoTablesExistInProject()
 //        {
 //            LocalizationEditorSettings.Instance = new EmptyProjectPlayerSettings();
-//            Assert.IsEmpty(LocalizationEditorSettings.GetAssetTables<LocalizedTable>(), "Expected no tables");
+//            Assert.IsEmpty(LocalizationEditorSettings.GetAssetTables<LocalizationTable>(), "Expected no tables");
 //            Assert.DoesNotThrow(() => new ProjectTablesPopup());
 //            LocalizationEditorSettings.Instance = null;
 //        }

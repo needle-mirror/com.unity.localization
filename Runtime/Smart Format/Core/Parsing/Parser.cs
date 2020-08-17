@@ -17,7 +17,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
         [SerializeField]
         char m_ClosingBrace = '}';
 
-        [SerializeReference]
+        [SerializeReference, HideInInspector]
         SmartSettings m_Settings;
 
         // The following fields are points of extensibility

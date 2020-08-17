@@ -22,6 +22,10 @@ namespace UnityEngine.Localization.Tests.Settings
         [TearDown]
         public void Teardown()
         {
+            foreach (var locale in m_Settings.GetAvailableLocales().Locales)
+            {
+                Object.DestroyImmediate(locale);
+            }
             Object.DestroyImmediate(m_Settings);
         }
 

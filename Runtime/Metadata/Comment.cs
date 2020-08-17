@@ -1,6 +1,4 @@
-#if UNITY_EDITOR
 using System;
-using System.Globalization;
 
 namespace UnityEngine.Localization.Metadata
 {
@@ -26,4 +24,3 @@ namespace UnityEngine.Localization.Metadata
         }
     }
 }
-#endif

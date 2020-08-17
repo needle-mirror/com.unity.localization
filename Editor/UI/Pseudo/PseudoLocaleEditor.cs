@@ -15,6 +15,7 @@ namespace UnityEditor.Localization.UI
             public static readonly GUIContent identifier = new GUIContent("Source Locale", "The locale the pseudo localized values will be generated from.");
             public static readonly GUIContent methods = new GUIContent("Pseudo-Localization Methods", "The pseudo-localization transformations that will be applied in order(top to bottom).");
             public static readonly GUIContent preview = new GUIContent("Pseudo-Localization Preview", "Preview the result of applying the pseudo-localization methods to a sample string.");
+            public static readonly GUIContent sortOrder = new GUIContent("Sort Order", "The order the Locales will appear in any sorted Lists. By default Locales are ordered by name however the Sort Order can be used to override this.");
         }
 
         const string k_PreviewTextPref = "Localization-Pseudo-PreviewText";
@@ -24,6 +25,8 @@ namespace UnityEditor.Localization.UI
         SerializedProperty m_Identifier;
         SerializedProperty m_Metadata;
         SerializedProperty m_Methods;
+        SerializedProperty m_SortOrder;
+
         ReorderableListExtended m_MethodsList;
         string m_PseudoPreviewText;
 
@@ -45,6 +48,7 @@ namespace UnityEditor.Localization.UI
             m_Identifier = serializedObject.FindProperty("m_Identifier");
             m_Metadata = serializedObject.FindProperty("m_Metadata");
             m_Methods = serializedObject.FindProperty("m_Methods");
+            m_SortOrder = serializedObject.FindProperty("m_SortOrder");
             m_MethodsList = new ReorderableListExtended(m_Methods.serializedObject, m_Methods);
             m_MethodsList.headerHeight = 2;
             m_MethodsList.onAddDropdownCallback = AddMethod;
@@ -74,6 +78,14 @@ namespace UnityEditor.Localization.UI
 
             EditorGUILayout.PropertyField(m_Name);
             EditorGUILayout.PropertyField(m_Identifier, Styles.identifier);
+
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(m_SortOrder, Styles.sortOrder);
+            if (EditorGUI.EndChangeCheck())
+            {
+                LocalizationEditorSettings.EditorEvents.RaiseLocaleSortOrderChanged(this, target as PseudoLocale);
+            }
+
             EditorGUILayout.PropertyField(m_Metadata);
 
             m_Methods.isExpanded = EditorGUILayout.Foldout(m_Methods.isExpanded, Styles.methods);

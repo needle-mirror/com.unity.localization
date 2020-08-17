@@ -167,7 +167,7 @@ namespace UnityEngine.Localization.Settings
         }
 
         /// <inheritdoc cref="GetLocalizedStringAsync"/>
-        protected virtual AsyncOperationHandle<string> GetLocalizedStringAsyncInternal(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale, object[] arguments)
+        internal protected virtual AsyncOperationHandle<string> GetLocalizedStringAsyncInternal(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale, object[] arguments)
         {
             var tableEntryOp = GetTableEntryAsync(tableReference, tableEntryReference, locale);
             if (!tableEntryOp.IsDone)

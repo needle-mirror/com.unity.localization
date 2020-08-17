@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
+using UnityEngine.Localization;
 using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Tables;
 
@@ -12,9 +12,9 @@ namespace UnityEditor.Localization.UI
 
         (SmartFormatField editor, ISelectable selected)[] m_TableProperties;
 
-        public override void Initialize(LocalizedTableCollection collection, int startIdx)
+        public override void Initialize(LocalizationTableCollection collection, int startIdx, List<LocalizationTable> sortedTables)
         {
-            m_TableProperties = new(SmartFormatField, ISelectable)[startIdx + collection.Tables.Count];
+            m_TableProperties = new(SmartFormatField, ISelectable)[startIdx + sortedTables.Count];
 
             // Get the shared data
             m_SharedTableData = collection.SharedData;
@@ -22,7 +22,7 @@ namespace UnityEditor.Localization.UI
             Debug.Assert(m_SharedTableData != null);
             for (int i = startIdx; i < m_TableProperties.Length; ++i)
             {
-                var table = collection.Tables[i - startIdx].asset as StringTable;
+                var table = sortedTables[i - startIdx] as StringTable;
                 var smartEditor = new SmartFormatField();
                 smartEditor.KeyId = KeyId;
                 smartEditor.Table = table;
@@ -95,17 +95,23 @@ namespace UnityEditor.Localization.UI
 
         void UpdateSearchString()
         {
-            var sb = new StringBuilder();
-            sb.AppendLine(SharedEntry.Key);
-            foreach (var tableField in m_TableProperties)
+            using (StringBuilderPool.Get(out var sb))
             {
-                if (tableField.editor != null)
-                {
-                    sb.Append(tableField.editor.RawText);
-                }
-            }
+                sb.Clear();
 
-            displayName = sb.ToString();
+                sb.AppendLine(SharedEntry.Id.ToString());
+                sb.AppendLine(SharedEntry.Key);
+
+                foreach (var tableField in m_TableProperties)
+                {
+                    if (tableField.editor != null)
+                    {
+                        sb.Append(tableField.editor.RawText);
+                    }
+                }
+
+                displayName = sb.ToString();
+            }
         }
     }
 }

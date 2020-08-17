@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.Localization.Pseudo;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.SocialPlatforms;
 
 namespace UnityEngine.Localization.Settings
 {
@@ -17,7 +18,6 @@ namespace UnityEngine.Localization.Settings
 
         List<Locale> m_Locales = new List<Locale>();
         AsyncOperationHandle? m_LoadOperation;
-        int m_PseudoLocaleCount;
 
         /// <summary>
         /// The list of all supported locales.
@@ -45,7 +45,6 @@ namespace UnityEngine.Localization.Settings
                         m_Locales = new List<Locale>();
 
                     m_Locales.Clear();
-                    m_PseudoLocaleCount = 0;
                     m_LoadOperation = AddressableAssets.Addressables.LoadAssetsAsync<Locale>(LocalizationSettings.LocaleLabel, AddLocale);
                 }
 
@@ -77,6 +76,10 @@ namespace UnityEngine.Localization.Settings
         {
             foreach (var locale in Locales)
             {
+                // Ignore PseudoLocale's
+                if (locale is PseudoLocale)
+                    continue;
+
                 if (locale.Identifier.Code == code)
                     return locale;
             }
@@ -110,20 +113,8 @@ namespace UnityEngine.Localization.Settings
                 }
             }
 
-            // Insert PseudoLocale's at the end so they are not returned by GetLocale.
-            if (isPsedudoLocale)
-            {
-                m_PseudoLocaleCount++;
-                Locales.Add(locale);
-            }
-            else if (m_PseudoLocaleCount > 0)
-            {
-                Locales.Insert(0, locale);
-            }
-            else
-            {
-                Locales.Add(locale);
-            }
+            var index = m_Locales.BinarySearch(locale);
+            m_Locales.Insert(~index, locale);
         }
 
         /// <summary>

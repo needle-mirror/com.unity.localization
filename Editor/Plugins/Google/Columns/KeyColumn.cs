@@ -37,7 +37,7 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
 
         public SharedTableData.SharedTableEntry PullKey(string cellValue, string cellNote)
         {
-            if (!string.IsNullOrEmpty(cellNote) && uint.TryParse(cellNote, out var keyId))
+            if (!string.IsNullOrEmpty(cellNote) && long.TryParse(cellNote, out var keyId))
             {
                 var entry = m_SharedTableData.GetEntry(keyId);
                 if (entry != null)

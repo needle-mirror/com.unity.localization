@@ -10,7 +10,7 @@ using UnityEngine.UIElements;
 namespace UnityEditor.Localization.UI
 {
     class GenericAssetTableListViewMultiColumnHeader<T1, T2> : MultiColumnHeader
-        where T1 : LocalizedTable
+        where T1 : LocalizationTable
         where T2 : GenericAssetTableTreeViewItem<T1>, new()
     {
         const float k_MetadataLabelHeight = 20;
@@ -19,11 +19,11 @@ namespace UnityEditor.Localization.UI
 
         static readonly GUIContent k_MetadataIcon = new GUIContent(AssetDatabase.LoadAssetAtPath<Texture>("Packages/com.unity.localization/Editor/Icons/Localization_AssetTable.png"), "Edit Table Metadata");
 
-        LocalizedTableCollection TableCollection { get; set; }
+        LocalizationTableCollection TableCollection { get; set; }
 
         GenericAssetTableListView<T1, T2> m_Parent;
 
-        public GenericAssetTableListViewMultiColumnHeader(MultiColumnHeaderState state, GenericAssetTableListView<T1, T2> parent, LocalizedTableCollection collection)
+        public GenericAssetTableListViewMultiColumnHeader(MultiColumnHeaderState state, GenericAssetTableListView<T1, T2> parent, LocalizationTableCollection collection)
             : base(state)
         {
             height += k_MetadataLabelHeight;
@@ -140,7 +140,7 @@ namespace UnityEditor.Localization.UI
         }
     }
 
-    class TableColumn<T1> : VisibleColumn, ISelectable where T1 : LocalizedTable
+    class TableColumn<T1> : VisibleColumn, ISelectable where T1 : LocalizationTable
     {
         public T1 Table { get; set; }
         public SerializedObject SerializedObjectTable { get; private set; }
@@ -149,12 +149,12 @@ namespace UnityEditor.Localization.UI
         public Locale TableLocale { get; set; }
         public bool Selected { get; set; }
 
-        LocalizedTableCollection m_TableCollection;
+        LocalizationTableCollection m_TableCollection;
         bool m_PreloadAllMixedValues;
         bool m_PreloadAllToggle;
         bool m_PreloadSelectedToggle;
 
-        public TableColumn(LocalizedTableCollection collection, LocalizedTable table, Locale locale)
+        public TableColumn(LocalizationTableCollection collection, LocalizationTable table, Locale locale)
         {
             m_TableCollection = collection;
             minWidth = 100;

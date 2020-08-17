@@ -49,7 +49,7 @@ namespace UnityEngine.Localization.Tables
     /// <summary>
     /// An AssetTable
     /// </summary>
-    public class AssetTable : LocalizedTableT<AssetTableEntry>, IPreloadRequired
+    public class AssetTable : DetailedLocalizationTable<AssetTableEntry>, IPreloadRequired
     {
         AsyncOperationHandle? m_PreloadOperationHandle;
         GroupIAsyncOperation m_PreloadOperation;
@@ -119,7 +119,7 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public AsyncOperationHandle<TObject> GetAssetAsync<TObject>(uint keyId) where TObject : Object
+        public AsyncOperationHandle<TObject> GetAssetAsync<TObject>(long keyId) where TObject : Object
         {
             var entry = GetEntry(keyId);
             if (entry == null)

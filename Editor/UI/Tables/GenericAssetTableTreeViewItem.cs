@@ -14,14 +14,14 @@ namespace UnityEditor.Localization.UI
             set => SharedEntry.Key = value;
         }
 
-        public uint KeyId => SharedEntry.Id;
+        public long KeyId => SharedEntry.Id;
 
         public bool Selected { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
 
         /// <summary>
         /// Called during the setup of the tree view.
         /// </summary>
-        public virtual void Initialize(LocalizedTableCollection collection, int startIdx) {}
+        public virtual void Initialize(LocalizationTableCollection collection, int startIdx, List<LocalizationTable> sortedTables) {}
 
         /// <summary>
         /// Called before the key entry is deleted.

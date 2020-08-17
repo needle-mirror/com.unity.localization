@@ -4,7 +4,7 @@ namespace UnityEditor.Localization.UI
 {
     abstract class TableEditor : VisualElement
     {
-        public LocalizedTableCollection TableCollection { get; set; }
+        public LocalizationTableCollection TableCollection { get; set; }
 
         protected VisualElement m_TableContentsPanel;
         protected VisualElement m_PropertiesPanel;

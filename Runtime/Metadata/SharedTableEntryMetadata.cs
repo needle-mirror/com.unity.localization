@@ -4,16 +4,16 @@ using UnityEngine.Localization.Tables;
 namespace UnityEngine.Localization.Metadata
 {
     /// <summary>
-    /// Shared Metadata is data that is associated to one or more entries in a single <see cref="LocalizedTable"/>.
+    /// Shared Metadata is data that is associated to one or more entries in a single <see cref="LocalizationTable"/>.
     /// While it is possible to share any metadata across multiple entries in a table, this will track the entries that
     /// are currently using it providing a quick way to get all the entries.
     /// </summary>
     public abstract class SharedTableEntryMetadata : IMetadata, ISerializationCallbackReceiver
     {
         [SerializeField]
-        List<uint> m_Entries = new List<uint>();
+        List<long> m_Entries = new List<long>();
 
-        HashSet<uint> m_EntriesLookup = new HashSet<uint>();
+        HashSet<long> m_EntriesLookup = new HashSet<long>();
 
         internal int Count => m_EntriesLookup.Count;
 
@@ -38,7 +38,7 @@ namespace UnityEngine.Localization.Metadata
         public void OnBeforeSerialize()
         {
             if (m_Entries == null)
-                m_Entries = new List<uint>();
+                m_Entries = new List<long>();
             else
                 m_Entries.Clear();
 
@@ -51,7 +51,7 @@ namespace UnityEngine.Localization.Metadata
         public void OnAfterDeserialize()
         {
             if (m_EntriesLookup == null)
-                m_EntriesLookup = new HashSet<uint>();
+                m_EntriesLookup = new HashSet<long>();
             else
                 m_EntriesLookup.Clear();
 

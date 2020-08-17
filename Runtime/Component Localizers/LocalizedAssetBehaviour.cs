@@ -21,21 +21,23 @@ namespace UnityEngine.Localization.Components
             get => m_LocalizedAssetReference;
             set
             {
-                m_LocalizedAssetReference.ClearChangeHandler();
+                m_LocalizedAssetReference.AssetChanged -= UpdateAsset;
                 m_LocalizedAssetReference = value;
-                m_LocalizedAssetReference.RegisterChangeHandler(UpdateAsset);
+
+                if (enabled)
+                    m_LocalizedAssetReference.AssetChanged += UpdateAsset;
             }
         }
 
         /// <summary>
         /// Starts listening for changes to <see cref="AssetReference"/>.
         /// </summary>
-        protected virtual void OnEnable() => AssetReference.RegisterChangeHandler(UpdateAsset);
+        protected virtual void OnEnable() => m_LocalizedAssetReference.AssetChanged += UpdateAsset;
 
         /// <summary>
         /// Stops listening for changes to <see cref="AssetReference"/>.
         /// </summary>
-        protected virtual void OnDisable() => AssetReference.ClearChangeHandler();
+        protected virtual void OnDisable() => m_LocalizedAssetReference.AssetChanged -= UpdateAsset;
 
         /// <summary>
         /// Called whenever the localized asset is updated, such as when the Locale changes or when initializing.

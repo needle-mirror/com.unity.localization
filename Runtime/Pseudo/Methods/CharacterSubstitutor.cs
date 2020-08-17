@@ -105,65 +105,6 @@ namespace UnityEngine.Localization.Pseudo
         /// </summary>
         public List<char> ReplacementList => m_ReplacementList;
 
-        /// <summary>
-        /// Replaces each character in the input with a replacement character if one can be found.
-        /// If a replacement character can not be found then the original is kept.
-        /// </summary>
-        /// <param name="input"></param>
-        /// <returns></returns>
-        public string Transform(string input)
-        {
-            switch (Method)
-            {
-                case SubstitutionMethod.Map:
-                    var converted = new char[input.Length];
-                    for (int i = 0; i < converted.Length; ++i)
-                    {
-                        converted[i] = ReplaceCharFromMap(input[i]);
-                    }
-                    return new string(converted);
-
-                case SubstitutionMethod.ToUpper:
-                    return input.ToUpper();
-
-                case SubstitutionMethod.ToLower:
-                    return input.ToLower();
-
-                case SubstitutionMethod.List:
-
-                    if (m_ReplacementList == null || m_ReplacementList.Count == 0)
-                        break;
-
-                    if (m_ReplacementList.Count == 1)
-                        return new string(m_ReplacementList[0], input.Length);
-
-                    var newValues = new char[input.Length];
-
-                    if (ListMode == ListSelectionMethod.Random)
-                    {
-                        Random.InitState(GetRandomSeed(input));
-                        for (int i = 0; i < newValues.Length; ++i)
-                        {
-                            newValues[i] = m_ReplacementList[Random.Range(0, m_ReplacementList.Count)];
-                        }
-                    }
-                    else
-                    {
-                        if (ListMode == ListSelectionMethod.LoopFromStart)
-                            m_ReplacementsPosition = 0;
-
-                        for (int i = 0; i < newValues.Length; ++i, ++m_ReplacementsPosition)
-                        {
-                            newValues[i] = m_ReplacementList[m_ReplacementsPosition % m_ReplacementList.Count];
-                        }
-                    }
-
-                    return new string(newValues);
-            }
-
-            return input;
-        }
-
         int GetRandomSeed(string input) => input.GetHashCode();
 
         /// <summary>
@@ -199,6 +140,78 @@ namespace UnityEngine.Localization.Pseudo
             foreach (var d in m_ReplacementsMap)
             {
                 ReplacementMap[d.original] = d.replacement;
+            }
+        }
+
+        void TransformFragment(WritableMessageFragment writableFragment)
+        {
+            switch (Method)
+            {
+                case SubstitutionMethod.Map:
+                    var converted = new char[writableFragment.Length];
+                    for (int j = 0; j < converted.Length; ++j)
+                    {
+                        converted[j] = ReplaceCharFromMap(writableFragment[j]);
+                    }
+                    writableFragment.Text = new string(converted);
+                    break;
+
+                case SubstitutionMethod.ToUpper:
+                    writableFragment.Text = writableFragment.Text.ToUpper();
+                    break;
+
+                case SubstitutionMethod.ToLower:
+                    writableFragment.Text = writableFragment.Text.ToLower();
+                    break;
+
+                case SubstitutionMethod.List:
+
+                    if (m_ReplacementList == null || m_ReplacementList.Count == 0)
+                        break;
+
+                    if (m_ReplacementList.Count == 1)
+                    {
+                        writableFragment.Text = new string(m_ReplacementList[0], writableFragment.Length);
+                        break;
+                    }
+
+                    var newValues = new char[writableFragment.Length];
+
+                    if (ListMode == ListSelectionMethod.Random)
+                    {
+                        Random.InitState(GetRandomSeed(writableFragment.Message.Original));
+                        for (int i = 0; i < newValues.Length; ++i)
+                        {
+                            newValues[i] = m_ReplacementList[Random.Range(0, m_ReplacementList.Count)];
+                        }
+                    }
+                    else
+                    {
+                        if (ListMode == ListSelectionMethod.LoopFromStart)
+                            m_ReplacementsPosition = 0;
+
+                        for (int i = 0; i < newValues.Length; ++i, ++m_ReplacementsPosition)
+                        {
+                            newValues[i] = m_ReplacementList[m_ReplacementsPosition % m_ReplacementList.Count];
+                        }
+                    }
+                    writableFragment.Text = new string(newValues);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Replaces each character in the input with a replacement character if one can be found.
+        /// If a replacement character can not be found then the original is kept.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public void Transform(Message message)
+        {
+            foreach (var fragment in message.Fragments)
+            {
+                if (fragment is WritableMessageFragment writableFragment)
+                    TransformFragment(writableFragment);
             }
         }
     }

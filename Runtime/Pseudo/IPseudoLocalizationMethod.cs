@@ -6,10 +6,9 @@ namespace UnityEngine.Localization.Pseudo
     public interface IPseudoLocalizationMethod
     {
         /// <summary>
-        /// Apply a Pseudo-Localization transformation to the string and return the Pseudo-Localized string.
+        /// Apply a Pseudo-Localization transformation to the <see cref="Message"/>.
         /// </summary>
-        /// <param name="input">The string to be transformed.</param>
-        /// <returns></returns>
-        string Transform(string input);
+        /// <param name="message"></param>
+        void Transform(Message message);
     }
 }

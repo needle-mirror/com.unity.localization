@@ -13,21 +13,23 @@ namespace UnityEditor.Localization
     /// <summary>
     /// Contains information on all the tables associated with a table collection name and type.
     /// </summary>
-    public class AssetTableCollection : LocalizedTableCollection
+    public class AssetTableCollection : LocalizationTableCollection
     {
-        readonly Type kTableType = typeof(AssetTable);
+        static readonly Type kTableType = typeof(AssetTable);
         protected internal override  Type TableType => kTableType;
 
         protected internal override Type RequiredExtensionAttribute => typeof(AssetTableCollectionExtensionAttribute);
 
-        public override string DefaultTableGroupName => "Localization-AssetTables";
+        protected override string DefaultAddressablesGroupName => "Localization-AssetTables";
 
         /// <summary>
         /// A helper property which is the contents of <see cref="Tables"/> loaded and cast to <see cref="AssetTable"/>.
         /// </summary>
         public virtual ReadOnlyCollection<AssetTable> AssetTables => new ReadOnlyCollection<AssetTable>(Tables.Select(t => t.asset as AssetTable).ToList().AsReadOnly());
 
-        protected override void RemoveTableFromAddressables(LocalizedTable table, bool createUndo)
+        protected internal override string DefaultGroupName => "Asset Table";
+
+        protected override void RemoveTableFromAddressables(LocalizationTable table, bool createUndo)
         {
             if (table is AssetTable assetTable)
             {

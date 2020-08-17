@@ -46,6 +46,14 @@ namespace UnityEditor.Localization.Tests
         }
 
         [Test]
+        public void TableEntryReference_UsingMaxLongKeyId_IsRecreated()
+        {
+            // Ensure the key is not truncated to an int.
+            m_TestFixture.tableEntryReference = long.MaxValue;
+            CheckSerializedTableEntryReferenceMatchesOriginalData();
+        }
+
+        [Test]
         public void TableEntryReference_UsingKeyName_IsRecreated()
         {
             m_TestFixture.tableEntryReference = "A string key";

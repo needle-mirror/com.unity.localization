@@ -2,7 +2,7 @@ using System.Linq;
 using NUnit.Framework;
 using UnityEngine.Localization.Pseudo;
 
-namespace UnityEngine.Localization.Tests.Pseudo
+namespace UnityEditor.Localization.Tests.Pseudo
 {
     public class CharacterSubstitutorTests
     {
@@ -13,8 +13,10 @@ namespace UnityEngine.Localization.Tests.Pseudo
         {
             var method = new CharacterSubstitutor();
             method.Method = CharacterSubstitutor.SubstitutionMethod.ToLower;
-            var result = method.Transform(input);
-            Assert.AreEqual(expected, result, "Expected the transformed string to match.");
+
+            var message = Message.CreateMessage(input);
+            method.Transform(message);
+            Assert.AreEqual(expected, message.ToString(), "Expected the transformed string to match.");
         }
 
         [TestCase("karl", "KARL")]
@@ -24,8 +26,11 @@ namespace UnityEngine.Localization.Tests.Pseudo
         {
             var method = new CharacterSubstitutor();
             method.Method = CharacterSubstitutor.SubstitutionMethod.ToUpper;
-            var result = method.Transform(input);
-            Assert.AreEqual(expected, result, "Expected the transformed string to match.");
+
+            var message = Message.CreateMessage(input);
+            method.Transform(message);
+            Assert.AreEqual(expected, message.ToString(), "Expected the transformed string to match.");
+            message.Release();
         }
 
         [TestCase("Some text")]
@@ -38,9 +43,13 @@ namespace UnityEngine.Localization.Tests.Pseudo
             var method = new CharacterSubstitutor();
             method.Method = CharacterSubstitutor.SubstitutionMethod.List;
             method.ReplacementList.Add(replacementChar);
-            var result = method.Transform(input);
+
+            var message = Message.CreateMessage(input);
+            method.Transform(message);
+            var result = message.ToString();
             var count = result.Count(o => o == replacementChar);
             Assert.AreEqual(input.Length, count, "Expected all characters to be replaced with the same character when replacement chars only has a single value: " + result);
+            message.Release();
         }
 
         [TestCase("Some text", "ABCABCABC")]
@@ -55,8 +64,11 @@ namespace UnityEngine.Localization.Tests.Pseudo
             method.ListMode = CharacterSubstitutor.ListSelectionMethod.LoopFromStart;
             method.ReplacementList.Clear();
             method.ReplacementList.AddRange(new[] { 'A', 'B', 'C' });
-            var result = method.Transform(input);
-            Assert.AreEqual(expected, result, "Expected the transformed string to match.");
+
+            var message = Message.CreateMessage(input);
+            method.Transform(message);
+            Assert.AreEqual(expected, message.ToString(), "Expected the transformed string to match.");
+            message.Release();
         }
 
         [Test]
@@ -73,11 +85,17 @@ namespace UnityEngine.Localization.Tests.Pseudo
             const string expected1 = "ABC";
             const string expected2 = "DEAB";
 
-            var result1 = method.Transform(input1);
-            var result2 = method.Transform(input2);
+            var message1 = Message.CreateMessage(input1);
+            var message2 = Message.CreateMessage(input2);
 
-            Assert.AreEqual(expected1, result1, "Expected the transformed string to match.");
-            Assert.AreEqual(expected2, result2, "Expected the transformed string to match.");
+            method.Transform(message1);
+            method.Transform(message2);
+
+            Assert.AreEqual(expected1, message1.ToString(), "Expected the transformed string to match.");
+            Assert.AreEqual(expected2, message2.ToString(), "Expected the transformed string to match.");
+
+            message1.Release();
+            message2.Release();
         }
 
         [TestCase("KARL", "LRAK")]
@@ -98,8 +116,10 @@ namespace UnityEngine.Localization.Tests.Pseudo
             method.ReplacementMap['{'] = '[';
             method.ReplacementMap['}'] = ']';
 
-            var result = method.Transform(input);
-            Assert.AreEqual(expected, result, "Expected the transformed string to match.");
+            var message = Message.CreateMessage(input);
+            method.Transform(message);
+            Assert.AreEqual(expected, message.ToString(), "Expected the transformed string to match.");
+            message.Release();
         }
     }
 }

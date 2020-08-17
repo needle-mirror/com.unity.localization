@@ -56,7 +56,7 @@ namespace UnityEditor.Localization.Tests
         }
 
         [Test]
-        public void CreateCollectionThrowsExceptionIfTypeIsNotDerivedFromLocalizedTableCollection()
+        public void CreateCollectionThrowsExceptionIfTypeIsNotDerivedFromLocalizationTableCollection()
         {
             Assert.Throws<ArgumentException>(() => LocalizationEditorSettings.Instance.CreateCollection(typeof(StringTable), null, null, null));
         }
@@ -66,6 +66,67 @@ namespace UnityEditor.Localization.Tests
         {
             Assert.Throws<ArgumentException>(() => LocalizationEditorSettings.Instance.CreateCollection(typeof(StringTableCollection), null, null, null));
             Assert.Throws<ArgumentException>(() => LocalizationEditorSettings.Instance.CreateCollection(typeof(StringTableCollection), "", null, null));
+        }
+
+        [Test]
+        public void SettingShowLocaleMenuInGameViewUpdatesEditorPrefs()
+        {
+            LocalizationEditorSettings.ShowLocaleMenuInGameView = false;
+            Assert.IsFalse(EditorPrefs.GetBool(LocalizationEditorSettings.k_GameViewPref));
+
+            LocalizationEditorSettings.ShowLocaleMenuInGameView = true;
+            Assert.IsTrue(EditorPrefs.GetBool(LocalizationEditorSettings.k_GameViewPref));
+        }
+
+        [Test]
+        public void ShowLocaleMenuInGameViewUsesEditorPrefsValue()
+        {
+            EditorPrefs.SetBool(LocalizationEditorSettings.k_GameViewPref, false);
+            Assert.IsFalse(EditorPrefs.GetBool(LocalizationEditorSettings.k_GameViewPref));
+
+            EditorPrefs.SetBool(LocalizationEditorSettings.k_GameViewPref, true);
+            Assert.IsTrue(EditorPrefs.GetBool(LocalizationEditorSettings.k_GameViewPref));
+        }
+
+        [Test]
+        public void ProjectLocalesIsUpdatedWhenRemoveLocaleIsUndone()
+        {
+            const string localeAssetPath = "Assets/HebrewRemove.asset";
+            var locale = Locale.CreateLocale(SystemLanguage.Hebrew);
+
+            AssetDatabase.CreateAsset(locale, localeAssetPath);
+            LocalizationEditorSettings.AddLocale(locale, false);
+            Assert.That(LocalizationEditorSettings.GetLocales(), Does.Contain(locale), "Expected new locale asset to be added to Project Locales.");
+
+            LocalizationEditorSettings.RemoveLocale(locale, true);
+            Assert.That(LocalizationEditorSettings.GetLocales(), Does.Not.Contains(locale), "Expected locale to not be in project locales after calling RemoveLocale.");
+
+            Undo.PerformUndo();
+            Assert.That(LocalizationEditorSettings.GetLocales(), Does.Contain(locale), "Expected locale asset to be in project locale after calling Undo.");
+
+            AssetDatabase.DeleteAsset(localeAssetPath);
+        }
+
+        [Test]
+        public void ProjectLocalesIsUpdatedWhenAddLocaleIsUndone()
+        {
+            const string localeAssetPath = "Assets/HebrewAdd.asset";
+            var locale = Locale.CreateLocale(SystemLanguage.Hebrew);
+
+            AssetDatabase.CreateAsset(locale, localeAssetPath);
+            LocalizationEditorSettings.AddLocale(locale, false);
+            Assert.That(LocalizationEditorSettings.GetLocales(), Does.Contain(locale), "Expected new locale asset to be added to Project Locales.");
+
+            LocalizationEditorSettings.RemoveLocale(locale, false);
+            Assert.That(LocalizationEditorSettings.GetLocales(), Does.Not.Contains(locale), "Expected locale to not be in project locales after calling RemoveLocale.");
+
+            LocalizationEditorSettings.AddLocale(locale, true);
+            Assert.That(LocalizationEditorSettings.GetLocales(), Does.Contain(locale), "Expected locale asset to be in project locale after calling AddLocale.");
+
+            Undo.PerformUndo();
+            Assert.That(LocalizationEditorSettings.GetLocales(), Does.Not.Contains(locale), "Expected locale to not be in project locales after calling Undo.");
+
+            AssetDatabase.DeleteAsset(localeAssetPath);
         }
     }
 }

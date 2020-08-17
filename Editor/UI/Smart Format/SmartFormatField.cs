@@ -77,7 +77,7 @@ namespace UnityEditor.Localization.UI
         /// <summary>
         /// Key id for the table entry.
         /// </summary>
-        public uint KeyId { get; set; }
+        public long KeyId { get; set; }
 
         /// <summary>
         /// TODO: DOC
@@ -208,6 +208,7 @@ namespace UnityEditor.Localization.UI
         /// </summary>
         public void RefreshData()
         {
+            ResetCache();
             var entry = Table.GetEntry(KeyId);
             if (entry != null)
             {
@@ -360,10 +361,9 @@ namespace UnityEditor.Localization.UI
             return Table.GetEntry(KeyId) ?? Table.AddEntry(KeyId, string.Empty);
         }
 
-        void SetIsSmart(bool value)
+        internal void SetIsSmart(bool value)
         {
             Undo.RecordObject(Table, "Set smart format");
-            EditorUtility.SetDirty(Table);
 
             var entry = GetOrCreateEntry();
             entry.IsSmart = value;
@@ -371,10 +371,9 @@ namespace UnityEditor.Localization.UI
             CalcHeight();
         }
 
-        void SetValue(string value)
+        internal void SetValue(string value)
         {
             Undo.RecordObject(Table, "Set smart format");
-            EditorUtility.SetDirty(Table);
 
             var entry = GetOrCreateEntry();
             entry.Value = value;
@@ -449,5 +448,7 @@ namespace UnityEditor.Localization.UI
 
             return result.ToString();
         }
+
+        public override string ToString() => $"SmartFormatField({RawText})";
     }
 }

@@ -123,7 +123,7 @@ namespace UnityEditor.Localization.UI
             return selectedLocales;
         }
 
-        void CreateCollection(Func<string, string, IList<Locale>, LocalizedTableCollection> create)
+        void CreateCollection(Func<string, string, IList<Locale>, LocalizationTableCollection> create)
         {
             var assetDirectory = EditorUtility.SaveFolderPanel("Create Table Collection", "Assets/", "");
             if (string.IsNullOrEmpty(assetDirectory))

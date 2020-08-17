@@ -4,7 +4,7 @@ using UnityEngine.Localization.Tables;
 namespace UnityEngine.Localization
 {
     /// <summary>
-    /// A Localized Reference allows for referencing an entry inside of a specific <see cref="LocalizedTable"/>.
+    /// A Localized Reference allows for referencing an entry inside of a specific <see cref="LocalizationTable"/>.
     /// </summary>
     [Serializable]
     public abstract class LocalizedReference
@@ -16,7 +16,7 @@ namespace UnityEngine.Localization
         TableEntryReference m_TableEntryReference;
 
         /// <summary>
-        /// A reference to the <see cref="LocalizedTable"/>.
+        /// A reference to the <see cref="LocalizationTable"/>.
         /// A table reference can be either the name of the table or the table collection name Guid.
         /// </summary>
         public TableReference TableReference

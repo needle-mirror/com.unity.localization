@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using UnityEngine.Localization.Pseudo;
 
-namespace UnityEngine.Localization.Tests.Pseudo
+namespace UnityEditor.Localization.Tests.Pseudo
 {
     public class EncapsulatorTests
     {
@@ -31,12 +31,15 @@ namespace UnityEngine.Localization.Tests.Pseudo
         [TestCaseSource("TestCases")]
         public void StringIsEncapsulated(string input)
         {
-            var result = m_Method.Transform(input);
+            var message = Message.CreateMessage(input);
+            m_Method.Transform(message);
+            var result = message.ToString();
             Assert.IsTrue(result.StartsWith(k_Start), "Expected string to have the start string at the start.");
             Assert.IsTrue(result.EndsWith(k_End), "Expected the string to have the end string at the end.");
 
             int expectedLngth = k_End.Length + k_Start.Length + input.Length;
             Assert.AreEqual(expectedLngth, result.Length, "Expected the length of the string to be the sum of end string, start string and input.");
+            message.Release();
         }
     }
 }

@@ -49,7 +49,7 @@ namespace UnityEditor.Localization.Plugins.Google
         /// <summary>
         /// Keep track of any Async push requests in case the property drawer is closed/reopened.
         /// </summary>
-        static List<(LocalizedTableCollection collection, Task pushTask)> s_PushRequests = new List<(LocalizedTableCollection, Task)>();
+        static List<(LocalizationTableCollection collection, Task pushTask)> s_PushRequests = new List<(LocalizationTableCollection, Task)>();
 
         ITaskReporter GetNewTaskReporter()
         {
@@ -72,7 +72,7 @@ namespace UnityEditor.Localization.Plugins.Google
                 m_RemoveMissingPulledKeys = property.FindPropertyRelative("m_RemoveMissingPulledKeys")
             };
 
-            var ltc = data.m_Collection.objectReferenceValue as LocalizedTableCollection;
+            var ltc = data.m_Collection.objectReferenceValue as LocalizationTableCollection;
             data.m_NewSheetName = ltc.TableCollectionName;
             data.columnsList = new ReorderableListExtended(property.serializedObject, data.m_Columns);
             data.columnsList.Header = Styles.mappedColumns;

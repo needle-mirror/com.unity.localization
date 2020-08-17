@@ -5,14 +5,16 @@ using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization
 {
-    public class StringTableCollection : LocalizedTableCollection
+    public class StringTableCollection : LocalizationTableCollection
     {
-        readonly Type kTableType = typeof(StringTable);
+        static readonly Type kTableType = typeof(StringTable);
         protected internal override Type TableType => kTableType;
 
         protected internal override Type RequiredExtensionAttribute => typeof(StringTableCollectionExtensionAttribute);
 
-        public override string DefaultTableGroupName => "Localization-StringTables";
+        protected override string DefaultAddressablesGroupName => "Localization-StringTables";
+
+        protected internal override string DefaultGroupName => "String Table";
 
         /// <summary>
         /// A helper property which is the contents of <see cref="Tables"/> loaded and cast to <see cref="StringTable"/>.

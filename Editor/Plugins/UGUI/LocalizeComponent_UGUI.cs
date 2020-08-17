@@ -26,6 +26,13 @@ namespace UnityEditor.Localization.Plugins.UGUI
             SetupForLocalization(target);
         }
 
+        [MenuItem("CONTEXT/Image/Localize")]
+        static void LocalizeUIImage(MenuCommand command)
+        {
+            var target = command.context as Image;
+            SetupForLocalization(target);
+        }
+
         public static MonoBehaviour SetupForLocalization(Text target)
         {
             var comp = Undo.AddComponent(target.gameObject, typeof(LocalizeStringEvent)) as LocalizeStringEvent;
@@ -49,6 +56,15 @@ namespace UnityEditor.Localization.Plugins.UGUI
             var comp = Undo.AddComponent(target.gameObject, typeof(LocalizeTextureEvent)) as LocalizeTextureEvent;
             var setTextureMethod = target.GetType().GetProperty("texture").GetSetMethod();
             var methodDelegate = System.Delegate.CreateDelegate(typeof(UnityAction<Texture>), target, setTextureMethod) as UnityAction<Texture>;
+            Events.UnityEventTools.AddPersistentListener(comp.OnUpdateAsset, methodDelegate);
+            return comp;
+        }
+
+        public static MonoBehaviour SetupForLocalization(Image target)
+        {
+            var comp = Undo.AddComponent(target.gameObject, typeof(LocalizeSpriteEvent)) as LocalizeSpriteEvent;
+            var setTextureMethod = target.GetType().GetProperty("sprite").GetSetMethod();
+            var methodDelegate = System.Delegate.CreateDelegate(typeof(UnityAction<Sprite>), target, setTextureMethod) as UnityAction<Sprite>;
             Events.UnityEventTools.AddPersistentListener(comp.OnUpdateAsset, methodDelegate);
             return comp;
         }

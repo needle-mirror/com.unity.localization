@@ -12,21 +12,29 @@ namespace UnityEngine.Localization.Pseudo
         /// <summary>
         /// Reverse all strings, to simulate right-to-left locales.
         /// </summary>
-        /// <param name="input"></param>
-        /// <returns></returns>
-        public string Transform(string input)
+        /// <param name="message"></param>
+        public void Transform(Message message)
         {
-            var mirrorBuffer = new char[input.Length];
+            foreach (var fragment in message.Fragments)
+            {
+                if (fragment is WritableMessageFragment writableMessageFragment)
+                    MirrorFragment(writableMessageFragment);
+            }
+        }
 
-            int readPos = input.Length - 1;
+        void MirrorFragment(WritableMessageFragment writableMessageFragment)
+        {
+            var mirrorBuffer = new char[writableMessageFragment.Length];
+
+            int readPos = writableMessageFragment.Length - 1;
             int writePos;
 
             // We search for a new line char in reverse,
             // when we find one we then copy that line into the buffer in reverse.
-            for (int i = input.Length - 1; i >= 0; --i)
+            for (int i = writableMessageFragment.Length - 1; i >= 0; --i)
             {
                 // Look for a new line
-                if (input[i] == '\n')
+                if (writableMessageFragment[i] == '\n')
                 {
                     // Add the new line char
                     mirrorBuffer[i] = '\n';
@@ -35,7 +43,7 @@ namespace UnityEngine.Localization.Pseudo
                     writePos = i + 1;
                     while (readPos > i)
                     {
-                        mirrorBuffer[writePos++] = input[readPos--];
+                        mirrorBuffer[writePos++] = writableMessageFragment[readPos--];
                     }
                     readPos = i - 1;
                 }
@@ -45,10 +53,10 @@ namespace UnityEngine.Localization.Pseudo
             writePos = 0;
             while (readPos >= 0)
             {
-                mirrorBuffer[writePos++] = input[readPos--];
+                mirrorBuffer[writePos++] = writableMessageFragment[readPos--];
             }
 
-            return new string(mirrorBuffer);
+            writableMessageFragment.Text = new string(mirrorBuffer);
         }
     }
 }

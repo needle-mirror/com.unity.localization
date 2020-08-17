@@ -77,21 +77,19 @@ namespace UnityEditor.Localization.Tests.UI
             m_FakeLocaleProvider.DestroyLocales();
         }
 
-        void CheckListViewContainsProjectLocales()
+        void CheckListContainsProjectLocales()
         {
-            var rows = m_PropertyDrawer.ListView.GetRows();
-
+            var items = m_PropertyDrawer.LocalesList.list;
             var locales = LocalizationEditorSettings.GetLocales().ToList();
-            foreach (var item in rows)
+            foreach (SerializedLocaleItem serializedLocale in items)
             {
-                var localeItem = item as SerializedLocaleItem;
-                Assert.That(localeItem, Is.Not.Null);
+                Assert.That(serializedLocale, Is.Not.Null);
 
                 // Check the locale exists in the project
-                Assert.That(locales, Does.Contain(localeItem.Reference), "Expected the Locale in the ListView to be in the project but it was not.");
+                Assert.That(locales, Does.Contain(serializedLocale.Reference), "Expected the Locale in the ListView to be in the project but it was not.");
 
                 // Remove the locale, it should only be in the list once and we want to know whats leftover.
-                locales.Remove(localeItem.Reference);
+                locales.Remove(serializedLocale.Reference);
             }
 
             Assert.That(locales, Is.Empty, "Expected all project locales to be in the ListView but they were not.");
@@ -106,7 +104,7 @@ namespace UnityEditor.Localization.Tests.UI
                 var height = m_PropertyDrawer.GetPropertyHeight(m_Property, GUIContent.none);
                 m_PropertyDrawer.OnGUI(new Rect(wnd.position.x, wnd.position.y, wnd.position.width, height), m_Property, GUIContent.none);
 
-                CheckListViewContainsProjectLocales();
+                CheckListContainsProjectLocales();
 
                 return true;
             });
@@ -133,7 +131,7 @@ namespace UnityEditor.Localization.Tests.UI
                 m_PropertyDrawer.OnGUI(new Rect(wnd.position.x, wnd.position.y, wnd.position.width, height), m_Property, GUIContent.none);
 
                 Assert.That(m_FakeLocaleProvider.TestLocales, Does.Contain(newLocale));
-                CheckListViewContainsProjectLocales();
+                CheckListContainsProjectLocales();
 
                 return true;
             });
@@ -159,7 +157,7 @@ namespace UnityEditor.Localization.Tests.UI
                 // Update again, it should not contain the new element
                 height = m_PropertyDrawer.GetPropertyHeight(m_Property, GUIContent.none);
                 m_PropertyDrawer.OnGUI(new Rect(0, 0, 1000, height), m_Property, GUIContent.none);
-                CheckListViewContainsProjectLocales();
+                CheckListContainsProjectLocales();
 
                 return true;
             });

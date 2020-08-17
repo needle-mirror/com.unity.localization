@@ -1,7 +1,7 @@
 {
   "name": "com.unity.localization",
   "displayName": "Localization",
-  "version": "0.7.1-preview",
+  "version": "0.8.0-preview",
   "unity": "2019.3",
   "description": "Preview of player localization system. Provides tools for localizing your built application.",
   "keywords": [
@@ -11,15 +11,15 @@
   ],
   "dependencies": {
     "com.unity.addressables": "1.7.5",
-    "com.unity.nuget.newtonsoft-json": "1.1.2"
+    "com.unity.nuget.newtonsoft-json": "2.0.0"
   },
   "upmCi": {
-    "footprint": "84daa69a33b7d5d5fb3eadf2c3cdce38d4b7a78d"
+    "footprint": "474ffec478e3a28313b21aec400809dd0d480304"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.localization.git",
     "type": "git",
-    "revision": "0010c4ff2b8cf5d274567cba3a56bbe0b3720ddb"
+    "revision": "a9d531c1ac826600b3ff11eb903c11274daa87a9"
   },
   "samples": [
     {
@@ -38,9 +38,14 @@
       "path": "Samples~/LoadingStrings"
     },
     {
-      "displayName": "Simple Language Selection Menu(IMGUI)",
+      "displayName": "Language Selection Menu (IMGUI)",
       "description": "This sample shows how to implement a simple language selection menu using IMGUI. The sample also includes an example of overriding the LocalesProvider in order to provide a custom list of available Locales.",
       "path": "Samples~/LocaleMenuIMGUI"
+    },
+    {
+      "displayName": "Language Selection Menu (UGUI)",
+      "description": "This sample shows how to implement a simple language selection menu using a UGUI Dropdown.",
+      "path": "Samples~/LocaleMenuUGUI"
     }
   ]
 }

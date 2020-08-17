@@ -56,9 +56,6 @@ using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization.Samples.Google
 {
-    /// <summary>
-    ///
-    /// </summary>
     [Serializable]
     [DisplayName("Custom Data")]
     [Metadata(AllowedTypes = MetadataType.StringTableEntry)]

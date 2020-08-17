@@ -10,14 +10,14 @@ namespace UnityEditor.Localization
     public class CollectionExtension
     {
         [SerializeField, HideInInspector]
-        LocalizedTableCollection m_Collection;
+        LocalizationTableCollection m_Collection;
 
         /// <summary>
         /// The collection this extension is attached to.
         /// </summary>
-        public LocalizedTableCollection TargetCollection => m_Collection;
+        public LocalizationTableCollection TargetCollection => m_Collection;
 
-        internal void Init(LocalizedTableCollection target)
+        internal void Init(LocalizationTableCollection target)
         {
             m_Collection = target;
         }

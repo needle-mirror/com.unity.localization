@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using UnityEngine.Localization.Pseudo;
 
-namespace UnityEngine.Localization.Tests.Pseudo
+namespace UnityEditor.Localization.Tests.Pseudo
 {
     public class MirrorTests
     {
@@ -21,8 +21,11 @@ namespace UnityEngine.Localization.Tests.Pseudo
         [TestCase("+-@:", ":@-+")]
         public void SingleLineTextIsReversed(string input, string expected)
         {
-            var result = m_Method.Transform(input);
-            Assert.AreEqual(expected, result, "Expected the strings to match");
+            var message = Message.CreateMessage(input);
+            m_Method.Transform(message);
+
+            Assert.AreEqual(expected, message.ToString(), "Expected the strings to match");
+            message.Release();
         }
 
         [TestCase("This is some\nmultiple\nLines of text", "emos si sihT\nelpitlum\ntxet fo seniL")]
@@ -31,8 +34,11 @@ namespace UnityEngine.Localization.Tests.Pseudo
         [TestCase("\nStart of Line", "\neniL fo tratS")]
         public void MultiLineTextIsReversedPerLine(string input, string expected)
         {
-            var result = m_Method.Transform(input);
-            Assert.AreEqual(expected, result, "Expected the strings to match");
+            var message = Message.CreateMessage(input);
+            m_Method.Transform(message);
+
+            Assert.AreEqual(expected, message.ToString(), "Expected the strings to match");
+            message.Release();
         }
     }
 }

@@ -37,14 +37,16 @@ namespace UnityEngine.Localization.Pseudo
         }
 
         /// <summary>
-        /// Encapsulates the input between the <see cref="Start"/> and
-        /// <see cref="End"/> strings.
+        /// Encapsulates the input between the <see cref="Start"/> and <see cref="End"/> strings.
         /// </summary>
-        /// <param name="input">The string that will be encapsulated.</param>
-        /// <returns>New encapsulated string.</returns>
-        public string Transform(string input)
+        /// <param name="message"></param>
+        public void Transform(Message message)
         {
-            return $"{Start}{input}{End}";
+            var startBracket = message.CreateReadonlyTextFragment(Start);
+            var closingBracket = message.CreateReadonlyTextFragment(End);
+
+            message.Fragments.Insert(0, startBracket);
+            message.Fragments.Add(closingBracket);
         }
     }
 }

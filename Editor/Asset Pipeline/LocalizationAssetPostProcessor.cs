@@ -33,9 +33,9 @@ namespace UnityEditor.Localization
                     if (assetPath.EndsWith("asset"))
                     {
                         var assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
-                        if (typeof(LocalizedTableCollection).IsAssignableFrom(assetType))
+                        if (typeof(LocalizationTableCollection).IsAssignableFrom(assetType))
                         {
-                            var collection = AssetDatabase.LoadAssetAtPath<LocalizedTableCollection>(assetPath);
+                            var collection = AssetDatabase.LoadAssetAtPath<LocalizationTableCollection>(assetPath);
                             collection.ImportCollectionIntoProject();
                         }
                         else if (typeof(SharedTableData).IsAssignableFrom(assetType))
@@ -77,9 +77,9 @@ namespace UnityEditor.Localization
             if (assetPath.EndsWith("asset"))
             {
                 var assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
-                if (typeof(LocalizedTableCollection).IsAssignableFrom(assetType))
+                if (typeof(LocalizationTableCollection).IsAssignableFrom(assetType))
                 {
-                    var tableCollection = AssetDatabase.LoadAssetAtPath<LocalizedTableCollection>(assetPath);
+                    var tableCollection = AssetDatabase.LoadAssetAtPath<LocalizationTableCollection>(assetPath);
                     tableCollection.RemoveCollectionFromProject();
                 }
                 else if (typeof(SharedTableData).IsAssignableFrom(assetType))
@@ -88,9 +88,9 @@ namespace UnityEditor.Localization
                     var collection = LocalizationEditorSettings.GetCollectionForSharedTableData(sharedData);
                     collection?.RemoveCollectionFromProject();
                 }
-                else if (typeof(LocalizedTable).IsAssignableFrom(assetType))
+                else if (typeof(LocalizationTable).IsAssignableFrom(assetType))
                 {
-                    var table = AssetDatabase.LoadAssetAtPath<LocalizedTable>(assetPath);
+                    var table = AssetDatabase.LoadAssetAtPath<LocalizationTable>(assetPath);
                     var collection = LocalizationEditorSettings.GetCollectionFromTable(table);
                     collection?.RemoveTable(table);
                 }

@@ -126,7 +126,7 @@ namespace UnityEngine.Localization.Pseudo
         /// For example, 0.3 would add an extra 30% onto the length.
         /// Note: Negative values are ignored.
         /// When the newly calculated length is not whole then the next largest whole number will be used.
-        /// Rules can also be added using <see cref="SetConstantExpansion"/> and <see cref="AddExpansionRule(uint, uint, float)"/>.
+        /// Rules can also be added using <see cref="SetConstantExpansion"/> and <see cref="AddExpansionRule(int, int, float)"/>.
         /// </summary>
         public List<ExpansionRule> ExpansionRules => m_ExpansionRules;
 
@@ -232,40 +232,50 @@ namespace UnityEngine.Localization.Pseudo
         /// <summary>
         /// Pad the string with random characters to increase its length.
         /// </summary>
-        /// <param name="input"></param>
-        /// <returns></returns>
-        public string Transform(string input)
+        /// <param name="message"></param>
+        public void Transform(Message message)
         {
-            int stringLength = Mathf.Max(input.Length, MinimumStringLength);
+            var messageLength = message.Length;
+            int stringLength = Mathf.Max(messageLength, MinimumStringLength);
             var paddingAmount = Mathf.CeilToInt(GetExpansionForLength(stringLength) * stringLength);
             if (paddingAmount > 0)
             {
                 // Add the extra length which may have resulted due to the minimum string length.
-                paddingAmount += stringLength - input.Length;
+                paddingAmount += stringLength - messageLength;
 
                 var padding = new char[paddingAmount];
-                Random.InitState(GetRandomSeed(input));
+                Random.InitState(GetRandomSeed(message.Original));
 
                 for (int i = 0; i < paddingAmount; ++i)
                 {
                     padding[i] = PaddingCharacters[Random.Range(0, PaddingCharacters.Count)];
                 }
 
-                return AddPaddingToInput(input, padding);
+                AddPaddingToMessage(message, padding);
             }
-            return input;
         }
 
-        string AddPaddingToInput(string input, char[] padding)
+        void AddPaddingToMessage(Message message, char[] padding)
         {
-            if (Location == InsertLocation.Start)
-                return new string(padding) + input;
-            if (Location == InsertLocation.End)
-                return input + new string(padding);
+            MessageFragment start = null;
+            MessageFragment end = null;
+            string paddingString = new string(padding);
 
-            // Both
-            int splitPoint = Mathf.FloorToInt(padding.Length * 0.5f);
-            return new string(padding, 0, splitPoint) + input + new string(padding, splitPoint, padding.Length - splitPoint);
+            if (Location == InsertLocation.Start)
+                start = message.CreateTextFragment(paddingString);
+            else if (Location == InsertLocation.End)
+                end = message.CreateTextFragment(paddingString);
+            else // Both
+            {
+                int splitPoint = Mathf.FloorToInt(padding.Length * 0.5f);
+                start = message.CreateTextFragment(paddingString, 0, splitPoint);
+                end = message.CreateTextFragment(paddingString, splitPoint, padding.Length - 1);
+            }
+
+            if (start != null)
+                message.Fragments.Insert(0, start);
+            if (end != null)
+                message.Fragments.Add(end);
         }
 
         int GetRandomSeed(string input) => input.GetHashCode();

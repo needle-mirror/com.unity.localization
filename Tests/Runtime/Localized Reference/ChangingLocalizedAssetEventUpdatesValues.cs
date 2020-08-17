@@ -22,7 +22,6 @@ namespace UnityEngine.Localization.Tests
             }
         }
 
-        LocalizationSettings m_OldSettings;
         GameObject m_GameObject;
         LocalizeTextureEvent m_LocalizeTextureEvent;
         FixtureAssetDatabase m_FixtureAssetDatabase;
@@ -48,7 +47,7 @@ namespace UnityEngine.Localization.Tests
         [SetUp]
         public void Setup()
         {
-            m_OldSettings = LocalizationSettings.Instance;
+            LocalizationSettingsHelper.SaveCurrentSettings();
 
             LocalizationSettings.Instance = ScriptableObject.CreateInstance<LocalizationSettings>();
             m_FixtureAssetDatabase = new FixtureAssetDatabase();
@@ -68,7 +67,7 @@ namespace UnityEngine.Localization.Tests
             // Delete GameObject first as it will call into LocalizationSettings during cleanup.
             Object.DestroyImmediate(m_GameObject);
             Object.DestroyImmediate(LocalizationSettings.Instance);
-            LocalizationSettings.Instance = m_OldSettings;
+            LocalizationSettingsHelper.RestoreSettings();
         }
 
         [Test]

@@ -8,7 +8,7 @@ using UnityEngine.ResourceManagement.ResourceLocations;
 namespace UnityEngine.Localization
 {
     class PreloadDatabaseOperation<TTable, TEntry> : AsyncOperationBase<LocalizedDatabase<TTable, TEntry>>
-        where TTable : LocalizedTableT<TEntry>
+        where TTable : DetailedLocalizationTable<TEntry>
         where TEntry : TableEntry
     {
         LocalizedDatabase<TTable, TEntry> m_Database;

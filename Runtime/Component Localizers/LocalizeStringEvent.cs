@@ -39,7 +39,9 @@ namespace UnityEngine.Localization.Components
                 ClearChangeHandler();
 
                 m_StringReference = value;
-                RegisterChangeHandler();
+
+                if (enabled)
+                    RegisterChangeHandler();
             }
         }
 
@@ -75,12 +77,12 @@ namespace UnityEngine.Localization.Components
                 StringReference.Arguments = m_FormatArguments.ToArray();
             }
 
-            StringReference.RegisterChangeHandler(UpdateString);
+            StringReference.StringChanged += UpdateString;
         }
 
         void ClearChangeHandler()
         {
-            StringReference.ClearChangeHandler();
+            StringReference.StringChanged -= UpdateString;
         }
     }
 }

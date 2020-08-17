@@ -13,11 +13,13 @@ namespace UnityEditor.Localization.UI
             public static readonly GUIContent code = new GUIContent("Locale Code");
             public static readonly GUIContent cultureNotFoundLabel = new GUIContent("Not Found");
             public static readonly GUIContent cultureInfo = new GUIContent("Culture Info");
+            public static readonly GUIContent sortOrder = new GUIContent("Sort Order", "The order the Locales will appear in any sorted Lists. By default Locales are ordered by name however the Sort Order can be used to override this.");
         }
 
         SerializedProperty m_Name;
         SerializedProperty m_Code;
         SerializedProperty m_Metadata;
+        SerializedProperty m_SortOrder;
 
         CultureInfo m_CultureInfo;
         GUIContent m_CultureInfoLabel;
@@ -27,6 +29,7 @@ namespace UnityEditor.Localization.UI
             m_Name = serializedObject.FindProperty("m_Name");
             m_Code = serializedObject.FindProperty("m_Identifier.m_Code");
             m_Metadata = serializedObject.FindProperty("m_Metadata");
+            m_SortOrder = serializedObject.FindProperty("m_SortOrder");
             UpdateCultureInfo();
         }
 
@@ -45,6 +48,13 @@ namespace UnityEditor.Localization.UI
             }
 
             EditorGUILayout.LabelField(Styles.cultureInfo, m_CultureInfoLabel);
+
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(m_SortOrder, Styles.sortOrder);
+            if (EditorGUI.EndChangeCheck())
+            {
+                LocalizationEditorSettings.EditorEvents.RaiseLocaleSortOrderChanged(this, target as Locale);
+            }
 
             EditorGUILayout.PropertyField(m_Metadata);
 

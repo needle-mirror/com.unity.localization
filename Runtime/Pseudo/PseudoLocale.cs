@@ -56,6 +56,7 @@ namespace UnityEngine.Localization.Pseudo
         [SerializeReference]
         List<IPseudoLocalizationMethod> m_Methods = new List<IPseudoLocalizationMethod>
         {
+            new PreserveTags(),
             new Expander(),
             new Accenter(),
             new Encapsulator()
@@ -72,7 +73,9 @@ namespace UnityEngine.Localization.Pseudo
         /// <returns></returns>
         public static PseudoLocale CreatePseudoLocale()
         {
-            return CreateInstance<PseudoLocale>();
+            var locale = CreateInstance<PseudoLocale>();
+            locale.name = nameof(PseudoLocale);
+            return locale;
         }
 
         PseudoLocale()
@@ -98,13 +101,15 @@ namespace UnityEngine.Localization.Pseudo
         /// <returns></returns>
         public virtual string GetPseudoString(string input)
         {
-            string transformed = input;
+            var message = Message.CreateMessage(input);
             foreach (var method in Methods)
             {
-                if (method != null)
-                    transformed = method.Transform(transformed);
+                method?.Transform(message);
             }
-            return transformed;
+
+            var result = message.ToString();
+            message.Release();
+            return result;
         }
 
         public override string ToString() => $"Pseudo ({base.ToString()})";

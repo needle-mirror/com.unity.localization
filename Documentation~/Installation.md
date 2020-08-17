@@ -2,9 +2,9 @@
 
 This package is currently in preview and not available in the Package Manager. To install the package edit *Packages/manifest.json* and insert the package into the dependencies section:
 
-```
+```json
 "dependencies": {
-    "com.unity.localization": "0.7.0-preview"
+    "com.unity.localization": "0.8.0-preview"
     },
 }
 ```

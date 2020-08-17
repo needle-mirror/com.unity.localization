@@ -8,15 +8,15 @@ namespace UnityEditor.Localization.UI
 {
     class TableEntrySelected : ISelectable
     {
-        LocalizedTable m_Table;
+        LocalizationTable m_Table;
         Locale m_Locale;
-        uint m_KeyId;
+        long m_KeyId;
         VisualElement m_Editor;
         MetadataTypeAttribute m_MetadataType;
 
         public bool Selected { get; set; }
 
-        public TableEntrySelected(LocalizedTable table, uint id, Locale locale, MetadataType supportedType)
+        public TableEntrySelected(LocalizationTable table, long id, Locale locale, MetadataType supportedType)
         {
             m_Table = table;
             m_Locale = locale;

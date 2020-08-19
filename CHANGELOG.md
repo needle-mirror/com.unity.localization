@@ -1,12 +1,17 @@
 # Changelog
 All notable changes to this package will be documented in this file.
 
+## [0.8.1] - 2020-08-19
+
+### Fixed
+- Fixed incorrect Further Reading URL in Pseudo-Localization documentation page.
+- Fixed changes to tables not being saved due to them not being set dirty when edited through the Table Editor.
+
 ## [0.8.0] - 2020-08-17
 
 ### Added
 - Added `IKeyGenerator` to `SharedTableData`. This is now used to generate the unique ids for each key. By default `DistributedUIDGenerator` will be used to generate the keys however it is possible to change it back to Sequential by assigning `SequentialIDGenerator` to `SharedTableData.KeyGenerator`. See docs for further details.
 - Added `PreserveTags` Pseudo-localization method. This will prevent tags such as rich text or xml from being modified by any subsequent Pseudo-localization methods. ([LOC-86](https://issuetracker.unity3d.com/issues/pseudo-localization-methods-are-applied-to-the-whole-string-when-using-rich-text-tags))
-- Added `PreserveTags` Pseudo-localization method. This will prevent tags such as rich text or xml from being modified by any subsequent Pseudo-localization methods. (case [LOC-86](https://issuetracker.unity3d.com/issues/pseudo-localization-methods-are-applied-to-the-whole-string-when-using-rich-text-tags)).
 - Added `LocalizeSpriteEvent` component. This can be used for Localizing `Sprite` assets.
 - Added `Localize` context menu item for UGUI `Image` component. This will add and setup a `LocalizeSpriteEvent` component.
 - Added `Group` property to `StringTableCollection`and `AssetTableCollection`, This can be used to customize the menu grouping when selecting a Table Collection.
@@ -39,7 +44,6 @@ All notable changes to this package will be documented in this file.
 - Fixed `GoogleSheets` push not handling Table entries that were missing matching Shared Table Entries, this would cause future rows to be blank. ([LOC-102](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-102))
 - Fixed `NullReferenceException` in `Localization Settings` when Editor window focus was lost and Smart Format properties field was visible. ([LOC-101](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-101))
 - Fixed `Available Locales` not updating when performing an Undo/Redo after adding or removing a Locale.
-- Fixed `GoogleSheets` push not handling Table entries that were missing matching Shared Table Entries, this would cause future rows to be blank. [LOC-102](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-102)
 - `LocalizedString` and `LocalizedAsset` property drawers now remember the expanded state of each Locale field when an Undo/Redo occurs. ([LOC-105](https://issuetracker.unity3d.com/issues/undoing-a-change-to-a-language-in-the-localizedstring-inspector-resets-the-folded-state))
 - Added Undo support when adding and removing a table from a `StringTableCollection` or `AssetTableCollection`. When Undo is not used the asset will be set dirty so changes are not lost. ([LOC-107](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-107))
 

@@ -365,6 +365,9 @@ namespace UnityEditor.Localization.UI
         {
             Undo.RecordObject(Table, "Set smart format");
 
+            // This is required as Undo does not make assets dirty
+            EditorUtility.SetDirty(Table);
+
             var entry = GetOrCreateEntry();
             entry.IsSmart = value;
             IsSmart = value;
@@ -374,6 +377,9 @@ namespace UnityEditor.Localization.UI
         internal void SetValue(string value)
         {
             Undo.RecordObject(Table, "Set smart format");
+
+            // This is required as Undo does not make assets dirty
+            EditorUtility.SetDirty(Table);
 
             var entry = GetOrCreateEntry();
             entry.Value = value;

@@ -4,7 +4,7 @@ This package is currently in preview and not available in the Package Manager. T
 
 ```json
 "dependencies": {
-    "com.unity.localization": "0.8.0-preview"
+    "com.unity.localization": "0.8.1-preview"
     },
 }
 ```

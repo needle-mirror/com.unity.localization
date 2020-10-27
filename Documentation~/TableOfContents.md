@@ -11,10 +11,12 @@
     * [Asset Tables](AssetTables.md)
     * [Table Keys](TableEntryKeys.md)
   * Extensions
+    * [CSV](CSV.md)
     * [Google Sheets](Google-Sheets.md)
       * [Sheets Service Provider](Google-Sheets-Sheets-Service-Provider.md)
       * [Configuring Authentication](Google-Sheets-Configuring-Authentication.md)
       * [Syncing String Table Collections](Google-Sheets-Syncing-StringTableCollections.md)
+    * [XLIFF](XLIFF.md)
   * [Metadata](Metadata.md)
   * [Smart Strings](SmartStrings.md)
     * [Common Pitfalls](Common-Pitfalls.md)

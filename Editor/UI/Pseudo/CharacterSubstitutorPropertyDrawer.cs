@@ -47,7 +47,7 @@ namespace UnityEditor.Localization.UI
         public override void OnGUI(CharacterSubstitutorPropertyDrawerData data, Rect position, SerializedProperty property, GUIContent label)
         {
             position.height = EditorGUIUtility.singleLineHeight;
-            property.isExpanded = EditorGUI.Foldout(position, property.isExpanded, label);
+            property.isExpanded = EditorGUI.Foldout(position, property.isExpanded, label, true);
             position.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 
             if (property.isExpanded)
@@ -110,7 +110,7 @@ namespace UnityEditor.Localization.UI
         internal static Rect DrawReplacementRules(Rect position, SerializedProperty property)
         {
             // Header
-            property.isExpanded = EditorGUI.Foldout(position, property.isExpanded, Styles.replacementCharacters);
+            property.isExpanded = EditorGUI.Foldout(position, property.isExpanded, Styles.replacementCharacters, true);
             position.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
             if (!property.isExpanded)
                 return position;

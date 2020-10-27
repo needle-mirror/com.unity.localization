@@ -199,13 +199,39 @@ namespace UnityEditor.Localization
         /// <returns></returns>
         public static AssetTableCollection CreateAssetTableCollection(string tableName, string assetDirectory, IList<Locale> selectedLocales) => Instance.CreateCollection(typeof(AssetTableCollection), tableName, assetDirectory, selectedLocales) as AssetTableCollection;
 
+        internal protected string GetUniqueCollectionName(Type collectionType, string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                name = $"New {collectionType.Name}";
+
+            int suffix = 1;
+            var nameToTest = name;
+            while (true)
+            {
+                if (collectionType == typeof(StringTableCollection))
+                {
+                    if (TableCollectionCache.FindStringTableCollection(nameToTest) == null)
+                        return nameToTest;
+                }
+                else
+                {
+                    if (TableCollectionCache.FindAssetTableCollection(nameToTest) == null)
+                        return nameToTest;
+                }
+
+                nameToTest = $"{name} {suffix}";
+                suffix++;
+            }
+        }
+
         internal protected virtual LocalizationTableCollection CreateCollection(Type collectionType, string tableName, string assetDirectory, IList<Locale> selectedLocales)
         {
-            if (collectionType.IsAssignableFrom(typeof(LocalizationTableCollection)))
+            if (!typeof(LocalizationTableCollection).IsAssignableFrom(collectionType))
                 throw new ArgumentException($"{collectionType.Name} Must be derived from {nameof(LocalizationTableCollection)}", nameof(collectionType));
+            if (string.IsNullOrEmpty(assetDirectory))
+                throw new ArgumentException(nameof(assetDirectory), "Must not be null or empty.");
 
-            if (string.IsNullOrEmpty(tableName))
-                throw new ArgumentException("Can not be null or empty", nameof(tableName));
+            tableName = GetUniqueCollectionName(collectionType, tableName);
 
             var collection = ScriptableObject.CreateInstance(collectionType) as LocalizationTableCollection;
             List<LocalizationTable> createdTables;

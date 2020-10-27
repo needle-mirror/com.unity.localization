@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using UnityEditor.AddressableAssets.Settings;
@@ -28,6 +29,17 @@ namespace UnityEditor.Localization
         public virtual ReadOnlyCollection<AssetTable> AssetTables => new ReadOnlyCollection<AssetTable>(Tables.Select(t => t.asset as AssetTable).ToList().AsReadOnly());
 
         protected internal override string DefaultGroupName => "Asset Table";
+
+        /// <summary>
+        /// Returns an enumerator that can be used to step through each key and its localized values, such as in a foreach loop.
+        /// Internally <see cref="SharedTableData"/> and <see cref="AssetTable"/>'s are separate assets with their own internal list of values.
+        /// This means that when iterating through each key a lookup must be made in each table in order to retrieve the localized value,
+        /// this can become slow when dealing with a large number of tables and entries.
+        /// GetRowEnumerator improves this process by first sorting the multiple internal lists and then stepping through each conceptual row at a time.
+        /// It handles missing keys and table entries and provides a more efficient and faster way to iterate through the tables.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<Row<AssetTableEntry>> GetRowEnumerator() => GetRowEnumerator<AssetTable, AssetTableEntry>(AssetTables);
 
         protected override void RemoveTableFromAddressables(LocalizationTable table, bool createUndo)
         {

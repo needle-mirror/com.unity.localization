@@ -4,6 +4,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.Localization.SmartFormat;
 using UnityEngine.Localization.SmartFormat.Core.Parsing;
+using UnityEngine.Localization.SmartFormat.Core.Settings;
 using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization.UI
@@ -138,7 +139,7 @@ namespace UnityEditor.Localization.UI
         /// <summary>
         /// Debug text is the RawText with hyper links inserted for Smart Format fields, we provide info when the links are clicked on.
         /// </summary>
-        string DebugText
+        public string DebugText
         {
             get
             {
@@ -153,12 +154,25 @@ namespace UnityEditor.Localization.UI
             }
         }
 
-        string PreviewText
+        public string PreviewText
         {
             get
             {
                 if (m_PreviewText == null)
+                {
+                    // Print the error in the message and avoid throwing actions. (LOC-119)
+                    var oldParseAction = m_SmartFormatter.Settings.ParseErrorAction;
+                    var oldFormatArgumentAction = m_SmartFormatter.Settings.FormatErrorAction;
+                    m_SmartFormatter.Settings.ParseErrorAction = ErrorAction.OutputErrorInResult;
+                    m_SmartFormatter.Settings.FormatErrorAction = ErrorAction.OutputErrorInResult;
+
                     m_PreviewText = m_SmartFormatter?.Format(RawText, Arguments);
+
+                    m_SmartFormatter.Settings.ParseErrorAction = oldParseAction;
+                    m_SmartFormatter.Settings.FormatErrorAction = oldFormatArgumentAction;
+
+                    CalcHeight();
+                }
                 return m_PreviewText;
             }
         }
@@ -192,8 +206,6 @@ namespace UnityEditor.Localization.UI
         SmartFormatter m_SmartFormatter;
         Format m_Format;
 
-        TableEntrySelected m_TableEntrySelected;
-
         Dictionary<string, FormatItem> m_FormatItemLookup = new Dictionary<string, FormatItem>();
 
         public SmartFormatField()
@@ -225,7 +237,8 @@ namespace UnityEditor.Localization.UI
 
         void CalcHeight()
         {
-            var contentsHeight = EditorStyles.textArea.CalcSize(new GUIContent(RawText)).y + EditorGUIUtility.standardVerticalSpacing;
+            var text = m_Mode == Mode.Preview ? PreviewText : RawText;
+            var contentsHeight = EditorStyles.textArea.CalcSize(new GUIContent(text)).y + EditorGUIUtility.standardVerticalSpacing;
             contentsHeight += k_ToolbarHeight + EditorGUIUtility.standardVerticalSpacing;
             if (IsSmart)
                 contentsHeight += EditorStyles.toolbarButton.lineHeight + EditorGUIUtility.standardVerticalSpacing;

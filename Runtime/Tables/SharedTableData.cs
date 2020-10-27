@@ -62,6 +62,8 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         public const long EmptyId = 0;
 
+        internal const string NewEntryKey = "New Entry";
+
         [FormerlySerializedAs("m_TableName")]
         [SerializeField]
         string m_TableCollectionName;
@@ -75,7 +77,7 @@ namespace UnityEngine.Localization.Tables
 
         [SerializeField]
         [MetadataType(MetadataType.SharedTableData)]
-        MetadataCollection m_Metadata;
+        MetadataCollection m_Metadata = new MetadataCollection();
 
         [SerializeReference]
         IKeyGenerator m_KeyGenerator = new DistributedUIDGenerator();
@@ -246,16 +248,14 @@ namespace UnityEngine.Localization.Tables
         /// <returns></returns>
         public SharedTableEntry AddKey()
         {
-            const string newKeyName = "New Entry";
-
-            var keyToTry = newKeyName;
+            var keyToTry = NewEntryKey;
             SharedTableEntry entry = null;
             int counter = 1;
             while (entry == null)
             {
                 if (Contains(keyToTry))
                 {
-                    keyToTry = $"{newKeyName} {counter++}";
+                    keyToTry = $"{NewEntryKey} {counter++}";
                 }
                 else
                 {
@@ -407,6 +407,14 @@ namespace UnityEngine.Localization.Tables
         SharedTableEntry AddKeyInternal(string key)
         {
             var newEntry = new SharedTableEntry() { Id = m_KeyGenerator.GetNextKey(), Key = key };
+
+            // Its possible that the Id already exists, such as when a custom entry was added by a user.
+            // We need to to make sure this value is unique, if it is not then we keep trying until we find a unique Id.
+            while (FindWithId(newEntry.Id) != null)
+            {
+                newEntry.Id = m_KeyGenerator.GetNextKey();
+            }
+
             Entries.Add(newEntry);
 
             if (m_IdDictionary.Count > 0)
@@ -502,6 +510,22 @@ namespace UnityEngine.Localization.Tables
             m_KeyDictionary.Clear();
 
             m_TableCollectionNameGuid = string.IsNullOrEmpty(m_TableCollectionNameGuidString) ? Guid.Empty : Guid.Parse(m_TableCollectionNameGuidString);
+
+            #if UNITY_EDITOR
+            // If in the editor we can try and repair missing GUID issues.
+            if (m_TableCollectionNameGuid == Guid.Empty)
+            {
+                // We have to defer as we can not use the asset database whilst inside of OnAfterDeserialize.
+                UnityEditor.EditorApplication.delayCall += () =>
+                {
+                    if (UnityEditor.AssetDatabase.TryGetGUIDAndLocalFileIdentifier(this, out string guid, out long _))
+                    {
+                        m_TableCollectionNameGuid = Guid.Parse(guid);
+                        UnityEditor.EditorUtility.SetDirty(this);
+                    }
+                };
+            }
+            #endif
         }
     }
 }

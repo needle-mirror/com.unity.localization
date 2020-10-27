@@ -86,6 +86,40 @@ namespace UnityEditor.Localization.Tests
         }
 
         [Test]
+        public void AddKey_GeneratesUniqueId_WhenNextIdValueHasAlreadyBeenUsed()
+        {
+            const int customId = 1234;
+
+            // Create an entry with a custom Id
+            Assert.Null(m_SharedTableData.GetEntry(customId), "Expected no Key to already exist with the Id");
+            var entry = m_SharedTableData.AddKey("My Custom Entry", customId);
+            Assert.NotNull(entry);
+
+            // Start generating id values using the custom id as the next id.
+            m_SharedTableData.KeyGenerator = new SequentialIDGenerator(customId);
+
+            var currentEntryCount = m_SharedTableData.Entries.Count;
+            var newEntry = m_SharedTableData.AddKey();
+            Assert.AreNotEqual(customId, newEntry.Id, "Expected new entry to not use the custom Id");
+            Assert.Greater(m_SharedTableData.Entries.Count, currentEntryCount, "Expected entry count to have increased");
+        }
+
+        [Test]
+        public void AddKey_GeneratesUniqueKey_WhenNewEntryKeyHasAlreadyBeenUsed()
+        {
+            string expectedKey = $"{SharedTableData.NewEntryKey} 3";
+
+            // Use some of the new Entry names
+            m_SharedTableData.AddKey(SharedTableData.NewEntryKey);
+            m_SharedTableData.AddKey($"{SharedTableData.NewEntryKey} 1");
+            m_SharedTableData.AddKey($"{SharedTableData.NewEntryKey} 2");
+            m_SharedTableData.AddKey($"{SharedTableData.NewEntryKey} 4");
+
+            var entry = m_SharedTableData.AddKey();
+            Assert.AreEqual(expectedKey, entry.Key);
+        }
+
+        [Test]
         public void KeyIsNotInSharedTableData_AfterRemovingKey_ByName()
         {
             const string keyName = "Remove Key By Name";

@@ -3,16 +3,37 @@ using System.Text;
 
 namespace UnityEditor.Localization.Reporting
 {
+    static class TaskReporter
+    {
+        public static ITaskReporter CreateDefaultReporter()
+        {
+            #if UNITY_2020_1_OR_NEWER
+            return new ProgressReporter();
+            #else
+            return new ProgressBarReporter();
+            #endif
+        }
+    }
+
     public abstract class TaskTimerReporter : ITaskReporter
     {
+        public float CurrentProgress { get; private set; }
+
+        public bool Active { get; private set; }
+
         StringBuilder m_Summary = new StringBuilder();
         Stopwatch m_Timer;
         string m_Title;
         string m_CurrentDescription;
         double m_TotalTimeInSeconds;
+        bool m_Started;
 
         public virtual void Start(string title, string description)
         {
+            if (m_Started)
+                return;
+
+            m_Started = true;
             m_Title = title;
             m_CurrentDescription = description;
             m_Summary.Clear();
@@ -22,6 +43,12 @@ namespace UnityEditor.Localization.Reporting
 
         public void ReportProgress(string description, float progress)
         {
+            if (!m_Started)
+            {
+                Start(description, description);
+            }
+
+            CurrentProgress = progress;
             LogStep();
             PrintStatus(m_Title, description, progress);
             m_CurrentDescription = description;
@@ -30,6 +57,11 @@ namespace UnityEditor.Localization.Reporting
 
         public void Completed(string message)
         {
+            if (!m_Started)
+                return;
+
+            m_Started = false;
+            CurrentProgress = 1;
             LogStep();
             m_Summary.AppendFormat("Total time: {0:0.##}s\n{1}", m_TotalTimeInSeconds, message);
             m_Summary.Insert(0, $"{m_Title}\n");
@@ -38,6 +70,10 @@ namespace UnityEditor.Localization.Reporting
 
         public void Fail(string message)
         {
+            if (!m_Started)
+                return;
+
+            m_Started = false;
             LogStep();
             m_Summary.AppendFormat("Total time: {0:0.##}s", m_TotalTimeInSeconds);
             m_Summary.Insert(0, $"{m_Title}: Failed\n{message}\n");

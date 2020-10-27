@@ -120,18 +120,7 @@ namespace UnityEngine.Localization.Settings
         {
             foreach (var tableOp in TableOperations.Values)
             {
-                var table = tableOp.Result;
-                if (table != null)
-                {
-                    foreach (var tableEntry in table.Values)
-                    {
-                        if (tableEntry.AsyncOperation.HasValue)
-                        {
-                            Addressables.Release(tableEntry.AsyncOperation.Value);
-                            tableEntry.AsyncOperation = null;
-                        }
-                    }
-                }
+                tableOp.Result?.ReleaseAssets();
             }
 
             base.OnLocaleChanged(locale);

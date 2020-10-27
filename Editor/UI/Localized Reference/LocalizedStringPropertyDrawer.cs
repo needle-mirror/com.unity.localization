@@ -92,7 +92,7 @@ namespace UnityEditor.Localization.UI
             {
                 previewArguments.Clear();
                 previewArguments.AddRange(previewArgumentsList.list as List<Object>);
-                LocaleFields.ForEach(sf => sf.SmartEditor.ResetCache());
+                LocaleFields.ForEach(sf => sf.SmartEditor?.ResetCache());
             }
 
             void DrawPreviewElement(Rect rect, int index, bool isActive, bool isFocused)
@@ -122,7 +122,7 @@ namespace UnityEditor.Localization.UI
                 {
                     foreach (var field in LocaleFields)
                     {
-                        field.SmartEditor.RefreshData();
+                        field.SmartEditor?.RefreshData();
                     }
                 }
             }

@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.UI
 {
-    public class LocalizationTablesWindow : EditorWindow
+    public class LocalizationTablesWindow : EditorWindow, IHasCustomMenu
     {
         const string k_EditorPrefValueKey = "Localization-LocalizationTablesWindow-Selected-Tab";
         const string k_WindowTitle = "Localization Tables";
@@ -116,6 +116,27 @@ namespace UnityEditor.Localization.UI
             m_TabPanels[idx].style.display = DisplayStyle.Flex;
 
             SelectedTab = idx;
+        }
+
+        public void AddItemsToMenu(GenericMenu menu)
+        {
+            menu.AddItem(new GUIContent("Import/XLIFF Directory"), false, Plugins.XLIFF.MenuItems.ImportXliffDirectory);
+
+            int idx = m_TabPanels.FindIndex(p => p is EditAssetTables);
+
+            var panel = m_TabPanels[idx] as EditAssetTables;
+            if (SelectedTab != idx)
+                return;
+
+            var selectedCollection = panel.SelectedCollection as StringTableCollection;
+            if (selectedCollection != null)
+            {
+                menu.AddItem(new GUIContent("Import/XLIFF File"), false, () => Plugins.XLIFF.MenuItems.ImportIntoCollection(new MenuCommand(selectedCollection)));
+                menu.AddItem(new GUIContent("Import/CSV File"), false, () => Plugins.CSV.MenuItems.ImportCollection(new MenuCommand(selectedCollection)));
+                menu.AddItem(new GUIContent("Export/XLIFF"), false, () => Plugins.XLIFF.MenuItems.ExportCollection(new MenuCommand(selectedCollection)));
+                menu.AddItem(new GUIContent("Export/CSV"), false, () => Plugins.CSV.MenuItems.ExportCollection(new MenuCommand(selectedCollection)));
+                menu.AddItem(new GUIContent("Export/CSV(With Comments)"), false, () => Plugins.CSV.MenuItems.ExportCollectionWithComments(new MenuCommand(selectedCollection)));
+            }
         }
     }
 }

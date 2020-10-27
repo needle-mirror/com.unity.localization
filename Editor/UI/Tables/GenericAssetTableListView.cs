@@ -197,6 +197,10 @@ namespace UnityEditor.Localization.UI
                 }
             }
 
+            // We need to add the remaining tables that do not have any Locales.
+            for (int i = 0; i < projectTables.Count; ++i)
+                m_SortedTables.Add(projectTables[i].asset);
+
             // Tables with missing Locales
             projectTables.ForEach(tbl => columns.Add(new TableColumn<T1>(TableCollection, tbl.asset, null)));
 

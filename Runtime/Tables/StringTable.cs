@@ -17,7 +17,11 @@ namespace UnityEngine.Localization.Tables
         public string Value
         {
             get => Data.Localized;
-            set => Data.Localized = value;
+            set
+            {
+                Data.Localized = value;
+                m_FormatCache = null;
+            }
         }
 
         /// <summary>
@@ -35,6 +39,7 @@ namespace UnityEngine.Localization.Tables
             {
                 if (value)
                 {
+                    m_FormatCache = null;
                     AddTagMetadata<SmartFormatTag>();
                 }
                 else

@@ -91,7 +91,7 @@ namespace UnityEditor.Localization.UI
         {
             // Header
             position.height = EditorStyles.boldLabel.lineHeight;
-            property.isExpanded = EditorGUI.Foldout(position, property.isExpanded, Styles.smartFormatHeader);
+            property.isExpanded = EditorGUI.Foldout(position, property.isExpanded, Styles.smartFormatHeader, true);
             position.yMin += position.height + EditorGUIUtility.standardVerticalSpacing;
 
             if (!property.isExpanded)

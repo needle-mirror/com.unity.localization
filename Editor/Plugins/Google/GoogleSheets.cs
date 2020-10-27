@@ -349,31 +349,9 @@ namespace UnityEditor.Localization.Plugins.Google
 
         void GeneratePushRequests(int sheetId, StringTableCollection collection, IList<SheetColumn> columnMapping, List<Request> requestsToSend, ITaskReporter reporter)
         {
-            // Prepare the tables - Sort the keys and table entries
-            reporter?.ReportProgress("Sorting entries", 0.2f);
-            var sortedKeyEntries = collection.SharedData.Entries.OrderBy(e => e.Id);
-            var sortedTableEntries = new List<IOrderedEnumerable<StringTableEntry>>();
-            foreach (var table in collection.StringTables)
-            {
-                if (table != null)
-                {
-                    var s = table.Values.OrderBy(e => e.KeyId);
-                    sortedTableEntries.Add(s);
-                }
-            }
-
-            // Extract all the data so we can generate a request to send
-            // We go through each Key, extract the table entries for that key if they exists and then pass this to each column.
-            var currentTableRowIterator = sortedTableEntries.Select(o =>
-            {
-                var itr = o.GetEnumerator();
-                itr.MoveNext();
-                return itr;
-            }).ToArray();
-
             // Prepare the column requests.
             // We use a request per column as its possible that some columns in the sheet will be preserved and we don't want to write over them.
-            reporter?.ReportProgress("Generating column headers", 0.25f);
+            reporter?.ReportProgress("Generating column headers", 0);
             var columnSheetRequests = new List<PushColumnSheetRequest>(columnMapping.Count);
             foreach (var col in columnMapping)
             {
@@ -385,62 +363,25 @@ namespace UnityEditor.Localization.Plugins.Google
                 colRequest.AddHeader(header, note);
             }
 
-            // Populate the requests from the string tables
-            var currentTableRow = new StringTableEntry[sortedTableEntries.Count];
-            using (StringBuilderPool.Get(out var warningMessage))
+            // Prepare the tables - Sort the keys and table entries
+            reporter?.ReportProgress("Generating row enumerator", 0.1f);
+            var rowEnumerator = collection.GetRowEnumerator();
+
+            reporter?.ReportProgress("Generating push data", 0.2f);
+            foreach (var row in rowEnumerator)
             {
-                foreach (var keyRow in sortedKeyEntries)
+                // Now process each sheet column so they can update their requests.
+                foreach (var colReq in columnSheetRequests)
                 {
-                    // Extract the string table entries for this row
-                    for (int i = 0; i < currentTableRow.Length; ++i)
-                    {
-                        var tableRowItr = currentTableRowIterator[i];
-
-                        // Skip any table entries that may not not exist in Shared Data
-                        while (tableRowItr != null && tableRowItr.Current?.KeyId < keyRow.Id)
-                        {
-                            warningMessage.AppendLine($"{tableRowItr.Current.Table.name} - {tableRowItr.Current.KeyId} - {tableRowItr.Current.Value}");
-                            if (!tableRowItr.MoveNext())
-                            {
-                                currentTableRowIterator[i] = null;
-                                break;
-                            }
-                        }
-
-                        if (tableRowItr?.Current?.KeyId == keyRow.Id)
-                        {
-                            currentTableRow[i] = tableRowItr.Current;
-                            if (!tableRowItr.MoveNext())
-                            {
-                                currentTableRowIterator[i] = null;
-                            }
-                        }
-                        else
-                        {
-                            currentTableRow[i] = null;
-                        }
-                    }
-
-                    // Now process each sheet column so they can update their requests.
-                    foreach (var colReq in columnSheetRequests)
-                    {
-                        colReq.Column.PushCellData(keyRow, currentTableRow, out var value, out var note);
-                        colReq.AddRow(value, note);
-                    }
+                    colReq.Column.PushCellData(row.KeyEntry, row.TableEntries, out var value, out var note);
+                    colReq.AddRow(value, note);
                 }
+            }
 
-                foreach (var col in columnSheetRequests)
-                {
-                    col.Column.PushEnd();
-                    requestsToSend.AddRange(col.Requests);
-                }
-
-                // Any warning messages?
-                if (warningMessage.Length > 0)
-                {
-                    warningMessage.Insert(0, "Found entries in String Tables that are missing a Shared Table Data Entry. These entries will be ignored:\n");
-                    Debug.LogWarning(warningMessage.ToString(), collection);
-                }
+            foreach (var col in columnSheetRequests)
+            {
+                col.Column.PushEnd();
+                requestsToSend.AddRange(col.Requests);
             }
         }
 

@@ -14,6 +14,30 @@ namespace UnityEditor.Localization
     /// </summary>
     public abstract class LocalizationTableCollection : ScriptableObject, ISerializationCallbackReceiver
     {
+        /// <summary>
+        /// Represents a single Key and its localized values when using GetRowEnumerator.
+        /// </summary>
+        /// <typeparam name="TEntry"></typeparam>
+        public class Row<TEntry> where TEntry : TableEntry
+        {
+            /// <summary>
+            /// The <see cref="LocaleIdentifier"/> for each table value in <see cref="TableEntries"/>.
+            /// The order of the tables is guaranteed not to change.
+            /// </summary>
+            public LocaleIdentifier[] TableEntriesReference { get; internal set; }
+
+            /// <summary>
+            /// The Key for the current row.
+            /// </summary>
+            public SharedTableData.SharedTableEntry KeyEntry { get; internal set; }
+
+            /// <summary>
+            /// The entries taken from all the tables for the current <see cref="KeyEntry"/>.
+            /// The value may be null, such as when the table does not have a value for the current key.
+            /// </summary>
+            public TEntry[] TableEntries { get; internal set; }
+        }
+
         [SerializeField]
         LazyLoadReference<SharedTableData> m_SharedTableData;
 
@@ -124,8 +148,8 @@ namespace UnityEditor.Localization
             var undoGroup = Undo.GetCurrentGroup();
             if (createUndo)
                 Undo.RecordObject(SharedData, "Change Table Collection Name");
-            else
-                EditorUtility.SetDirty(SharedData);
+
+            EditorUtility.SetDirty(SharedData);
 
             SharedData.TableCollectionName = name;
             RefreshAddressables(createUndo);
@@ -181,8 +205,8 @@ namespace UnityEditor.Localization
 
             if (createUndo)
                 Undo.RecordObject(this, "Add table to collection");
-            else
-                EditorUtility.SetDirty(this);
+
+            EditorUtility.SetDirty(this);
 
             AddTableToAddressables(table, createUndo);
             m_Tables.Add(new LazyLoadReference<LocalizationTable> { asset = table });
@@ -243,8 +267,8 @@ namespace UnityEditor.Localization
 
             if (createUndo)
                 Undo.RecordObject(this, "Remove table from collection");
-            else
-                EditorUtility.SetDirty(this);
+
+            EditorUtility.SetDirty(this);
 
             RemoveTableFromAddressables(table, false);
             m_Tables.RemoveAt(index);
@@ -257,7 +281,7 @@ namespace UnityEditor.Localization
         /// </summary>
         /// <param name="localeIdentifier">The locale identifier that the table must have.</param>
         /// <returns>The table with the matching <see cref="LocaleIdentifier"/> or null if one does not exist in the collection.</returns>
-        public LocalizationTable GetTable(LocaleIdentifier localeIdentifier)
+        public virtual LocalizationTable GetTable(LocaleIdentifier localeIdentifier)
         {
             foreach (var tbl in m_Tables)
             {
@@ -322,6 +346,100 @@ namespace UnityEditor.Localization
         /// </summary>
         /// <param name="extension"></param>
         public void RemoveExtension(CollectionExtension extension) => m_Extensions.Remove(extension);
+
+        protected static IEnumerable<Row<TEntry>> GetRowEnumerator<TTable, TEntry>(IEnumerable<TTable> tables)
+            where TTable : DetailedLocalizationTable<TEntry>
+            where TEntry : TableEntry
+        {
+            if (tables == null)
+                throw new ArgumentNullException(nameof(tables));
+
+            SharedTableData sharedTableData = null;
+
+            // Prepare the tables - Sort the keys and table entries
+            var sortedTableEntries = new List<IOrderedEnumerable<TEntry>>();
+            foreach (var table in tables)
+            {
+                if (sharedTableData == null)
+                {
+                    sharedTableData = table.SharedData;
+                }
+                else if (sharedTableData != table.SharedData)
+                {
+                    throw new Exception("All tables must share the same SharedData.");
+                }
+
+                if (table != null)
+                {
+                    var s = table.Values.OrderBy(e => e.KeyId);
+                    sortedTableEntries.Add(s);
+                }
+            }
+
+            var sortedKeyEntries = sharedTableData.Entries.OrderBy(e => e.Id);
+
+            var currentTableRowIterator = sortedTableEntries.Select(o =>
+            {
+                var itr = o.GetEnumerator();
+                itr.MoveNext();
+                return itr;
+            }).ToArray();
+
+            var currentRow = new Row<TEntry>
+            {
+                TableEntriesReference = tables.Select(t => t.LocaleIdentifier).ToArray(),
+                TableEntries = new TEntry[sortedTableEntries.Count]
+            };
+
+            using (StringBuilderPool.Get(out var warningMessage))
+            {
+                // Extract the table row values for this key.
+                // If the table has a key value then add it to currentTableRow otherwise use null.
+                foreach (var keyRow in sortedKeyEntries)
+                {
+                    currentRow.KeyEntry = keyRow;
+
+                    // Extract the string table entries for this row
+                    for (int i = 0; i < currentRow.TableEntries.Length; ++i)
+                    {
+                        var tableRowItr = currentTableRowIterator[i];
+
+                        // Skip any table entries that may not not exist in Shared Data
+                        while (tableRowItr != null && tableRowItr.Current?.KeyId < keyRow.Id)
+                        {
+                            warningMessage.AppendLine($"{tableRowItr.Current.Table.name} - {tableRowItr.Current.KeyId} - {tableRowItr.Current.Data.Localized}");
+                            if (!tableRowItr.MoveNext())
+                            {
+                                currentTableRowIterator[i] = null;
+                                break;
+                            }
+                        }
+
+                        if (tableRowItr?.Current?.KeyId == keyRow.Id)
+                        {
+                            currentRow.TableEntries[i] = tableRowItr.Current;
+                            if (!tableRowItr.MoveNext())
+                            {
+                                currentTableRowIterator[i] = null;
+                            }
+                        }
+                        else
+                        {
+                            currentRow.TableEntries[i] = null;
+                        }
+                    }
+
+                    yield return currentRow;
+                }
+
+                // Any warning messages?
+                if (warningMessage.Length > 0)
+                {
+                    warningMessage.Insert(0, "Found entries in Tables that were missing a Shared Table Data Entry. These entries were ignored:\n");
+                    Debug.LogWarning(warningMessage.ToString(), sharedTableData);
+                }
+            }
+        }
 
         /// <summary>
         /// Can this table be added to the collection?

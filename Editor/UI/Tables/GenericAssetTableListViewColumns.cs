@@ -289,7 +289,7 @@ namespace UnityEditor.Localization.UI
         public KeyIdColumn(SharedTableData sharedData)
         {
             minWidth = 50;
-            maxWidth = 100;
+            maxWidth = 150;
             Keys = sharedData;
             headerContent = new GUIContent("Key Id");
             headerTextAlignment = TextAlignment.Center;

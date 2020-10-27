@@ -15,8 +15,8 @@ namespace UnityEngine.Localization
         AsyncOperationHandle<IList<IResourceLocation>> m_LoadResourcesOperation;
         AsyncOperationHandle<IList<TTable>> m_LoadTablesOperation;
 
-        GroupIAsyncOperation m_PreloadTableContentsGroupOperation;
         List<AsyncOperationHandle> m_PreloadTableContentsOperations = new List<AsyncOperationHandle>();
+        List<string> m_ResourceKeys = new List<string>();
         float m_Progress;
 
         protected override float Progress => m_Progress;
@@ -56,7 +56,10 @@ namespace UnityEngine.Localization
 
             m_Progress = 0;
             var localeLabel = AddressHelper.FormatAssetLabel(selectedLocale.Identifier);
-            m_LoadResourcesOperation = Addressables.LoadResourceLocationsAsync(new object[] { localeLabel, LocalizationSettings.PreloadLabel }, Addressables.MergeMode.Intersection, typeof(TTable));
+            m_ResourceKeys.Clear();
+            m_ResourceKeys.Add(localeLabel);
+            m_ResourceKeys.Add(LocalizationSettings.PreloadLabel);
+            m_LoadResourcesOperation = Addressables.LoadResourceLocationsAsync(m_ResourceKeys, Addressables.MergeMode.Intersection, typeof(TTable));
 
             if (!m_LoadResourcesOperation.IsDone)
                 m_LoadResourcesOperation.Completed += LoadTables;
@@ -124,13 +127,11 @@ namespace UnityEngine.Localization
                 return;
             }
 
-            m_PreloadTableContentsGroupOperation = m_PreloadTableContentsGroupOperation ?? (GroupIAsyncOperation)LocalizationSettings.ResourceManager.Allocator.New(typeof(GroupIAsyncOperation), typeof(GroupIAsyncOperation).GetHashCode());
-            m_PreloadTableContentsGroupOperation.Init(m_PreloadTableContentsOperations);
-            var groupOperation = LocalizationSettings.ResourceManager.StartOperation(m_PreloadTableContentsGroupOperation, default);
-
+            var groupOperation = LocalizationSettings.ResourceManager.CreateGenericGroupOperation(m_PreloadTableContentsOperations);
             if (!groupOperation.IsDone)
                 groupOperation.CompletedTypeless += FinishPreloading;
-            FinishPreloading(groupOperation);
+            else
+                FinishPreloading(groupOperation);
         }
 
         void FinishPreloading(AsyncOperationHandle op)

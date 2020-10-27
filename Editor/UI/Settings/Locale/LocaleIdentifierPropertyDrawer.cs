@@ -60,7 +60,7 @@ namespace UnityEditor.Localization.UI
         public override void OnGUI(LocaleIdentifierPropertyDrawerData data, Rect position, SerializedProperty property, GUIContent label)
         {
             var foldRect = new Rect(position.x, position.y, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight);
-            property.isExpanded = EditorGUI.Foldout(foldRect, property.isExpanded, label);
+            property.isExpanded = EditorGUI.Foldout(foldRect, property.isExpanded, label, true);
 
             EditorGUI.BeginChangeCheck();
             EditorGUI.BeginProperty(foldRect, GUIContent.none, property);

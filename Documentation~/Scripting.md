@@ -1,29 +1,20 @@
 # Scripting
 
-The common ways to interact with the Localization System using scripts are covered here.
+This documentation describes the most common ways to interact with the Localization System via C# scripts.
 
-## Localized Reference
+You can download additional scripting examples from the package manager window, in the Localization package’s **Samples** section. 
 
-A Localized Reference allows for referencing an entry inside of a Table. Internally it contains a TableReference and a TableEntryReference.
+## LocalizedString
 
-### TableReference
-A TableReference refers to a Table, tables can be referenced by either by using their **Name** or by a name **Guid**. By using a name Guid it is safe to rename the table without losing all references. The name Guid is taken from the **KeyDatabase** asset Guid.
-The TableReference provides a simple way to reference a table either by the name of the Guid, it also features inspector and serialization support.
+A `LocalizedString` accesses specific entries from within a [String Table](StringTables.md).
 
-### TableEntryReference
-A TableEntryReference refers to a specific entry within a Table. It is possible to reference a table entry by either using the **Name** or **Key** of the entry or by using the **Key Id**, an unsigned integer. The TableEntryReference provides a simple way to reference a table entry by the name or Id, it also features inspector and serialization support.
+You can use the `LocalizedString` in a user script. It serializes and displays its own editor, which you can use to select the table and table entry, and edit the localized values inline, without opening the Tables window.
 
-### LocalizedString
-The LocalizedString is a Localized Reference that can be used to reference a [String Table](StringTables.md) entry.
-The LocalizedString editor allows for selecting String Table Entries, Creating new Table entries, Creating new String Tables and new Locales.
+![The LocalizedString editor in Unity.](images/LocalizedString_Inspector.png)
 
-![The LocalizedString editor.](images/LocalizedString_Inspector.png)
+The `LocalizedString` provides a `StringChanged` event. The script calls the event whenever the selected Locale changes. This makes your code simpler and more efficient, because the script only calls it when it needs to update the `LocalizedString`.
 
-![String Table Entries can be selected through the inspector.](images/LocalizedStringReference_Select.png)
-
-The following simple example shows how a LocalizedString can use used to Localize some GUI text.
-
-```
+```CSharp
 using UnityEngine;
 using UnityEngine.Localization;
 
@@ -31,20 +22,36 @@ public class LocalizedStringExample : MonoBehaviour
 {
     public LocalizedString myString;
 
+    string localizedText;
+
+    /// <summary>
+    /// Register a ChangeHandler. This is called whenever the string needs to be updated.
+    /// </summary>
+    void OnEnable()
+    {
+        myString.StringChanged += UpdateString;
+    }
+
+    private void OnDisable()
+    {
+        myString.StringChanged -= UpdateString;
+    }
+
+    void UpdateString(string s)
+    {
+        localizedText = s;
+    }
+
     void OnGUI()
     {
-        var localizedText = myString.GetLocalizedString();
-        if (localizedText.IsDone)
-        {
-            GUILayout.Label(localizedText.Result);
-        }
+        EditorGUILayout.LabelField(localizedText);
     }
 }
 ```
 
-The LocalizedString also provides a **ChangeHandler**, this will be called whenever the selected Locale is changed allowing for more efficient code that is only called when an update is required.
+The `LocalizedString` also provides a `ChangeHandler`. The script calls a `ChangeHandler` whenever the selected Locale changes. This makes your code more efficient, because the script only calls it when it needs to update the `LocalizedString`.
 
-```
+```CSharp
 using UnityEngine;
 using UnityEngine.Localization;
 
@@ -80,13 +87,11 @@ public class LocalizedStringExample : MonoBehaviour
 }
 ```
 
-### Dynamic Strings
+## Dynamic Strings
 
-At times it may be necessary to update a localized string, such as when using [Smart Strings](SmartStrings.md) or *String.Format* with arguments that have since changed.
-Calling **GetLocalizedString** with the arguments will always update the string.
-When using a **ChangeHandler**, the **RefreshString** function can be used to request an update and the **Arguments** property can be used to configure the arguments used to format the string.
+Sometimes you might need to update a localized string, such as when using [Smart Strings](SmartStrings.md) or `String.Format` with arguments that have since changed. Calling `GetLocalizedString` with the arguments always updates the string. When you use the `StringChanged` event, you can use the `RefreshString` function to request an update, and the `Arguments` property to configure the arguments that format the string.
 
-```
+```CSharp
 using UnityEngine;
 using UnityEngine.Localization;
 
@@ -102,17 +107,17 @@ public class LocalizedStringExample : MonoBehaviour
     public float TimeNow => Time.time;
 
     /// <summary>
-    /// Register a ChangeHandler. This will be called whenever we need to update our string.
+    /// Register a ChangeHandler. This is called whenever we need to update our string.
     /// </summary>
     void OnEnable()
     {
         myString.Arguments.Add(this); // Add our new argument
-        myString.RegisterChangeHandler(UpdateString);
+        myString.StringChanged += UpdateString;
     }
 
     private void OnDisable()
     {
-        myString.ClearChangeHandler();
+        myString.StringChanged -= UpdateString;
     }
 
     void UpdateString(string s)
@@ -122,24 +127,62 @@ public class LocalizedStringExample : MonoBehaviour
 
     void OnGUI()
     {
-        // This will either call UpdateString immediately (if the table is loaded) or when the table is available.
+        // This calls UpdateString immediately (if the table is loaded) or when the table is available.
         myString.RefreshString();
         GUILayout.Label(localizedText);
     }
 }
 ```
 
+## LocalizedAsset
+
+LocalizedAsset is a generic class that accesses localized versions of Unity assets from within an [Asset Table](AssetTables.md).
+
+You can use the `LocalizedAsset` in a user script. It serializes and displays its own editor, which you can use to select the table and table entry, and edit the localized values inline, without opening the Tables window.
+
+![The LocalizedAsset editor in Unity.](images/LocalizedTexture_Inspector.png)
+
+The `LocalizedString` provides an `AssetChanged` event. The script calls the event whenever a new localized asset is available, such as when the game language changes. This makes your code simpler and more efficient, because the script only calls it when it needs to update the `LocalizedAsset`.
+
+To use a `LocalizedAsset`, you need to create a concrete version of the class and mark it as `Serializable`.
+
+For example, to support localizing font assets, you could define the following class:
+
+```CSharp
+[Serializable]
+public class LocalizedFont : LocalizedAsset<Font> {}
+```
+
+In this example, you can now add `LocalizedFont` to a script, and `LocalizedString` will call the `AssetChanged` event when a localized Font asset is available.
+
+The following Unity assets are already supported:
+
+| **Type**   | **Class**       |
+| ---------- | --------------- |
+| Texture    | `LocalizedTexture`
+| AudioClip  | `LocalizedAudioClip`
+| Sprite     | `LocalizedSprite`
+| GameObject | `LocalizedGameObject`
+
+### TableReference
+
+Use the `TableReference` struct to reference an Asset Table or String Table. To reference a table, you can use either the table's name or its unique GUID. It is usually safer to use the GUID, because you might decide to change the table name in future, which would require you to manually update your references, but the GUID always stays the same. 
+
+### TableEntryReference
+
+Use the `TableEntryReference` struct to reference an entry in an Asset Table or String Table. To reference a table, you can use either the table entry's name or its unique Key ID, an unsigned long integer. It is usually safer to use the Key ID, because you might decide to change the table entry name in future, which would require you to manually update your references, but the Key ID always stays the same. 
+
 ## Using AsyncOperationHandle
 
-The localization system is designed so that Unity does not need to hold all localized Assets in memory ready for use, but can instead load them on demand when it needs them, and unload them when it no longer needs them. Because of this, localized Assets might not be immediately available, and Unity might need to load them from disk or fetch them from a server. To facilitate this, Unity uses the [AsyncOperationHandle](https://docs.unity3d.com/Packages/com.unity.addressables@latest?subfolder=/manual/AddressableAssetsAsyncOperationHandle.html) as an interface to all requests.
+Unity does not hold all localized assets in memory ready for use. Instead, it loads them on demand when it needs them, and unloads them when it no longer needs them. Because of this, localized Assets might not be immediately available, and Unity might need to load them from disk or fetch them from a server. To facilitate this, Unity uses the [AsyncOperationHandle](https://docs.unity3d.com/Packages/com.unity.addressables@latest?subfolder=/manual/AddressableAssetsAsyncOperationHandle.html) as an interface to all requests.
+When an Asset is not immediately available, the localization system returns an `AsyncOperationHandle`. When the operation has finished, the `AsyncOperationHandle` provides a `Completed` event to notify Unity. It calls this during `LateUpdate`. If the request has already completed (for example, when the requested data is already loaded from a previous request, or during preloading), you can check the `IsDone` property for immediate access via the `Result` property. Alternatively, the `Completed` event still occurs in `LateUpdate`, allowing for all code to follow the same path. You can also yield on an `AsyncOperationHandle` inside a coroutine.
 
-When an Asset is not immediately available, the localization system returns an *AsyncOperationHandle*. The *AsyncOperationHandle* provides a Completed event that notifies Unity when the operation has finished. It calls this during *LateUpdate*. If the request has already been completed, such as when the requested data is already loaded from a previous request or during preloading, then the *IsDone* property can be used to check for immediate access through the *Result* property, alternative the Completed event still occurs in the LateUpdate, allowing for all code to follow the same path. You can also yield on an *AsyncOperationHandle* inside of a coroutine.
+## Make a basic Locale selection menu
 
-## A Simple Locale Selection Menu
+This example demonstrates how to create a way for the person playing a game to select the language (defined in the Localization system by Locale) they want to use in the game. 
+To add a UI dropdown menu to the Scene, go to **GameObject > UI > Dropdown**, and attach the following script:
 
-Players need a way to select the Locale they want to use in the game. To add a UI Dropdown menu to the Scene, go to **GameObject > UI > Dropdown**, and attach the following script:
-
-```
+```CSharp
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -152,7 +195,7 @@ public class LocaleDropdown : MonoBehaviour
 
     IEnumerator Start()
     {
-        // Wait for the localization system to initialize, loading Locales, preloading etc.
+        // Wait for the localization system to initialize
         yield return LocalizationSettings.InitializationOperation;
 
         // Generate list of available Locales
@@ -177,3 +220,5 @@ public class LocaleDropdown : MonoBehaviour
     }
 }
 ```
+
+You can see a more advanced version of this script in the Localization package samples.

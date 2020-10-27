@@ -13,6 +13,8 @@ namespace UnityEditor.Localization.UI
         ProjectTablesPopup m_AssetTablesField;
         TableEditor m_CurrentEditor;
 
+        public LocalizationTableCollection SelectedCollection => m_AssetTablesField.value;
+
         public EditAssetTables()
         {
             var asset = Resources.GetTemplateAsset(nameof(EditAssetTables));

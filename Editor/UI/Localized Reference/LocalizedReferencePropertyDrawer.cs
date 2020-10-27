@@ -321,23 +321,10 @@ namespace UnityEditor.Localization.UI
                     // Attempt to create a new key with a set default name
                     var keys = data.SelectedTableCollection.SharedData;
 
-                    const string newKeyName = "New Entry";
-                    var keyToTry = newKeyName;
-                    SharedTableData.SharedTableEntry entry = null;
-                    int counter = 1;
-                    while (entry == null)
-                    {
-                        if (keys.Contains(keyToTry))
-                        {
-                            keyToTry = $"{newKeyName} {counter++}";
-                        }
-                        else
-                        {
-                            Undo.RecordObject(keys, "Add entry.");
-                            entry = keys.AddKey(keyToTry);
-                            EditorUtility.SetDirty(keys);
-                        }
-                    }
+                    Undo.RecordObject(keys, "Add entry.");
+                    var entry = keys.AddKey();
+                    EditorUtility.SetDirty(keys);
+
                     data.SelectedTableEntry = entry;
                     LocalizationEditorSettings.EditorEvents.RaiseTableEntryAdded(data.SelectedTableCollection, entry);
                 }

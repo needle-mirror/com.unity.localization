@@ -36,6 +36,7 @@ namespace UnityEditor.Localization.Plugins.Google
             public static readonly GUIContent addSheet = new GUIContent("Add Sheet");
             public static readonly GUIContent createNewSpredsheet = new GUIContent("Create New Spreadsheet");
             public static readonly GUIContent extractColumns = new GUIContent("Extract Columns From Sheet");
+            public static readonly GUIContent header = new GUIContent("Google Sheets");
             public static readonly GUIContent newSheetName = new GUIContent("Sheet Name");
             public static readonly GUIContent noSheetsFound = new GUIContent("No Sheets Could Be Found");
             public static readonly GUIContent mappedColumns = new GUIContent("Mapped Columns");
@@ -50,15 +51,6 @@ namespace UnityEditor.Localization.Plugins.Google
         /// Keep track of any Async push requests in case the property drawer is closed/reopened.
         /// </summary>
         static List<(LocalizationTableCollection collection, Task pushTask)> s_PushRequests = new List<(LocalizationTableCollection, Task)>();
-
-        ITaskReporter GetNewTaskReporter()
-        {
-            #if UNITY_2020_1_OR_NEWER
-            return new ProgressReporter();
-            #else
-            return new ProgressBarReporter();
-            #endif
-        }
 
         public override GoogleSheetsExtensionPropertyDrawerData CreatePropertyData(SerializedProperty property)
         {
@@ -156,6 +148,9 @@ namespace UnityEditor.Localization.Plugins.Google
         {
             position.yMin += EditorGUIUtility.standardVerticalSpacing;
             position.height = EditorGUIUtility.singleLineHeight;
+
+            EditorGUI.LabelField(position, Styles.header, EditorStyles.boldLabel);
+            position.MoveToNextLine();
 
             EditorGUI.PropertyField(position, data.m_SheetsServiceProvider);
             position.MoveToNextLine();
@@ -294,7 +289,7 @@ namespace UnityEditor.Localization.Plugins.Google
                         var target = property.GetActualObjectForSerializedProperty<GoogleSheetsExtension>(fieldInfo);
                         var selectedCollection = GetSelectedColumns(data.columnsList.index, property);
                         var collection = target.TargetCollection as StringTableCollection;
-                        data.pushTask = google.PushStringTableCollectionAsync(data.m_SheetId.intValue, collection, selectedCollection, GetNewTaskReporter());
+                        data.pushTask = google.PushStringTableCollectionAsync(data.m_SheetId.intValue, collection, selectedCollection, TaskReporter.CreateDefaultReporter());
                         s_PushRequests.Add((collection, data.pushTask));
                     }
                     if (GUI.Button(splitRow.right, Styles.pullSelected))
@@ -302,7 +297,7 @@ namespace UnityEditor.Localization.Plugins.Google
                         var google = GetGoogleSheets(data);
                         var target = property.GetActualObjectForSerializedProperty<GoogleSheetsExtension>(fieldInfo);
                         var selectedCollection = GetSelectedColumns(data.columnsList.index, property);
-                        google.PullIntoStringTableCollection(data.m_SheetId.intValue, target.TargetCollection as StringTableCollection, selectedCollection, data.m_RemoveMissingPulledKeys.boolValue, GetNewTaskReporter(), true);
+                        google.PullIntoStringTableCollection(data.m_SheetId.intValue, target.TargetCollection as StringTableCollection, selectedCollection, data.m_RemoveMissingPulledKeys.boolValue, TaskReporter.CreateDefaultReporter(), true);
                     }
                 }
 
@@ -313,14 +308,14 @@ namespace UnityEditor.Localization.Plugins.Google
                     var google = GetGoogleSheets(data);
                     var target = property.GetActualObjectForSerializedProperty<GoogleSheetsExtension>(fieldInfo);
                     var collection = target.TargetCollection as StringTableCollection;
-                    data.pushTask = google.PushStringTableCollectionAsync(data.m_SheetId.intValue, collection, target.Columns, GetNewTaskReporter());
+                    data.pushTask = google.PushStringTableCollectionAsync(data.m_SheetId.intValue, collection, target.Columns, TaskReporter.CreateDefaultReporter());
                     s_PushRequests.Add((collection, data.pushTask));
                 }
                 if (GUI.Button(splitRow.right, Styles.pull))
                 {
                     var google = GetGoogleSheets(data);
                     var target = property.GetActualObjectForSerializedProperty<GoogleSheetsExtension>(fieldInfo);
-                    google.PullIntoStringTableCollection(data.m_SheetId.intValue, target.TargetCollection as StringTableCollection, target.Columns, data.m_RemoveMissingPulledKeys.boolValue, GetNewTaskReporter(), true);
+                    google.PullIntoStringTableCollection(data.m_SheetId.intValue, target.TargetCollection as StringTableCollection, target.Columns, data.m_RemoveMissingPulledKeys.boolValue, TaskReporter.CreateDefaultReporter(), true);
                 }
             }
         }
@@ -356,7 +351,7 @@ namespace UnityEditor.Localization.Plugins.Google
         public override float GetPropertyHeight(GoogleSheetsExtensionPropertyDrawerData data, SerializedProperty property, GUIContent label)
         {
             float height = EditorGUIUtility.standardVerticalSpacing; // top padding
-            height += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * 9;
+            height += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * 10;
             height += data.columnsList.GetHeight() + EditorGUIUtility.standardVerticalSpacing;
             return height;
         }

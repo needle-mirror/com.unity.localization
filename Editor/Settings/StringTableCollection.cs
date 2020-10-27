@@ -1,6 +1,7 @@
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization
@@ -20,5 +21,63 @@ namespace UnityEditor.Localization
         /// A helper property which is the contents of <see cref="Tables"/> loaded and cast to <see cref="StringTable"/>.
         /// </summary>
         public virtual ReadOnlyCollection<StringTable> StringTables => new ReadOnlyCollection<StringTable>(Tables.Select(t => t.asset as StringTable).ToList().AsReadOnly());
+
+        /// <summary>
+        /// Returns an enumerator that can be used to step through each key and its localized values, such as in a foreach loop.
+        /// Internally <see cref="SharedTableData"/> and <see cref="StringTable"/>'s are separate assets with their own internal list of values.
+        /// This means that when iterating through each key a lookup must be made in each table in order to retrieve the localized value,
+        /// this can become slow when dealing with a large number of tables and entries.
+        /// GetRowEnumerator improves this process by first sorting the multiple internal lists and then stepping through each conceptual row at a time.
+        /// It handles missing keys and table entries and provides a more efficient and faster way to iterate through the tables.
+        /// </summary>
+        /// <example>
+        /// This example shows how a StringTableCollection could be exported as CSV.
+        /// <code>
+        /// [MenuItem("CONTEXT/StringTableCollection/Print CSV")]
+        /// public static void CreateCSV(MenuCommand command)
+        /// {
+        ///     var collection = command.context as StringTableCollection;
+        ///
+        ///     StringBuilder sb = new StringBuilder();
+        ///
+        ///     // Header
+        ///     sb.Append("Key,");
+        ///     foreach (var table in collection.StringTables)
+        ///     {
+        ///         sb.Append(table.LocaleIdentifier);
+        ///         sb.Append(",");
+        ///     }
+        ///     sb.Append("\n");
+        ///
+        ///     // Add each row
+        ///     foreach (var row in collection.GetRowEnumerator())
+        ///     {
+        ///         // Key column
+        ///         sb.Append(row.KeyEntry.Key);
+        ///         sb.Append(",");
+        ///
+        ///         foreach (var tableEntry in row.TableEntries)
+        ///         {
+        ///             // The table entry will be null if no entry exists for this key
+        ///             sb.Append(tableEntry == null ? string.Empty : tableEntry.Value);
+        ///             sb.Append(",");
+        ///         }
+        ///         sb.Append("\n");
+        ///     }
+        ///
+        ///     // Print the contents. You could save it to a file here.
+        ///     Debug.Log(sb.ToString());
+        /// }
+        /// </code>
+        /// </example>
+        /// <returns></returns>
+        public IEnumerable<Row<StringTableEntry>> GetRowEnumerator() => GetRowEnumerator<StringTable, StringTableEntry>(StringTables);
+
+        /// <summary>
+        /// <inheritdoc cref="GetRowEnumerator"/>
+        /// </summary>
+        /// <param name="tables"></param>
+        /// <returns></returns>
+        public static IEnumerable<Row<StringTableEntry>> GetRowEnumerator(params StringTable[] tables) => GetRowEnumerator<StringTable, StringTableEntry>(tables);
     }
 }

@@ -1,6 +1,34 @@
 # Changelog
 All notable changes to this package will be documented in this file.
 
+## [0.9.0] - 2020-10-27
+
+### Added
+- Added support for exporting and importing `StringTables` and `StringTableCollections` as XML Localisation Interchange File Format (XLIFF). XLIFF version [1.2](https://docs.oasis-open.org/xliff/v1.2/os/xliff-core.html) and [2.0](https://docs.oasis-open.org/xliff/xliff-core/v2.0/os/xliff-core-v2.0-os.html) are both supported. See docs for further details.
+- Added support for exporting and importing `StringTableCollections` as Comma Separated Values (CSV).
+- Added `GetRowEnumerator` to `AssetTableCollection` and `StringTableCollection`. This can be used to step through each key and its localized values.
+- Added `ReleaseAssets` to allow for forcing all `AssetTable` assets to be released. This is called automatically when the `LocalizationSettings.SelectedLocale` is changed.
+
+### Changed
+- Updated to Addressables version **1.16.6**.
+- Editor Foldout fields now toggle when clicking on the label.
+- When enabling preload on Asset Tables, all assets will now be preloaded by default instead of requiring the `PreloadAssetTable` Metadata. Adding a `PreloadAssetTable` can be used to disable this default behavior. ([LOC-114](https://issuetracker.unity3d.com/issues/localized-audio-clips-fail-to-load-on-first-retrieval-when-using-loadassetasync))
+- `SmartFormat` editor will now show parsing and format errors in the preview field.
+- Added title header to Google Sheets extension property drawer.
+
+### Fixed
+- Fixed smart `StringTableEntry` returning the wrong localized string after its value was changed.
+- Fixed `LocalizedAsset` from loading when it contained an empty reference. ([LOC-109](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-109))
+- Fixed `InvalidCastException` when calling `AssetTable.GetAssetAsync` and the table was preloaded. ([LOC-114](https://issuetracker.unity3d.com/issues/localized-audio-clips-fail-to-load-on-first-retrieval-when-using-loadassetasync))
+- Fixed bug in `PreloadDatabaseOperation` that caused it to complete before preloading was finished. ([LOC-114](https://issuetracker.unity3d.com/issues/localized-audio-clips-fail-to-load-on-first-retrieval-when-using-loadassetasync))
+- Fixed Tables Window throwing exceptions when editing a collection which had 1 or more tables without a matching locale in the project.
+- Fixed `ProjectSettings.asset` being modified on disc during a build.
+- Fixed `LocalizedString` property drawer throwing `NullReferenceException` when selecting a Localization Table Collection which did not have a table for every Locale in the project. ([LOC-118](https://issuetracker.unity3d.com/issues/nullreferenceexception-thrown-when-editing-a-localizedstring-linked-to-a-collection-that-does-not-have-a-table-for-every-project-locale))
+- Calling `AddKey` will now check if the new Id is already in use and generate a new Id if it is. This means it is now safe to use custom Id values.
+- `SharedTableData` that contains an empty Guid will now be repaired when loaded in the editor.
+- Fixed `SmartFormat` editor becoming corrupt when showing preview and `ThrowException` action was enabled in ParseError or FormatError. [(LOC-119)(https://issuetracker.unity3d.com/issues/editor-ui-is-broken-when-editing-a-smart-string-and-throwexceptions-error-mode-is-enabled)]
+- Increased max width for `Localization Tables` window Id field so large keys can be fully visible.
+
 ## [0.8.1] - 2020-08-19
 
 ### Fixed
@@ -50,7 +78,6 @@ All notable changes to this package will be documented in this file.
 ## [0.7.1] - 2020-06-05
 
 ### Added
-
 - Added `StringTableCollection` and `AssetTableCollection`. These are editor only assets for controlling a collection of string or asset tables. Tables that are not part of a collection will now be ignored. To upgrade old table assets select one and press the `Create Collection` button in the inspector.
 - Added Google Sheets support. A `StringTableCollection` can by pushed and pulled by using the `Google Sheets Extension` in the editor or through script with the `GoogleSheets` class. Table entry values, comments and metadata can be synced to a Google Sheet. This is currently an Editor only feature.
 - Added `DisplayName` attribute. This is an optional attribute for `Metadata` and `CollectionExtensions` so that a custom name that can be displayed in the editor instead of the class name.

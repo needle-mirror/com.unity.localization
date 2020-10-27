@@ -21,7 +21,8 @@
         "Google.Apis.Core.dll",
         "Google.Apis.Auth.dll",
         "Newtonsoft.Json.dll",
-        "Google.Apis.Auth.PlatformServices.dll"
+        "Google.Apis.Auth.PlatformServices.dll",
+        "CsvHelper.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

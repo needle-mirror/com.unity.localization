@@ -1,7 +1,7 @@
 {
   "name": "com.unity.localization",
   "displayName": "Localization",
-  "version": "0.8.1-preview",
+  "version": "0.9.0-preview",
   "unity": "2019.3",
   "description": "Preview of player localization system. Provides tools for localizing your built application.",
   "keywords": [
@@ -10,18 +10,23 @@
     "language"
   ],
   "dependencies": {
-    "com.unity.addressables": "1.7.5",
+    "com.unity.addressables": "1.16.6",
     "com.unity.nuget.newtonsoft-json": "2.0.0"
   },
   "upmCi": {
-    "footprint": "82221050eec4aa67cc5b41f58e752a0152e823c7"
+    "footprint": "0bedaf552685d2cf1e48ba5577b1caf47384c367"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.localization.git",
     "type": "git",
-    "revision": "791a470597534ca7222c6ba4927509d54dc3d24a"
+    "revision": "c71b782d7d729795d83fdb97cdb34d2b9565df7a"
   },
   "samples": [
+    {
+      "displayName": "CSV",
+      "description": "These samples show how String Table Collections can be exported and imported from CSV files.",
+      "path": "Samples~/CSV"
+    },
     {
       "displayName": "Creating Locales",
       "description": "This sample shows how to Locales including custom ones through script.",

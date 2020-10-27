@@ -5,14 +5,14 @@ namespace UnityEngine.Localization.Metadata
 {
     /// <summary>
     /// Used to indicate if the assets within an <see cref="AssetTable"/> should all be preloaded when the table is loaded or should be loaded on demand(default).
-    /// If no <see cref="PreloadAssetTableMetadata"/> is attached to a <see cref="AssetTable"/> then the default behaviour is <see cref="PreloadBehaviour.NoPreload"/>.
+    /// If no <see cref="PreloadAssetTableMetadata"/> is attached to a <see cref="AssetTable"/> then the default behavior is <see cref="PreloadBehaviour.PreloadAll"/>.
     /// </summary>
-    [Metadata(AllowedTypes = MetadataType.AssetTable | MetadataType.SharedTableData)]
+    [Metadata(AllowedTypes = MetadataType.AssetTable | MetadataType.SharedTableData, MenuItem = "Preload Assets")]
     [Serializable]
     public class PreloadAssetTableMetadata : IMetadata
     {
         /// <summary>
-        /// The preload behaviour to be applied to the <see cref="AssetTable"/>.
+        /// The preload behavior to be applied to the <see cref="AssetTable"/>.
         /// </summary>
         public enum PreloadBehaviour
         {

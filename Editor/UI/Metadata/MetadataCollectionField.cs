@@ -40,7 +40,7 @@ namespace UnityEditor.Localization.UI
         {
             // Label
             var rowPosition = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
-            data.m_ItemsProperty.isExpanded = EditorGUI.Foldout(rowPosition, data.m_ItemsProperty.isExpanded, label);
+            data.m_ItemsProperty.isExpanded = EditorGUI.Foldout(rowPosition, data.m_ItemsProperty.isExpanded, label, true);
             rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
 
             // Adding a new item is deferred so that Undo will work.

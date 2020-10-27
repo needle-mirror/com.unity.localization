@@ -47,7 +47,7 @@ namespace UnityEditor.Localization.UI
         public override void OnGUI(ExpanderPropertyDrawerData data, Rect position, SerializedProperty property, GUIContent label)
         {
             position.height = EditorGUIUtility.singleLineHeight;
-            property.isExpanded = EditorGUI.Foldout(position, property.isExpanded, label);
+            property.isExpanded = EditorGUI.Foldout(position, property.isExpanded, label, true);
             position.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 
             if (property.isExpanded)

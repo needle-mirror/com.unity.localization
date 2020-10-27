@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Localization.Metadata;
@@ -52,7 +53,6 @@ namespace UnityEngine.Localization.Tables
     public class AssetTable : DetailedLocalizationTable<AssetTableEntry>, IPreloadRequired
     {
         AsyncOperationHandle? m_PreloadOperationHandle;
-        GroupIAsyncOperation m_PreloadOperation;
         List<AsyncOperationHandle> m_AssetPreloadOperations;
 
         ResourceManager ResourceManager => LocalizationSettings.ResourceManager;
@@ -73,24 +73,24 @@ namespace UnityEngine.Localization.Tables
         {
             // Check the metadata to see if we should preload. First we check the table preload data, if one does not exist then check the key database(global).
             var preload = GetMetadata<PreloadAssetTableMetadata>() ?? SharedData.Metadata.GetMetadata<PreloadAssetTableMetadata>();
-            if (preload != null)
+
+            // If no preload metadata was found then we will preload all assets by default.
+            if (preload?.Behaviour != PreloadAssetTableMetadata.PreloadBehaviour.NoPreload)
             {
-                m_PreloadOperation = m_PreloadOperation ?? new GroupIAsyncOperation();
                 m_AssetPreloadOperations = m_AssetPreloadOperations ?? new List<AsyncOperationHandle>();
                 m_AssetPreloadOperations.Clear();
 
-                if (preload.Behaviour == PreloadAssetTableMetadata.PreloadBehaviour.PreloadAll)
+                // Preload all
+                foreach (var entry in Values)
                 {
-                    foreach (var entry in Values)
+                    if (!entry.IsEmpty && !entry.AsyncOperation.HasValue)
                     {
-                        if (!entry.IsEmpty && !entry.AsyncOperation.HasValue)
-                        {
-                            entry.AsyncOperation = Addressables.LoadAssetAsync<Object>(entry.Guid);
-                            m_AssetPreloadOperations.Add(entry.AsyncOperation.Value);
-                        }
+                        entry.AsyncOperation = Addressables.LoadAssetAsync<Object>(entry.Guid);
+                        m_AssetPreloadOperations.Add(entry.AsyncOperation.Value);
                     }
                 }
-                //else
+
+                // TODO: Preload selected
                 //{
                 //    foreach (var entry in TableEntries.Values)
                 //    {
@@ -104,8 +104,7 @@ namespace UnityEngine.Localization.Tables
 
                 if (m_AssetPreloadOperations.Count > 0)
                 {
-                    m_PreloadOperation.Init(m_AssetPreloadOperations);
-                    return ResourceManager.StartOperation(m_PreloadOperation, default);
+                    return ResourceManager.CreateGenericGroupOperation(m_AssetPreloadOperations, true);
                 }
             }
 
@@ -142,7 +141,60 @@ namespace UnityEngine.Localization.Tables
                 }
                 entry.AsyncOperation = Addressables.LoadAssetAsync<TObject>(entry.Guid);
             }
-            return entry.AsyncOperation.Value.Convert<TObject>();
+
+            var operation = entry.AsyncOperation.Value;
+
+            try
+            {
+                return operation.Convert<TObject>();
+            }
+            catch (InvalidCastException)
+            {
+                // If we preloaded then the operation will be of type AsyncOperationHandle<Object> however we now need to
+                // convert to AsyncOperationHandle<TObject>.
+
+                if (operation.IsDone)
+                {
+                    if (operation.Status != AsyncOperationStatus.Succeeded)
+                    {
+                        return ResourceManager.CreateCompletedOperation<TObject>(null, operation.OperationException.Message);
+                    }
+
+                    // Convert the operation
+                    if (operation.Result is TObject)
+                    {
+                        var convertedCompletedOperation = ResourceManager.CreateCompletedOperation<TObject>(operation.Result as TObject, null);
+                        entry.AsyncOperation = convertedCompletedOperation;
+                        return convertedCompletedOperation;
+                    }
+                    else
+                    {
+                        throw new InvalidCastException($"Could not convert asset of type {operation.Result.GetType().Name} to {typeof(TObject).Name}.");
+                    }
+                }
+
+                // Wait for the operation to complete before attempting again
+                var convertedOperation = ResourceManager.CreateChainOperation(operation, (op) => GetAssetAsync<TObject>(entry));
+                entry.AsyncOperation = convertedOperation;
+                return convertedOperation;
+            }
+        }
+
+        /// <summary>
+        /// Releases all assets that have been preloaded or cached resets the preload state so it can be performed again.
+        /// Note: This is called automatically by <see cref="LocalizedAssetDatabase"/> when the <see cref="LocalizationSettings.SelectedLocale"/> is changed.
+        /// </summary>
+        public void ReleaseAssets()
+        {
+            m_PreloadOperationHandle = null;
+            foreach (var entry in Values)
+            {
+                if (entry.AsyncOperation.HasValue)
+                {
+                    Addressables.Release(entry.AsyncOperation.Value);
+                    entry.AsyncOperation = null;
+                }
+            }
         }
 
         /// <summary>

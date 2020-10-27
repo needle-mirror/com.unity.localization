@@ -56,16 +56,10 @@ namespace UnityEditor.Localization.Tests
         }
 
         [Test]
-        public void CreateCollectionThrowsExceptionIfTypeIsNotDerivedFromLocalizationTableCollection()
+        public void CreateCollection_InvalidArguments_ThrowsException()
         {
-            Assert.Throws<ArgumentException>(() => LocalizationEditorSettings.Instance.CreateCollection(typeof(StringTable), null, null, null));
-        }
-
-        [Test]
-        public void CreateCollectionThrowsExceptionIfTableCollectionNameIsNullOrEmpty()
-        {
-            Assert.Throws<ArgumentException>(() => LocalizationEditorSettings.Instance.CreateCollection(typeof(StringTableCollection), null, null, null));
-            Assert.Throws<ArgumentException>(() => LocalizationEditorSettings.Instance.CreateCollection(typeof(StringTableCollection), "", null, null));
+            Assert.Throws<ArgumentException>(() => LocalizationEditorSettings.Instance.CreateCollection(typeof(StringTable), "test", "Assets/", null));
+            Assert.Throws<ArgumentException>(() => LocalizationEditorSettings.Instance.CreateCollection(typeof(StringTableCollection), "test", null, null));
         }
 
         [Test]

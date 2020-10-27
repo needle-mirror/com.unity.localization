@@ -99,6 +99,10 @@ namespace UnityEngine.Localization
             // Cancel any previous loading operations.
             ClearLoadingOperation();
 
+            // Don't try and load empty references.
+            if (IsEmpty)
+                return;
+
             m_CurrentLoadingOperation = LoadAssetAsync();
             if (m_CurrentLoadingOperation.Value.IsDone)
                 AutomaticLoadingCompleted(m_CurrentLoadingOperation.Value);

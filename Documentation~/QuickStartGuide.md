@@ -25,7 +25,7 @@ To select a Locale, tick the toggle box next to its name. Tick the checkbox next
 Use the Locale Selectors to determine which Locale your application uses by default if it is not English(en). To do this, add the Locale to the **Specific Locale Selector** field. Your application uses this Locale on start-up, and when no other Locale is selected.
 
 
-![The Locale selection UI Dropdown menu.](images/UIDropdownMenu.png)
+![The Locale selection UI Dropdown menu.](images/SpecificLocaleSelector.png)
 
 ## 4. Texture Localization: Create an Asset Table Collection
 There are many reasons you might need to localize an Asset. For example, you might want to play a different piece of voiceover audio or music, or change a texture that contains written text (such as a signpost). The localization system uses Asset Tables to support this.
@@ -60,9 +60,11 @@ This adds a new component called **Localize Texture**. This is a generic localiz
 
 Use the **Localized Asset Reference** field to select the **Country Flag** Key you added to the Texture Asset Table previously.
 
-![Asset Reference Field Popup](images/LocalizeComponentTexture2DPopup.gif)
+![Asset Reference Field Popup.](images/LocalizeComponentTexture2DPopup.gif)
 
 Run the Scene and use the Game View Locale selection dropdown to change the **Locale**. If everything is configured correctly, the country flag changes to the assigned Texture in the Asset Table. If the Game View menu does not appear it can be enabled from the **Localization Project Settings**.
+
+![Changing the texture using the Game View Locale selection dropdown.](images/LocaleGameViewMenu.gif)
 
 The **Locale Game View Menu** can be used to quickly change the language in the editor. It can be enabled and disabled through **Edit/Preferences/Localization**.
 

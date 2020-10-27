@@ -9,7 +9,7 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
     public static class PluralRules
     {
         /// <summary>
-        /// Holds the ISO langue code as key, and the <see cref="PluralRuleDelegate"/> with the pluralization rule.
+        /// Holds the ISO language code as key, and the <see cref="PluralRuleDelegate"/> with the pluralization rule.
         /// </summary>
         public static Dictionary<string, PluralRuleDelegate> IsoLangToDelegate =
             new Dictionary<string, PluralRuleDelegate>

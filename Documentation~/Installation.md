@@ -1,13 +1,7 @@
 # Installation guide
 
-This package is currently in preview and not available in the Package Manager. To install the package edit *Packages/manifest.json* and insert the package into the dependencies section:
-
-```json
-"dependencies": {
-    "com.unity.localization": "0.8.1-preview"
-    },
-}
-```
+This package is currently in preview and not visible in the Package Manager. To install the package 
+type in `com.unity.localization` under “Add package from git URL” in the Package Manager.
 
 Further information can be found on the forum [here](https://forum.unity.com/threads/release-announcements-and-notes.597262/)
 

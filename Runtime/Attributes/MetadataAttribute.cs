@@ -3,7 +3,7 @@ using System;
 namespace UnityEngine.Localization.Metadata
 {
     /// <summary>
-    /// Flags to indicate where the Metadata can be added.
+    /// Flags that can be used to indicate where the Metadata can be added in the Editor.
     /// </summary>
     [Flags]
     public enum MetadataType
@@ -54,11 +54,6 @@ namespace UnityEngine.Localization.Metadata
         All = AllTables | AllTableEntries | Locale | SharedTableData
     }
 
-
-    /// <summary>
-    /// Used to indicate the type of the Metadata that can be added.
-    /// <seealso cref="MetadataAttribute"/>
-    /// </summary>
     [AttributeUsage(AttributeTargets.Field)]
     class MetadataTypeAttribute : PropertyAttribute
     {
@@ -79,8 +74,14 @@ namespace UnityEngine.Localization.Metadata
 
     /// <summary>
     /// Provides a hint to the editor on where this metadata can be used.
-    /// This is only used in the editor and ignored when adding Metadata through script.
+    /// This is only used in the Editor and not considered when adding Metadata through script.
     /// </summary>
+    /// <example>
+    /// This example shows how a Translation Status Metadata could be created.
+    /// This will only appear in the Metadata menu for String Table Entries.
+    /// ![](../manual/images/scripting/TranslationStatusMetadata.png)
+    /// <code source="../../DocCodeSamples.Tests/MetadataSamples.cs"/>
+    /// </example>
     [AttributeUsage(AttributeTargets.Class)]
     public class MetadataAttribute : Attribute
     {
@@ -90,12 +91,12 @@ namespace UnityEngine.Localization.Metadata
         public string MenuItem { get; set; }
 
         /// <summary>
-        /// Can multiple instances be added?
+        /// Should it be possible to have more than 1 instance?
         /// </summary>
         public bool AllowMultiple { get; set; } = true;
 
         /// <summary>
-        /// The types that the Metadata is meant for. This is used when generating the add Metadata menu.
+        /// Describes where the Metadata can be added. This is used when generating the add Metadata menu.
         /// </summary>
         public MetadataType AllowedTypes { get; set; } = MetadataType.All;
     }

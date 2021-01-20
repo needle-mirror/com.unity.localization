@@ -97,6 +97,11 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             return true;
         }
 
+        public override bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+        {
+            return true;
+        }
+
         private TimeTextInfo GetTimeTextInfo(IFormatProvider provider)
         {
             // Return the default if there is no provider:

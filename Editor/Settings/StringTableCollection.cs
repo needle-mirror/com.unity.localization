@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization
@@ -21,6 +22,36 @@ namespace UnityEditor.Localization
         /// A helper property which is the contents of <see cref="Tables"/> loaded and cast to <see cref="StringTable"/>.
         /// </summary>
         public virtual ReadOnlyCollection<StringTable> StringTables => new ReadOnlyCollection<StringTable>(Tables.Select(t => t.asset as StringTable).ToList().AsReadOnly());
+
+        /// <summary>
+        /// Returns a string that contains all the unique characters that are used for all localized values in the tables that belong to the supplied <see cref="LocaleIdentifier"/>'s.
+        /// This will also include Smart String entries but will only consider the <see cref="UnityEngine.Localization.SmartFormat.Core.Parsing.LiteralText"/> values,
+        /// it will not consider <see cref="UnityEngine.Localization.SmartFormat.Core.Parsing.Placeholder"/> values.
+        /// </summary>
+        /// <param name="localeIdentifiers">The tables to be included.</param>
+        /// <returns>All distinct characters or an empty string if no tables or entries.</returns>.
+        public string GenerateCharacterSet(params LocaleIdentifier[] localeIdentifiers)
+        {
+            if (localeIdentifiers == null || localeIdentifiers.Length == 0)
+                throw new ArgumentException(nameof(localeIdentifiers), "Must provide at least 1 LocaleIdentifier");
+
+            var characters = ExtractLiteralCharacters(localeIdentifiers);
+            var distinct = characters.Distinct().OrderBy(c => c);
+            return string.Concat(distinct);
+        }
+
+        internal IEnumerable<char> ExtractLiteralCharacters(params LocaleIdentifier[] localeIdentifiers)
+        {
+            IEnumerable<char> e = "";
+            foreach (var id in localeIdentifiers)
+            {
+                // Create an enumerator for all the tables and entries.
+                var table = GetTable(id) as StringTable;
+                if (table != null)
+                    e = e.Concat(table.CollectLiteralCharacters());
+            }
+            return e;
+        }
 
         /// <summary>
         /// Returns an enumerator that can be used to step through each key and its localized values, such as in a foreach loop.

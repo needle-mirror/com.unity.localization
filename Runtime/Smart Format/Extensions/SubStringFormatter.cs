@@ -75,5 +75,12 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
 
             return true;
         }
+
+        public override bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+        {
+            if (formattingInfo.FormatterOptions == string.Empty)
+                return false;
+            return true;
+        }
     }
 }

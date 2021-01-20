@@ -1,7 +1,7 @@
 {
   "name": "com.unity.localization",
   "displayName": "Localization",
-  "version": "0.9.0-preview",
+  "version": "0.10.0-preview",
   "unity": "2019.3",
   "description": "Preview of player localization system. Provides tools for localizing your built application.",
   "keywords": [
@@ -10,16 +10,15 @@
     "language"
   ],
   "dependencies": {
-    "com.unity.addressables": "1.16.6",
-    "com.unity.nuget.newtonsoft-json": "2.0.0"
+    "com.unity.addressables": "1.16.13"
   },
   "upmCi": {
-    "footprint": "0bedaf552685d2cf1e48ba5577b1caf47384c367"
+    "footprint": "3c61da6d9b1e18aa5640835d31e0ecd09ade1176"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.localization.git",
     "type": "git",
-    "revision": "c71b782d7d729795d83fdb97cdb34d2b9565df7a"
+    "revision": "14d19bba320b6cfd22746af49fbafe0740bc10ca"
   },
   "samples": [
     {
@@ -31,6 +30,11 @@
       "displayName": "Creating Locales",
       "description": "This sample shows how to Locales including custom ones through script.",
       "path": "Samples~/CreatingLocales"
+    },
+    {
+      "displayName": "Smart Strings - Global Variables",
+      "description": "These samples show how Global Variables can be used in Smart Strings and how custom variables can be created.",
+      "path": "Samples~/GlobalVariables"
     },
     {
       "displayName": "Google Sheets",
@@ -51,6 +55,11 @@
       "displayName": "Language Selection Menu (UGUI)",
       "description": "This sample shows how to implement a simple language selection menu using a UGUI Dropdown.",
       "path": "Samples~/LocaleMenuUGUI"
+    },
+    {
+      "displayName": "Preloading Screen",
+      "description": "Preloading is a way to ensure that chosen Localization data is immediately available and does not require additional loading. This sample shows how to implement a loading screen to wait for preloading to complete.",
+      "path": "Samples~/PreloadingScreen"
     }
   ]
 }

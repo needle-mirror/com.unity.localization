@@ -41,7 +41,7 @@ namespace UnityEditor.Localization.Tests.UI
                 row.enabled = i < selectCount;
             }
             m_Window.m_ListView.SelectedCount = selectCount;
-            m_Window.ExportSelectedLocales(testPath);
+            LocaleGeneratorWindow.ExportSelectedLocales(testPath, m_Window.m_ListView.GetSelectedLocales());
         }
     }
 }

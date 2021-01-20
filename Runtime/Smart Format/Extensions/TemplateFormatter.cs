@@ -53,8 +53,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                 templateName = formattingInfo.Format.RawText;
             }
 
-            Format template;
-            if (!Templates.TryGetValue(templateName, out template))
+            if (!Templates.TryGetValue(templateName, out var template))
             {
                 if (Names.Contains(formattingInfo.Placeholder.FormatterName))
                     throw new FormatException(
@@ -94,6 +93,12 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         public void Clear()
         {
             Templates.Clear();
+        }
+
+        public override bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+        {
+            // Not implemented
+            return true;
         }
     }
 }

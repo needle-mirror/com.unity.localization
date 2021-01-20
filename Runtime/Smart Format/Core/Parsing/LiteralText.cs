@@ -9,31 +9,22 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
     /// </summary>
     public class LiteralText : FormatItem
     {
-        public LiteralText(SmartSettings smartSettings, Format parent, int startIndex) : base(smartSettings, parent,
-                                                                                              startIndex)
-        {
-        }
-
-        public LiteralText(SmartSettings smartSettings, Format parent) : base(smartSettings, parent, parent.startIndex)
-        {
-        }
-
         public override string ToString()
         {
             return SmartSettings.ConvertCharacterStringLiterals
                 ? ConvertCharacterLiteralsToUnicode()
-                : baseString.Substring(startIndex, endIndex - startIndex);
+                : RawText;
         }
 
         private string ConvertCharacterLiteralsToUnicode()
         {
-            var source = baseString.Substring(startIndex, endIndex - startIndex);
+            var source = RawText;
 
             // No character literal escaping - nothing to do
             if (source[0] != Parser.m_CharLiteralEscapeChar)
                 return source;
 
-            // The string length should be 2: espace character \ and literal character
+            // The string length should be 2: escape character \ and literal character
             if (source.Length < 2) throw new ArgumentException($"Missing escape sequence in literal: \"{source}\"");
 
             char c;

@@ -1,7 +1,6 @@
 using System;
-using UnityEngine.AddressableAssets;
 using UnityEngine.Localization.Tables;
-using UnityEngine.ResourceManagement;
+using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization.Settings
@@ -19,61 +18,33 @@ namespace UnityEngine.Localization.Settings
         /// Returns a handle to a localized asset loading operation from the <see cref="LocalizedAssetDatabase.DefaultTable"/>.
         /// This function is asynchronous and may not have an immediate result available.
         /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
+        /// Once the Completed event has been called, during the next update, the internal operation will be returned to a pool so that it can be reused.
+        /// If you do plan to keep hold of the handle after completion then you should call <see cref="Addressables.ResourceManager.Acquire(AsyncOperationHandle)"/>
+        /// to prevent the operation being reused and <see cref="Addressables.Release(AsyncOperationHandle)"/> to finally return the operation back to the pool.
         /// </summary>
         /// <typeparam name="TObject">The type of asset that should be loaded.</typeparam>
         /// <param name="tableEntryReference">A reference to the entry in the <see cref="LocalizedAssetDatabase.DefaultTable"/></param>
-        /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
+        /// <param name="locale">The <see cref="Locale"/> to load the table from. Null will use <see cref="LocalizationSettings.SelectedLocale"/>.</param>
         /// <returns></returns>
-        public AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableEntryReference tableEntryReference) where TObject : Object
+        public AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableEntryReference tableEntryReference, Locale locale = null) where TObject : Object
         {
-            return GetLocalizedAssetAsync<TObject>(DefaultTable, tableEntryReference);
-        }
-
-        /// <summary>
-        /// Returns a handle to a localized asset loading operation from the <see cref="LocalizedAssetDatabase.DefaultTable"/>.
-        /// This function is asynchronous and may not have an immediate result available.
-        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
-        /// </summary>
-        /// <typeparam name="TObject">The type of asset that should be loaded.</typeparam>
-        /// <param name="tableEntryReference">A reference to the entry in the <see cref="LocalizedAssetDatabase.DefaultTable"/></param>
-        /// <returns></returns>
-        public AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableEntryReference tableEntryReference, Locale locale) where TObject : Object
-        {
-            if (locale == null)
-                throw new ArgumentNullException(nameof(locale));
-
-            return GetLocalizedAssetAsync<TObject>(DefaultTable, tableEntryReference, locale);
+            return GetLocalizedAssetAsync<TObject>(GetDefaultTable(), tableEntryReference, locale);
         }
 
         /// <summary>
         /// Returns a handle to a localized asset loading operation from the requested table.
         /// This function is asynchronous and may not have an immediate result available.
         /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
+        /// Once the Completed event has been called, during the next update, the internal operation will be returned to a pool so that it can be reused.
+        /// If you do plan to keep hold of the handle after completion then you should call <see cref="Addressables.ResourceManager.Acquire(AsyncOperationHandle)"/>
+        /// to prevent the operation being reused and <see cref="Addressables.Release(AsyncOperationHandle)"/> to finally return the operation back to the pool.
         /// </summary>
         /// <typeparam name="TObject">The type of asset that should be loaded.</typeparam>
         /// <param name="tableReference">A reference to the table that the asset should be loaded from.</param>
         /// <param name="tableEntryReference">A reference to the entry in the table.</param>
-        public virtual AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableReference tableReference, TableEntryReference tableEntryReference) where TObject : Object
+        /// <param name="locale">The <see cref="Locale"/> to load the table from. Null will use <see cref="LocalizationSettings.SelectedLocale"/>.</param>
+        public virtual AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale = null) where TObject : Object
         {
-            var locale = LocalizationSettings.SelectedLocaleAsync;
-            if (!locale.IsDone)
-                return ResourceManager.CreateChainOperation(locale, (op) => GetLocalizedAssetAsync<TObject>(tableReference, tableEntryReference, op.Result));
-            return GetLocalizedAssetAsync<TObject>(tableReference, tableEntryReference, locale.Result);
-        }
-
-        /// <summary>
-        /// Returns a handle to a localized asset loading operation from the requested table.
-        /// This function is asynchronous and may not have an immediate result available.
-        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
-        /// </summary>
-        /// <typeparam name="TObject">The type of asset that should be loaded.</typeparam>
-        /// <param name="tableReference">A reference to the table that the asset should be loaded from.</param>
-        /// <param name="tableEntryReference">A reference to the entry in the table.</param>
-        /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
-        public AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale) where TObject : Object
-        {
-            if (locale == null)
-                throw new ArgumentNullException(nameof(locale));
             return GetLocalizedAssetAsyncInternal<TObject>(tableReference, tableEntryReference, locale);
         }
 
@@ -86,33 +57,17 @@ namespace UnityEngine.Localization.Settings
         /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
         protected virtual AsyncOperationHandle<TObject> GetLocalizedAssetAsyncInternal<TObject>(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale) where TObject : Object
         {
-            var tableEntryOp = GetTableEntryAsync(tableReference, tableEntryReference, locale);
-            if (!tableEntryOp.IsDone)
-                return ResourceManager.CreateChainOperation<TObject>(tableEntryOp, (op) => GetLocalizedAssetLoadAsset<TObject>(tableEntryOp, tableEntryReference));
-            return GetLocalizedAssetLoadAsset<TObject>(tableEntryOp, tableEntryReference);
-        }
+            var loadTableOperation = GetTableAsync(tableReference, locale);
 
-        /// <summary>
-        /// /// Performs the final step after the <see cref="AssetTableEntry"/> has been found. Starts the table asset loading operation.
-        /// </summary>
-        /// <typeparam name="TObject">The type of asset that should be loaded.</typeparam>
-        /// <param name="entryOp">The table entry operation returned from <see cref="LocalizedAssetDatabase.GetTableEntryAsync"/></param>
-        /// <param name="tableEntryReference">A reference to the entry in the table.</param>
-        /// <returns></returns>
-        internal protected virtual AsyncOperationHandle<TObject> GetLocalizedAssetLoadAsset<TObject>(AsyncOperationHandle<TableEntryResult> entryOp, TableEntryReference tableEntryReference) where TObject : Object
-        {
-            tableEntryReference.Validate();
+            var operation = GenericPool<LoadAssetOperation<TObject>>.Get();
+            operation.Init(loadTableOperation, tableEntryReference);
+            var handle = AddressablesInterface.ResourceManager.StartOperation(operation, loadTableOperation);
 
-            if (entryOp.Status != AsyncOperationStatus.Succeeded || entryOp.Result.Entry == null)
-            {
-                // Find the key so we can provide a better error message.
-                var table = entryOp.Result.Table;
-                string key = tableEntryReference.ResolveKeyName(table?.SharedData);
-                var message = $"Could not load asset {key}";
-                return ResourceManager.CreateCompletedOperation<TObject>(null, message);
-            }
+            // We don't want to force users to have to manage the reference counting so by default we will release the operation for reuse once completed in the next frame
+            // If a user wants to hold onto it then they should call Acquire on the operation and later Release.
+            handle.CompletedTypeless += ReleaseNextFrame;
 
-            return entryOp.Result.Table.GetAssetAsync<TObject>(entryOp.Result.Entry);
+            return handle;
         }
 
         /// <inheritdoc />

@@ -111,6 +111,11 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
                 formattingInfo.Write("TestExtension1 Options: " + options + ", Format: " + formatString);
                 return true;
             }
+
+            public bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+            {
+                throw new System.NotImplementedException();
+            }
         }
         private class TestExtension2 : IFormatter
         {
@@ -123,6 +128,11 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
                 var formatString = format != null ? format.ToString() : "";
                 formattingInfo.Write("TestExtension2 Options: " + options + ", Format: " + formatString);
                 return true;
+            }
+
+            public bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+            {
+                throw new System.NotImplementedException();
             }
         }
     }

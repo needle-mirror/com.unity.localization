@@ -24,6 +24,9 @@ namespace UnityEditor.Localization.UI
             Type assetType = null;
             while (baseType != null)
             {
+                if (baseType.IsArray)
+                    baseType = baseType.GetElementType().BaseType;
+
                 if (baseType.IsGenericType && baseType.GetGenericTypeDefinition() == typeof(LocalizedAsset<>))
                 {
                     assetType = baseType.GetGenericArguments()[0];

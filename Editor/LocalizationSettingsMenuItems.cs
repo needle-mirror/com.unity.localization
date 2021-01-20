@@ -18,6 +18,7 @@ namespace UnityEditor.Localization
                 "No"))
             {
                 LocalizationEditorSettings.ActiveLocalizationSettings = ls;
+                Selection.activeObject = ls;
             }
         }
 
@@ -34,7 +35,6 @@ namespace UnityEditor.Localization
 
             AssetDatabase.CreateAsset(settings, path);
             AssetDatabase.SaveAssets();
-            Selection.activeObject = settings;
             return settings;
         }
     }

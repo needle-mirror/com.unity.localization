@@ -3,9 +3,17 @@ using UnityEngine.Events;
 namespace UnityEngine.Localization.Components
 {
     /// <summary>
-    /// Base class for all asset localization components.
+    /// Abstract class that can be inherited from to create a general purpose Localized Asset Component.
+    /// This Component handles the Localization of the asset and calls <see cref="UpdateAsset(TObject)"/>
+    /// whenever a new Localized Asset is ready.
     /// </summary>
-    /// <typeparam name="TObject"></typeparam>
+    /// <example>
+    /// This example shows how the [Font](https://docs.unity3d.com/ScriptReference/Font.html) asset of a [UGUI Text Component](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.UI.Text.html) could be localized.
+    /// ![](../manual/images/scripting/LocalizedFontComponent.png)
+    /// <code source="../../DocCodeSamples.Tests/LocalizedFontComponent.cs" region="sample-code"/>
+    /// </example>
+    /// <typeparam name="TObject">The type of Asset to be Localized. Must inherit from [UnityEngine.Object](https://docs.unity3d.com/ScriptReference/Object.html)</typeparam>
+    /// <typeparam name="TReference">The **Serializable** LocalizedAsset class. This will be used for the <see cref="AssetReference"/> property.</typeparam>
     public abstract class LocalizedAssetBehaviour<TObject, TReference> : MonoBehaviour
         where TObject : Object
         where TReference : LocalizedAsset<TObject>, new()
@@ -14,7 +22,7 @@ namespace UnityEngine.Localization.Components
         TReference m_LocalizedAssetReference = new TReference();
 
         /// <summary>
-        /// Reference to the localized asset entry and table.
+        /// Reference to the Table and Entry which will be used to identify the asset being localized.
         /// </summary>
         public TReference AssetReference
         {
@@ -29,29 +37,31 @@ namespace UnityEngine.Localization.Components
             }
         }
 
-        /// <summary>
-        /// Starts listening for changes to <see cref="AssetReference"/>.
-        /// </summary>
         protected virtual void OnEnable() => m_LocalizedAssetReference.AssetChanged += UpdateAsset;
 
-        /// <summary>
-        /// Stops listening for changes to <see cref="AssetReference"/>.
-        /// </summary>
         protected virtual void OnDisable() => m_LocalizedAssetReference.AssetChanged -= UpdateAsset;
 
         /// <summary>
-        /// Called whenever the localized asset is updated, such as when the Locale changes or when initializing.
+        /// Called when <see cref="AssetReference"/> has been loaded. This will occur when the game first starts after
+        /// <see cref="Settings.LocalizationSettings.InitializationOperation"/> has completed and whenever
+        /// the <see cref="Settings.LocalizationSettings.SelectedLocale"/> is changed.
         /// </summary>
         /// <param name="localizedAsset"></param>
         protected abstract void UpdateAsset(TObject localizedAsset);
     }
 
     /// <summary>
-    /// Localized Asset Behaviour component that will call a UnityEvent to update the localized asset.
+    /// A version of <see cref="LocalizedAssetBehaviour{TObject, TReference}"/> which also includes a [UnityEvent](https://docs.unity3d.com/ScriptReference/Events.UnityEvent.html) with the localized asset.
+    /// Using the <see cref="OnUpdateAsset"/> event it is possible to Localize Components without writing scripts specific to the Component that can be configured in the Inspector.
     /// </summary>
-    /// <typeparam name="TObject"></typeparam>
-    /// <typeparam name="TReference"></typeparam>
-    /// <typeparam name="TEvent"></typeparam>
+    /// <example>
+    /// This example shows how a [Font](https://docs.unity3d.com/ScriptReference/Font.html) asset could be localized.
+    /// ![](../manual/images/scripting/LocalizedFontEventComponent.png)
+    /// <code source="../../DocCodeSamples.Tests/LocalizedFontEventComponent.cs" region="sample-code"/>
+    /// </example>
+    /// <typeparam name="TObject">The type of Asset to be Localized. Must inherit from [UnityEngine.Object](https://docs.unity3d.com/ScriptReference/Object.html)</typeparam>
+    /// <typeparam name="TReference">The **Serializable** LocalizedAsset class. This will be used for the <see cref="AssetReference"/> property.</typeparam>
+    /// <typeparam name="TEvent">The **Serializable** [UnityEvent](https://docs.unity3d.com/ScriptReference/Events.UnityEvent.html) that should be called when the asset is loaded.</typeparam>
     public class LocalizedAssetEvent<TObject, TReference, TEvent> : LocalizedAssetBehaviour<TObject, TReference>
         where TObject : Object
         where TReference : LocalizedAsset<TObject>, new()
@@ -60,20 +70,12 @@ namespace UnityEngine.Localization.Components
         [SerializeField]
         TEvent m_UpdateAsset = new TEvent();
 
-        /// <summary>
-        /// Event that will be called when the localized asset is ready, usually called after the Locale has changed
-        /// or at initialization.
-        /// </summary>
         public TEvent OnUpdateAsset
         {
             get => m_UpdateAsset;
             set => m_UpdateAsset = value;
         }
 
-        /// <summary>
-        /// Invokes the <see cref="OnUpdateAsset"/> event.
-        /// </summary>
-        /// <param name="localizedAsset"></param>
         protected override void UpdateAsset(TObject localizedAsset)
         {
             OnUpdateAsset.Invoke(localizedAsset);

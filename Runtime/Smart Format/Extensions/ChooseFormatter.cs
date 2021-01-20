@@ -38,8 +38,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             return true;
         }
 
-        private static Format DetermineChosenFormat(IFormattingInfo formattingInfo, IList<Format> choiceFormats,
-            string[] chooseOptions)
+        private static Format DetermineChosenFormat(IFormattingInfo formattingInfo, IList<Format> choiceFormats, string[] chooseOptions)
         {
             var currentValue = formattingInfo.CurrentValue;
             var currentValueString = currentValue == null ? "null" : currentValue.ToString();
@@ -61,6 +60,23 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
 
             var chosenFormat = choiceFormats[chosenIndex];
             return chosenFormat;
+        }
+
+        public override bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+        {
+            if (formattingInfo.FormatterOptions == "")
+                return false;
+
+            var formats = formattingInfo.Format.Split(SplitChar);
+            if (formats.Count < 2)
+                return false;
+
+            for (int i = 0; i < formats.Count; ++i)
+            {
+                formattingInfo.Write(formats[i], null);
+            }
+
+            return true;
         }
     }
 }

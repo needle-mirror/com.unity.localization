@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine.ResourceManagement;
+using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization.Settings
@@ -36,7 +36,6 @@ namespace UnityEngine.Localization.Settings
         [SerializeReference]
         LocalizedStringDatabase m_StringDatabase = new LocalizedStringDatabase();
 
-        InitializationOperation m_InitializingOperation;
         AsyncOperationHandle<LocalizationSettings>? m_InitializingOperationHandle;
 
         AsyncOperationHandle<Locale>? m_SelectedLocaleAsync;
@@ -153,11 +152,6 @@ namespace UnityEngine.Localization.Settings
             remove => Instance.OnSelectedLocaleChanged -= value;
         }
 
-        /// <summary>
-        /// The <see cref="ResourceManager"/> to use for Addressable operations. Primarily used for Completed and Chain operations.
-        /// </summary>
-        internal static ResourceManager ResourceManager => AddressableAssets.Addressables.ResourceManager;
-
         void OnEnable()
         {
             if (s_Instance == null)
@@ -205,14 +199,15 @@ namespace UnityEngine.Localization.Settings
         {
             if (m_InitializingOperationHandle == null)
             {
-                // TODO: We need to reuse these operations however its not possible to reset the internal state at the moment.
-                m_InitializingOperation = new InitializationOperation();
-                m_InitializingOperation.Init(this);
-                m_InitializingOperationHandle = ResourceManager.StartOperation(m_InitializingOperation, default);
+                var operation = GenericPool<InitializationOperation>.Get();
+                operation.Init(this);
+                m_InitializingOperationHandle = AddressablesInterface.ResourceManager.StartOperation(operation, default);
             }
 
             return m_InitializingOperationHandle.Value;
         }
+
+        internal virtual bool IsPlaying => Application.isPlaying;
 
         /// <summary>
         /// <inheritdoc cref="IStartupLocaleSelector"/>
@@ -268,7 +263,12 @@ namespace UnityEngine.Localization.Settings
             if (m_AssetDatabase != null)
                 m_AssetDatabase.OnLocaleChanged(locale);
 
-            m_InitializingOperationHandle = null;
+            if (m_InitializingOperationHandle.HasValue)
+            {
+                AddressablesInterface.Release(m_InitializingOperationHandle.Value);
+                m_InitializingOperationHandle = null;
+            }
+
             var initOp = GetInitializationOperation();
             if (initOp.Status == AsyncOperationStatus.Succeeded)
             {
@@ -381,7 +381,7 @@ namespace UnityEngine.Localization.Settings
                 if (locale == null)
                     m_SelectedLocaleAsync = null;
                 else
-                    m_SelectedLocaleAsync = ResourceManager.CreateCompletedOperation(m_SelectedLocale, null);
+                    m_SelectedLocaleAsync = AddressablesInterface.ResourceManager.CreateCompletedOperation(m_SelectedLocale, null);
 
                 SendLocaleChangedEvents(locale);
             }
@@ -394,17 +394,17 @@ namespace UnityEngine.Localization.Settings
         public virtual AsyncOperationHandle<Locale> GetSelectedLocaleAsync()
         {
             if (!Application.isPlaying)
-                return ResourceManager.CreateCompletedOperation<Locale>(null, null);
+                return AddressablesInterface.ResourceManager.CreateCompletedOperation<Locale>(null, null);
 
             if (!m_SelectedLocaleAsync.HasValue)
             {
                 if (m_AvailableLocales is IPreloadRequired localesProvider && !localesProvider.PreloadOperation.IsDone)
                 {
-                    m_SelectedLocaleAsync = ResourceManager.CreateChainOperation<Locale>(localesProvider.PreloadOperation, (op) => ResourceManager.CreateCompletedOperation(GetSelectedLocale(), null));
+                    m_SelectedLocaleAsync = AddressablesInterface.ResourceManager.CreateChainOperation<Locale>(localesProvider.PreloadOperation, (op) => AddressablesInterface.ResourceManager.CreateCompletedOperation(GetSelectedLocale(), null));
                 }
                 else
                 {
-                    m_SelectedLocaleAsync = ResourceManager.CreateCompletedOperation(GetSelectedLocale(), null);
+                    m_SelectedLocaleAsync = AddressablesInterface.ResourceManager.CreateCompletedOperation(GetSelectedLocale(), null);
                 }
             }
             return m_SelectedLocaleAsync.Value;

@@ -5,10 +5,6 @@ namespace UnityEngine.Localization.Pseudo
     /// </summary>
     public class Mirror : IPseudoLocalizationMethod
     {
-        // There is a bug with SerializeField that causes empty instances to not deserialize. This is a workaround while we wait for the fix (case 1183543)
-        [SerializeField, HideInInspector]
-        int dummyObject;
-
         /// <summary>
         /// Reverse all strings, to simulate right-to-left locales.
         /// </summary>

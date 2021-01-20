@@ -35,5 +35,10 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
 
             return false;
         }
+
+        public override bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+        {
+            return true;
+        }
     }
 }

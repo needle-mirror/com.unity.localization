@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.Localization.Tables;
+using UnityEngine.Localization.Settings;
 
 namespace UnityEngine.Localization
 {
@@ -14,6 +15,9 @@ namespace UnityEngine.Localization
 
         [SerializeField]
         TableEntryReference m_TableEntryReference;
+
+        [SerializeField]
+        FallbackBehavior m_FallbackState = FallbackBehavior.UseProjectSettings;
 
         /// <summary>
         /// A reference to the <see cref="LocalizationTable"/>.
@@ -49,6 +53,12 @@ namespace UnityEngine.Localization
                 m_TableEntryReference = value;
                 ForceUpdate();
             }
+        }
+
+        public FallbackBehavior FallbackState
+        {
+            get => m_FallbackState;
+            set => m_FallbackState = value;
         }
 
         /// <summary>

@@ -128,6 +128,28 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
 
             return m_DefaultPluralRule ?? (m_DefaultPluralRule = PluralRules.GetPluralRule(DefaultTwoLetterISOLanguageName));
         }
+
+        public override bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+        {
+            var format = formattingInfo.Format;
+
+            // Ignore formats that start with "?" (this can be used to bypass this extension)
+            if (format == null || format.baseString[format.startIndex] == ':')
+                return false;
+
+            // Extract the plural words from the format string:
+            var pluralWords = format.Split('|');
+            // This extension requires at least two plural words:
+            if (pluralWords.Count == 1)
+                return false;
+
+            for (int i = 0; i < pluralWords.Count; ++i)
+            {
+                formattingInfo.Write(pluralWords[i], null);
+            }
+
+            return true;
+        }
     }
 
     /// <summary>

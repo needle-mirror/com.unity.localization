@@ -4,12 +4,18 @@ using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Pseudo;
 using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 
 namespace UnityEditor.Localization.UI
 {
     class TableCreator : VisualElement
     {
         internal new class UxmlFactory : UxmlFactory<TableCreator> {}
+
+        class LocaleLabel : Label
+        {
+            public Locale boundLocale;
+        }
 
         readonly TextField m_TableCollectionName;
         readonly ScrollView m_LocalesList;
@@ -60,11 +66,14 @@ namespace UnityEditor.Localization.UI
 
         void OnLocaleRemoved(Locale locale)
         {
-            var toggle = m_LocalesList.Q<Toggle>(locale.name);
-            if (toggle != null)
+            for (int i = 0; i < m_LocalesList.childCount; ++i)
             {
-                m_LocalesList.Remove(toggle);
-                UpdateCreateButtonState();
+                var localeLabel = m_LocalesList[i].Q<Label>();
+                if (localeLabel != null && localeLabel.text == locale.name)
+                {
+                    m_LocalesList.Remove(m_LocalesList[i]);
+                    UpdateCreateButtonState();
+                }
             }
         }
 
@@ -73,24 +82,30 @@ namespace UnityEditor.Localization.UI
             if (locale is PseudoLocale) // Don't include pseudo locales
                 return;
 
-            var toggle = new Toggle() { name = locale.name, text = locale.name, value = true };
+            var so = new SerializedObject(locale);
+
+            var visualElement = new VisualElement() { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center }, };
+            var toggle = new Toggle() { value = true };
             toggle.RegisterValueChangedCallback((evt) => UpdateCreateButtonState());
-            m_LocalesList.Add(toggle);
+            var label = new LocaleLabel() { boundLocale = locale, bindingPath = "m_Name" };
+            visualElement.Add(toggle);
+            visualElement.Add(label);
+            visualElement.Bind(so);
+
+            m_LocalesList.Add(visualElement);
         }
 
         void UpdateCreateButtonState()
         {
             // If we have no active Locales then the buttons should be disabled.
-            foreach (var child in m_LocalesList.Children())
+            foreach (var localeItem in m_LocalesList.Children())
             {
-                if (child is Toggle toggle)
+                var toggle = localeItem.Q<Toggle>();
+                if (toggle.value)
                 {
-                    if (toggle.value)
-                    {
-                        m_CreateStringTablesButton.SetEnabled(true);
-                        m_CreateAssetTablesButton.SetEnabled(true);
-                        return;
-                    }
+                    m_CreateStringTablesButton.SetEnabled(true);
+                    m_CreateAssetTablesButton.SetEnabled(true);
+                    return;
                 }
             }
             m_CreateStringTablesButton.SetEnabled(false);
@@ -99,24 +114,28 @@ namespace UnityEditor.Localization.UI
 
         void SelectAllLocales(bool selected)
         {
-            for (int i = 0; i < m_LocalesList.contentContainer.childCount; ++i)
+            foreach (var localeItem in m_LocalesList.Children())
             {
-                var toggle = m_LocalesList.contentContainer.ElementAt(i) as Toggle;
+                var toggle = localeItem.Q<Toggle>();
                 toggle.value = selected;
             }
         }
 
         List<Locale> GetSelectedLocales()
         {
-            var locales = LocalizationEditorSettings.GetLocales();
             var selectedLocales = new List<Locale>();
 
-            for (int i = 0; i < m_LocalesList.contentContainer.childCount; ++i)
+            foreach (var localeItem in m_LocalesList.Children())
             {
-                if (m_LocalesList.contentContainer.ElementAt(i) is Toggle toggle && toggle.value)
+                var toggle = localeItem.Q<Toggle>();
+                var label = localeItem.Q<LocaleLabel>();
+
+                if (toggle.value)
                 {
-                    Debug.Assert(locales[i].name == toggle.text, $"Expected locale to match toggle. Expected {locales[i].name} but got {toggle.name}");
-                    selectedLocales.Add(locales[i]);
+                    if (label.boundLocale != null)
+                        selectedLocales.Add(label.boundLocale);
+                    else
+                        Debug.LogError($"Expected locale to match toggle. Expected {label.boundLocale.name} but got {label.text}");
                 }
             }
 

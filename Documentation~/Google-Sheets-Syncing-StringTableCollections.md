@@ -11,7 +11,7 @@ To sync a String Table to a Google Sheet, you need to connect it to a Sheets Ser
 | **Sheets Service Provider**         | Assign the [Sheets Service Provider](Google-Sheets-Sheets-Service-Provider.md) Asset you want to use.
 | **Create New Spreadsheet**          | Select this button to create a new spreadsheet for String Table data. Use this if a Google Sheet for this String Table does not already exist.
 | **Spreadsheet Id**                  | Enter the Spreadsheet ID from your Google Spreadsheet. In the Spreadsheet’s Google URL, this is in the middle of the URL:<br><br>https://<span>docs.google.</span>com/spreadsheets/d/**spreadsheetId**/edit#gid=sheetId
-| **Sheet Id**                        | Enter the Sheet ID from your Google Spreadsheet. In the Sheet’s Google URL, this is in the middle of the URL:<br><br>https://<span>docs.google.</span>com/spreadsheets/d/spreadsheetId/edit#gid=**sheetId**
+| **Sheet Id**                        | Enter the Sheet ID from your Google Spreadsheet. In the Sheet’s Google URL, this at the end of the URL:<br><br>https://<span>docs.google.</span>com/spreadsheets/d/spreadsheetId/edit#gid=**sheetId**
 | **Add Sheet**                       | Create a new sheet based on the properties defined in the associated Sheets Service Provider’s New Sheet Properties.
 | **Select Sheet**                    | Select a sheet from the Google Spreadsheet.
 | **Mapped Columns**                  | Assign specific types of data to specific columns. See **Mapped Columns**, below, for details.
@@ -47,61 +47,7 @@ To create a custom column, you need to inherit from the abstract class *SheetCol
 
 The following example demonstrates how to populate Comment metadata into a column.
 
-```C#
-using System;
-using UnityEditor.Localization.Plugins.Google.Columns;
-using UnityEngine.Localization;
-using UnityEngine.Localization.Metadata;
-using UnityEngine.Localization.Tables;
-
-namespace UnityEditor.Localization.Samples.Google
-{
-    [Serializable]
-    [DisplayName("Custom Data")]
-    [Metadata(AllowedTypes = MetadataType.StringTableEntry)]
-    public class MyCustomDataMetadata : IMetadata
-    {
-        public string someValue;
-        public string someNoteValue;
-    }
-
-    /// <summary>
-    /// LocaleMetadataColumn is a version of SheetColumn just for handling Metadata.
-    /// This can now be added to the Column Mappings for any Push or Pull request.
-    /// </summary>
-    public class MyCustomColumn : LocaleMetadataColumn<MyCustomDataMetadata>
-    {
-        public override PushFields PushFields => PushFields.ValueAndNote; // For our example we use both value and note.
-
-        public override void PullMetadata(StringTableEntry entry, MyCustomDataMetadata metadata, string cellValue, string cellNote)
-        {
-            // Metadata will be null if the entry does not already contain any.
-            if (metadata == null)
-            {
-                metadata = new MyCustomDataMetadata();
-                entry.AddMetadata(metadata);
-            }
-
-            metadata.someValue = cellValue;
-            metadata.someNoteValue = cellNote;
-        }
-
-        public override void PushHeader(StringTableCollection collection, out string header, out string headerNote)
-        {
-            // The title of the Google Sheet column
-            header = "My Custom Data";
-            headerNote = null;
-        }
-
-        public override void PushMetadata(MyCustomDataMetadata metadata, out string value, out string note)
-        {
-            // Metadata will never be null as this is only called if the entry contains a metadata entry.
-            value = metadata.someValue;
-            note = metadata.someNoteValue;
-        }
-    }
-}
-```
+[!code-cs[google-custom-columns](../DocCodeSamples.Tests/GoogleSheetsCustomColumns.cs)]
 
 ## Synchronizing 
 

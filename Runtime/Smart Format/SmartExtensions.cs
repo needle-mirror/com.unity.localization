@@ -7,8 +7,6 @@ namespace UnityEngine.Localization.SmartFormat
 {
     public static class SmartExtensions
     {
-        #region : StringBuilder :
-
         /// <summary> Appends a formatted string, using the same semantics as Smart.Format. </summary>
         /// <param name="sb">The StringBuilder that will be used for output</param>
         /// <param name="format">The template that defines how the arguments are formatted</param>
@@ -28,10 +26,6 @@ namespace UnityEngine.Localization.SmartFormat
             AppendSmart(sb, format, args);
             sb.AppendLine();
         }
-
-        #endregion
-
-        #region : TextWriter :
 
         /// <summary> Writes out a formatted string, using the same semantics as Smart.Format. </summary>
         /// <param name="writer">The TextWriter that will be used for output</param>
@@ -53,10 +47,6 @@ namespace UnityEngine.Localization.SmartFormat
             writer.WriteLine();
         }
 
-        #endregion
-
-        #region : String :
-
         /// <summary> Formats the specified arguments using this string as a template. </summary>
         /// <param name="format">The template that defines how the arguments are formatted</param>
         /// <param name="args">A list of arguments to be used in formatting</param>
@@ -77,7 +67,5 @@ namespace UnityEngine.Localization.SmartFormat
             // With cache:
             return Smart.Default.FormatWithCache(ref cache, format, args);
         }
-
-        #endregion
     }
 }

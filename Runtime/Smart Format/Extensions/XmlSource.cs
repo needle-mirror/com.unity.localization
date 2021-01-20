@@ -8,10 +8,6 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     [Serializable]
     public class XmlSource : ISource
     {
-        // There is a bug with SerializeField that causes empty instances to not deserialize. This is a workaround while we wait for the fix (case 1183543)
-        [SerializeField, HideInInspector]
-        int dummyObject;
-
         public XmlSource(SmartFormatter formatter)
         {
             // Add some special info to the parser:

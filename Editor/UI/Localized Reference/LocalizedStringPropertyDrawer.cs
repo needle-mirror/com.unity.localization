@@ -3,7 +3,6 @@ using System.Linq;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Localization;
-using UnityEngine.Localization.SmartFormat;
 using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization.UI
@@ -15,18 +14,31 @@ namespace UnityEditor.Localization.UI
 
         static GUIStyle s_FoldoutStyle;
 
-        /// <summary>
-        /// Optional arguments list.
-        /// </summary>
-        public SmartObjects Arguments { get; set; }
-
         public class StringPropertyData : Data
         {
             List<LocaleField> m_SmartFormatFields;
+            object[] m_PreviewArguments;
 
             public ReorderableList previewArgumentsList;
             public bool previewExpanded;
-            public SmartObjects previewArguments;
+
+            public object[] PreviewArguments
+            {
+                get => m_PreviewArguments;
+                set
+                {
+                    m_PreviewArguments = value;
+
+                    if (m_SmartFormatFields != null)
+                    {
+                        foreach (var field in m_SmartFormatFields)
+                        {
+                            if (field.SmartEditor != null)
+                                field.SmartEditor.Arguments = value;
+                        }
+                    }
+                }
+            }
 
             public class LocaleField
             {
@@ -47,8 +59,6 @@ namespace UnityEditor.Localization.UI
                         foreach (var locale in projectLocales)
                         {
                             var table = SelectedTableCollection.Tables.FirstOrDefault(tbl => tbl.asset?.LocaleIdentifier == locale.Identifier);
-                            if (previewArguments == null)
-                                previewArguments = new SmartObjects();
                             m_SmartFormatFields.Add(new LocaleField { Locale = locale, Expanded = false, SmartEditor = CreateSmartFormatFieldForTable(table.asset) });
                         }
                     }
@@ -72,7 +82,7 @@ namespace UnityEditor.Localization.UI
                     smartField.ShowMetadataButton = false;
                     smartField.ShowPreviewTab = true;
                     smartField.MinHeight = EditorGUIUtility.singleLineHeight;
-                    smartField.Arguments = previewArguments;
+                    smartField.Arguments = PreviewArguments;
                     smartField.RefreshData();
                     return smartField;
                 }
@@ -90,8 +100,7 @@ namespace UnityEditor.Localization.UI
 
             public void UpdateArguments(ReorderableList _)
             {
-                previewArguments.Clear();
-                previewArguments.AddRange(previewArgumentsList.list as List<Object>);
+                PreviewArguments = (previewArgumentsList.list as List<Object>).ToArray();
                 LocaleFields.ForEach(sf => sf.SmartEditor?.ResetCache());
             }
 
@@ -116,7 +125,6 @@ namespace UnityEditor.Localization.UI
                 serializedObject = property.serializedObject;
                 tableReference = new SerializedTableReference(property.FindPropertyRelative("m_TableReference"));
                 tableEntryReference = new SerializedTableEntryReference(property.FindPropertyRelative("m_TableEntryReference"));
-                NeedsInitializing = true;
 
                 if (LocaleFields != null)
                 {
@@ -138,7 +146,7 @@ namespace UnityEditor.Localization.UI
             var prop = new StringPropertyData()
             {
                 entryNameLabel = Styles.entryName,
-                previewArguments = Arguments,
+                PreviewArguments = new object[0],
             };
             return prop;
         }

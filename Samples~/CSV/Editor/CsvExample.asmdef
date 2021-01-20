@@ -11,7 +11,7 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "CsvHelper.dll"
+        "Unity.Localization.ThirdParty.Editor.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

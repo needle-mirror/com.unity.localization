@@ -1,15 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
-using UnityEngine.Localization.SmartFormat.Core.Parsing;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
-
-#if NET45
-// Not supported by .Net Core
-using System.Runtime.Remoting.Messaging;
-#endif
+using UnityEngine.Pool;
 
 namespace UnityEngine.Localization.SmartFormat.Extensions
 {
@@ -59,10 +53,11 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             var current = selectorInfo.CurrentValue;
             var selector = selectorInfo.SelectorText;
 
+            if (!(current is IList currentList)) return false;
+
             // See if we're trying to access a specific index:
-            var currentList = current as IList;
             var isAbsolute = selectorInfo.SelectorIndex == 0 && selectorInfo.SelectorOperator.Length == 0;
-            if (!isAbsolute && currentList != null && int.TryParse(selector, out int itemIndex) &&
+            if (!isAbsolute && int.TryParse(selector, out var itemIndex) &&
                 itemIndex < currentList.Count)
             {
                 // The current is a List, and the selector is a number;
@@ -85,7 +80,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                 }
 
                 // Looking for 2 lists to sync: "{List1: {List2[Index]} }"
-                if (currentList != null && 0 <= CollectionIndex && CollectionIndex < currentList.Count)
+                if (0 <= CollectionIndex && CollectionIndex < currentList.Count)
                 {
                     selectorInfo.Result = currentList[CollectionIndex];
                     return true;
@@ -101,30 +96,10 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         // same with: private static ThreadLocal<int> CollectionIndex2 = new ThreadLocal<int>(() => -1);
         // Good example: https://msdn.microsoft.com/en-us/library/dn906268(v=vs.110).aspx
 
-#if NET45
-        /// <summary>
-        /// The key for CallContext.Logical[Get|Set]Data().
-        /// </summary>
-        private static readonly string key = "664c3d47-8d00-4825-b4fb-f3dd7c8a9bdf";
-
         /// <remarks>
-        /// System.Runtime.Remoting.Messaging and CallContext.Logical[Get|Set]Data
-        /// not supported by .Net Core. Instead .Net Core provides AsyncLocal&lt;T&gt;
+        /// Wrap, so that CollectionIndex can be used without code changes.
         /// </remarks>
-        private static int CollectionIndex
-        {
-            get
-            {
-                var val = CallContext.LogicalGetData(key);
-                return (int?)val ?? -1;
-            }
-            set => CallContext.LogicalSetData(key, value);
-        }
-#else
-/// <remarks>
-/// Wrap, so that CollectionIndex can be used without code changes.
-/// </remarks>
-        private static readonly AsyncLocal<int?> _collectionIndex = new AsyncLocal<int?>();
+        //private static readonly AsyncLocal<int?> _collectionIndex = new AsyncLocal<int?>();
 
         /// <remarks>
         /// System.Runtime.Remoting.Messaging and CallContext.Logical[Get|Set]Data
@@ -134,10 +109,13 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         /// </remarks>
         private static int CollectionIndex
         {
-            get { return _collectionIndex.Value ?? -1; }
-            set { _collectionIndex.Value = value; }
-        }
-#endif
+            // Removed multi threading support as AsyncLocal generates garbage and our object pools are not thread safe.
+            get;
+            set;
+            //get { return _collectionIndex.Value ?? -1; }
+            //set { _collectionIndex.Value = value; }
+        } = -1;
+
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {
             var format = formattingInfo.Format;
@@ -174,32 +152,25 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             {
                 // The format is not nested,
                 // so we will treat it as an itemFormat:
-                var newItemFormat = new Format(m_SmartSettings, itemFormat.baseString)
-                {
-                    startIndex = itemFormat.startIndex,
-                    endIndex = itemFormat.endIndex,
-                    HasNested = true
-                };
-                var newPlaceholder = new Placeholder(m_SmartSettings, newItemFormat, itemFormat.startIndex, 0)
-                {
-                    Format = itemFormat,
-                    endIndex = itemFormat.endIndex
-                };
+                var newItemFormat = FormatItemPool.GetFormat(m_SmartSettings, itemFormat.baseString, itemFormat.startIndex, itemFormat.endIndex, true);
+                var newPlaceholder = FormatItemPool.GetPlaceholder(m_SmartSettings, newItemFormat, itemFormat.startIndex, 0, itemFormat, itemFormat.endIndex);
                 newItemFormat.Items.Add(newPlaceholder);
                 itemFormat = newItemFormat;
             }
 
             // Let's buffer all items from the enumerable (to ensure the Count without double-enumeration):
+            List<object> bufferItems = null;
             if (!(current is ICollection items))
             {
-                var allItems = new List<object>();
+                bufferItems = ListPool<object>.Get();
                 foreach (var item in enumerable)
-                    allItems.Add(item);
-                items = allItems;
+                {
+                    bufferItems.Add(item);
+                }
+                items = bufferItems;
             }
 
-            var oldCollectionIndex =
-                CollectionIndex; // In case we have nested arrays, we might need to restore the CollectionIndex
+            var oldCollectionIndex = CollectionIndex; // In case we have nested arrays, we might need to restore the CollectionIndex
             CollectionIndex = -1;
             foreach (var item in items)
             {
@@ -228,6 +199,48 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             }
 
             CollectionIndex = oldCollectionIndex; // Restore the CollectionIndex
+
+            if (bufferItems != null)
+                ListPool<object>.Release(bufferItems);
+
+            return true;
+        }
+
+        public override bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+        {
+            var format = formattingInfo.Format;
+            if (format == null)
+                return false;
+
+            var parameters = format.Split('|', 4);
+            if (parameters.Count < 2)
+                return false;
+
+            var itemFormat = parameters[0];
+
+            // Spacer
+            if (parameters.Count >= 1)
+                formattingInfo.Write(parameters[0], null);
+
+            // Last spacer
+            if (parameters.Count >= 3)
+                formattingInfo.Write(parameters[2], null);
+
+            // Two spacer
+            if (parameters.Count >= 4)
+                formattingInfo.Write(parameters[3], null);
+
+            if (!itemFormat.HasNested)
+            {
+                // The format is not nested,
+                // so we will treat it as an itemFormat:
+                var newItemFormat = FormatItemPool.GetFormat(m_SmartSettings, itemFormat.baseString, itemFormat.startIndex, itemFormat.endIndex, true);
+                var newPlaceholder = FormatItemPool.GetPlaceholder(m_SmartSettings, newItemFormat, itemFormat.startIndex, 0, itemFormat, itemFormat.endIndex);
+                newItemFormat.Items.Add(newPlaceholder);
+                itemFormat = newItemFormat;
+            }
+
+            formattingInfo.Write(itemFormat, null);
 
             return true;
         }

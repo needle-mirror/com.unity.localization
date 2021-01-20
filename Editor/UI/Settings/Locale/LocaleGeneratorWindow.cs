@@ -80,7 +80,8 @@ namespace UnityEditor.Localization.UI
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(s_Texts.generateLocalesButton, GUILayout.Width(180)))
                 {
-                    ExportSelectedLocales();
+                    ExportSelectedLocales(m_ListView.GetSelectedLocales());
+                    Close();
                 }
                 EditorGUILayout.EndHorizontal();
             }
@@ -99,14 +100,14 @@ namespace UnityEditor.Localization.UI
             }
         }
 
-        internal void ExportSelectedLocales()
+        internal static void ExportSelectedLocales(List<LocaleIdentifier> localeIdentifiers)
         {
             var path = EditorUtility.SaveFolderPanel(Texts.saveDialog, "Assets/", "");
             if (!string.IsNullOrEmpty(path))
-                ExportSelectedLocales(path);
+                ExportSelectedLocales(path, localeIdentifiers);
         }
 
-        internal void ExportSelectedLocales(string path)
+        internal static void ExportSelectedLocales(string path, List<LocaleIdentifier> selectedIdentifiers)
         {
             try
             {
@@ -114,7 +115,6 @@ namespace UnityEditor.Localization.UI
                 EditorUtility.DisplayProgressBar(Texts.progressTitle, "Creating Locale Objects", 0);
                 var localeDict = new Dictionary<LocaleIdentifier, Locale>(); // Used for quick look up of parents
                 var locales = new List<Locale>();
-                var selectedIdentifiers = m_ListView.GetSelectedLocales();
 
                 foreach (var selectedIdentifier in selectedIdentifiers)
                 {
@@ -154,7 +154,7 @@ namespace UnityEditor.Localization.UI
 
                 // Export the assets
                 AssetDatabase.StartAssetEditing(); // Batch the assets into a single asset operation
-                var relativePath = MakePathRelative(path);
+                var relativePath = PathHelper.MakePathRelative(path);
                 for (int i = 0; i < locales.Count; ++i)
                 {
                     var locale = locales[i];
@@ -163,26 +163,18 @@ namespace UnityEditor.Localization.UI
                     assetPath = AssetDatabase.GenerateUniqueAssetPath(assetPath);
                     AssetDatabase.CreateAsset(locale, assetPath);
                 }
-
                 AssetDatabase.StopAssetEditing();
 
-                Close();
+                // Import the Locales now instead of waiting for them to be imported via the asset post processor.
+                // If we wait for them to be imported during the asset post processor then they will not be available
+                // until all current assets have been imported.
+                // This can cause duplicate Locales to be created when importing multiple tables with missing Locales.
+                locales.ForEach(l => LocalizationEditorSettings.AddLocale(l));
             }
             finally
             {
                 EditorUtility.ClearProgressBar();
             }
-        }
-
-        static string MakePathRelative(string path)
-        {
-            if (path.Contains(Application.dataPath))
-            {
-                var length = Application.dataPath.Length - "Assets".Length;
-                return path.Substring(length, path.Length - length);
-            }
-
-            return path;
         }
 
         static List<LocaleIdentifier> GenerateLocaleChoices(LocaleSource source)

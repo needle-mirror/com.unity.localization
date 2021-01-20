@@ -77,6 +77,11 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
+        /// True if <see cref="AssetChanged"/> has any subscribers.
+        /// </summary>
+        public bool HasChangeHandler => m_ChangeHandler != null;
+
+        /// <summary>
         /// Load the referenced asset as type TObject.
         /// </summary>
         /// <returns>The load operation.</returns>

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using UnityEngine.Localization.SmartFormat;
 using UnityEngine.Pool;
 
 namespace UnityEngine.Localization.Pseudo
@@ -257,8 +258,6 @@ namespace UnityEngine.Localization.Pseudo
         {
             using (StringBuilderPool.Get(out var stringBuilder))
             {
-                stringBuilder.Clear();
-
                 foreach (var f in Fragments)
                 {
                     f.BuildString(stringBuilder);

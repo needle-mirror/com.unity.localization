@@ -129,6 +129,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             formatter.Settings.CaseSensitivity = CaseSensitivityType.CaseInsensitive;
 
             Assert.AreEqual(string.Format($"{derived.Property}"), formatter.Format("{Property}", derived));
+            Assert.AreEqual(string.Format($"{derived.ReadonlyProperty}"), formatter.Format("{ReadonlyProperty}", derived));
         }
 
         public class MiscObject
@@ -151,10 +152,6 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
 
         public class DerivedMiscObject : MiscObject
         {
-            public override string Property
-            {
-                set {}   // only a dummy setter, getter from base class
-            }
         }
     }
 }

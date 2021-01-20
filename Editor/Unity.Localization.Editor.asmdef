@@ -4,6 +4,7 @@
         "Unity.Localization",
         "Unity.Addressables.Editor",
         "Unity.Addressables",
+        "Unity.InternalAPIEditorBridge.013",
         "Unity.ResourceManager",
         "Unity.TextMeshPro",
         "Unity.ugui",
@@ -16,13 +17,7 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "Google.Apis.Sheets.v4.dll",
-        "Google.Apis.dll",
-        "Google.Apis.Core.dll",
-        "Google.Apis.Auth.dll",
-        "Newtonsoft.Json.dll",
-        "Google.Apis.Auth.PlatformServices.dll",
-        "CsvHelper.dll"
+        "Unity.Localization.ThirdParty.Editor.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

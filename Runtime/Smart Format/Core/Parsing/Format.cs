@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using UnityEngine.Localization.SmartFormat.Core.Settings;
+using UnityEngine.Pool;
 
 namespace UnityEngine.Localization.SmartFormat.Core.Parsing
 {
@@ -14,23 +14,34 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
     /// </summary>
     public class Format : FormatItem
     {
-        public Format(SmartSettings smartSettings, string baseString) : base(smartSettings, baseString, 0,
-                                                                             baseString.Length)
+        public void ReleaseToPool()
         {
+            Clear();
+
+            foreach (var i in Items)
+            {
+                // Only release items we own
+                if (ReferenceEquals(this, i.Parent))
+                    FormatItemPool.Release(i);
+            }
+
+            foreach (var s in m_Splits)
+            {
+                SplitListPool.Release(s);
+            }
+
             parent = null;
-            Items = new List<FormatItem>();
+            Items.Clear();
+            HasNested = false;
+            splitCache = null;
+            m_Splits.Clear();
         }
 
-        public Format(SmartSettings smartSettings, Placeholder parent, int startIndex) : base(smartSettings, parent,
-                                                                                              startIndex)
-        {
-            this.parent = parent;
-            Items = new List<FormatItem>();
-        }
-
-        public readonly Placeholder parent;
-        public List<FormatItem> Items { get; }
+        public Placeholder parent;
+        public List<FormatItem> Items { get; } = new List<FormatItem>();
         public bool HasNested { get; set; }
+
+        List<SplitList> m_Splits = new List<SplitList>();
 
         /// <summary>Returns a substring of the current Format.</summary>
         public Format Substring(int startIndex)
@@ -52,7 +63,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
             // If startIndex and endIndex already match this item, we're done:
             if (startIndex == this.startIndex && endIndex == this.endIndex) return this;
 
-            var substring = new Format(SmartSettings, baseString) {startIndex = startIndex, endIndex = endIndex};
+            var substring = FormatItemPool.GetFormat(SmartSettings, baseString, startIndex, endIndex);
             foreach (var item in Items)
             {
                 if (item.endIndex <= startIndex)
@@ -64,11 +75,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                 if (item is LiteralText) // See if we need to slice the LiteralText:
                 {
                     if (startIndex > item.startIndex || item.endIndex > endIndex)
-                        newItem = new LiteralText(SmartSettings, substring)
-                        {
-                            startIndex = Math.Max(startIndex, item.startIndex),
-                            endIndex = Math.Min(endIndex, item.endIndex)
-                        };
+                        newItem = FormatItemPool.GetLiteralText(SmartSettings, substring, Math.Max(startIndex, item.startIndex), Math.Min(endIndex, item.endIndex));
                 }
                 else
                 {
@@ -116,14 +123,14 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
             return -1;
         }
 
-        private IList<int> FindAll(char search)
+        private List<int> FindAll(char search)
         {
             return FindAll(search, -1);
         }
 
-        private IList<int> FindAll(char search, int maxCount)
+        private List<int> FindAll(char search, int maxCount)
         {
-            var results = new List<int>();
+            var results = ListPool<int>.Get();
             var index = 0; // this.startIndex;
             while (maxCount != 0)
             {
@@ -154,50 +161,75 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
         public IList<Format> Split(char search, int maxCount)
         {
             var splits = FindAll(search, maxCount);
-            return new SplitList(this, splits);
+            var sl = SplitListPool.Get(this, splits);
+
+            // Keep track of the split lists we create so that they can be returned for reuse in the future.
+            m_Splits.Add(sl);
+            return sl;
         }
 
         /// <summary>
         /// Contains the results of a Split operation.
         /// This allows deferred splitting of items.
         /// </summary>
-        private class SplitList : IList<Format>
+        internal class SplitList : IList<Format>
         {
-            private readonly Format format;
-            private readonly IList<int> splits;
+            Format m_Format;
+            List<int> m_Splits;
+            List<Format> m_FormatCache = new List<Format>();
 
-            public SplitList(Format format, IList<int> splits)
+            public void Init(Format format, List<int> splits)
             {
-                this.format = format;
-                this.splits = splits;
+                m_Format = format;
+                m_Splits = splits;
+
+                // Resize the cache to match
+                for (int i = 0; i < Count; ++i)
+                    m_FormatCache.Add(null);
             }
 
             public Format this[int index]
             {
                 get
                 {
-                    if (index > splits.Count) throw new ArgumentOutOfRangeException("index");
+                    if (index > m_Splits.Count) throw new ArgumentOutOfRangeException("index");
 
-                    if (splits.Count == 0) return format;
+                    if (m_Splits.Count == 0) return m_Format;
 
-                    if (index == 0) return format.Substring(0, splits[0]);
+                    // Return cached version?
+                    if (m_FormatCache[index] != null)
+                        return m_FormatCache[index];
 
-                    if (index == splits.Count) return format.Substring(splits[index - 1] + 1);
+                    if (index == 0)
+                    {
+                        var f = m_Format.Substring(0, m_Splits[0]);
+                        m_FormatCache[index] = f;
+                        return f;
+                    }
+
+                    if (index == m_Splits.Count)
+                    {
+                        var f = m_Format.Substring(m_Splits[index - 1] + 1);
+                        m_FormatCache[index] = f;
+                        return f;
+                    }
 
                     // Return the format between the splits:
-                    var startIndex = splits[index - 1] + 1;
-                    return format.Substring(startIndex, splits[index] - startIndex);
+                    var startIndex = m_Splits[index - 1] + 1;
+                    var format = m_Format.Substring(startIndex, m_Splits[index] - startIndex);
+                    m_FormatCache[index] = format;
+                    return format;
                 }
                 set => throw new NotSupportedException();
             }
 
             public void CopyTo(Format[] array, int arrayIndex)
             {
-                var length = splits.Count + 1;
+                var length = m_Splits.Count + 1;
                 for (var i = 0; i < length; i++) array[arrayIndex + i] = this[i];
             }
 
-            public int Count => splits.Count + 1;
+            public int Count => m_Splits.Count + 1;
 
             public bool IsReadOnly => true;
 
@@ -223,7 +255,17 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
 
             public void Clear()
             {
-                throw new NotSupportedException();
+                m_Format = null;
+                ListPool<int>.Release(m_Splits);
+                m_Splits = null;
+
+                // Return the Formats we created
+                for (int i = 0; i < m_FormatCache.Count; ++i)
+                {
+                    if (m_FormatCache[i] != null)
+                        FormatItemPool.ReleaseFormat(m_FormatCache[i]);
+                }
+                m_FormatCache.Clear();
             }
 
             public bool Contains(Format item)
@@ -255,14 +297,17 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
         /// <returns></returns>
         public string GetLiteralText()
         {
-            var sb = new StringBuilder();
-            foreach (var item in Items)
+            using (StringBuilderPool.Get(out var sb))
             {
-                var literalItem = item as LiteralText;
-                if (literalItem != null) sb.Append(literalItem);
-            }
+                foreach (var item in Items)
+                {
+                    var literalItem = item as LiteralText;
+                    if (literalItem != null)
+                        sb.Append(literalItem);
+                }
 
-            return sb.ToString();
+                return sb.ToString();
+            }
         }
 
         /// <summary>
@@ -271,9 +316,16 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
         /// </summary>
         public override string ToString()
         {
-            var result = new StringBuilder(endIndex - startIndex);
-            foreach (var item in Items) result.Append(item);
-            return result.ToString();
+            using (StringBuilderPool.Get(out var sb))
+            {
+                int size = endIndex - startIndex;
+                if (sb.Capacity < size)
+                    sb.Capacity = size;
+
+                foreach (var item in Items)
+                    sb.Append(item);
+                return sb.ToString();
+            }
         }
     }
 }

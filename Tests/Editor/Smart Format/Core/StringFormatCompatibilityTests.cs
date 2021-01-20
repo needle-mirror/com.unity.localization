@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using NUnit.Framework;
 
@@ -47,6 +48,13 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             var year = 2017;
             var amount = 1025632;
             Assert.AreEqual(string.Format(fmt, year, amount), Smart.Format(fmt, year, amount));
+        }
+
+        [Test]
+        public void SmartFormat_With_Three_Arguments()
+        {
+            var args = new Dictionary<string, object> { {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
+            Assert.AreEqual($"{args["key1"]} {args["key2"]} {args["key3"]}", Smart.Format("{0} {1} {2}", args["key1"], args["key2"], args["key3"]));
         }
 
         [Test]

@@ -14,7 +14,7 @@ namespace UnityEngine.Localization.SmartFormat
     /// the composite string by invoking each extension.
     /// </summary>
     [Serializable]
-    public class SmartFormatter
+    public class SmartFormatter : ISerializationCallbackReceiver
     {
         [SerializeReference]
         SmartSettings m_Settings;
@@ -27,6 +27,10 @@ namespace UnityEngine.Localization.SmartFormat
 
         [SerializeReference]
         List<IFormatter> m_Formatters;
+
+        List<string> m_NotEmptyFormatterExtensionNames;
+
+        static readonly object[] k_Empty = { null };
 
         /// <summary>
         /// Event raising, if an error occurs during formatting.
@@ -55,15 +59,24 @@ namespace UnityEngine.Localization.SmartFormat
         /// Gets all names of registered formatter extensions which are not empty.
         /// </summary>
         /// <returns></returns>
-        public string[] GetNotEmptyFormatterExtensionNames()
+        public List<string> GetNotEmptyFormatterExtensionNames()
         {
-            var names = new List<string>();
+            if (m_NotEmptyFormatterExtensionNames != null)
+                return m_NotEmptyFormatterExtensionNames;
+
+            m_NotEmptyFormatterExtensionNames = new List<string>();
             foreach (var extension in FormatterExtensions)
             {
-                if (extension != null && extension.Names != null)
-                    names.AddRange(extension.Names.Where(n => n != string.Empty).ToArray());
+                if (extension?.Names != null)
+                {
+                    foreach (var name in extension.Names)
+                    {
+                        if (!string.IsNullOrEmpty(name))
+                            m_NotEmptyFormatterExtensionNames.Add(name);
+                    }
+                }
             }
-            return names.ToArray();
+            return m_NotEmptyFormatterExtensionNames;
         }
 
         /// <summary>
@@ -83,6 +96,7 @@ namespace UnityEngine.Localization.SmartFormat
         /// <param name="formatterExtensions"></param>
         public void AddExtensions(params IFormatter[] formatterExtensions)
         {
+            m_NotEmptyFormatterExtensionNames = null;
             FormatterExtensions.InsertRange(0, formatterExtensions);
         }
 
@@ -95,7 +109,7 @@ namespace UnityEngine.Localization.SmartFormat
         /// <returns></returns>
         public T GetSourceExtension<T>() where T : class, ISource
         {
-            return SourceExtensions.OfType<T>().First();
+            return SourceExtensions.OfType<T>().FirstOrDefault();
         }
 
         /// <summary>
@@ -107,7 +121,7 @@ namespace UnityEngine.Localization.SmartFormat
         /// <returns></returns>
         public T GetFormatterExtension<T>() where T : class, IFormatter
         {
-            return FormatterExtensions.OfType<T>().First();
+            return FormatterExtensions.OfType<T>().FirstOrDefault();
         }
 
         /// <summary>
@@ -136,7 +150,7 @@ namespace UnityEngine.Localization.SmartFormat
         /// <returns>Returns the formatted input with items replaced with their string representation.</returns>
         public string Format(string format, params object[] args)
         {
-            return Format(null, format, args ?? new object[] {null});
+            return Format(null, format, args);
         }
 
         /// <summary>
@@ -148,14 +162,20 @@ namespace UnityEngine.Localization.SmartFormat
         /// <returns>Returns the formatted input with items replaced with their string representation.</returns>
         public string Format(IFormatProvider provider, string format, params object[] args)
         {
-            args = args ?? new object[] {null};
-            var output = new StringOutput(format.Length + args.Length * 8);
-            var formatParsed = Parser.ParseFormat(format, GetNotEmptyFormatterExtensionNames());
-            var current = args.Length > 0 ? args[0] : args; // The first item is the default.
-            var formatDetails = new FormatDetails(this, formatParsed, args, null, provider, output);
-            Format(formatDetails, formatParsed, current);
+            args = args ?? k_Empty;
+            using (StringOutputPool.Get(format.Length + args.Length * 8, out var output))
+            {
+                var formatParsed = Parser.ParseFormat(format, GetNotEmptyFormatterExtensionNames());
+                var current = args.Length > 0 ? args[0] : args; // The first item is the default.
 
-            return output.ToString();
+                var formatDetails = FormatDetailsPool.Get(this, formatParsed, args, null, provider, output);
+                Format(formatDetails, formatParsed, current);
+
+                FormatDetailsPool.Release(formatDetails);
+                FormatItemPool.ReleaseFormat(formatParsed);
+
+                return output.ToString();
+            }
         }
 
         /// <summary>
@@ -166,11 +186,15 @@ namespace UnityEngine.Localization.SmartFormat
         /// <param name="args">The objects to format.</param>
         public void FormatInto(IOutput output, string format, params object[] args)
         {
-            args = args ?? new object[] {null};
+            args = args ?? k_Empty;
             var formatParsed = Parser.ParseFormat(format, GetNotEmptyFormatterExtensionNames());
             var current = args.Length > 0 ? args[0] : args; // The first item is the default.
-            var formatDetails = new FormatDetails(this, formatParsed, args, null, null, output);
+
+            var formatDetails = FormatDetailsPool.Get(this, formatParsed, args, null, null, output);
             Format(formatDetails, formatParsed, current);
+
+            FormatDetailsPool.Release(formatDetails);
+            FormatItemPool.ReleaseFormat(formatParsed);
         }
 
         /// <summary>
@@ -183,16 +207,23 @@ namespace UnityEngine.Localization.SmartFormat
         /// <returns>Returns the formatted input with items replaced with their string representation.</returns>
         public string FormatWithCache(ref FormatCache cache, string format, params object[] args)
         {
-            args = args ?? new object[] {null};
-            var output = new StringOutput(format.Length + args.Length * 8);
+            return FormatWithCache(ref cache, format, null, args);
+        }
 
-            if (cache == null)
-                cache = new FormatCache(Parser.ParseFormat(format, GetNotEmptyFormatterExtensionNames()));
-            var current = args.Length > 0 ? args[0] : args; // The first item is the default.
-            var formatDetails = new FormatDetails(this, cache.Format, args, cache, null, output);
-            Format(formatDetails, cache.Format, current);
+        public string FormatWithCache(ref FormatCache cache, string format, IFormatProvider formatProvider, params object[] args)
+        {
+            args = args ?? k_Empty;
+            using (StringOutputPool.Get(format.Length + args.Length * 8, out var output))
+            {
+                if (cache == null)
+                    cache = FormatCachePool.Get(Parser.ParseFormat(format, GetNotEmptyFormatterExtensionNames()));
+                var current = args.Length > 0 ? args[0] : args; // The first item is the default.
+                var formatDetails = FormatDetailsPool.Get(this, cache.Format, args, cache, formatProvider, output);
+                Format(formatDetails, cache.Format, current);
+                FormatDetailsPool.Release(formatDetails);
 
-            return output.ToString();
+                return output.ToString();
+            }
         }
 
         /// <summary>
@@ -204,25 +235,28 @@ namespace UnityEngine.Localization.SmartFormat
         /// <param name="args">The objects to format.</param>
         public void FormatWithCacheInto(ref FormatCache cache, IOutput output, string format, params object[] args)
         {
-            args = args ?? new object[] {null};
+            args = args ?? k_Empty;
             if (cache == null)
-                cache = new FormatCache(Parser.ParseFormat(format, GetNotEmptyFormatterExtensionNames()));
+                cache = FormatCachePool.Get(Parser.ParseFormat(format, GetNotEmptyFormatterExtensionNames()));
             var current = args.Length > 0 ? args[0] : args; // The first item is the default.
-            var formatDetails = new FormatDetails(this, cache.Format, args, cache, null, output);
+
+            var formatDetails = FormatDetailsPool.Get(this, cache.Format, args, cache, null, output);
             Format(formatDetails, cache.Format, current);
+            FormatDetailsPool.Release(formatDetails);
         }
 
         private void Format(FormatDetails formatDetails, Format format, object current)
         {
-            var formattingInfo = new FormattingInfo(formatDetails, format, current);
+            var formattingInfo = FormattingInfoPool.Get(formatDetails, format, current);
             Format(formattingInfo);
+            FormattingInfoPool.Release(formattingInfo);
         }
 
         /// <summary>
         /// Format the <see cref="FormattingInfo" /> argument.
         /// </summary>
         /// <param name="formattingInfo"></param>
-        public void Format(FormattingInfo formattingInfo)
+        public virtual void Format(FormattingInfo formattingInfo)
         {
             // Before we start, make sure we have at least one source extension and one formatter extension:
             CheckForExtensions();
@@ -334,31 +368,9 @@ namespace UnityEngine.Localization.SmartFormat
         {
             foreach (var sourceExtension in SourceExtensions)
             {
-                // if the current value is of type SmartObjects
-                // then try to find the right source extension for each of the objects in SmartObjects
-                // Note: SmartObjects cannot be nested, so this can be the case only once.
-                if (formattingInfo.CurrentValue is SmartObjects smartObjects)
-                {
-                    var savedCurrentValue = formattingInfo.CurrentValue;
-                    foreach (var obj in smartObjects)
-                    {
-                        formattingInfo.CurrentValue = obj;
-                        var handled = sourceExtension.TryEvaluateSelector(formattingInfo);
-                        if (handled)
-                        {
-                            formattingInfo.CurrentValue = savedCurrentValue;
-                            return true;
-                        }
-                    }
-
-                    formattingInfo.CurrentValue = savedCurrentValue;
-                }
-                else
-                {
-                    // other object - default handling
-                    var handled = sourceExtension.TryEvaluateSelector(formattingInfo);
-                    if (handled) return true;
-                }
+                var handled = sourceExtension.TryEvaluateSelector(formattingInfo);
+                if (handled)
+                    return true;
             }
 
             return false;
@@ -395,6 +407,16 @@ namespace UnityEngine.Localization.SmartFormat
             }
 
             return false;
+        }
+
+        public void OnBeforeSerialize()
+        {
+            m_NotEmptyFormatterExtensionNames = null;
+        }
+
+        public void OnAfterDeserialize()
+        {
+            m_NotEmptyFormatterExtensionNames = null;
         }
     }
 }

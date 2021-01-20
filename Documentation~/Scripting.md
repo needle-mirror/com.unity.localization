@@ -14,125 +14,13 @@ You can use the `LocalizedString` in a user script. It serializes and displays i
 
 The `LocalizedString` provides a `StringChanged` event. The script calls the event whenever the selected Locale changes. This makes your code simpler and more efficient, because the script only calls it when it needs to update the `LocalizedString`.
 
-```CSharp
-using UnityEngine;
-using UnityEngine.Localization;
-
-public class LocalizedStringExample : MonoBehaviour
-{
-    public LocalizedString myString;
-
-    string localizedText;
-
-    /// <summary>
-    /// Register a ChangeHandler. This is called whenever the string needs to be updated.
-    /// </summary>
-    void OnEnable()
-    {
-        myString.StringChanged += UpdateString;
-    }
-
-    private void OnDisable()
-    {
-        myString.StringChanged -= UpdateString;
-    }
-
-    void UpdateString(string s)
-    {
-        localizedText = s;
-    }
-
-    void OnGUI()
-    {
-        EditorGUILayout.LabelField(localizedText);
-    }
-}
-```
-
-The `LocalizedString` also provides a `ChangeHandler`. The script calls a `ChangeHandler` whenever the selected Locale changes. This makes your code more efficient, because the script only calls it when it needs to update the `LocalizedString`.
-
-```CSharp
-using UnityEngine;
-using UnityEngine.Localization;
-
-public class LocalizedStringExample : MonoBehaviour
-{
-    public LocalizedString myString;
-
-    string localizedText;
-
-    /// <summary>
-    /// Register a ChangeHandler. This will be called whenever we need to update our string.
-    /// </summary>
-    void OnEnable()
-    {
-        myString.RegisterChangeHandler(UpdateString);
-    }
-
-    private void OnDisable()
-    {
-        myString.ClearChangeHandler();
-    }
-
-    void UpdateString(string s)
-    {
-        localizedText = s;
-    }
-
-    void OnGUI()
-    {
-        EditorGUILayout.LabelField(localizedText);
-    }
-}
-}
-```
+[!code-cs[localized-string-events](../DocCodeSamples.Tests/LocalizedStringSamples.cs#localized-string-events)]
 
 ## Dynamic Strings
 
 Sometimes you might need to update a localized string, such as when using [Smart Strings](SmartStrings.md) or `String.Format` with arguments that have since changed. Calling `GetLocalizedString` with the arguments always updates the string. When you use the `StringChanged` event, you can use the `RefreshString` function to request an update, and the `Arguments` property to configure the arguments that format the string.
 
-```CSharp
-using UnityEngine;
-using UnityEngine.Localization;
-
-/// <summary>
-/// This example expects a Smart String with a named placeholder of `TimeNow`, such as "The time now is {TimeNow}".
-/// </summary>
-public class LocalizedStringExample : MonoBehaviour
-{
-    public LocalizedString myString;
-
-    string localizedText;
-
-    public float TimeNow => Time.time;
-
-    /// <summary>
-    /// Register a ChangeHandler. This is called whenever we need to update our string.
-    /// </summary>
-    void OnEnable()
-    {
-        myString.Arguments.Add(this); // Add our new argument
-        myString.StringChanged += UpdateString;
-    }
-
-    private void OnDisable()
-    {
-        myString.StringChanged -= UpdateString;
-    }
-
-    void UpdateString(string s)
-    {
-        localizedText = s;
-    }
-
-    void OnGUI()
-    {
-        // This calls UpdateString immediately (if the table is loaded) or when the table is available.
-        myString.RefreshString();
-        GUILayout.Label(localizedText);
-    }
-}
-```
+[!code-cs[localized-string-smart](../DocCodeSamples.Tests/LocalizedStringSamples.cs#localized-string-smart)]
 
 ## LocalizedAsset
 
@@ -148,10 +36,7 @@ To use a `LocalizedAsset`, you need to create a concrete version of the class an
 
 For example, to support localizing font assets, you could define the following class:
 
-```CSharp
-[Serializable]
-public class LocalizedFont : LocalizedAsset<Font> {}
-```
+[!code-cs[localized-font](../DocCodeSamples.Tests/LocalizedFontSample.cs)]
 
 In this example, you can now add `LocalizedFont` to a script, and `LocalizedString` will call the `AssetChanged` event when a localized Font asset is available.
 
@@ -182,43 +67,6 @@ When an Asset is not immediately available, the localization system returns an `
 This example demonstrates how to create a way for the person playing a game to select the language (defined in the Localization system by Locale) they want to use in the game. 
 To add a UI dropdown menu to the Scene, go to **GameObject > UI > Dropdown**, and attach the following script:
 
-```CSharp
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Localization.Settings;
-using UnityEngine.UI;
-
-public class LocaleDropdown : MonoBehaviour
-{
-    public Dropdown dropdown;
-
-    IEnumerator Start()
-    {
-        // Wait for the localization system to initialize
-        yield return LocalizationSettings.InitializationOperation;
-
-        // Generate list of available Locales
-        var options = new List<Dropdown.OptionData>();
-        int selected = 0;
-        for (int i = 0; i < LocalizationSettings.AvailableLocales.Locales.Count; ++i)
-        {
-            var locale = LocalizationSettings.AvailableLocales.Locales[i];
-            if (LocalizationSettings.SelectedLocale == locale)
-                selected = i;
-            options.Add(new Dropdown.OptionData(locale.name));
-        }
-        dropdown.options = options;
-
-        dropdown.value = selected;
-        dropdown.onValueChanged.AddListener(LocaleSelected);
-    }
-
-    static void LocaleSelected(int index)
-    {
-        LocalizationSettings.SelectedLocale = LocalizationSettings.AvailableLocales.Locales[index];
-    }
-}
-```
+[!code-cs[locale-dropdown](../DocCodeSamples.Tests/LocaleDropdown.cs)]
 
 You can see a more advanced version of this script in the Localization package samples.

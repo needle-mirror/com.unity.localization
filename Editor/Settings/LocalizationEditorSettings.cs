@@ -11,7 +11,6 @@ using UnityEngine.Localization;
 using UnityEngine.Localization.Pseudo;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
-using UnityEngine.Pool;
 using Object = UnityEngine.Object;
 
 namespace UnityEditor.Localization
@@ -69,8 +68,6 @@ namespace UnityEditor.Localization
         /// Localization modification events.
         /// </summary>
         public static LocalizationEditorEvents EditorEvents { get; internal set; } = new LocalizationEditorEvents();
-
-        internal static bool EnableAddressablesCreation { get; set; } = true;
 
         public LocalizationEditorSettings()
         {
@@ -239,7 +236,7 @@ namespace UnityEditor.Localization
             AssetDatabase.StartAssetEditing();
 
             // TODO: Check that no tables already exist with the same name, locale and type.
-            var relativePath = MakePathRelative(assetDirectory);
+            var relativePath = PathHelper.MakePathRelative(assetDirectory);
             Directory.CreateDirectory(relativePath);
 
             var sharedDataPath = Path.Combine(relativePath, tableName + " Shared Data.asset");
@@ -316,7 +313,7 @@ namespace UnityEditor.Localization
                 collection.AddTable(table, postEvent: false); // Don't post the event, we will send the Collection added only event
             }
 
-            var relativePath = MakePathRelative(path);
+            var relativePath = PathHelper.MakePathRelative(path);
             CreateAsset(collection, relativePath);
             EditorEvents.RaiseCollectionAdded(collection);
             return collection;
@@ -381,7 +378,7 @@ namespace UnityEditor.Localization
 
         internal virtual AddressableAssetSettings GetAddressableAssetSettings(bool create)
         {
-            return AddressableAssetSettingsDefaultObject.GetSettings(create && EnableAddressablesCreation);
+            return AddressableAssetSettingsDefaultObject.GetSettings(create);
         }
 
         internal virtual AddressableAssetEntry GetAssetEntry(Object asset) => GetAssetEntry(asset.GetInstanceID());
@@ -544,9 +541,9 @@ namespace UnityEditor.Localization
 
             var foundLocales = new List<Locale>();
 
-            var aaSettings = GetAddressableAssetSettings(true);
+            var aaSettings = GetAddressableAssetSettings(false);
             if (aaSettings == null)
-                return null;
+                return new ReadOnlyCollection<Locale>(foundLocales);
 
             var foundAssets = new List<AddressableAssetEntry>();
             aaSettings.GetAllAssets(foundAssets, false, group => group != null, entry =>
@@ -626,7 +623,7 @@ namespace UnityEditor.Localization
             if (table == null)
                 throw new ArgumentNullException(nameof(table), "Can not get preload flag from a null table");
 
-            var aaSettings = GetAddressableAssetSettings(true);
+            var aaSettings = GetAddressableAssetSettings(false);
             if (aaSettings == null)
                 return false;
 
@@ -686,17 +683,6 @@ namespace UnityEditor.Localization
         {
             Debug.Assert(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out string guid, out long _), "Failed to extract the asset Guid", asset);
             return guid;
-        }
-
-        internal static string MakePathRelative(string path)
-        {
-            if (path.Contains(Application.dataPath))
-            {
-                var length = Application.dataPath.Length - "Assets".Length;
-                return path.Substring(length, path.Length - length);
-            }
-
-            return path;
         }
     }
 }

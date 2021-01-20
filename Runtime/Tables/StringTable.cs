@@ -1,5 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Settings;
+using UnityEngine.Localization.SmartFormat;
 using UnityEngine.Localization.SmartFormat.Core.Formatting;
 
 namespace UnityEngine.Localization.Tables
@@ -12,6 +16,16 @@ namespace UnityEngine.Localization.Tables
         FormatCache m_FormatCache;
 
         /// <summary>
+        /// Used when <see cref="IsSmart"/> is true and <see cref="GetLocalizedString"/> is called.
+        /// Contains information about the format including any <see cref="IGlobalVariable"/> that were used.
+        /// </summary>
+        public FormatCache FormatCache
+        {
+            get => m_FormatCache;
+            set => m_FormatCache = value;
+        }
+
+        /// <summary>
         /// The raw localized value without any formatting applied.
         /// </summary>
         public string Value
@@ -20,7 +34,7 @@ namespace UnityEngine.Localization.Tables
             set
             {
                 Data.Localized = value;
-                m_FormatCache = null;
+                FormatCache = null;
             }
         }
 
@@ -39,7 +53,7 @@ namespace UnityEngine.Localization.Tables
             {
                 if (value)
                 {
-                    m_FormatCache = null;
+                    FormatCache = null;
                     AddTagMetadata<SmartFormatTag>();
                 }
                 else
@@ -71,31 +85,49 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Returns the raw localized value without any formatting applied.
+        /// Returns the localized text after formatting has been applied.
+        /// This will use SmartFormat if <see cref="IsSmart"/> is true else it will return the raw unformatted value.
         /// </summary>
         /// <returns></returns>
-        public string GetLocalizedString()
-        {
-            return Data.Localized;
-        }
+        public string GetLocalizedString() => GetLocalizedString(null, null);
+
+        /// <summary>
+        /// Returns the localized text after formatting has been applied.
+        /// Formatting will use SmartFormat if <see cref="IsSmart"/> is true else it will default to String.Format.
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        public string GetLocalizedString(params object[] args) => GetLocalizedString(null, args);
 
         /// <summary>
         /// Returns the localized text after formatting has been applied.
         /// Formatting will use SmartFormat is <see cref="IsSmart"/> is true else it will default to String.Format.
         /// </summary>
+        /// <param name="formatProvider">Custom format provider used with String.Format and smart strings.</param>
         /// <param name="args"></param>
         /// <returns></returns>
-        public string GetLocalizedString(params object[] args)
+        public string GetLocalizedString(IFormatProvider formatProvider, params object[] args)
         {
             string translatedText = null;
 
             if (IsSmart)
             {
-                translatedText = LocalizationSettings.StringDatabase.SmartFormatter.FormatWithCache(ref m_FormatCache, Data.Localized, args);
+                #if UNITY_EDITOR
+                if (!LocalizationSettings.Instance.IsPlaying)
+                {
+                    FormatCache formatCache = null;
+                    translatedText = LocalizationSettings.StringDatabase.SmartFormatter.FormatWithCache(ref formatCache, Data.Localized, formatProvider, args);
+                }
+                else
+                #endif
+                translatedText = LocalizationSettings.StringDatabase.SmartFormatter.FormatWithCache(ref m_FormatCache, Data.Localized, formatProvider, args);
             }
             else if (!string.IsNullOrEmpty(Data.Localized))
             {
-                translatedText = args == null ? Data.Localized : string.Format(Data.Localized, args);
+                if (args != null)
+                    translatedText = formatProvider == null ? string.Format(Data.Localized, args) : string.Format(formatProvider, Data.Localized, args);
+                else
+                    translatedText = Data.Localized;
             }
 
             return translatedText;
@@ -107,6 +139,39 @@ namespace UnityEngine.Localization.Tables
     /// </summary>
     public class StringTable : DetailedLocalizationTable<StringTableEntry>
     {
+        /// <summary>
+        /// Returns the unique characters used by all entries in this table.
+        /// This will also include Smart String entries but will only consider the <see cref="UnityEngine.Localization.SmartFormat.Core.Parsing.LiteralText"/> values,
+        /// it will not consider <see cref="UnityEngine.Localization.SmartFormat.Core.Parsing.Placeholder"/> values.
+        /// </summary>
+        public string GenerateCharacterSet()
+        {
+            var literals = CollectLiteralCharacters();
+
+            // Sort the output so the results are more deterministic.
+            var sorted = literals.Distinct().OrderBy(c => c);
+
+            return string.Concat(sorted);
+        }
+
+        internal IEnumerable<char> CollectLiteralCharacters()
+        {
+            IEnumerable<char> e = "";
+            var smart = new SmartFormatterLiteralCharacterExtractor(LocalizationSettings.StringDatabase?.SmartFormatter);
+            foreach (var entry in Values)
+            {
+                if (entry.IsSmart)
+                {
+                    e = e.Concat(smart.ExtractLiteralsCharacters(entry.LocalizedValue));
+                }
+                else
+                {
+                    e = e.Concat(entry.LocalizedValue.AsEnumerable());
+                }
+            }
+            return e;
+        }
+
         /// <summary>
         /// Creates a new, empty StringTableEntry.
         /// </summary>

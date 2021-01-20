@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Localization;
-using UnityEngine.Localization.Metadata;
 
 namespace UnityEditor.Localization.UI
 {
     static class ManagedReferenceUtility
     {
-        static readonly Dictionary<string, GUIContent> s_NameLookup = new Dictionary<string, GUIContent>();
+        static readonly Dictionary<object, GUIContent> s_NameLookup = new Dictionary<object, GUIContent>();
         static readonly Dictionary<string, Type> s_TypeLookup = new Dictionary<string, Type>();
         public static readonly GUIContent Empty = new GUIContent("Empty");
 
@@ -26,6 +25,26 @@ namespace UnityEditor.Localization.UI
                 type = Type.GetType($"{typeNames[1]}, {typeNames[0]}");
             s_TypeLookup[managedReferenceFullTypename] = type;
             return type;
+        }
+
+        public static GUIContent GetDisplayName(Type type)
+        {
+            if (s_NameLookup.TryGetValue(type, out var name))
+                return name;
+
+            var itemAttribute = type.GetCustomAttribute<DisplayNameAttribute>();
+            if (itemAttribute != null && !string.IsNullOrEmpty(itemAttribute.Name))
+            {
+                name = new GUIContent(itemAttribute.Name);
+                s_NameLookup[type] = name;
+                return name;
+            }
+
+            // Class name
+            var className = ObjectNames.NicifyVariableName(type.Name);
+            var guiContent = new GUIContent(className);
+            s_NameLookup[type] = guiContent;
+            return guiContent;
         }
 
         public static GUIContent GetDisplayName(string managedReferenceFullTypename)
@@ -45,15 +64,9 @@ namespace UnityEditor.Localization.UI
                 return name;
             }
 
-            var itemAttribute = type.GetCustomAttribute<DisplayNameAttribute>();
-            if (itemAttribute != null && !string.IsNullOrEmpty(itemAttribute.Name))
-            {
-                name = new GUIContent(itemAttribute.Name);
-                s_NameLookup[managedReferenceFullTypename] = name;
-                return name;
-            }
-
-            return UseClassName(managedReferenceFullTypename, type);
+            name = GetDisplayName(type);
+            s_NameLookup[managedReferenceFullTypename] = name;
+            return name;
         }
 
         static GUIContent UseClassName(string managedReferenceFullTypename, Type type)

@@ -51,5 +51,11 @@ namespace UnityEditor.Localization
             property.InsertArrayElementAtIndex(property.arraySize);
             return property.GetArrayElementAtIndex(property.arraySize - 1);
         }
+
+        public static SerializedProperty InsertArrayElement(this SerializedProperty property, int index)
+        {
+            property.InsertArrayElementAtIndex(index);
+            return property.GetArrayElementAtIndex(index);
+        }
     }
 }

@@ -14,7 +14,7 @@ By default, Unity uses a distributed Key Id generator to provide a unique Key Id
 
 A Key is a 64-bit long data type. It has the following structure:.
 
-![Distributed ID Generator key data structure.](images/DistributedIDGeneratorKeyDatastructure.png)
+![Distributed ID Generator key data structure.](images/DistributedIDGeneratorKeyDatastructure.svg)
 
 The 64-bit key is comprised of the following components:
 
@@ -31,27 +31,4 @@ As an alternative to Unity’s distributed Key Id generation, you can apply a cu
 
 The following example shows how to set an existing String Table Collection to use sequential keys.
 
-```c#
-using System.Linq;
-using UnityEditor;
-using UnityEditor.Localization;
-using UnityEngine.Localization.Tables;
-
-public class Example
-{
-    public void ChangeKeyGenerator()
-    {
-        var stringTableCollection = LocalizationEditorSettings.GetStringTableCollection("My Game Text");
-
-        // Determine the highest Key Id so Unity can continue generating Ids that do not conflict with existing Ids.
-        long maxKeyId = 0;
-        if (stringTableCollection.SharedData.Entries.Count > 0)
-            maxKeyId = stringTableCollection.SharedData.Entries.Max(e => e.Id);
-
-        stringTableCollection.SharedData.KeyGenerator = new SequentialIDGenerator(maxKeyId + 1);
-
-        // Mark the asset dirty so that Unity saves the changes
-        EditorUtility.SetDirty(stringTableCollection.SharedData);
-    }
-}
-```
+[!code-cs[change-key-generator](../DocCodeSamples.Tests/ChangeKeyGenerator.cs)]

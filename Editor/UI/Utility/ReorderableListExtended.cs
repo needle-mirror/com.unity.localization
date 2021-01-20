@@ -60,6 +60,14 @@ namespace UnityEditor.Localization.UI
             onCanRemoveCallback = CanRemoveElement;
         }
 
+        public ReorderableListExtended(SerializedObject serializedObject, SerializedProperty elements,  bool draggable, bool displayHeader, bool displayAddButton, bool displayRemoveButton) :
+            base(serializedObject, elements, draggable, displayHeader, displayAddButton, displayRemoveButton)
+        {
+            drawElementCallback = DrawElement;
+            elementHeightCallback = GetElementHeight;
+            onCanRemoveCallback = CanRemoveElement;
+        }
+
         void DrawElement(Rect rect, int idx, bool isActive, bool isFocused)
         {
             var element = serializedProperty.GetArrayElementAtIndex(idx);
@@ -103,25 +111,12 @@ namespace UnityEditor.Localization.UI
         void ShowAddMenu(Rect rect, ReorderableList lst)
         {
             var menu = new GenericMenu();
-
-            var foundTypes = TypeCache.GetTypesDerivedFrom(m_AddType);
-            for (int i = 0; i < foundTypes.Count; ++i)
+            TypeUtility.PopulateMenuWithCreateItems(menu, m_AddType, type =>
             {
-                var type = foundTypes[i];
-
-                if (type.IsAbstract)
-                    continue;
-
-                if (RequiredAttribute != null && !Attribute.IsDefined(type, RequiredAttribute))
-                    continue;
-
-                menu.AddItem(new GUIContent(ObjectNames.NicifyVariableName(type.Name)), false, () =>
-                {
-                    var element = serializedProperty.AddArrayElement();
-                    element.managedReferenceValue = CreateNewInstance(type);
-                    serializedProperty.serializedObject.ApplyModifiedProperties();
-                });
-            }
+                var element = serializedProperty.AddArrayElement();
+                element.managedReferenceValue = CreateNewInstance(type);
+                serializedProperty.serializedObject.ApplyModifiedProperties();
+            }, RequiredAttribute);
 
             AddMenuItems?.Invoke(menu);
 

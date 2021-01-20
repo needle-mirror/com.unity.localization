@@ -9,17 +9,17 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
     /// </summary>
     public class Selector : FormatItem
     {
+        string m_Operator = null;
+
         /// <summary>
         /// Keeps track of where the "operators" started for this item.
         /// </summary>
-        internal readonly int operatorStart;
+        internal int operatorStart;
 
-        public Selector(SmartSettings smartSettings, string baseString, int startIndex, int endIndex, int operatorStart,
-                        int selectorIndex)
-            : base(smartSettings, baseString, startIndex, endIndex)
+        public override void Clear()
         {
-            SelectorIndex = selectorIndex;
-            this.operatorStart = operatorStart;
+            base.Clear();
+            m_Operator = null;
         }
 
         /// <summary>
@@ -27,11 +27,19 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
         /// Example: {Person.Birthday.Year} has 3 seletors,
         /// and Year has a SelectorIndex of 2.
         /// </summary>
-        public int SelectorIndex { get; }
+        public int SelectorIndex { get; internal set; }
 
         /// <summary>
         /// The operator that came before the selector; typically "."
         /// </summary>
-        public string Operator => baseString.Substring(operatorStart, startIndex - operatorStart);
+        public string Operator
+        {
+            get
+            {
+                if (m_Operator == null)
+                    m_Operator = baseString.Substring(operatorStart, startIndex - operatorStart);
+                return m_Operator;
+            }
+        }
     }
 }

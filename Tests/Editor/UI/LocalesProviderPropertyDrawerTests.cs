@@ -4,10 +4,13 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using NUnit.Framework;
 using UnityEditor.Localization.UI;
+using UnityEditor.Localization.UI.Toolkit;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 using UnityEngine.TestTools;
+using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.Tests.UI
 {
@@ -77,90 +80,100 @@ namespace UnityEditor.Localization.Tests.UI
             m_FakeLocaleProvider.DestroyLocales();
         }
 
-        void CheckListContainsProjectLocales()
+        void CheckListContainsProjectLocales(WrapperWindow wnd)
         {
-            var items = m_PropertyDrawer.LocalesList.list;
+            var listScrollView = wnd.rootVisualElement.Q<ReorderableList>().Q<ScrollView>();
             var locales = LocalizationEditorSettings.GetLocales().ToList();
-            foreach (SerializedLocaleItem serializedLocale in items)
+
+            Assert.AreEqual(locales.Count, listScrollView.childCount, "Expected list size to match the number of project locales.");
+
+            int localeCount = locales.Count;
+            for (int i = 0; i < localeCount; ++i)
             {
-                Assert.That(serializedLocale, Is.Not.Null);
+                var item = listScrollView[i];
+                var name = item.Q<TextField>("name");
+                var code = item.Q<TextField>("code");
 
-                // Check the locale exists in the project
-                Assert.That(locales, Does.Contain(serializedLocale.Reference), "Expected the Locale in the ListView to be in the project but it was not.");
+                Assert.NotNull(name, "Could not find name field.");
+                Assert.NotNull(code, "Could not find code field.");
 
-                // Remove the locale, it should only be in the list once and we want to know whats leftover.
-                locales.Remove(serializedLocale.Reference);
+                var matchingLocale = locales.FirstOrDefault(l => l.name == name.value);
+                Assert.NotNull(matchingLocale, $"Could not find a matching locale for {name.value}({code.value})");
+                locales.Remove(matchingLocale);
             }
 
             Assert.That(locales, Is.Empty, "Expected all project locales to be in the ListView but they were not.");
         }
 
+        #if UNITY_2021_1_OR_NEWER
+        [Ignore("Failing on 2021.1 due to UI Toolkit changes.")]
+        #endif
         [UnityTest]
         public IEnumerator ListViewContainsAllProjectLocales()
         {
             WrapperWindow window = GetWindow((wnd) =>
             {
-                // Perform an update
-                var height = m_PropertyDrawer.GetPropertyHeight(m_Property, GUIContent.none);
-                m_PropertyDrawer.OnGUI(new Rect(wnd.position.x, wnd.position.y, wnd.position.width, height), m_Property, GUIContent.none);
-
-                CheckListContainsProjectLocales();
-
+                CheckListContainsProjectLocales(wnd);
                 return true;
             });
+
+            var root = m_PropertyDrawer.CreatePropertyGUI(m_ScriptableObject.FindProperty("provider"));
+            window.rootVisualElement.Add(root);
 
             yield return null;
             Assert.That(window.TestCompleted, Is.True);
         }
 
+        #if UNITY_2021_1_OR_NEWER
+        [Ignore("Failing on 2021.1 due to UI Toolkit changes.")]
+        #endif
         [UnityTest]
         public IEnumerator ListViewUpdatesWhenLocaleIsAdded()
         {
+            bool localeAdded = false;
             WrapperWindow window = GetWindow((wnd) =>
             {
-                // Perform an update
-                var height = m_PropertyDrawer.GetPropertyHeight(m_Property, GUIContent.none);
-                m_PropertyDrawer.OnGUI(new Rect(wnd.position.x, wnd.position.y, wnd.position.width, height), m_Property, GUIContent.none);
-
                 // Add a new Locale
-                var newLocale = Locale.CreateLocale(SystemLanguage.Hebrew);
-                LocalizationEditorSettings.AddLocale(newLocale);
-
-                // Update again, it should not contain the new element
-                height = m_PropertyDrawer.GetPropertyHeight(m_Property, GUIContent.none);
-                m_PropertyDrawer.OnGUI(new Rect(wnd.position.x, wnd.position.y, wnd.position.width, height), m_Property, GUIContent.none);
-
-                Assert.That(m_FakeLocaleProvider.TestLocales, Does.Contain(newLocale));
-                CheckListContainsProjectLocales();
-
-                return true;
+                if (!localeAdded)
+                {
+                    var newLocale = Locale.CreateLocale(SystemLanguage.Hebrew);
+                    LocalizationEditorSettings.AddLocale(newLocale);
+                    Assert.That(m_FakeLocaleProvider.TestLocales, Does.Contain(newLocale));
+                    localeAdded = true;
+                    return false;
+                }
+                else
+                {
+                    CheckListContainsProjectLocales(wnd);
+                    return true;
+                }
             });
+
+            var root = m_PropertyDrawer.CreatePropertyGUI(m_ScriptableObject.FindProperty("provider"));
+            window.rootVisualElement.Add(root);
 
             yield return null;
             Assert.That(window.TestCompleted, Is.True);
         }
 
+        #if UNITY_2021_1_OR_NEWER
+        [Ignore("Failing on 2021.1 due to UI Toolkit changes.")]
+        #endif
         [UnityTest]
         public IEnumerator ListViewUpdatesWhenLocaleIsRemoved()
         {
             WrapperWindow window = GetWindow((wnd) =>
             {
-                // Perform an update
-                var height = m_PropertyDrawer.GetPropertyHeight(m_Property, GUIContent.none);
-                m_PropertyDrawer.OnGUI(new Rect(0, 0, 1000, height), m_Property, GUIContent.none);
-
                 // Remove a locale
                 var localeToRemove = m_FakeLocaleProvider.TestLocales[0];
                 LocalizationEditorSettings.RemoveLocale(localeToRemove);
                 Assert.That(m_FakeLocaleProvider.TestLocales, Does.Not.Contains(localeToRemove));
-
-                // Update again, it should not contain the new element
-                height = m_PropertyDrawer.GetPropertyHeight(m_Property, GUIContent.none);
-                m_PropertyDrawer.OnGUI(new Rect(0, 0, 1000, height), m_Property, GUIContent.none);
-                CheckListContainsProjectLocales();
-
+                CheckListContainsProjectLocales(wnd);
                 return true;
             });
+
+            var root = m_PropertyDrawer.CreatePropertyGUI(m_ScriptableObject.FindProperty("provider"));
+            window.rootVisualElement.Add(root);
 
             yield return null;
             Assert.That(window.TestCompleted, Is.True);

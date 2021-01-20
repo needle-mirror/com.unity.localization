@@ -136,7 +136,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF.V20
 
         private System.Xml.XmlElement[] anyField;
 
-        private List<note> notesField = new List<note>();
+        private List<note> notesField;
 
         private List<object> itemsField = new List<object>();
 
@@ -535,7 +535,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF.V20
     {
         private System.Xml.XmlElement[] anyField;
 
-        private List<note> notesField = new List<note>();
+        private List<note> notesField;
 
         private List<object> itemsField = new List<object>();
 
@@ -803,7 +803,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF.V20
 
         private System.Xml.XmlElement[] anyField;
 
-        private List<note> notesField = new List<note>();
+        private List<note> notesField;
 
         private data[] originalDataField;
 

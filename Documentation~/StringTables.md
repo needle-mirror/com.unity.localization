@@ -41,3 +41,28 @@ You can view [Metadata](Metadata.md) for tables and table entries.
 The Localization system stores **Shared** Metadata in the **Shared Table Data** for the table collection. This means that all Tables have access to this data. Locale-specific Metadata (the list below Shared) is stored in the table and is only accessible by the table with the data.
 
 ![Editing Table Entry Metadata](images/StringTables_EntryProperties.png)
+
+## Character Sets
+
+Sometimes we need to populate a Font Atlas with specific characters for a language. One practical reason is creating a font from a subset of characters. This is particularly useful for languages with massive character sets (over 50,000 for Chinese). Most games use about 1,000 characters at most, and games with full Chinese and Japanese language support are some of the few that approach this range.
+Unity can determine the **Character Sets** for **String Tables** by examining the contents of each table and determining the distinct characters that are in use. The contents of [Smart Strings](SmartStrings.md) can also be examined so that the literal values are also included into the **Character Set** whilst ignoring any placeholders.
+
+For example, the **Character Set** for the [Smart String](SmartStrings.md) `You have {count:plural:an Apple|{} apples}!` would be ` !AYaehlnopsuv`. 
+
+You can export a **Character Set** file from the context menu of the String Table window, the String Table Collection window, or the Localization Tables window. 
+
+The type of export depends on where you run the export from:
+
+- **String Table window:** This exports values for the selected String Table only.
+- **String Table Collection window:** This exports all values for the selected String Table Collection.
+- **Localization window:** This exports all values for the selected String Table Collection.
+
+![Exporting a Character Set from the Localization Tables Window](images/StringTables_ExportCharacterSetMenu.png)
+
+The **Export Character Set Window** can be used to select multiple **String Tables** to generate the **Character Set** from.
+
+![Exporting the Character Set for Lithuanian](images/StringTables_ExportCharacterSetWindow.png)
+
+The exported file can then be used to generate a Font Atlas, such as with the TextMeshPro Font Asset Creator.
+
+![Exporting a Character Set from the Localization Tables Window](images/TMP_FontAssetCreator_CharacterSet.png)

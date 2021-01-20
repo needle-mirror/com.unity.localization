@@ -8,9 +8,9 @@ using Google.Apis.Sheets.v4.Data;
 using UnityEditor.Localization.Plugins.Google.Columns;
 using UnityEditor.Localization.Reporting;
 using UnityEngine;
-using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
 using static Google.Apis.Sheets.v4.SpreadsheetsResource;
+using static UnityEngine.Localization.Tables.SharedTableData;
 using Data = Google.Apis.Sheets.v4.Data;
 using Object = UnityEngine.Object;
 
@@ -33,6 +33,8 @@ namespace UnityEditor.Localization.Plugins.Google
         /// Further information can be found <see href="https://developers.google.com/sheets/api/guides/concepts#spreadsheet_id">here.</see>
         /// </summary>
         public string SpreadSheetId { get; set;  }
+
+        internal protected virtual bool UsingApiKey => (SheetsService as SheetsServiceProvider)?.Authentication != AuthenticationType.OAuth;
 
         /// <summary>
         /// Creates a new instance of a GoogleSheets connection.
@@ -163,6 +165,7 @@ namespace UnityEditor.Localization.Plugins.Google
 
         /// <summary>
         /// Returns all the column titles(values from the first row) for the selected sheet inside of the Spreadsheet with id <see cref="SpreadSheetId"/>.
+        /// This method requires the <see cref="SheetsService"/> to use OAuth authorization as it uses a data filter which reuires elevated authorization.
         /// </summary>
         /// <param name="sheetId">The sheet id.</param>
         /// <returns>All the </returns>
@@ -223,6 +226,7 @@ namespace UnityEditor.Localization.Plugins.Google
 
         /// <summary>
         /// Returns the total number of rows in the sheet inside of the Spreadsheet with id <see cref="SpreadSheetId"/>.
+        /// This method requires the <see cref="SheetsService"/> to use OAuth authorization as it uses a data filter which reuires elevated authorization.
         /// </summary>
         /// <param name="sheetId">The sheet to get the row count from.</param>
         /// <returns>The row count for the sheet.</returns>
@@ -306,6 +310,7 @@ namespace UnityEditor.Localization.Plugins.Google
         /// <summary>
         /// Extracts data from <paramref name="collection"/> using <paramref name="columnMapping"/> and sends it to the sheet
         /// inside of the Spreadsheet with id <see cref="SpreadSheetId"/>.
+        /// This method requires the <see cref="SheetsService"/> to use OAuth authorization as an API Key does not have the ability to write to a sheet.
         /// </summary>
         /// <param name="sheetId">The sheet(Spreadsheet tab) to insert the data into.</param>
         /// <param name="collection">The collection to extract the data from.</param>
@@ -363,17 +368,22 @@ namespace UnityEditor.Localization.Plugins.Google
                 colRequest.AddHeader(header, note);
             }
 
-            // Prepare the tables - Sort the keys and table entries
-            reporter?.ReportProgress("Generating row enumerator", 0.1f);
-            var rowEnumerator = collection.GetRowEnumerator();
+            var stringTables = collection.StringTables;
+            var tableEntries = new StringTableEntry[stringTables.Count];
 
-            reporter?.ReportProgress("Generating push data", 0.2f);
-            foreach (var row in rowEnumerator)
+            reporter?.ReportProgress("Generating push data", 0.1f);
+            foreach (var keyEntry in collection.SharedData.Entries)
             {
+                // Collect the table entry data.
+                for (int i = 0; i < stringTables.Count; ++i)
+                {
+                    tableEntries[i] = stringTables[i].GetEntry(keyEntry.Id);
+                }
+
                 // Now process each sheet column so they can update their requests.
                 foreach (var colReq in columnSheetRequests)
                 {
-                    colReq.Column.PushCellData(row.KeyEntry, row.TableEntries, out var value, out var note);
+                    colReq.Column.PushCellData(keyEntry, tableEntries, out var value, out var note);
                     colReq.AddRow(value, note);
                 }
             }
@@ -414,23 +424,48 @@ namespace UnityEditor.Localization.Plugins.Google
 
                 // The response columns will be in the same order we request them, we need the key
                 // before we can process any values so ensure the first column is the key column.
-                var sortedColumns = columnMapping.OrderBy(c => c is IPullKeyColumn).ToList();
+                var sortedColumns = columnMapping.OrderByDescending(c => c is IPullKeyColumn).ToList();
 
+                // We can only use public API. No data filters.
+                // We use a data filter when possible as it allows us to remove a lot of unnecessary information,
+                // such as unneeded sheets and columns, which reduces the size of the response. A Data filter can only be used with OAuth authentication.
                 reporter?.ReportProgress("Generating request", 0.1f);
-                var pullReq = GeneratePullRequest(sheetId, columnMapping);
+                ClientServiceRequest<Spreadsheet> pullReq = UsingApiKey ? GeneratePullRequest() : GenerateFilteredPullRequest(sheetId, columnMapping);
 
                 reporter?.ReportProgress("Sending request", 0.2f);
-                var response = ExecuteRequest<Spreadsheet, GetByDataFilterRequest>(pullReq);
+                var response = ExecuteRequest<Spreadsheet, ClientServiceRequest<Spreadsheet>>(pullReq);
 
                 reporter?.ReportProgress("Validating response", 0.5f);
-                if (response.Sheets == null || response.Sheets.Count == 0)
+
+                // When using an API key we get all the sheets so we need to extract the one we are pulling from.
+                var sheet = UsingApiKey ? response.Sheets?.FirstOrDefault(s => s?.Properties?.SheetId == sheetId) : response.Sheets[0];
+                if (sheet == null)
                     throw new Exception($"No sheet data available for {sheetId} in Spreadsheet {SpreadSheetId}.");
 
-                var sheet = response.Sheets[0];
-                if (sheet.Data.Count != columnMapping.Count)
-                    throw new Exception($"Column mismatch. Expected a response with {columnMapping.Count} columns but only got {sheet.Data.Count}");
+                // The data will be structured differently if we used a filter or not so we need to extract the parts we need.
+                var pulledColumns = new List<(IList<RowData> rowData, int valueIndex)>();
 
-                MergePull(sheet, collection, columnMapping, removeMissingEntries, reporter);
+                if (UsingApiKey)
+                {
+                    // When getting the whole sheet all the columns are stored in a single Data. We need to extract the correct value index for each column.
+                    foreach (var sortedCol in sortedColumns)
+                    {
+                        pulledColumns.Add((sheet.Data[0].RowData, sortedCol.ColumnIndex));
+                    }
+                }
+                else
+                {
+                    if (sheet.Data.Count != columnMapping.Count)
+                        throw new Exception($"Column mismatch. Expected a response with {columnMapping.Count} columns but only got {sheet.Data.Count}");
+
+                    // When using a filter each Data represents a single column.
+                    foreach (var d in sheet.Data)
+                    {
+                        pulledColumns.Add((d.RowData, 0));
+                    }
+                }
+
+                MergePull(pulledColumns, collection, columnMapping, removeMissingEntries, reporter);
 
                 // There is a bug that causes Undo to not set assets dirty (case 1240528) so we always set the asset dirty.
                 modifiedAssets.ForEach(EditorUtility.SetDirty);
@@ -449,9 +484,6 @@ namespace UnityEditor.Localization.Plugins.Google
             if (string.IsNullOrEmpty(SpreadSheetId))
                 throw new Exception($"{nameof(SpreadSheetId)} is required.");
 
-            if (sheetId == 0)
-                throw new ArgumentException($"Invalid sheet Id {sheetId}", nameof(sheetId));
-
             if (collection == null)
                 throw new ArgumentNullException(nameof(collection));
 
@@ -467,7 +499,15 @@ namespace UnityEditor.Localization.Plugins.Google
             ThrowIfDuplicateColumnIds(columnMapping);
         }
 
-        GetByDataFilterRequest GeneratePullRequest(int sheetId, IList<SheetColumn> columnMapping)
+        ClientServiceRequest<Spreadsheet> GeneratePullRequest()
+        {
+            var request = SheetsService.Service.Spreadsheets.Get(SpreadSheetId);
+            request.IncludeGridData = true;
+            request.Fields = "sheets.properties.sheetId,sheets.properties.gridProperties.rowCount,sheets.data.rowData.values.formattedValue,sheets.data.rowData.values.note";
+            return request;
+        }
+
+        ClientServiceRequest<Spreadsheet> GenerateFilteredPullRequest(int sheetId, IList<SheetColumn> columnMapping)
         {
             var getRequest = new GetSpreadsheetByDataFilterRequest { DataFilters = new List<DataFilter>() };
 
@@ -490,7 +530,7 @@ namespace UnityEditor.Localization.Plugins.Google
             return request;
         }
 
-        void MergePull(Sheet sheet, StringTableCollection collection, IList<SheetColumn> columnMapping, bool removeMissingEntries, ITaskReporter reporter)
+        void MergePull(List<(IList<RowData> rowData, int valueIndex)> columns, StringTableCollection collection, IList<SheetColumn> columnMapping, bool removeMissingEntries, ITaskReporter reporter)
         {
             reporter?.ReportProgress("Preparing to merge", 0.55f);
 
@@ -500,7 +540,7 @@ namespace UnityEditor.Localization.Plugins.Google
             var keyColumn = columnMapping[0] as IPullKeyColumn;
             Debug.Assert(keyColumn != null, "Expected the first column to be a Key column");
 
-            var rowCount = sheet.Data[0].RowData.Count;
+            var rowCount = columns[0].rowData.Count;
 
             // Send the start message
             foreach (var col in columnMapping)
@@ -510,15 +550,26 @@ namespace UnityEditor.Localization.Plugins.Google
 
             reporter?.ReportProgress("Merging response into collection", 0.6f);
             var keysProcessed = new HashSet<long>();
+
+            // We want to keep track of the order the entries are pulled in so we can match it
+            var sortedEntries = new List<SharedTableEntry>(rowCount);
+
             long totalCellsProcessed = 0;
 
+            var keyValueIndex = columns[0].valueIndex;
             for (int row = 0; row < rowCount; row++)
             {
-                var keyColData = sheet.Data[0];
-                var keyRowData = keyColData.RowData[row].Values[0];
-                var keyValue = keyRowData.FormattedValue;
-                var keyNote = keyRowData.Note;
+                var keyRowData = columns[0].rowData[row];
+                var keyData = keyRowData?.Values ? [keyValueIndex];
+                var keyValue = keyData?.FormattedValue;
+                var keyNote = keyData?.Note;
+
+                // Skip rows with no key data
+                if (string.IsNullOrEmpty(keyValue) && string.IsNullOrEmpty(keyNote))
+                    continue;
+
                 var rowKeyEntry = keyColumn.PullKey(keyValue, keyNote);
+                sortedEntries.Add(rowKeyEntry);
 
                 if (rowKeyEntry == null)
                 {
@@ -532,29 +583,46 @@ namespace UnityEditor.Localization.Plugins.Google
 
                 for (int col = 1; col < columnMapping.Count; ++col)
                 {
-                    var colData = sheet.Data[col];
+                    string value = null;
+                    string note = null;
+
+                    var colRowData = columns[col].rowData;
+                    var valueIndex = columns[col].valueIndex;
 
                     // Do we have data in this column for this row?
-                    if (colData.RowData?.Count > row && colData.RowData[row].Values?.Count > 0)
+                    if (colRowData.Count > row && colRowData[row]?.Values.Count > valueIndex)
                     {
-                        var cellData = colData.RowData[row].Values[0];
-                        columnMapping[col].PullCellData(rowKeyEntry, cellData.FormattedValue, cellData.Note);
-                        totalCellsProcessed++;
+                        var cellData = colRowData[row].Values[valueIndex];
+                        if (cellData != null)
+                        {
+                            value = cellData.FormattedValue;
+                            note = cellData.Note;
+                            totalCellsProcessed++;
+                        }
                     }
+
+                    // We always call PullCellData as its possible that data may have existed
+                    // in a previous Pull and has now been removed. We call Pull so that the column
+                    // is aware it is now null and can remove any metadata it may have added in the past. (LOC-134)
+                    columnMapping[col].PullCellData(rowKeyEntry, value, note);
                 }
             }
 
-            if (removeMissingEntries)
+            // Send the end message
+            foreach (var col in columnMapping)
             {
-                reporter?.ReportProgress("Removing missing entries", 0.9f);
-                RemoveMissingEntries(keysProcessed, collection, messages);
+                col.PullEnd();
             }
 
+            reporter?.ReportProgress("Removing missing entries and matching sheet row order", 0.9f);
+            HandleMissingEntriesAndMatchPullOrder(keysProcessed, sortedEntries, collection, messages, removeMissingEntries);
             reporter?.Completed($"Completed merge of {rowCount} rows and {totalCellsProcessed} cells from {columnMapping.Count} columns successfully.\n{messages.ToString()}");
         }
 
-        void RemoveMissingEntries(HashSet<long> entriesToKeep, StringTableCollection collection, StringBuilder removedEntriesLog)
+        void HandleMissingEntriesAndMatchPullOrder(HashSet<long> entriesToKeep, List<SharedTableEntry> sortedEntries, StringTableCollection collection, StringBuilder removedEntriesLog, bool removeMissingEntries)
         {
+            // We either remove missing entries or add them to the end.
+
             var stringTables = collection.StringTables;
 
             removedEntriesLog.AppendLine("Removed missing entries:");
@@ -562,20 +630,34 @@ namespace UnityEditor.Localization.Plugins.Google
             {
                 var entry = collection.SharedData.Entries[i];
                 if (entriesToKeep.Contains(entry.Id))
-                    continue;
-
-                removedEntriesLog.AppendLine($"\t{entry.Key}({entry.Id})");
-
-                // Remove the entry
-                collection.SharedData.RemoveKey(entry.Id);
-                i--;
-
-                // Remove from tables
-                foreach (var table in stringTables)
                 {
-                    table.Remove(entry.Id);
+                    continue;
+                }
+
+                if (!removeMissingEntries)
+                {
+                    // Missing entries that we want to keep go to the bottom of the list
+                    sortedEntries.Add(entry);
+                }
+                else
+                {
+                    removedEntriesLog.AppendLine($"\t{entry.Key}({entry.Id})");
+
+                    // Remove the entry
+                    collection.SharedData.RemoveKey(entry.Id);
+                    i--;
+
+                    // Remove from tables
+                    foreach (var table in stringTables)
+                    {
+                        table.Remove(entry.Id);
+                    }
                 }
             }
+
+            // Now replace the old list with our new one that is in the correct order.
+            Debug.Assert(collection.SharedData.Entries.Count == sortedEntries.Count, "Expected sorted entries to match unsorted.");
+            collection.SharedData.Entries = sortedEntries;
         }
 
         void ThrowIfDuplicateColumnIds(IList<SheetColumn> columnMapping)

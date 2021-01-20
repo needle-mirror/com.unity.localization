@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine.Localization.Settings;
+using UnityEngine.Localization.SmartFormat.Extensions;
+using UnityEngine.Localization.SmartFormat.GlobalVariables;
 using UnityEngine.Localization.Tables;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
@@ -15,11 +18,26 @@ namespace UnityEngine.Localization
         ChangeHandler m_ChangeHandler;
         AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult>? m_CurrentLoadingOperation;
         string m_CurrentStringChangedValue;
+        List<IGlobalVariableValueChanged> m_LastUsedGlobalVariables = new List<IGlobalVariableValueChanged>();
+        Action<IGlobalVariable> m_OnGlobaleVariableChanged;
+        object[] m_SmartArguments;
+        bool m_WaitingForGlobalVariablesEndUpdate;
 
         /// <summary>
         /// Arguments that will be passed through to Smart Format. These arguments are not serialized and will need to be set during play mode.
         /// </summary>
-        public object[] Arguments { get; set; }
+        public object[] Arguments
+        {
+            get => m_SmartArguments;
+            set
+            {
+                if (m_SmartArguments == value)
+                    return;
+
+                m_SmartArguments = value;
+                RefreshString();
+            }
+        }
 
         /// <summary>
         /// <inheritdoc cref="RegisterChangeHandler"/>
@@ -119,6 +137,11 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
+        /// True if <see cref="StringChanged"/> has any subscribers.
+        /// </summary>
+        public bool HasChangeHandler => m_ChangeHandler != null;
+
+        /// <summary>
         /// Forces a refresh of the string when using <see cref="StringChanged"/>.
         /// Note, this will only only force the refresh if there is currently no loading operation, if one is still being executed then it will be ignored and false will be returned.
         /// If a string is not static and will change during game play, such as when using format arguments, then this can be used to force the string to update itself.
@@ -126,23 +149,15 @@ namespace UnityEngine.Localization
         /// <returns>True if a refresh was requested or false if it could not.</returns>
         public bool RefreshString()
         {
-            if (m_ChangeHandler == null)
-                throw new Exception($"{nameof(RefreshString)} should be used with {nameof(StringChanged)} however no change handler has been registered.");
-
-            if (m_CurrentLoadingOperation == null || !m_CurrentLoadingOperation.Value.IsDone)
+            if (m_ChangeHandler == null || m_CurrentLoadingOperation == null || !m_CurrentLoadingOperation.Value.IsDone)
                 return false;
 
-            string translatedText;
-            if (m_CurrentLoadingOperation.Value.Result.Entry != null)
-            {
-                var entryResult = LocalizationSettings.StringDatabase.GetLocalizedStringProcessTableEntry(m_CurrentLoadingOperation.Value, TableEntryReference, LocalizationSettings.SelectedLocale, Arguments);
-                translatedText = entryResult.Result;
-            }
-            else
-            {
-                var table = m_CurrentLoadingOperation.Value.Result.Table;
-                translatedText = LocalizationSettings.StringDatabase?.ProcessUntranslatedText(TableEntryReference.ResolveKeyName(table?.SharedData));
-            }
+            // Clear any previous global variables.
+            var entry = m_CurrentLoadingOperation.Value.Result.Entry;
+            entry?.FormatCache?.GlobalVariableTriggers.Clear();
+
+            var translatedText = LocalizationSettings.StringDatabase.GenerateLocalizedString(m_CurrentLoadingOperation.Value.Result.Table, entry, TableReference, TableEntryReference, LocalizationSettings.SelectedLocale, Arguments);
+            UpdateGlobalVariableListeners(entry?.FormatCache?.GlobalVariableTriggers);
 
             m_CurrentStringChangedValue = translatedText;
             m_ChangeHandler(m_CurrentStringChangedValue);
@@ -177,7 +192,7 @@ namespace UnityEngine.Localization
         public AsyncOperationHandle<string> GetLocalizedString()
         {
             LocalizationSettings.ValidateSettingsExist();
-            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, Arguments);
+            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, null, FallbackState, Arguments);
         }
 
         /// <summary>
@@ -193,7 +208,7 @@ namespace UnityEngine.Localization
         public AsyncOperationHandle<string> GetLocalizedString(params object[] arguments)
         {
             LocalizationSettings.ValidateSettingsExist();
-            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, arguments);
+            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, null, FallbackState, arguments);
         }
 
         protected override void ForceUpdate()
@@ -202,6 +217,53 @@ namespace UnityEngine.Localization
             {
                 HandleLocaleChange(null);
             }
+        }
+
+        void UpdateGlobalVariableListeners(List<IGlobalVariableValueChanged> variables)
+        {
+            if (m_OnGlobaleVariableChanged == null)
+                m_OnGlobaleVariableChanged = OnGlobaleVariableChanged;
+
+            // Unsubscribe from any old ones
+            foreach (var gv in m_LastUsedGlobalVariables)
+            {
+                gv.ValueChanged -= m_OnGlobaleVariableChanged;
+            }
+
+            m_LastUsedGlobalVariables.Clear();
+            if (variables == null)
+                return;
+
+            foreach (var gv in variables)
+            {
+                m_LastUsedGlobalVariables.Add(gv);
+                gv.ValueChanged += m_OnGlobaleVariableChanged;
+            }
+        }
+
+        void OnGlobaleVariableChanged(IGlobalVariable globalVariable)
+        {
+            if (m_WaitingForGlobalVariablesEndUpdate)
+                return;
+
+            if (GlobalVariablesSource.IsUpdating)
+            {
+                // Its possible that multiple global variables will be changed, we don't want to force the
+                // string to be updated for each change so we defer and do a single update during EndUpdate.
+                m_WaitingForGlobalVariablesEndUpdate = true;
+                GlobalVariablesSource.EndUpdate += OnGlobalVariablesSourceUpdateCompleted;
+            }
+            else
+            {
+                RefreshString();
+            }
+        }
+
+        void OnGlobalVariablesSourceUpdateCompleted()
+        {
+            GlobalVariablesSource.EndUpdate -= OnGlobalVariablesSourceUpdateCompleted;
+            m_WaitingForGlobalVariablesEndUpdate = false;
+            RefreshString();
         }
 
         void HandleLocaleChange(Locale _)
@@ -215,7 +277,9 @@ namespace UnityEngine.Localization
             if (IsEmpty)
                 return;
 
-            CurrentLoadingOperation = LocalizationSettings.StringDatabase.GetTableEntryAsync(TableReference, TableEntryReference);
+            CurrentLoadingOperation = LocalizationSettings.StringDatabase.GetTableEntryAsync(TableReference, TableEntryReference, null, FallbackState);
+
+            AddressablesInterface.Acquire(CurrentLoadingOperation.Value);
             if (CurrentLoadingOperation.Value.IsDone)
                 AutomaticLoadingCompleted(CurrentLoadingOperation.Value);
             else
@@ -239,6 +303,8 @@ namespace UnityEngine.Localization
                 // We should only call this if we are not done as its possible that the internal list is null if its not been used.
                 if (!CurrentLoadingOperation.Value.IsDone)
                     CurrentLoadingOperation.Value.Completed -= AutomaticLoadingCompleted;
+
+                AddressablesInterface.Release(m_CurrentLoadingOperation.Value);
                 CurrentLoadingOperation = null;
             }
         }

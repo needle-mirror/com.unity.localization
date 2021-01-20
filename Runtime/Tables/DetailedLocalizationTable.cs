@@ -67,6 +67,24 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
+        /// Returns true if any tag metadata of type TShared contains this entry.
+        /// </summary>
+        /// <typeparam name="TShared"></typeparam>
+        /// <returns></returns>
+        public bool HasTagMetadata<TShared>() where TShared : SharedTableEntryMetadata
+        {
+            var tag = Table.GetMetadata<TShared>();
+            if (tag != null)
+            {
+                if (tag.IsRegistered(this))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Tags are Metadata that can be shared across multiple table entries,
         /// they are often used to indicate an entry has a particular attribute or feature, e.g SmartFormat.
         /// Generally Tags do not contains data, for sharing data across multiple table entries see <see cref="AddSharedMetadata"/>.
@@ -76,7 +94,7 @@ namespace UnityEngine.Localization.Tables
         public void AddTagMetadata<TShared>() where TShared : SharedTableEntryMetadata, new()
         {
             TShared tag = null;
-            foreach (var md in Table.TableData)
+            foreach (var md in Table.MetadataEntries)
             {
                 if (md is TShared shared)
                 {
@@ -141,16 +159,23 @@ namespace UnityEngine.Localization.Tables
         /// <typeparam name="TShared"></typeparam>
         public void RemoveTagMetadata<TShared>() where TShared : SharedTableEntryMetadata
         {
-            var tag = Table.GetMetadata<TShared>();
-            if (tag != null)
-            {
-                tag.Unregister(this);
-                RemoveMetadata(tag);
+            var tableMetada = Table.MetadataEntries;
+            var entryMetadata = Data.Metadata.MetadataEntries;
 
-                // Remove the shared data if it is no longer used
-                if (tag.Count == 0)
+            for (int i = 0; i < tableMetada.Count; ++i)
+            {
+                var tag = tableMetada[i] as TShared;
+                if (tag != null)
                 {
-                    Table.RemoveMetadata(tag);
+                    tag.Unregister(this);
+                    entryMetadata.Remove(tag);
+
+                    // Remove the shared data if it is no longer used
+                    if (tag.Count == 0)
+                    {
+                        tableMetada.RemoveAt(i);
+                        i--;
+                    }
                 }
             }
         }

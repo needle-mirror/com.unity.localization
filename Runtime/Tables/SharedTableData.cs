@@ -91,7 +91,16 @@ namespace UnityEngine.Localization.Tables
         /// <summary>
         /// All entries.
         /// </summary>
-        public List<SharedTableEntry> Entries => m_Entries;
+        public List<SharedTableEntry> Entries
+        {
+            get => m_Entries;
+            set
+            {
+                m_Entries = value;
+                m_IdDictionary.Clear();
+                m_KeyDictionary.Clear();
+            }
+        }
 
         /// <summary>
         /// The name of this table collection.
@@ -126,6 +135,10 @@ namespace UnityEngine.Localization.Tables
         /// The Key Generator to use when adding new entries.
         /// By default this will use <see cref="DistributedUIDGenerator"/>.
         /// </summary>
+        /// <example>
+        /// This example shows how the <see cref="KeyGenerator"/> could be configured to use a <see cref="SequentialIDGenerator"/>.
+        /// <code source="../../DocCodeSamples.Tests/ChangeKeyGenerator.cs"/>
+        /// </example>
         public IKeyGenerator KeyGenerator
         {
             get => m_KeyGenerator;

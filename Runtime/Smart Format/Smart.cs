@@ -61,7 +61,7 @@ namespace UnityEngine.Localization.SmartFormat
             formatter.AddExtensions(
                 listFormatter, // ListFormatter MUST be first
                 new DictionarySource(formatter),
-                //new JsonSource(formatter),
+                new ValueTupleSource(formatter),
                 new XmlSource(formatter),
                 new ReflectionSource(formatter),
 
@@ -76,6 +76,7 @@ namespace UnityEngine.Localization.SmartFormat
                 new XElementFormatter(),
                 new ChooseFormatter(),
                 new SubStringFormatter(),
+                new IsMatchFormatter(),
                 new DefaultFormatter()
             );
 

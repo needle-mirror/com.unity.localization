@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
@@ -8,9 +9,19 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     [Serializable]
     public class ReflectionSource : ISource
     {
-        // There is a bug with SerializeReference that causes empty instances to not deserialize. This is a workaround while we wait for the fix (case 1183547)
-        [SerializeField, HideInInspector]
-        int dummyObject;
+        static readonly object[] k_Empty = new object[0];
+
+        Dictionary<(Type, string), (FieldInfo field, MethodInfo method)> m_TypeCache;
+
+        Dictionary<(Type, string), (FieldInfo field, MethodInfo method)> TypeCache
+        {
+            get
+            {
+                if (m_TypeCache == null)
+                    m_TypeCache = new Dictionary<(Type, string), (FieldInfo field, MethodInfo method)>();
+                return m_TypeCache;
+            }
+        }
 
         public ReflectionSource(SmartFormatter formatter)
         {
@@ -33,6 +44,24 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             // Let's see if the argSelector is a Selectors/Field/ParseFormat:
             var sourceType = current.GetType();
 
+            // Check the type cache
+            if (TypeCache.TryGetValue((sourceType, selector), out var found))
+            {
+                if (found.field != null)
+                {
+                    selectorInfo.Result = found.field.GetValue(current);
+                    return true;
+                }
+
+                if (found.method != null)
+                {
+                    selectorInfo.Result = found.method.Invoke(current, k_Empty);
+                    return true;
+                }
+
+                return false;
+            }
+
             // Important:
             // GetMembers (opposite to GetMember!) returns all members,
             // both those defined by the type represented by the current T:System.Type object
@@ -46,6 +75,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                         //  Selector is a Field; retrieve the value:
                         var field = (FieldInfo)member;
                         selectorInfo.Result = field.GetValue(current);
+                        TypeCache[(sourceType, selector)] = (field, null);
                         return true;
                     case MemberTypes.Property:
                     case MemberTypes.Method:
@@ -73,10 +103,16 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                         //  Make sure that this method is not void!  It has to be a Function!
                         if (method.ReturnType == typeof(void)) continue;
 
+                        // Add to cache
+                        TypeCache[(sourceType, selector)] = (null, method);
+
                         //  Retrieve the Selectors/ParseFormat value:
-                        selectorInfo.Result = method.Invoke(current, new object[0]);
+                        selectorInfo.Result = method.Invoke(current, k_Empty);
                         return true;
                 }
+
+            // We also cache failures so we dont need to call GetMembers again
+            TypeCache[(sourceType, selector)] = (null, null);
 
             return false;
         }

@@ -14,11 +14,11 @@ namespace UnityEngine.Localization.Tests
             public TableReference? LastTableReference { get; set; }
             public TableEntryReference? LastTableEntryReference { get; set; }
 
-            public override AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableReference tableReference, TableEntryReference tableEntryReference)
+            public override AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale)
             {
                 LastTableReference = tableReference;
                 LastTableEntryReference = tableEntryReference;
-                return ResourceManager.CreateCompletedOperation(default(TObject), null);
+                return AddressablesInterface.ResourceManager.CreateCompletedOperation(default(TObject), null);
             }
         }
 

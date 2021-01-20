@@ -16,6 +16,7 @@ namespace UnityEditor.Localization.UI
             public static readonly GUIContent addTableCollection = new GUIContent("Create Table Collection", "Create a new table collection for every Locale in the project");
             public static readonly GUIContent addTableEntry = new GUIContent("Add Table Entry", "Create a new table entry in the selected table collection.");
             public static readonly GUIContent entryName = new GUIContent("Entry Name", "The name or key of the selected table entry");
+            public static readonly GUIContent useFallback = new GUIContent("Enable Fallback", "Determines if a Fallback should be used when no value could be found for the Locale");
             public static readonly GUIContent noTableSelected = new GUIContent($"None({typeof(TCollection).Name})");
             public static readonly GUIContent previewArguments = new GUIContent("Preview Arguments", "Arguments to pass to the string formatter. These are for preview purposes only and are not stored.");
             public static readonly GUIContent selectedTable = new GUIContent("Table Collection");
@@ -28,6 +29,7 @@ namespace UnityEditor.Localization.UI
             public SerializedObject serializedObject;
             public SerializedTableReference tableReference;
             public SerializedTableEntryReference tableEntryReference;
+            public SerializedProperty fallbackState;
             public Type assetType;
             public GUIContent entryNameLabel;
 
@@ -150,6 +152,7 @@ namespace UnityEditor.Localization.UI
                 serializedObject = null;
                 tableReference = null;
                 tableEntryReference = null;
+                fallbackState = null;
 
                 // Clear cached values
                 m_FieldLabel = null;
@@ -165,6 +168,7 @@ namespace UnityEditor.Localization.UI
                 serializedObject = property.serializedObject;
                 tableReference = new SerializedTableReference(property.FindPropertyRelative("m_TableReference"));
                 tableEntryReference = new SerializedTableEntryReference(property.FindPropertyRelative("m_TableEntryReference"));
+                fallbackState = property.FindPropertyRelative("m_FallbackState");
                 NeedsInitializing = false;
             }
         }
@@ -260,7 +264,7 @@ namespace UnityEditor.Localization.UI
 
             var foldoutRect = new Rect(rowPosition.x, rowPosition.y, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight);
             var dropDownPosition = new Rect(foldoutRect.xMax, rowPosition.y, rowPosition.width - EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight);
-            rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
+            rowPosition.MoveToNextLine();
             property.isExpanded = EditorGUI.Foldout(foldoutRect, property.isExpanded, label, true);
 
             if (EditorGUI.DropdownButton(dropDownPosition, data.FieldLabel, FocusType.Passive))
@@ -336,7 +340,7 @@ namespace UnityEditor.Localization.UI
             {
                 LocaleGeneratorWindow.ShowWindow();
             }
-            rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
+            rowPosition.MoveToNextLine();
 
             if (data.SelectedTableEntry != null)
                 DrawTableEntryDetails(ref rowPosition, data, position);
@@ -349,7 +353,7 @@ namespace UnityEditor.Localization.UI
             EditorGUI.BeginChangeCheck();
             rowPosition.height = EditorStyles.textField.CalcHeight(new GUIContent(data.SelectedTableEntry?.Key), rowPosition.width);
             var newName = EditorGUI.TextField(rowPosition, data.entryNameLabel, data.SelectedTableEntry?.Key);
-            rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
+            rowPosition.MoveToNextLine();
             if (EditorGUI.EndChangeCheck() && data.SelectedTableCollection != null)
             {
                 // Prevent renaming to a new that is already taken.
@@ -372,6 +376,9 @@ namespace UnityEditor.Localization.UI
                     data.entryNameLabel = new GUIContent(Styles.entryName.text, EditorIcons.WarningIcon, $"Can not rename key to '{newName}', the name is already in use by Key Id {entry.Id}.");
                 }
             }
+
+            var FallbackLocale = EditorGUI.PropertyField(rowPosition, data.fallbackState, Styles.useFallback);
+            rowPosition.MoveToNextLine();
         }
 
         public override float GetPropertyHeight(Data data, SerializedProperty property, GUIContent label)
@@ -382,6 +389,7 @@ namespace UnityEditor.Localization.UI
                 height += EditorGUIUtility.singleLineHeight; // Selected table
                 height += EditorGUIUtility.singleLineHeight; // create table/add entry button
                 height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing; // Add locale button
+                height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing; // Fallback
 
                 if (data.SelectedTableEntry != null)
                 {

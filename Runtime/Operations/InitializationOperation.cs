@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine.Localization.Settings;
+using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization
@@ -120,6 +121,11 @@ namespace UnityEngine.Localization
         {
             PostInitializeExtensions();
             Complete(m_Settings, string.IsNullOrEmpty(m_Error), m_Error);
+        }
+
+        protected override void Destroy()
+        {
+            GenericPool<InitializationOperation>.Release(this);
         }
     }
 }

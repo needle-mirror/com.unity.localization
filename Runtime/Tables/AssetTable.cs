@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Generic;
-using UnityEngine.AddressableAssets;
 using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Settings;
+using UnityEngine.Pool;
 using UnityEngine.ResourceManagement;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
@@ -53,9 +52,8 @@ namespace UnityEngine.Localization.Tables
     public class AssetTable : DetailedLocalizationTable<AssetTableEntry>, IPreloadRequired
     {
         AsyncOperationHandle? m_PreloadOperationHandle;
-        List<AsyncOperationHandle> m_AssetPreloadOperations;
 
-        ResourceManager ResourceManager => LocalizationSettings.ResourceManager;
+        ResourceManager ResourceManager => AddressablesInterface.ResourceManager;
 
         public virtual AsyncOperationHandle PreloadOperation
         {
@@ -77,34 +75,29 @@ namespace UnityEngine.Localization.Tables
             // If no preload metadata was found then we will preload all assets by default.
             if (preload?.Behaviour != PreloadAssetTableMetadata.PreloadBehaviour.NoPreload)
             {
-                m_AssetPreloadOperations = m_AssetPreloadOperations ?? new List<AsyncOperationHandle>();
-                m_AssetPreloadOperations.Clear();
+                var handleList = ListPool<AsyncOperationHandle>.Get();
 
                 // Preload all
                 foreach (var entry in Values)
                 {
                     if (!entry.IsEmpty && !entry.AsyncOperation.HasValue)
                     {
-                        entry.AsyncOperation = Addressables.LoadAssetAsync<Object>(entry.Guid);
-                        m_AssetPreloadOperations.Add(entry.AsyncOperation.Value);
+                        // We have to preload the asset as an array so that we get all sub objects. The reason for this is that some assets,
+                        // such as Sprite can contain multiple sub objects and if we load it as Object then we may get the wrong one.
+                        // For example, if we load a Sprite as an Object and it has the same name as its Texture asset then it will load as a Texture,
+                        // not Sprite. So if we load as an array we get both, we can then pick the one we need later based on the type passed into GetAssetAsync. (LOC-143)
+                        entry.AsyncOperation = AddressablesInterface.LoadAssetFromGUID<Object[]>(entry.Guid);
+                        ResourceManager.Acquire(entry.AsyncOperation.Value);
+                        handleList.Add(entry.AsyncOperation.Value);
                     }
                 }
-
-                // TODO: Preload selected
-                //{
-                //    foreach (var entry in TableEntries.Values)
-                //    {
-                //        if (!entry.IsEmpty && !entry.AsyncOperation.HasValue && entry.Data.Metadata.GetMetadata<PreloadAssetMetadata>() != null)
-                //        {
-                //            entry.AsyncOperation = Addressables.LoadAssetAsync<Object>(entry.Guid);
-                //            m_AssetPreloadOperations.Add(entry.AsyncOperation.Value);
-                //        }
-                //    }
-                //}
-
-                if (m_AssetPreloadOperations.Count > 0)
+                if (handleList.Count > 0)
                 {
-                    return ResourceManager.CreateGenericGroupOperation(m_AssetPreloadOperations, true);
+                    return ResourceManager.CreateGenericGroupOperation(handleList);
+                }
+                else
+                {
+                    ListPool<AsyncOperationHandle>.Release(handleList);
                 }
             }
 
@@ -134,12 +127,11 @@ namespace UnityEngine.Localization.Tables
         {
             if (!entry.AsyncOperation.HasValue)
             {
+                // Empty entries are treated as null.
                 if (string.IsNullOrEmpty(entry.Guid))
-                {
-                    var keyName = SharedData.GetKey(entry.Data.Id);
-                    return ResourceManager.CreateCompletedOperation<TObject>(null, $"The asset table entry \"{keyName}({entry.Data.Id})\" is empty, no asset can be loaded from the table \"{ToString()}\"");
-                }
-                entry.AsyncOperation = Addressables.LoadAssetAsync<TObject>(entry.Guid);
+                    entry.AsyncOperation = ResourceManager.CreateCompletedOperation<TObject>(null, null);
+                else
+                    entry.AsyncOperation = AddressablesInterface.LoadAssetFromGUID<TObject>(entry.Guid);
             }
 
             var operation = entry.AsyncOperation.Value;
@@ -150,8 +142,8 @@ namespace UnityEngine.Localization.Tables
             }
             catch (InvalidCastException)
             {
-                // If we preloaded then the operation will be of type AsyncOperationHandle<Object> however we now need to
-                // convert to AsyncOperationHandle<TObject>.
+                // If we preloaded then the operation will be of type AsyncOperationHandle<Object[]> however we now
+                // need to extract the asset and convert to AsyncOperationHandle<TObject>.
 
                 if (operation.IsDone)
                 {
@@ -160,22 +152,27 @@ namespace UnityEngine.Localization.Tables
                         return ResourceManager.CreateCompletedOperation<TObject>(null, operation.OperationException.Message);
                     }
 
-                    // Convert the operation
-                    if (operation.Result is TObject)
+                    // Extract the asset from the array of preloaded sub objects.
+                    if (operation.Result is Object[] subObjects)
                     {
-                        var convertedCompletedOperation = ResourceManager.CreateCompletedOperation<TObject>(operation.Result as TObject, null);
-                        entry.AsyncOperation = convertedCompletedOperation;
-                        return convertedCompletedOperation;
+                        foreach (var obj in subObjects)
+                        {
+                            if (obj is TObject target)
+                            {
+                                var convertedCompletedOperation = ResourceManager.CreateCompletedOperation(target, null);
+                                entry.AsyncOperation = convertedCompletedOperation;
+                                AddressablesInterface.Release(operation); // Release the old operation
+                                return convertedCompletedOperation;
+                            }
+                        }
                     }
-                    else
-                    {
-                        throw new InvalidCastException($"Could not convert asset of type {operation.Result.GetType().Name} to {typeof(TObject).Name}.");
-                    }
+                    throw new InvalidCastException($"Could not convert asset of type {operation.Result.GetType().Name} to {typeof(TObject).Name}.");
                 }
 
                 // Wait for the operation to complete before attempting again
                 var convertedOperation = ResourceManager.CreateChainOperation(operation, (op) => GetAssetAsync<TObject>(entry));
                 entry.AsyncOperation = convertedOperation;
+                AddressablesInterface.Release(operation); // Release the old operation
                 return convertedOperation;
             }
         }
@@ -186,12 +183,17 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         public void ReleaseAssets()
         {
-            m_PreloadOperationHandle = null;
+            if (m_PreloadOperationHandle.HasValue)
+            {
+                AddressablesInterface.Release(m_PreloadOperationHandle.Value);
+                m_PreloadOperationHandle = null;
+            }
+
             foreach (var entry in Values)
             {
                 if (entry.AsyncOperation.HasValue)
                 {
-                    Addressables.Release(entry.AsyncOperation.Value);
+                    AddressablesInterface.Release(entry.AsyncOperation.Value);
                     entry.AsyncOperation = null;
                 }
             }

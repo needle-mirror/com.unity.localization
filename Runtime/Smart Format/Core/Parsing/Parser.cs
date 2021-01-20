@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
 
 namespace UnityEngine.Localization.SmartFormat.Core.Parsing
@@ -51,6 +50,8 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
             " and character literals should become the same.")]
         [SerializeField]
         internal const char m_CharLiteralEscapeChar = '\\';
+
+        static ParsingErrorText s_ParsingErrorText;
 
         /// <summary>
         /// Gets or sets the <seealso cref="Core.Settings.SmartSettings" /> for Smart.Format
@@ -126,15 +127,26 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
             m_AlternativeEscaping = false;
         }
 
+        /// <summary>
+        /// Set the closing and opening braces for the parser.
+        /// </summary>
+        /// <param name="opening"></param>
+        /// <param name="closing"></param>
         public void UseAlternativeBraces(char opening, char closing)
         {
             m_OpeningBrace = opening;
             m_ClosingBrace = closing;
         }
 
-        public Format ParseFormat(string format, string[] formatterExtensionNames)
+        /// <summary>
+        /// Parses a format string.
+        /// </summary>
+        /// <param name="format"></param>
+        /// <param name="formatterExtensionNames"></param>
+        /// <returns>Returns the <see cref="Format"/> for the parsed string.</returns>
+        public Format ParseFormat(string format, List<string> formatterExtensionNames)
         {
-            var result = new Format(Settings, format);
+            var result = FormatItemPool.GetFormat(Settings, format);
             var current = result;
             Placeholder currentPlaceholder = null;
             var namedFormatterStartIndex = -1;
@@ -142,8 +154,9 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
             var namedFormatterOptionsEndIndex = -1;
 
             // Store parsing errors until the end:
-            var parsingErrors = new ParsingErrors(result);
-            var parsingErrorText = new ParsingErrorText();
+            var parsingErrors = ParsingErrorsPool.Get(result);
+            if (s_ParsingErrorText == null)
+                s_ParsingErrorText = new ParsingErrorText();
 
             // Cache properties:
             var openingBrace = m_OpeningBrace;
@@ -162,7 +175,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                     if (c == openingBrace)
                     {
                         // Finish the last text item:
-                        if (i != lastI) current.Items.Add(new LiteralText(Settings, current, lastI) {endIndex = i});
+                        if (i != lastI) current.Items.Add(FormatItemPool.GetLiteralText(Settings, current, lastI, i));
                         lastI = i + 1;
 
                         // See if this brace should be escaped:
@@ -178,7 +191,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
 
                         // New placeholder:
                         nestedDepth++;
-                        currentPlaceholder = new Placeholder(Settings, current, i, nestedDepth);
+                        currentPlaceholder = FormatItemPool.GetPlaceholder(Settings, current, i, nestedDepth);
                         current.Items.Add(currentPlaceholder);
                         current.HasNested = true;
                         operatorIndex = i + 1;
@@ -189,7 +202,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                     {
                         // Finish the last text item:
                         if (i != lastI)
-                            current.Items.Add(new LiteralText(Settings, current, lastI) {endIndex = i});
+                            current.Items.Add(FormatItemPool.GetLiteralText(Settings, current, lastI, i));
                         lastI = i + 1;
 
                         // See if this brace should be escaped:
@@ -206,7 +219,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                         // Make sure that this is a nested placeholder before we un-nest it:
                         if (current.parent == null)
                         {
-                            parsingErrors.AddIssue(parsingErrorText[ParsingError.TooManyClosingBraces], i,
+                            parsingErrors.AddIssue(s_ParsingErrorText[ParsingError.TooManyClosingBraces], i,
                                 i + 1);
                             continue;
                         }
@@ -215,7 +228,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                         nestedDepth--;
                         current.endIndex = i;
                         current.parent.endIndex = i + 1;
-                        current = current.parent.parent;
+                        current = current.parent.Parent as Format;
                         namedFormatterStartIndex = -1;
                     }
                     else if (c == m_CharLiteralEscapeChar && Settings.ConvertCharacterStringLiterals ||
@@ -230,7 +243,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                         if (nextI < length && (format[nextI] == openingBrace || format[nextI] == closingBrace))
                         {
                             // Finish the last text item:
-                            if (i != lastI) current.Items.Add(new LiteralText(Settings, current, lastI) {endIndex = i});
+                            if (i != lastI) current.Items.Add(FormatItemPool.GetLiteralText(Settings, current, lastI, i));
                             lastI = i + 1;
 
                             i++;
@@ -240,12 +253,12 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                             // **** Escaping of charater literals like \t, \n, \v etc. ****
 
                             // Finish the last text item:
-                            if (i != lastI) current.Items.Add(new LiteralText(Settings, current, lastI) {endIndex = i});
+                            if (i != lastI) current.Items.Add(FormatItemPool.GetLiteralText(Settings, current, lastI, i));
                             lastI = i + 2;
                             if (lastI > length) lastI = length;
 
                             // Next add the character literal INCLUDING the escape character, which LiteralText will expect
-                            current.Items.Add(new LiteralText(Settings, current, i) {endIndex = lastI});
+                            current.Items.Add(FormatItemPool.GetLiteralText(Settings, current, i, lastI));
 
                             i++;
                         }
@@ -342,8 +355,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                         // Add the selector:
                         if (i != lastI)
                         {
-                            currentPlaceholder.Selectors.Add(new Selector(Settings, format, lastI, i, operatorIndex,
-                                selectorIndex));
+                            currentPlaceholder.Selectors.Add(FormatItemPool.GetSelector(Settings, currentPlaceholder, format, lastI, i, operatorIndex, selectorIndex));
                             selectorIndex++;
                             operatorIndex = i;
                         }
@@ -354,15 +366,14 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                     {
                         // Add the selector:
                         if (i != lastI)
-                            currentPlaceholder.Selectors.Add(new Selector(Settings, format, lastI, i, operatorIndex,
-                                selectorIndex));
+                            currentPlaceholder.Selectors.Add(FormatItemPool.GetSelector(Settings, currentPlaceholder, format, lastI, i, operatorIndex, selectorIndex));
                         else if (operatorIndex != i)
-                            parsingErrors.AddIssue(parsingErrorText[ParsingError.TrailingOperatorsInSelector],
+                            parsingErrors.AddIssue(s_ParsingErrorText[ParsingError.TrailingOperatorsInSelector],
                                 operatorIndex, i);
                         lastI = i + 1;
 
                         // Start the format:
-                        currentPlaceholder.Format = new Format(Settings, currentPlaceholder, i + 1);
+                        currentPlaceholder.Format = FormatItemPool.GetFormat(Settings, currentPlaceholder, i + 1);
                         current = currentPlaceholder.Format;
                         currentPlaceholder = null;
                         namedFormatterStartIndex = lastI;
@@ -373,17 +384,16 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                     {
                         // Add the selector:
                         if (i != lastI)
-                            currentPlaceholder.Selectors.Add(new Selector(Settings, format, lastI, i, operatorIndex,
-                                selectorIndex));
+                            currentPlaceholder.Selectors.Add(FormatItemPool.GetSelector(Settings, currentPlaceholder, format, lastI, i, operatorIndex, selectorIndex));
                         else if (operatorIndex != i)
-                            parsingErrors.AddIssue(parsingErrorText[ParsingError.TrailingOperatorsInSelector],
+                            parsingErrors.AddIssue(s_ParsingErrorText[ParsingError.TrailingOperatorsInSelector],
                                 operatorIndex, i);
                         lastI = i + 1;
 
                         // End the placeholder with no format:
                         nestedDepth--;
                         currentPlaceholder.endIndex = i + 1;
-                        current = currentPlaceholder.parent;
+                        current = currentPlaceholder.Parent as Format;
                         currentPlaceholder = null;
                     }
                     else
@@ -395,7 +405,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                             || m_AlphanumericSelectors && ('a' <= c && c <= 'z' || 'A' <= c && c <= 'Z')
                             || m_AllowedSelectorChars.IndexOf(c) != -1;
                         if (!isValidSelectorChar)
-                            parsingErrors.AddIssue(parsingErrorText[ParsingError.InvalidCharactersInSelector],
+                            parsingErrors.AddIssue(s_ParsingErrorText[ParsingError.InvalidCharactersInSelector],
                                 i, i + 1);
                     }
                 }
@@ -403,17 +413,17 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
 
             // finish the last text item:
             if (lastI != format.Length)
-                current.Items.Add(new LiteralText(Settings, current, lastI) {endIndex = format.Length});
+                current.Items.Add(FormatItemPool.GetLiteralText(Settings, current, lastI, format.Length));
 
             // Check that the format is finished:
             if (current.parent != null || currentPlaceholder != null)
             {
-                parsingErrors.AddIssue(parsingErrorText[ParsingError.MissingClosingBrace], format.Length,
+                parsingErrors.AddIssue(s_ParsingErrorText[ParsingError.MissingClosingBrace], format.Length,
                     format.Length);
                 current.endIndex = format.Length;
                 while (current.parent != null)
                 {
-                    current = current.parent.parent;
+                    current = current.parent.Parent as Format;
                     current.endIndex = format.Length;
                 }
             }
@@ -427,24 +437,51 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                 if (Settings.ParseErrorAction == ErrorAction.ThrowError)
                     throw parsingErrors;
             }
+            else
+            {
+                ParsingErrorsPool.Release(parsingErrors);
+            }
 
             return result;
         }
 
-        private static bool FormatterNameExists(string name, string[] formatterExtensionNames)
+        private static bool FormatterNameExists(string name, List<string> formatterExtensionNames)
         {
-            return formatterExtensionNames.Any(n => n == name);
+            foreach (var fen in formatterExtensionNames)
+            {
+                if (fen == name)
+                    return true;
+            }
+            return false;
         }
 
         public enum ParsingError
         {
+            /// <summary>
+            /// Too many closing braces.
+            /// </summary>
             TooManyClosingBraces = 1,
+
+            /// <summary>
+            /// Trailing operators in the selector.
+            /// </summary>
             TrailingOperatorsInSelector,
+
+            /// <summary>
+            /// Invalid characters in the selector.
+            /// </summary>
             InvalidCharactersInSelector,
+
+            /// <summary>
+            /// Missing closing brace.
+            /// </summary>
             MissingClosingBrace
         }
 
-        public class ParsingErrorText
+        /// <summary>
+        /// Supplies error text for the <see cref="Parser"/>.
+        /// </summary>
+        internal class ParsingErrorText
         {
             private readonly Dictionary<ParsingError, string> _errors = new Dictionary<ParsingError, string>
             {

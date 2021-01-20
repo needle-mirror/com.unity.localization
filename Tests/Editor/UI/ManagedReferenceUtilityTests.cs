@@ -78,7 +78,7 @@ namespace UnityEditor.Localization.Tests.UI
         [Test]
         public void GetDisplayName_ReurnsEmptyWhenNameIsNullOrEmpty()
         {
-            Assert.AreEqual(ManagedReferenceUtility.Empty, ManagedReferenceUtility.GetDisplayName(null));
+            Assert.AreEqual(ManagedReferenceUtility.Empty, ManagedReferenceUtility.GetDisplayName((string)null));
             Assert.AreEqual(ManagedReferenceUtility.Empty, ManagedReferenceUtility.GetDisplayName(string.Empty));
         }
 

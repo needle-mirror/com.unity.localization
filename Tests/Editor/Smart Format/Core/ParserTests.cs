@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine.Localization.SmartFormat.Core.Parsing;
@@ -27,7 +28,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
                 "{a}",
                 " aaa {bbb_bbb.CCC} ddd ",
             };
-            var results = formats.Select(f => new { format = f, parsed = parser.ParseFormat(f, new[] { Guid.NewGuid().ToString("N") }) }).ToArray();
+            var results = formats.Select(f => new { format = f, parsed = parser.ParseFormat(f, new List<string> { Guid.NewGuid().ToString("N") }) }).ToArray();
 
             // Verify that the reconstructed formats
             // match the original ones:
@@ -114,7 +115,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             };
             foreach (var format in invalidFormats)
             {
-                var discard = parser.ParseFormat(format, new[] { Guid.NewGuid().ToString("N") });
+                var discard = parser.ParseFormat(format, new List<string>  { Guid.NewGuid().ToString("N") });
             }
         }
 
@@ -124,7 +125,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             var parser = GetRegularParser();
             parser.UseAlternativeBraces('[', ']');
             var format = "aaa [bbb] [ccc:ddd] {eee} [fff:{ggg}] [hhh:[iii:[] ] ] jjj";
-            var parsed = parser.ParseFormat(format, new[] { Guid.NewGuid().ToString("N") });
+            var parsed = parser.ParseFormat(format, new List<string> { Guid.NewGuid().ToString("N") });
 
             Assert.AreEqual(9, parsed.Items.Count);
 
@@ -150,7 +151,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             var parser = GetRegularParser();
             var formatString = " a|aa {bbb: ccc dd|d {:|||} {eee} ff|f } gg|g ";
 
-            var format = parser.ParseFormat(formatString, new[] { Guid.NewGuid().ToString("N") });
+            var format = parser.ParseFormat(formatString, new List<string> { Guid.NewGuid().ToString("N") });
 
             // Extract the substrings of literal text:
             Assert.That(format.Substring(1, 3).ToString(), Is.EqualTo("a|a"));
@@ -188,7 +189,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             var parser = GetRegularParser();
             var formatString = "{0}";
 
-            var format = parser.ParseFormat(formatString, new[] { Guid.NewGuid().ToString("N") });
+            var format = parser.ParseFormat(formatString, new List<string> { Guid.NewGuid().ToString("N") });
             var placeholder = (Placeholder)format.Items[0];
             Assert.AreEqual(formatString, placeholder.ToString());
             placeholder.Alignment = 10;
@@ -201,7 +202,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             var parser = GetRegularParser();
             var formatString = "{0}";
 
-            var format = parser.ParseFormat(formatString, new[] { Guid.NewGuid().ToString("N") });
+            var format = parser.ParseFormat(formatString, new List<string> { Guid.NewGuid().ToString("N") });
             var placeholder = (Placeholder)format.Items[0];
             placeholder.FormatterName = "test";
             Assert.AreEqual($"{{0:{placeholder.FormatterName}}}", placeholder.ToString());
@@ -214,7 +215,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
         {
             var parser = GetRegularParser();
             var format = " a|aa {bbb: ccc dd|d {:|||} {eee} ff|f } gg|g ";
-            var Format = parser.ParseFormat(format, new[] { Guid.NewGuid().ToString("N") });
+            var Format = parser.ParseFormat(format, new List<string> { Guid.NewGuid().ToString("N") });
 
             Assert.That(Format.IndexOf('|'), Is.EqualTo(2));
             Assert.That(Format.IndexOf('|', 3), Is.EqualTo(43));
@@ -237,7 +238,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
         {
             var parser = GetRegularParser();
             var format = " a|aa {bbb: ccc dd|d {:|||} {eee} ff|f } gg|g ";
-            var Format = parser.ParseFormat(format, new[] { Guid.NewGuid().ToString("N") });
+            var Format = parser.ParseFormat(format, new List<string> { Guid.NewGuid().ToString("N") });
             var splits = Format.Split('|');
 
             Assert.That(splits.Count, Is.EqualTo(3));
@@ -257,7 +258,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             Assert.That(splits[2].ToString(), Is.EqualTo("f "));
         }
 
-        private Format Parse(string format, string[] formatterExentionNames)
+        private Format Parse(string format, List<string> formatterExentionNames)
         {
             return GetRegularParser().ParseFormat(format, formatterExentionNames);
         }
@@ -273,7 +274,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
         public void Name_of_registered_NamedFormatter_will_be_parsed(string format, string expectedName, string expectedOptions, string expectedFormat)
         {
             // The parser will only find names of named formatters which are registered. Names are case-sensitive.
-            var formatterExtensions = new[] { "name" };
+            var formatterExtensions = new List<string> { "name" };
 
             // Named formatters will only be recognized by the parser, if their name occurs in one of FormatterExtensions.
             // If the name of the formatter does not exists, the string is treaded as format for the DefaultFormatter.
@@ -287,7 +288,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
         public void Name_of_unregistered_NamedFormatter_will_not_be_parsed()
         {
             // find formatter formattername, which does not exist in the (empty) list of formatter extensions
-            var placeholderWithNonExistingName = (Placeholder)Parse("{0:formattername:}", new string[] {}).Items[0];
+            var placeholderWithNonExistingName = (Placeholder)Parse("{0:formattername:}", new List<string>()).Items[0];
             Assert.AreEqual("formattername:", placeholderWithNonExistingName.Format.ToString()); // name is only treaded as a literal
         }
 
@@ -338,7 +339,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             parser.UseAlternativeEscapeChar('\\');
             parser.Settings.ConvertCharacterStringLiterals = false;
 
-            var placeholder = (Placeholder)parser.ParseFormat(format, new[] { Guid.NewGuid().ToString("N") }).Items[0];
+            var placeholder = (Placeholder)parser.ParseFormat(format, new List<string> { Guid.NewGuid().ToString("N") }).Items[0];
             Assert.IsEmpty(placeholder.FormatterName);
             Assert.IsEmpty(placeholder.FormatterOptions);
             var literalText = placeholder.Format.GetLiteralText();
@@ -354,7 +355,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             formatter.Settings.ParseErrorAction = ErrorAction.Ignore;
             formatter.Parser.OnParsingFailure += (o, args) => parsingError = args.Errors;
             var res = formatter.Format("{NoName {Other} {Same", default(object));
-            Assert.That(parsingError.Issues.Count == 3);
+            Assert.That(parsingError.Issues, Has.Count.EqualTo(3));
             Assert.That(parsingError.Issues[2].Issue == new Parser.ParsingErrorText()[Parser.ParsingError.MissingClosingBrace]);
         }
 
@@ -364,7 +365,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             var parser = GetRegularParser();
             // necessary because of the consecutive }}}, which would otherwise be escaped as }} and lead to "missing brace" exception:
             parser.UseAlternativeEscapeChar('\\');
-            var placeholders = parser.ParseFormat("{c1:{c2:{c3}}}", new[] {Guid.NewGuid().ToString("N")});
+            var placeholders = parser.ParseFormat("{c1:{c2:{c3}}}", new List<string> {Guid.NewGuid().ToString("N")});
 
             var c1 = (Placeholder)placeholders.Items[0];
             var c2 = (Placeholder)c1.Format.Items[0];

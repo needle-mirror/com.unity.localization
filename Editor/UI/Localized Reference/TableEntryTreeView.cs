@@ -95,12 +95,21 @@ namespace UnityEditor.Localization.UI
                     };
                     group.AddChild(tableNode);
 
-                    // Only show keys that have a compatible type.
                     var sharedData = collection.SharedData;
+
+                    // Record all the types that are not compatible with this one, then we can later discard the incompatible entries.
+                    var incompatibleTypes = new HashSet<long>();
+                    foreach (var md in sharedData.Metadata.MetadataEntries)
+                    {
+                        if (md is AssetTypeMetadata assetTypeMd && !m_AssetType.IsAssignableFrom(assetTypeMd.Type))
+                        {
+                            incompatibleTypes.UnionWith(assetTypeMd.EntriesLookup.Keys);
+                        }
+                    }
+
                     foreach (var entry in sharedData.Entries)
                     {
-                        var typeMetadata = entry.Metadata.GetMetadata<AssetTypeMetadata>();
-                        if (typeMetadata == null || m_AssetType.IsAssignableFrom(typeMetadata.Type))
+                        if (!incompatibleTypes.Contains(entry.Id))
                         {
                             tableNode.AddChild(new TableEntryTreeViewItem(collection, entry, id++, 1));
                         }
@@ -143,15 +152,24 @@ namespace UnityEditor.Localization.UI
 
         protected override void SelectionChanged(IList<int> selectedIds)
         {
-            if (FindItem(selectedIds[0], rootItem) is TableEntryTreeViewItem keyNode)
+            if (selectedIds.Count == 0)
+                return;
+
+            var selected = FindItem(selectedIds[0], rootItem);
+            if (selected is TableEntryTreeViewItem keyNode)
             {
                 m_SelectionHandler(keyNode.TableCollection, keyNode.SharedEntry);
+                return;
             }
-            else
+
+            // Toggle the foldout
+            if (selected.hasChildren)
             {
-                // Ignore Table selections. We just care about table entries.
-                SetSelection(new int[] {});
+                SetExpanded(selected.id, !IsExpanded(selected.id));
             }
+
+            // Ignore Table selections. We just care about table entries.
+            SetSelection(new int[] {});
         }
     }
 }

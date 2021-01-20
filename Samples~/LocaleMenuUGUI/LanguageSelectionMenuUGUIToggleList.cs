@@ -45,7 +45,7 @@ namespace UnityEngine.Localization.Samples
                 var locale = locales[i];
 
                 var languageToggle = Instantiate(languageTogglePrefab, container);
-                languageToggle.name = locale.ToString();
+                languageToggle.name = locale.Identifier.CultureInfo != null ? locale.Identifier.CultureInfo.NativeName : locale.ToString();
                 var label = languageToggle.GetComponentInChildren<Text>();
                 label.text = languageToggle.name;
 

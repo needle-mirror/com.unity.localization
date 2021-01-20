@@ -8,8 +8,6 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
 {
     public static class TimeSpanUtility
     {
-        #region : ToTimeString :
-
         /// <summary>
         /// <para>Turns a TimeSpan into a human-readable text.</para>
         /// <para>Uses the specified timeSpanFormatOptions.</para>
@@ -28,11 +26,11 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
             // Also, as a safeguard against missing DefaultFormatOptions, let's also merge with the AbsoluteDefaults:
             options = options.Merge(DefaultFormatOptions).Merge(AbsoluteDefaults);
             // Extract the individual options:
-            var rangeMax = options.Mask(TimeSpanFormatOptions._Range).AllFlags().Last();
-            var rangeMin = options.Mask(TimeSpanFormatOptions._Range).AllFlags().First();
-            var truncate = options.Mask(TimeSpanFormatOptions._Truncate).AllFlags().First();
-            var lessThan = options.Mask(TimeSpanFormatOptions._LessThan) != TimeSpanFormatOptions.LessThanOff;
-            var abbreviate = options.Mask(TimeSpanFormatOptions._Abbreviate) != TimeSpanFormatOptions.AbbreviateOff;
+            var rangeMax = options.Mask(RangeAll).AllFlags().Last();
+            var rangeMin = options.Mask(RangeAll).AllFlags().First();
+            var truncate = options.Mask(TruncateAll).AllFlags().First();
+            var lessThan = options.Mask(LessThanAll) != TimeSpanFormatOptions.LessThanOff;
+            var abbreviate = options.Mask(AbbreviateAll) != TimeSpanFormatOptions.AbbreviateOff;
 
             var round = lessThan ? (Func<double, double>)Math.Floor : Math.Ceiling;
             switch (rangeMin)
@@ -59,7 +57,7 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
 
             // Create our result:
             var textStarted = false;
-            var result = new StringBuilder();
+            var result = StringBuilderPool.Get();
             for (var i = rangeMax; i >= rangeMin; i = (TimeSpanFormatOptions)((int)i >> 1))
             {
                 // Determine the value and title:
@@ -147,12 +145,15 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
                 }
             }
 
-            return result.ToString();
+            var ret = result.ToString();
+            StringBuilderPool.Release(result);
+            return ret;
         }
 
-        #endregion
-
-        #region : DefaultFormatOptions :
+        internal const TimeSpanFormatOptions AbbreviateAll = TimeSpanFormatOptions.Abbreviate | TimeSpanFormatOptions.AbbreviateOff;
+        internal const TimeSpanFormatOptions LessThanAll = TimeSpanFormatOptions.LessThan | TimeSpanFormatOptions.LessThanOff;
+        internal const TimeSpanFormatOptions RangeAll = TimeSpanFormatOptions.RangeMilliSeconds | TimeSpanFormatOptions.RangeSeconds | TimeSpanFormatOptions.RangeMinutes | TimeSpanFormatOptions.RangeHours | TimeSpanFormatOptions.RangeDays | TimeSpanFormatOptions.RangeWeeks;
+        internal const TimeSpanFormatOptions TruncateAll = TimeSpanFormatOptions.TruncateShortest | TimeSpanFormatOptions.TruncateAuto | TimeSpanFormatOptions.TruncateFill | TimeSpanFormatOptions.TruncateFull;
 
         static TimeSpanUtility()
         {
@@ -177,37 +178,6 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
         /// </summary>
         public static TimeSpanFormatOptions AbsoluteDefaults { get; }
 
-        #endregion
-
-        #region : TimeSpan Rounding :
-
-        /// <summary>
-        /// <para>Returns the largest <c>TimeSpan</c> less than or equal to the specified interval.</para>
-        /// <para>For example: <c>Floor("00:57:00", TimeSpan.TicksPerMinute * 5) =&gt; "00:55:00"</c></para>
-        /// </summary>
-        /// <param name="FromTime">A <c>TimeSpan</c> to be rounded.</param>
-        /// <param name="intervalTicks">Specifies the interval for rounding.  Use <c>TimeSpan.TicksPer____</c>.</param>
-        [Obsolete("Use System.Math.Floor(int) instead", true)]
-        public static TimeSpan Floor(this TimeSpan FromTime, long intervalTicks)
-        {
-            var extra = FromTime.Ticks % intervalTicks;
-            return TimeSpan.FromTicks(FromTime.Ticks - extra);
-        }
-
-        /// <summary>
-        /// <para>Returns the smallest <c>TimeSpan</c> greater than or equal to the specified interval.</para>
-        /// <para>For example: <c>Ceiling("00:57:00", TimeSpan.TicksPerMinute * 5) =&gt; "01:00:00"</c></para>
-        /// </summary>
-        /// <param name="fromTime">A <c>TimeSpan</c> to be rounded.</param>
-        /// <param name="intervalTicks">Specifies the interval for rounding.  Use <c>TimeSpan.TicksPer____</c>.</param>
-        [Obsolete("Use System.Math.Ceiling(int) instead", true)]
-        public static TimeSpan Ceiling(this TimeSpan fromTime, long intervalTicks)
-        {
-            var extra = fromTime.Ticks % intervalTicks;
-            if (extra == 0) return fromTime;
-            return TimeSpan.FromTicks(fromTime.Ticks - extra + intervalTicks);
-        }
-
         /// <summary>
         /// <para>Returns the <c>TimeSpan</c> closest to the specified interval.</para>
         /// <para>For example: <c>Round("00:57:00", TimeSpan.TicksPerMinute * 5) =&gt; "00:55:00"</c></para>
@@ -220,11 +190,7 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
             if (extra >= intervalTicks >> 1) extra -= intervalTicks;
             return TimeSpan.FromTicks(FromTime.Ticks - extra);
         }
-
-        #endregion
     }
-
-    #region : TimeSpanFormatOptions :
 
     /// <summary>
     /// <para>Determines all options for time formatting.</para>
@@ -351,22 +317,6 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
         /// </para>
         /// </summary>
         RangeWeeks = 0x2000,
-
-        #pragma warning disable CA1707 // CA1707: Identifiers should not contain underscores
-
-        /// <summary>(for internal use only)</summary>
-        _Abbreviate = Abbreviate | AbbreviateOff,
-
-        /// <summary>(for internal use only)</summary>
-        _LessThan = LessThan | LessThanOff,
-
-        /// <summary>(for internal use only)</summary>
-        _Truncate = TruncateShortest | TruncateAuto | TruncateFill | TruncateFull,
-
-        /// <summary>(for internal use only)</summary>
-        _Range = RangeMilliSeconds | RangeSeconds | RangeMinutes | RangeHours | RangeDays | RangeWeeks
-
-        #pragma warning restore CA1707
     }
 
     internal static class TimeSpanFormatOptionsConverter
@@ -380,10 +330,10 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
         {
             var masks = new[]
             {
-                TimeSpanFormatOptions._Abbreviate,
-                TimeSpanFormatOptions._LessThan,
-                TimeSpanFormatOptions._Range,
-                TimeSpanFormatOptions._Truncate
+                TimeSpanUtility.AbbreviateAll,
+                TimeSpanUtility.LessThanAll,
+                TimeSpanUtility.RangeAll,
+                TimeSpanUtility.TruncateAll
             };
             foreach (var mask in masks)
                 if ((left & mask) == 0)
@@ -480,10 +430,6 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
             return t;
         }
     }
-
-    #endregion
-
-    #region : TimeTextInfo :
 
     /// <summary>
     /// Supplies the localized text used for TimeSpan formatting.
@@ -608,6 +554,4 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
             }
         }
     }
-
-    #endregion
 }

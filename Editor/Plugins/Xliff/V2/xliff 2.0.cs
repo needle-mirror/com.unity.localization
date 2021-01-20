@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 using UnityEditor.Localization.Plugins.XLIFF.Common;
@@ -78,7 +79,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF.V20
         }
 
         [XmlIgnore]
-        public int NoteCount => notes.Count;
+        public int NoteCount => notes == null ? 0 : notes.Count;
 
         public IGroup GetGroup(int index) => Items.GetItem<IGroup>(index);
 
@@ -124,6 +125,9 @@ namespace UnityEditor.Localization.Plugins.XLIFF.V20
 
         public INote AddNewNote()
         {
+            if (notes == null)
+                notes = new List<note>();
+
             var n20 = new note();
             notes.Add(n20);
             return n20;
@@ -132,15 +136,25 @@ namespace UnityEditor.Localization.Plugins.XLIFF.V20
         public void AddNote(INote note)
         {
             var n20 = TypeVersionCheck.GetConcreteTypeThrowIfTypeVersionMismatch<note>(note);
+
+            if (notes == null)
+                notes = new List<note>();
+
             notes.Add(n20);
         }
 
-        public INote GetNote(int index) => notes[index];
+        public INote GetNote(int index) => notes == null ? null : notes[index];
 
         public void RemoveNote(INote note)
         {
+            if (notes == null)
+                return;
+
             var n20 = TypeVersionCheck.GetConcreteTypeThrowIfTypeVersionMismatch<note>(note);
             notes.Remove(n20);
+
+            if (notes.Count == 0)
+                notes = null;
         }
     }
 
@@ -281,10 +295,13 @@ namespace UnityEditor.Localization.Plugins.XLIFF.V20
         }
 
         [XmlIgnore]
-        public int NoteCount => notes.Count;
+        public int NoteCount => notes == null ? 0 : notes.Count;
 
         public INote AddNewNote()
         {
+            if (notes == null)
+                notes = new List<note>();
+
             var n20 = new note();
             notes.Add(n20);
             return n20;
@@ -293,15 +310,26 @@ namespace UnityEditor.Localization.Plugins.XLIFF.V20
         public void AddNote(INote note)
         {
             var n20 = TypeVersionCheck.GetConcreteTypeThrowIfTypeVersionMismatch<note>(note);
+
+            if (notes == null)
+                notes = new List<note>();
+
             notes.Add(n20);
         }
 
-        public INote GetNote(int index) => notes[index];
+        public INote GetNote(int index) => notes == null ? null : notes[index];
 
         public void RemoveNote(INote note)
         {
+            if (notes == null)
+                return;
+
             var n20 = TypeVersionCheck.GetConcreteTypeThrowIfTypeVersionMismatch<note>(note);
+
             notes.Remove(n20);
+
+            if (notes.Count == 0)
+                notes = null;
         }
     }
 
@@ -325,7 +353,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF.V20
         public int GroupCount => Items.GetItemCount<IGroup>();
 
         [XmlIgnore]
-        public int NoteCount => notes.Count;
+        public int NoteCount => notes == null ? 0 : notes.Count;
 
         [XmlIgnore]
         public int TranslationUnitCount => Items.GetItemCount<ITranslationUnit>();
@@ -374,6 +402,9 @@ namespace UnityEditor.Localization.Plugins.XLIFF.V20
 
         public INote AddNewNote()
         {
+            if (notes == null)
+                notes = new List<note>();
+
             var n20 = new note();
             notes.Add(n20);
             return n20;
@@ -382,15 +413,25 @@ namespace UnityEditor.Localization.Plugins.XLIFF.V20
         public void AddNote(INote n)
         {
             var n20 = TypeVersionCheck.GetConcreteTypeThrowIfTypeVersionMismatch<note>(n);
+
+            if (notes == null)
+                notes = new List<note>();
+
             notes.Add(n20);
         }
 
-        public INote GetNote(int index) => notes[index];
+        public INote GetNote(int index) => notes == null ? null : notes[index];
 
         public void RemoveNote(INote n)
         {
+            if (notes == null)
+                return;
+
             var n20 = TypeVersionCheck.GetConcreteTypeThrowIfTypeVersionMismatch<note>(n);
             notes.Remove(n20);
+
+            if (notes.Count == 0)
+                notes = null;
         }
     }
 }

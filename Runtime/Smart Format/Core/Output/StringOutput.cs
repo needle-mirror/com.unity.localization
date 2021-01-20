@@ -26,6 +26,12 @@ namespace UnityEngine.Localization.SmartFormat.Core.Output
             this.output = output;
         }
 
+        public void SetCapacity(int capacity)
+        {
+            if (output.Capacity < capacity)
+                output.Capacity = capacity;
+        }
+
         public void Write(string text, IFormattingInfo formattingInfo)
         {
             output.Append(text);
@@ -34,6 +40,11 @@ namespace UnityEngine.Localization.SmartFormat.Core.Output
         public void Write(string text, int startIndex, int length, IFormattingInfo formattingInfo)
         {
             output.Append(text, startIndex, length);
+        }
+
+        public void Clear()
+        {
+            output.Clear();
         }
 
         /// <summary>

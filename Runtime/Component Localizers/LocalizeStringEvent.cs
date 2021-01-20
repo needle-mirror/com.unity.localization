@@ -7,13 +7,32 @@ namespace UnityEngine.Localization.Components
 {
     /// <summary>
     /// Component that can be used to Localize a string.
-    /// Allows for configuring optional string arguments and provides an update event that can be used to update the string.
+    /// Provides an update event <see cref="UpdateString(string)"/> that can be used to automatically update the string
+    /// when the <see cref="Settings.LocalizationSettings.SelectedLocale"/> or <see cref="StringReference"/> changes.
+    /// Allows for configuring optional arguments that will be used by **Smart Format** or <c>String.Format</c>.
     /// </summary>
+    /// <example>
+    /// This example shows how a Localized String Event can be dynamically updated with a different localized string or new formatting data.
+    /// <code source="../../DocCodeSamples.Tests/LocalizeStringEventExample.cs"/>
+    /// </example>
+    /// <example>
+    /// ![](../manual/images/scripting/LocalizeStringEventExample_Inspector.png)
+    /// </example>
+    /// <example>
+    /// Example of String Table Contents
+    ///
+    /// ![Example of String Table Contents](../manual/images/scripting/LocalizeStringEventExample_StringTable.png)
+    /// </example>
+    /// <example>
+    /// Example results in Game
+    ///
+    /// ![Example results in Game](../manual/images/scripting/LocalizeStringEventExample_GameView.gif)
+    /// </example>
     [AddComponentMenu("Localization/Localize String Event")]
     public class LocalizeStringEvent : MonoBehaviour
     {
         /// <summary>
-        /// UnityEvent which can pass a string as an argument.
+        /// [UnityEvent](https://docs.unity3d.com/ScriptReference/Events.UnityEvent.html) which contains the Localized String as an argument.
         /// </summary>
         [Serializable]
         public class StringUnityEvent : UnityEvent<string> {};
@@ -46,12 +65,20 @@ namespace UnityEngine.Localization.Components
         }
 
         /// <summary>
-        /// Event that will be sent when the localized string is ready.
+        /// Event that will be sent when the localized string is available.
         /// </summary>
         public StringUnityEvent OnUpdateString
         {
             get => m_UpdateString;
             set => m_UpdateString = value;
+        }
+
+        /// <summary>
+        /// Forces the string to be regenerated, such as when the string formatting argument values have changed.
+        /// </summary>
+        public void RefreshString()
+        {
+            StringReference.RefreshString();
         }
 
         /// <summary>

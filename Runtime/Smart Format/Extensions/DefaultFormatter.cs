@@ -16,6 +16,11 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
 
         public override string[] DefaultNames => new[] {"default", "d", ""};
 
+        /// <summary>
+        /// Checks, if the current value of the <see cref="ISelectorInfo"/> can be processed by the <see cref="DefaultFormatter"/>.
+        /// </summary>
+        /// <param name="formattingInfo"></param>
+        /// <returns>Returns true, if the current value of the <see cref="ISelectorInfo"/> can be processed by the <see cref="DefaultFormatter"/></returns>
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {
             var format = formattingInfo.Format;
@@ -32,25 +37,21 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             // If the object is null, we shouldn't write anything
             if (current == null) current = "";
 
-
-            //  (The following code was adapted from the built-in String.Format code)
-
-            //  We will try using IFormatProvider, IFormattable, and if all else fails, ToString.
-            string result = null;
-            ICustomFormatter cFormatter;
-            IFormattable formattable;
             // Use the provider to see if a CustomFormatter is available:
             var provider = formattingInfo.FormatDetails.Provider;
+
+            //  We will try using IFormatProvider, IFormattable, and if all else fails, ToString.
+            string result;
             if (provider != null &&
-                (cFormatter = provider.GetFormat(typeof(ICustomFormatter)) as ICustomFormatter) != null)
+                provider.GetFormat(typeof(ICustomFormatter)) is ICustomFormatter cFormatter)
             {
-                var formatText = format == null ? null : format.GetLiteralText();
+                var formatText = format?.GetLiteralText();
                 result = cFormatter.Format(formatText, current, provider);
             }
             // IFormattable:
-            else if ((formattable = current as IFormattable) != null)
+            else if (current is IFormattable formattable)
             {
-                var formatText = format == null ? null : format.ToString();
+                var formatText = format?.ToString();
                 result = formattable.ToString(formatText, provider);
             }
             // ToString:
@@ -59,9 +60,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                 result = current.ToString();
             }
 
-
             // Now that we have the result, let's output it (and consider alignment):
-
 
             // See if there's a pre-alignment to consider:
             if (formattingInfo.Alignment > 0)
@@ -80,6 +79,11 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                 if (spaces > 0) formattingInfo.Write(new string(' ', spaces));
             }
 
+            return true;
+        }
+
+        public override bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+        {
             return true;
         }
     }

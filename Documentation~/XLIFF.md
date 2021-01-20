@@ -70,25 +70,20 @@ The following demonstrates the output for the 2 supported XLIFF versions:
 <?xml version="1.0"?>
 <xliff xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.0" srcLang="en" trgLang="es" xmlns="urn:oasis:names:tc:xliff:document:2.0">
   <file id="8e0d86343d612504c9dda03e44e5026d" original="Assets/Tables/Example Table_es.asset">
-    <notes />
     <group id="c56c9f2391765d143baefc05182d5138" name="Example Table">
-      <notes />
       <unit id="6633451520" name="MSG_1">
-        <notes />
         <segment>
           <source>Hello</source>
           <target>Hola</target>
         </segment>
       </unit>
       <unit id="9531715584" name="START_GAME">
-        <notes />
         <segment>
           <source>Start</source>
           <target>Comenzar</target>
         </segment>
       </unit>
       <unit id="15160471552" name="EXIT_GAME">
-        <notes />
         <segment>
           <source>Exit</source>
           <target>Salir</target>

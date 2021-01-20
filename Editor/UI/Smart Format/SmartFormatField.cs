@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
+using UnityEngine.Localization;
 using UnityEngine.Localization.SmartFormat;
+using UnityEngine.Localization.SmartFormat.Core.Formatting;
 using UnityEngine.Localization.SmartFormat.Core.Parsing;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
 using UnityEngine.Localization.Tables;
@@ -145,10 +146,19 @@ namespace UnityEditor.Localization.UI
             {
                 if (m_DebugText == null)
                 {
+                    // Print the error in the message and avoid throwing actions. (LOC-119)
+                    var oldParseAction = m_SmartFormatter.Settings.ParseErrorAction;
+                    var oldFormatArgumentAction = m_SmartFormatter.Settings.FormatErrorAction;
+                    m_SmartFormatter.Settings.ParseErrorAction = ErrorAction.OutputErrorInResult;
+                    m_SmartFormatter.Settings.FormatErrorAction = ErrorAction.OutputErrorInResult;
+
                     m_Format = m_SmartFormatter.Parser.ParseFormat(RawText, m_SmartFormatter.GetNotEmptyFormatterExtensionNames());
                     m_FormatItemLookup.Clear();
                     int id = 0;
                     m_DebugText = FormatToDebugString(m_Format, ref id);
+
+                    m_SmartFormatter.Settings.ParseErrorAction = oldParseAction;
+                    m_SmartFormatter.Settings.FormatErrorAction = oldFormatArgumentAction;
                 }
                 return m_DebugText;
             }
@@ -166,7 +176,9 @@ namespace UnityEditor.Localization.UI
                     m_SmartFormatter.Settings.ParseErrorAction = ErrorAction.OutputErrorInResult;
                     m_SmartFormatter.Settings.FormatErrorAction = ErrorAction.OutputErrorInResult;
 
-                    m_PreviewText = m_SmartFormatter?.Format(RawText, Arguments);
+                    FormatCache formatCache = null;
+                    var locale = LocalizationEditorSettings.GetLocale(Table.LocaleIdentifier.Code);
+                    m_PreviewText = m_SmartFormatter?.FormatWithCache(ref formatCache, RawText, locale?.Formatter, Arguments);
 
                     m_SmartFormatter.Settings.ParseErrorAction = oldParseAction;
                     m_SmartFormatter.Settings.FormatErrorAction = oldFormatArgumentAction;
@@ -180,7 +192,16 @@ namespace UnityEditor.Localization.UI
         /// <summary>
         /// Optional arguments that will be passed through when using SmartFormat.
         /// </summary>
-        public SmartObjects Arguments { get; set; } = new SmartObjects();
+        public object[] Arguments
+        {
+            get => m_Arguments;
+            set
+            {
+                m_Arguments = value;
+                ResetCache();
+            }
+        }
+
         public bool Selected { get; set; }
 
         static readonly string[] k_Modes = {"Edit", "Debug"};
@@ -196,12 +217,16 @@ namespace UnityEditor.Localization.UI
             Preview
         }
 
+        object[] m_Arguments;
         Mode m_Mode = Mode.Edit;
         string m_DebugText = null;
         string m_PreviewText = null;
         string m_Label = null;
         string m_RawText;
         bool m_IsSmart;
+
+        GUIStyle m_TextAreaStyle;
+        GUIStyle m_DebugTextAreaStyle;
 
         SmartFormatter m_SmartFormatter;
         Format m_Format;
@@ -213,6 +238,9 @@ namespace UnityEditor.Localization.UI
             m_SmartFormatter = LocalizationEditorSettings.ActiveLocalizationSettings?.GetStringDatabase()?.SmartFormatter;
             // TODO: Only do this when in debug view.
             SubscribeToHyperlinkEvent();
+
+            m_TextAreaStyle = new GUIStyle("TextField") { wordWrap = true };
+            m_DebugTextAreaStyle = new GUIStyle("TextField") { wordWrap = false, richText = true };
         }
 
         /// <summary>
@@ -238,7 +266,7 @@ namespace UnityEditor.Localization.UI
         void CalcHeight()
         {
             var text = m_Mode == Mode.Preview ? PreviewText : RawText;
-            var contentsHeight = EditorStyles.textArea.CalcSize(new GUIContent(text)).y + EditorGUIUtility.standardVerticalSpacing;
+            var contentsHeight = m_TextAreaStyle.CalcSize(new GUIContent(text)).y + EditorGUIUtility.standardVerticalSpacing;
             contentsHeight += k_ToolbarHeight + EditorGUIUtility.standardVerticalSpacing;
             if (IsSmart)
                 contentsHeight += EditorStyles.toolbarButton.lineHeight + EditorGUIUtility.standardVerticalSpacing;
@@ -347,7 +375,7 @@ namespace UnityEditor.Localization.UI
             {
                 case Mode.Edit:
                     EditorGUI.BeginChangeCheck();
-                    var newText = EditorGUI.TextArea(rect, RawText);
+                    var newText = EditorGUI.TextArea(rect, RawText, m_TextAreaStyle);
                     if (EditorGUI.EndChangeCheck())
                     {
                         SetValue(newText);
@@ -356,14 +384,12 @@ namespace UnityEditor.Localization.UI
                     break;
 
                 case Mode.Debug:
-                    EditorStyles.textArea.richText = true;
-                    EditorStyles.textArea.wordWrap = false;
-                    EditorGUI.SelectableLabel(rect, DebugText, EditorStyles.textArea);
+                    EditorGUI.SelectableLabel(rect, DebugText, m_DebugTextAreaStyle);
                     break;
 
                 case Mode.Preview:
                     // TODO: List of references and the results.
-                    EditorGUI.LabelField(rect, PreviewText, EditorStyles.textArea);
+                    EditorGUI.LabelField(rect, PreviewText, m_TextAreaStyle);
                     break;
             }
             return change;
@@ -408,64 +434,65 @@ namespace UnityEditor.Localization.UI
         /// <returns></returns>
         string FormatToDebugString(Format format, ref int nextId)
         {
-            var result = new StringBuilder();
-
-            foreach (var item in format.Items)
+            using (StringBuilderPool.Get(out var result))
             {
-                if (item is Placeholder ph)
+                foreach (var item in format.Items)
                 {
-                    var id = $"{Table.GetInstanceID()}-{KeyId}-{nextId++}";
-                    m_FormatItemLookup.Add(id, ph);
-                    result.Append($"<a href=\"{id}\">"); // TODO: Support Different selectors from Settings
-                    result.Append("<b>");
-                    result.Append('{');
-                    result.Append("</b>");
-                    foreach (var s in ph.Selectors)
+                    if (item is Placeholder ph)
                     {
-                        result.Append("<b><color=#AE6503>");
-                        result.Append(s.baseString, s.operatorStart, s.endIndex - s.operatorStart);
-                        result.Append("</color></b>");
-                    }
-                    if (ph.Alignment != 0)
-                    {
+                        var id = $"{Table.GetInstanceID()}-{KeyId}-{nextId++}";
+                        m_FormatItemLookup.Add(id, ph);
+                        result.Append($"<a href=\"{id}\">"); // TODO: Support Different selectors from Settings
                         result.Append("<b>");
-                        result.Append(',');
-                        result.Append(ph.Alignment);
+                        result.Append('{');
                         result.Append("</b>");
-                    }
-
-                    if (ph.FormatterName != "")
-                    {
-                        result.Append(':');
-                        result.Append("<color=#937D39>");
-                        result.Append(ph.FormatterName);
-                        if (ph.FormatterOptions != "")
+                        foreach (var s in ph.Selectors)
                         {
-                            result.Append('(');
-                            result.Append(ph.FormatterOptions);
-                            result.Append(')');
+                            result.Append("<b><color=#AE6503>");
+                            result.Append(s.baseString, s.operatorStart, s.endIndex - s.operatorStart);
+                            result.Append("</color></b>");
                         }
-                        result.Append("</color>");
-                    }
+                        if (ph.Alignment != 0)
+                        {
+                            result.Append("<b>");
+                            result.Append(',');
+                            result.Append(ph.Alignment);
+                            result.Append("</b>");
+                        }
 
-                    if (ph.Format != null)
+                        if (ph.FormatterName != "")
+                        {
+                            result.Append(':');
+                            result.Append("<color=#937D39>");
+                            result.Append(ph.FormatterName);
+                            if (ph.FormatterOptions != "")
+                            {
+                                result.Append('(');
+                                result.Append(ph.FormatterOptions);
+                                result.Append(')');
+                            }
+                            result.Append("</color>");
+                        }
+
+                        if (ph.Format != null)
+                        {
+                            result.Append(':');
+                            result.Append(FormatToDebugString(ph.Format, ref nextId));
+                        }
+
+                        result.Append("<b>");
+                        result.Append('}');
+                        result.Append("</b>");
+                        result.Append("</a>");
+                    }
+                    else
                     {
-                        result.Append(':');
-                        result.Append(FormatToDebugString(ph.Format, ref nextId));
+                        result.Append(item.RawText);
                     }
+                }
 
-                    result.Append("<b>");
-                    result.Append('}');
-                    result.Append("</b>");
-                    result.Append("</a>");
-                }
-                else
-                {
-                    result.Append(item.RawText);
-                }
+                return result.ToString();
             }
-
-            return result.ToString();
         }
 
         public override string ToString() => $"SmartFormatField({RawText})";

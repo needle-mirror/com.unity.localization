@@ -1,39 +1,58 @@
 using System;
 using System.Linq;
-using UnityEditorInternal;
+using UnityEditor.Localization.UI.Toolkit;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.SmartFormat;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
+using UnityEngine.UIElements;
+using ReorderableList = UnityEditor.Localization.UI.Toolkit.ReorderableList;
 
 namespace UnityEditor.Localization.UI
 {
-    class SmartFormatterPropertyFieldPropertyData
-    {
-        public SerializedProperty settings;
-        public SerializedProperty parser;
-        public SerializedProperty sources;
-        public SerializedProperty formatters;
-        public SmartFormatter smartFormatterInstance;
-        public ReorderableListExtended sourcesList;
-        public ReorderableListExtended formattersList;
-    }
-
     [CustomPropertyDrawer(typeof(SmartFormatter))]
-    class SmartFormatterPropertyField : PropertyDrawerExtended<SmartFormatterPropertyFieldPropertyData>
+    class SmartFormatterPropertyField : PropertyDrawer
     {
-        class Styles
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            public static readonly GUIContent sourcesHeader = new GUIContent("Sources", "Used to evaluate a selector. Checked in order of the list, top first.");
-            public static readonly GUIContent formattersHeader = new GUIContent("Formatters", "Used to convert an object to a string. Checked in order of the list, top first.");
-            public static readonly GUIContent smartFormatHeader = new GUIContent("Smart Format");
+            var root = Resources.GetTemplate(nameof(SmartFormatter));
+            root.Q("root-foldout");
+            root.Bind(property.serializedObject);
+
+            var sources = new ManagedReferenceReorderableList(property.FindPropertyRelative("m_Sources"), typeof(ISource));
+            sources.HeaderTitle = "Sources";
+            sources.HeaderTooltip = "Used to evaluate a selector. Checked in order of the list, top first.";
+            sources.AddCallback = (l, i) => ShowAddMenu(l, i, property);
+            root.Add(sources);
+
+            var formatters = new ManagedReferenceReorderableList(property.FindPropertyRelative("m_Formatters"), typeof(IFormatter));
+            formatters.HeaderTitle = "Formatters";
+            formatters.HeaderTooltip = "Used to convert an object to a string. Checked in order of the list, top first.";
+            root.Add(formatters);
+
+            return root;
         }
 
-        void AddClassMenu(Rect rect, ReorderableList list, System.Type baseType, SmartFormatterPropertyFieldPropertyData data)
+        void ShowAddMenu(ReorderableList list, int index, SerializedProperty property)
         {
+            var managedList = list as ManagedReferenceReorderableList;
+
+            var settings = list.ListProperty.serializedObject.targetObject as LocalizationSettings;
+            SmartFormatter smartFormatterInstance = null;
+            if (settings != null)
+            {
+                smartFormatterInstance = settings.GetStringDatabase()?.SmartFormatter;
+            }
+            else
+            {
+                smartFormatterInstance = property.GetActualObjectForSerializedProperty<SmartFormatter>(fieldInfo);
+            }
+            Debug.Assert(smartFormatterInstance != null, $"Failed to extract {nameof(SmartFormatter)} instance.");
+
             var menu = new GenericMenu();
 
-            var foundTypes = TypeCache.GetTypesDerivedFrom(baseType);
+            var foundTypes = TypeCache.GetTypesDerivedFrom(managedList.AddType);
             for (int i = 0; i < foundTypes.Count; ++i)
             {
                 var type = foundTypes[i];
@@ -45,9 +64,10 @@ namespace UnityEditor.Localization.UI
 
                     if (hasSmartFormatterConstructor || hasDefaultConstructor)
                     {
-                        var elementProp = list.serializedProperty.AddArrayElement();
-                        elementProp.managedReferenceValue = hasDefaultConstructor ? Activator.CreateInstance(type) : Activator.CreateInstance(type, data.smartFormatterInstance);
-                        list.serializedProperty.serializedObject.ApplyModifiedProperties();
+                        var elementProp = list.ListProperty.InsertArrayElement(index);
+                        elementProp.managedReferenceValue = hasDefaultConstructor ? Activator.CreateInstance(type) : Activator.CreateInstance(type, smartFormatterInstance);
+                        list.ListProperty.serializedObject.ApplyModifiedProperties();
+                        list.RefreshList();
                     }
                     else
                     {
@@ -55,85 +75,7 @@ namespace UnityEditor.Localization.UI
                     }
                 });
             }
-            menu.DropDown(rect);
-        }
-
-        public override SmartFormatterPropertyFieldPropertyData CreatePropertyData(SerializedProperty property)
-        {
-            var data = new SmartFormatterPropertyFieldPropertyData();
-            data.settings = property.FindPropertyRelative("m_Settings");
-            data.parser = property.FindPropertyRelative("m_Parser");
-            data.sources = property.FindPropertyRelative("m_Sources");
-            data.formatters = property.FindPropertyRelative("m_Formatters");
-
-            var settings = property.serializedObject.targetObject as LocalizationSettings;
-            if (settings != null)
-            {
-                data.smartFormatterInstance = settings.GetStringDatabase()?.SmartFormatter;
-            }
-            else
-            {
-                data.smartFormatterInstance = property.GetActualObjectForSerializedProperty<SmartFormatter>(fieldInfo);
-            }
-            Debug.Assert(data.smartFormatterInstance != null, $"Failed to extract {nameof(SmartFormatter)} instance.");
-
-            data.sourcesList = new ReorderableListExtended(data.sources.serializedObject, data.sources);
-            data.sourcesList.drawHeaderCallback = (rect) => EditorGUI.LabelField(rect, Styles.sourcesHeader);
-            data.sourcesList.onAddDropdownCallback = (rect, list) => AddClassMenu(rect, list, typeof(ISource), data);
-
-            data.formattersList = new ReorderableListExtended(data.formatters.serializedObject, data.formatters);
-            data.formattersList.drawHeaderCallback = (rect) => EditorGUI.LabelField(rect, Styles.formattersHeader);
-            data.formattersList.onAddDropdownCallback = (rect, list) => AddClassMenu(rect, list, typeof(IFormatter), data);
-            return data;
-        }
-
-        public override void OnGUI(SmartFormatterPropertyFieldPropertyData data, Rect position, SerializedProperty property, GUIContent label)
-        {
-            // Header
-            position.height = EditorStyles.boldLabel.lineHeight;
-            property.isExpanded = EditorGUI.Foldout(position, property.isExpanded, Styles.smartFormatHeader, true);
-            position.yMin += position.height + EditorGUIUtility.standardVerticalSpacing;
-
-            if (!property.isExpanded)
-                return;
-
-            EditorGUI.indentLevel++;
-
-            // Settings
-            position.height = EditorGUI.GetPropertyHeight(data.settings);
-            EditorGUI.PropertyField(position, data.settings, true);
-            position.yMin += position.height + EditorGUIUtility.standardVerticalSpacing;
-
-            // Parser
-            position.height = EditorGUI.GetPropertyHeight(data.parser);
-            EditorGUI.PropertyField(position, data.parser, true);
-            position.yMin += position.height + EditorGUIUtility.standardVerticalSpacing;
-
-            position.height = data.sourcesList.GetHeight();
-            var listPos = EditorGUI.PrefixLabel(position, GUIContent.none);
-            data.sourcesList.DoList(listPos);
-
-            position.y += position.height + EditorGUIUtility.standardVerticalSpacing;
-
-            position.height = data.formattersList.GetHeight();
-            listPos = EditorGUI.PrefixLabel(position, GUIContent.none);
-            data.formattersList.DoList(listPos);
-
-            EditorGUI.indentLevel--;
-        }
-
-        public override float GetPropertyHeight(SmartFormatterPropertyFieldPropertyData data, SerializedProperty property, GUIContent label)
-        {
-            float height = EditorStyles.foldout.lineHeight + EditorGUIUtility.standardVerticalSpacing;
-
-            if (property.isExpanded)
-            {
-                height += EditorGUI.GetPropertyHeight(data.settings) + EditorGUIUtility.standardVerticalSpacing;
-                height += EditorGUI.GetPropertyHeight(data.parser) + EditorGUIUtility.standardVerticalSpacing;
-                height += data.sourcesList.GetHeight() + EditorGUIUtility.standardVerticalSpacing;
-                height += data.formattersList.GetHeight() + EditorGUIUtility.standardVerticalSpacing;
-            }
-            return height;
+            menu.ShowAsContext();
         }
     }
 }

@@ -7,8 +7,6 @@ namespace UnityEngine.Localization.SmartFormat.Net.Utilities
     /// </summary>
     internal static class SystemTime
     {
-        #region : DateTime.Now :
-
         /// <summary>
         /// Normally this is a pass-through to DateTime.Now, but it can be overridden with SetDateTime( .. ) for unit testing and debugging.
         /// </summary>
@@ -22,10 +20,6 @@ namespace UnityEngine.Localization.SmartFormat.Net.Utilities
             Now = () => dateTimeNow;
         }
 
-        #endregion
-
-        #region : DateTimeOffset :
-
         /// <summary>
         /// Normally this is a pass-through to DateTimeOffset.Now, but it can be overridden with SetDateTime( .. ) for unit testing and debugging.
         /// </summary>
@@ -38,8 +32,6 @@ namespace UnityEngine.Localization.SmartFormat.Net.Utilities
         {
             OffsetNow = () => dateTimeOffset;
         }
-
-        #endregion
 
         /// <summary>
         /// Resets SystemTime.Now() to return DateTime.Now.

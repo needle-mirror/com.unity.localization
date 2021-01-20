@@ -9,10 +9,6 @@ namespace UnityEngine.Localization.Settings
     [Serializable]
     public class SystemLocaleSelector : IStartupLocaleSelector
     {
-        // There is a bug with SerializeReference that causes empty instances to not deserialize. This is a workaround while we wait for the fix (case 1183547)
-        [SerializeField, HideInInspector]
-        int dummyObject;
-
         /// <summary>
         /// Uses <see cref="Application.systemLanguage"/> to find a matching <see cref="Locale"/> from the available locales.
         /// </summary>

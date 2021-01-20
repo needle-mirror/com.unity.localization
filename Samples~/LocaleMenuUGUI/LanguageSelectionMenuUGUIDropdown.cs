@@ -49,7 +49,8 @@ namespace UnityEngine.Localization.Samples
                 if (LocalizationSettings.SelectedLocale == locale)
                     selectedOption = i;
 
-                options.Add(locales[i].ToString());
+                var displayName = locales[i].Identifier.CultureInfo != null ? locales[i].Identifier.CultureInfo.NativeName : locales[i].ToString();
+                options.Add(displayName);
             }
 
             // If we have no Locales then something may have gone wrong.

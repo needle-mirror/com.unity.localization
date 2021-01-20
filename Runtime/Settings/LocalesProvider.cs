@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.Localization.Pseudo;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using UnityEngine.SocialPlatforms;
 
 namespace UnityEngine.Localization.Settings
 {
@@ -12,10 +11,6 @@ namespace UnityEngine.Localization.Settings
     [Serializable]
     public class LocalesProvider : ILocalesProvider, IPreloadRequired
     {
-        // There is a bug with SerializeReference that causes empty instances to not deserialize. This is a workaround while we wait for the fix (case 1183547)
-        [SerializeField, HideInInspector]
-        int dummyObject;
-
         List<Locale> m_Locales = new List<Locale>();
         AsyncOperationHandle? m_LoadOperation;
 
@@ -45,7 +40,7 @@ namespace UnityEngine.Localization.Settings
                         m_Locales = new List<Locale>();
 
                     m_Locales.Clear();
-                    m_LoadOperation = AddressableAssets.Addressables.LoadAssetsAsync<Locale>(LocalizationSettings.LocaleLabel, AddLocale);
+                    m_LoadOperation = AddressablesInterface.LoadAssetsWithLabel<Locale>(LocalizationSettings.LocaleLabel, AddLocale);
                 }
 
                 return m_LoadOperation.Value;

@@ -1,8 +1,9 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine.Localization.Pseudo;
 using UnityEngine.Localization.SmartFormat;
 using UnityEngine.Localization.Tables;
-using UnityEngine.ResourceManagement;
+using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization.Settings
@@ -14,19 +15,37 @@ namespace UnityEngine.Localization.Settings
     public class LocalizedStringDatabase : LocalizedDatabase<StringTable, StringTableEntry>
     {
         [SerializeField]
-        string m_NoTranslationFoundFormat = "No translation found for '{0}'";
+        MissingTranslationBehavior m_MissingTranslationState = MissingTranslationBehavior.ShowMissingTranslationMessage;
+
+        const string kDefaultNoTranslationMessage = "No translation found for '{key}' in {table.TableCollectionName}";
+
+        [SerializeField]
+        [Tooltip("The string that will be used when a localized value is missing. This is a Smart String which has access to the following placeholders:\n" +
+            "\t{key}: The name of the key\n" +
+            "\t{keyID}: The numeric Id of the key\n" +
+            "\t{table}: The table object, this can be further queried, for example {table.TableCollectionName}\n" +
+            "\t{locale}: The locale asset, this can be further queried, for example {locale.name}")]
+        string m_NoTranslationFoundMessage = kDefaultNoTranslationMessage;
 
         [SerializeReference]
         SmartFormatter m_SmartFormat = Smart.CreateDefaultSmartFormat();
+
+        StringTable m_MissingTranslationTable;
 
         /// <summary>
         /// The message to display when a string can not be localized.
         /// The final string will be created using String.Format where format item 0 contains the original string.
         /// </summary>
-        public string NoTranslationFoundFormat
+        public string NoTranslationFoundMessage
         {
-            get => m_NoTranslationFoundFormat;
-            set => m_NoTranslationFoundFormat = value;
+            get => m_NoTranslationFoundMessage;
+            set => m_NoTranslationFoundMessage = value;
+        }
+
+        public MissingTranslationBehavior MissingTranslationState
+        {
+            get => m_MissingTranslationState;
+            set => m_MissingTranslationState = value;
         }
 
         /// <summary>
@@ -39,109 +58,18 @@ namespace UnityEngine.Localization.Settings
         }
 
         /// <summary>
-        /// Attempts to retrieve a string from the default StringTable.
-        /// This function is asynchronous and may not have an immediate result.
-        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
-        /// </summary>
-        /// <param name="tableEntryReference"></param>
-        /// <returns></returns>
-        public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference)
-        {
-            return GetLocalizedStringAsync(DefaultTable, tableEntryReference);
-        }
-
-        /// <summary>
-        /// Attempts to retrieve a string from the default StringTable.
-        /// This function is asynchronous and may not have an immediate result.
-        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
-        /// </summary>
-        /// <param name="tableEntryReference"></param>
-        /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
-        /// <returns></returns>
-        public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference, Locale locale)
-        {
-            if (locale == null)
-                throw new ArgumentNullException(nameof(locale));
-
-            return GetLocalizedStringAsync(DefaultTable, tableEntryReference, locale, null);
-        }
-
-        /// <summary>
-        /// Attempts to retrieve a string from the default StringTable.
-        /// This function is asynchronous and may not have an immediate result.
-        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
-        /// </summary>
-        /// <param name="tableEntryReference">A reference to the entry in the <see cref="LocalizedDatabase{TTable, TEntry}.DefaultTable"/></param>
-        /// <param name="arguments">Arguments passed to SmartFormat or String.Format.</param>
-        /// <returns></returns>
-        public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference, params object[] arguments)
-        {
-            return GetLocalizedStringAsync(DefaultTable, tableEntryReference, arguments);
-        }
-
-        /// <summary>
-        /// Attempts to retrieve a string from the default StringTable.
-        /// This function is asynchronous and may not have an immediate result.
-        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
-        /// </summary>
-        /// <param name="tableEntryReference">A reference to the entry in the <see cref="LocalizedDatabase{TTable, TEntry}.DefaultTable"/></param>
-        /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
-        /// <param name="arguments">Arguments passed to SmartFormat or String.Format.</param>
-        /// <returns></returns>
-        public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference, Locale locale, params object[] arguments)
-        {
-            if (locale == null)
-                throw new ArgumentNullException(nameof(locale));
-
-            return GetLocalizedStringAsync(DefaultTable, tableEntryReference, locale, arguments);
-        }
-
-        /// <summary>
         /// Attempts to retrieve a string from the requested table.
         /// This function is asynchronous and may not have an immediate result.
         /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
         /// </summary>
-        /// <param name="tableReference">A reference to the table to check for the string.</param>
-        /// <param name="tableEntryReference">A reference to the entry in the <see cref="StringTable"/></param>
-        /// <returns></returns>
-        public AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference)
-        {
-            return GetLocalizedStringAsync(tableReference, tableEntryReference, (object[])null);
-        }
-
-        /// <summary>
-        /// Attempts to retrieve a string from the requested table.
-        /// This function is asynchronous and may not have an immediate result.
-        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
-        /// </summary>
-        /// <param name="tableReference">A reference to the table to check for the string.</param>
         /// <param name="tableEntryReference">A reference to the entry in the <see cref="StringTable"/></param>
         /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
-        /// <returns></returns>
-        public AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale)
-        {
-            if (locale == null)
-                throw new ArgumentNullException(nameof(locale));
-
-            return GetLocalizedStringAsync(tableReference, tableEntryReference, locale, null);
-        }
-
-        /// <summary>
-        /// Attempts to retrieve a string from the requested table.
-        /// The string will first be formatted with <see cref="SmartFormat"/> if <see cref="StringTableEntry.IsSmart"/> is enabled otherwise it will use String.Format.
-        /// This function is asynchronous and may not have an immediate result.
-        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
-        /// </summary>
-        /// <param name="tableReference">A reference to the table to check for the string.</param>
-        /// <param name="tableEntryReference">A reference to the entry in the <see cref="StringTable"/></param>
+        /// <param name="fallbackBehavior">A Enum which determines if a Fallback should be used when no value could be found for the Locale.</param>
         /// <param name="arguments">Arguments passed to SmartFormat or String.Format.</param>
         /// <returns></returns>
-        public AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference, params object[] arguments)
+        public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings, params object[] arguments)
         {
-            var localeOp = LocalizationSettings.SelectedLocaleAsync;
-            if (!localeOp.IsDone)
-                return ResourceManager.CreateChainOperation(localeOp, (op) => GetLocalizedStringAsync(tableReference, tableEntryReference, localeOp.Result, arguments));
-            return GetLocalizedStringAsync(tableReference, tableEntryReference, localeOp.Result, arguments);
+            return GetLocalizedStringAsync(GetDefaultTable(), tableEntryReference, locale, fallbackBehavior, arguments);
         }
 
         /// <summary>
@@ -153,66 +81,125 @@ namespace UnityEngine.Localization.Settings
         /// <param name="tableReference">A reference to the table to check for the string.</param>
         /// <param name="tableEntryReference">A reference to the entry in the <see cref="StringTable"/></param>
         /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
+        /// <param name="fallbackBehavior">A Enum which determines if a Fallback should be used when no value could be found for the Locale.</param>
         /// <param name="arguments">Arguments passed to SmartFormat or String.Format.</param>
         /// <returns></returns>
-        public AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale, params object[] arguments)
+        public virtual AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings, params object[] arguments)
         {
-            if (locale == null)
-                throw new ArgumentNullException(nameof(locale));
+            var tableEntryOperation = GetTableEntryAsync(tableReference, tableEntryReference, locale, fallbackBehavior);
 
-            var initOp = LocalizationSettings.InitializationOperation;
-            if (!initOp.IsDone)
-                return ResourceManager.CreateChainOperation(initOp, (op) => GetLocalizedStringAsyncInternal(tableReference, tableEntryReference, locale, arguments));
-            return GetLocalizedStringAsyncInternal(tableReference, tableEntryReference, locale, arguments);
+            var operation = GenericPool<GetLocalizedStringOperation>.Get();
+            operation.Init(tableEntryOperation, locale, this, tableReference, tableEntryReference, arguments);
+            var handle = AddressablesInterface.ResourceManager.StartOperation(operation, tableEntryOperation);
+
+            // We don't want to force users to have to manage the reference counting so by default we will release the operation for reuse once completed in the next frame
+            // If a user wants to hold onto it then they should call Acquire on the operation and later Release.
+            handle.CompletedTypeless += ReleaseNextFrame;
+
+            return handle;
         }
 
-        /// <inheritdoc cref="GetLocalizedStringAsync"/>
-        internal protected virtual AsyncOperationHandle<string> GetLocalizedStringAsyncInternal(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale, object[] arguments)
+        internal protected virtual string GenerateLocalizedString(StringTable table, StringTableEntry entry, TableReference tableReference, TableEntryReference tableEntryReference, Locale locale, object[] arguments)
         {
-            var tableEntryOp = GetTableEntryAsync(tableReference, tableEntryReference, locale);
-            if (!tableEntryOp.IsDone)
-                return ResourceManager.CreateChainOperation(tableEntryOp, (op) => GetLocalizedStringProcessTableEntry(op, tableEntryReference, locale, arguments));
-            return GetLocalizedStringProcessTableEntry(tableEntryOp, tableEntryReference, locale, arguments);
-        }
+            var result = entry?.GetLocalizedString(locale?.Formatter, arguments);
 
-        /// <summary>
-        /// Converts a <see cref="StringTableEntry"/> into a translated string.
-        /// Any Smart Format or String.Format operations and pseudo-localization are performed here.
-        /// </summary>
-        /// <param name="entryOp">The handle generated from calling <see cref="LocalizedDatabase.GetTableEntryAsync"/>.</param>
-        /// <param name="tableEntryReference"></param>
-        /// <param name="arguments">Arguments to be passed to Smart Format or String.Format. If null then no formatting will be performed.</param>
-        /// <returns></returns>
-        internal protected virtual AsyncOperationHandle<string> GetLocalizedStringProcessTableEntry(AsyncOperationHandle<TableEntryResult> entryOp, TableEntryReference tableEntryReference, Locale locale, object[] arguments)
-        {
-            tableEntryReference.Validate();
-
-            if (entryOp.Status != AsyncOperationStatus.Succeeded || entryOp.Result.Entry == null)
+            if (string.IsNullOrEmpty(result))
             {
-                string key = tableEntryReference.ResolveKeyName(entryOp.Result.Table?.SharedData);
-                return ResourceManager.CreateCompletedOperation(ProcessUntranslatedText(key), null);
-            }
+                var sharedTableData = table?.SharedData;
+                if (sharedTableData == null && tableReference.ReferenceType == TableReference.Type.Guid)
+                {
+                    var sharedTableDataOperation = GetSharedTableData(tableReference.TableCollectionNameGuid);
+                    if (sharedTableDataOperation.IsDone)
+                        sharedTableData = sharedTableDataOperation.Result;
+                }
 
-            var entry = entryOp.Result.Entry;
-            var localizedString = entry.GetLocalizedString(arguments);
+                string key = tableEntryReference.ResolveKeyName(sharedTableData);
+                return ProcessUntranslatedText(key, tableEntryReference.KeyId, tableReference, table, locale);
+            }
 
             // Apply pseudo-localization
             if (locale is PseudoLocale pseudoLocale)
             {
-                localizedString = pseudoLocale.GetPseudoString(localizedString);
+                result = pseudoLocale.GetPseudoString(result);
             }
 
-            return ResourceManager.CreateCompletedOperation(localizedString, null);
+            return result;
+        }
+
+        /// <summary>
+        /// If a table does not exist for a Locale then we should create a temporary one and populate it with what info we can so it can be used for the untranslated text message.
+        /// </summary>
+        /// <param name="tableReference"></param>
+        /// <returns></returns>
+        StringTable GetUntranslatedTextTempTable(TableReference tableReference)
+        {
+            if (m_MissingTranslationTable == null)
+            {
+                m_MissingTranslationTable = ScriptableObject.CreateInstance<StringTable>();
+                m_MissingTranslationTable.SharedData = ScriptableObject.CreateInstance<SharedTableData>();
+            }
+
+            if (tableReference.ReferenceType == TableReference.Type.Guid)
+            {
+                m_MissingTranslationTable.SharedData.TableCollectionNameGuid = tableReference;
+
+                // Try to extract the table name
+                var sharedTableData = GetSharedTableData(tableReference.TableCollectionNameGuid);
+                if (sharedTableData.IsDone && sharedTableData.Result != null)
+                {
+                    m_MissingTranslationTable.SharedData.TableCollectionName = sharedTableData.Result.TableCollectionName;
+                }
+                else
+                {
+                    m_MissingTranslationTable.SharedData.TableCollectionName = tableReference.TableCollectionNameGuid.ToString();
+                }
+            }
+            else if (tableReference.ReferenceType == TableReference.Type.Name)
+            {
+                m_MissingTranslationTable.SharedData.TableCollectionName = tableReference.TableCollectionName;
+                m_MissingTranslationTable.SharedData.TableCollectionNameGuid = Guid.Empty; // We don't really have a way to get a Guid from a table name.
+            }
+
+            return m_MissingTranslationTable;
         }
 
         /// <summary>
         /// Returns a string to indicate that the entry could not be found for the key when calling <see cref="GetLocalizedStringAsync"/>.
         /// </summary>
-        /// <param name="key">The key that could not be found.</param>
+        /// <param name="key"> The name of the key ///</param>
+        /// <param name="KeyId"> The numeric Id of the key ///</param>
+        /// <param name="table"> The table object, this can be further queried, for example {table.TableCollectionName} ///</param>
+        /// <param name="locale"> The locale asset, this can be further queried, for example {locale.name} ///</param>
         /// <returns></returns>
-        internal string ProcessUntranslatedText(string key)
+        internal string ProcessUntranslatedText(string key, long KeyId, TableReference tableReference, StringTable table, Locale locale)
         {
-            return string.IsNullOrEmpty(NoTranslationFoundFormat) ? key : string.Format(NoTranslationFoundFormat, key);
+            if (table == null)
+            {
+                table = GetUntranslatedTextTempTable(tableReference);
+            }
+
+            using (DictionaryPool<string, object>.Get(out var dict))
+            {
+                dict["key"] = key;
+                dict["keyId"] = KeyId;
+                dict["table"] = table;
+                dict["locale"] = locale;
+
+                var message = m_SmartFormat.Format(string.IsNullOrEmpty(NoTranslationFoundMessage) ? kDefaultNoTranslationMessage : NoTranslationFoundMessage, dict);
+
+                if (MissingTranslationState == MissingTranslationBehavior.PrintWarning)
+                {
+                    Debug.LogWarning(message);
+                    return String.Empty;
+                }
+                else if (MissingTranslationState.HasFlag(MissingTranslationBehavior.PrintWarning) && MissingTranslationState.HasFlag(MissingTranslationBehavior.ShowMissingTranslationMessage))
+                {
+                    Debug.LogWarning(message);
+                    return message;
+                }
+                else
+                    return message;
+            }
         }
     }
 }

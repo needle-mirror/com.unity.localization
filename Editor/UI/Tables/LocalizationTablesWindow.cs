@@ -136,6 +136,7 @@ namespace UnityEditor.Localization.UI
                 menu.AddItem(new GUIContent("Export/XLIFF"), false, () => Plugins.XLIFF.MenuItems.ExportCollection(new MenuCommand(selectedCollection)));
                 menu.AddItem(new GUIContent("Export/CSV"), false, () => Plugins.CSV.MenuItems.ExportCollection(new MenuCommand(selectedCollection)));
                 menu.AddItem(new GUIContent("Export/CSV(With Comments)"), false, () => Plugins.CSV.MenuItems.ExportCollectionWithComments(new MenuCommand(selectedCollection)));
+                menu.AddItem(new GUIContent("Export/Character Set"), false, () => ExportCharacterSetWindow.ShowWindow().SelectedTables.SetSelection(selectedCollection));
             }
         }
     }

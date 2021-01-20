@@ -37,12 +37,12 @@ namespace UnityEngine.Localization.Metadata
         [SerializeField, HideInInspector]
         List<Item> m_Entries = new List<Item>();
 
-        Dictionary<long, HashSet<string>> m_EntriesLookup = new Dictionary<long, HashSet<string>>();
+        public Dictionary<long, HashSet<string>> EntriesLookup { get; set; } = new Dictionary<long, HashSet<string>>();
 
         /// <summary>
         /// Are any table entries currently associated to this Metadata?
         /// </summary>
-        public bool IsEmpty => m_EntriesLookup.Count == 0;
+        public bool IsEmpty => EntriesLookup.Count == 0;
 
         /// <summary>
         /// Is the table entry associated to this Metadata?
@@ -51,7 +51,7 @@ namespace UnityEngine.Localization.Metadata
         /// <returns></returns>
         public bool Contains(long keyId)
         {
-            return m_EntriesLookup.ContainsKey(keyId);
+            return EntriesLookup.ContainsKey(keyId);
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace UnityEngine.Localization.Metadata
         /// <returns></returns>
         public bool Contains(long keyId, string code)
         {
-            return m_EntriesLookup.TryGetValue(keyId, out var codes) && codes.Contains(code);
+            return EntriesLookup.TryGetValue(keyId, out var codes) && codes.Contains(code);
         }
 
         /// <summary>
@@ -72,11 +72,11 @@ namespace UnityEngine.Localization.Metadata
         /// <param name="code">The table culture code.</param>
         public void AddEntry(long keyId, string code)
         {
-            m_EntriesLookup.TryGetValue(keyId, out var item);
+            EntriesLookup.TryGetValue(keyId, out var item);
             if (item == null)
             {
                 item = new HashSet<string>();
-                m_EntriesLookup[keyId] = item;
+                EntriesLookup[keyId] = item;
             }
 
             item.Add(code);
@@ -89,12 +89,12 @@ namespace UnityEngine.Localization.Metadata
         /// <param name="code"></param>
         public void RemoveEntry(long keyId, string code)
         {
-            if (m_EntriesLookup.TryGetValue(keyId, out var item))
+            if (EntriesLookup.TryGetValue(keyId, out var item))
             {
                 item.Remove(code);
 
                 if (item.Count == 0)
-                    m_EntriesLookup.Remove(keyId);
+                    EntriesLookup.Remove(keyId);
             }
         }
 
@@ -104,7 +104,7 @@ namespace UnityEngine.Localization.Metadata
         public virtual void OnBeforeSerialize()
         {
             m_Entries.Clear();
-            foreach (var entry in m_EntriesLookup)
+            foreach (var entry in EntriesLookup)
             {
                 m_Entries.Add(new Item() { KeyId = entry.Key, Tables = entry.Value.ToList() });
             }
@@ -115,10 +115,10 @@ namespace UnityEngine.Localization.Metadata
         /// </summary>
         public virtual void OnAfterDeserialize()
         {
-            m_EntriesLookup = new Dictionary<long, HashSet<string>>();
+            EntriesLookup = new Dictionary<long, HashSet<string>>();
             foreach (var entry in m_Entries)
             {
-                m_EntriesLookup[entry.KeyId] = new HashSet<string>(entry.Tables);
+                EntriesLookup[entry.KeyId] = new HashSet<string>(entry.Tables);
             }
         }
     }

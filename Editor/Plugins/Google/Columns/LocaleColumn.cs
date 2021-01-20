@@ -103,7 +103,12 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
             if (m_PullTable == null)
                 return;
 
-            var entry = m_PullTable.AddEntry(keyEntry.Id, cellValue);
+            // Ignore empty entries that do not already exist in the table
+            var entry = m_PullTable.GetEntry(keyEntry.Id);
+            if (entry == null && string.IsNullOrEmpty(cellValue) && string.IsNullOrEmpty(cellNote))
+                return;
+
+            entry = m_PullTable.AddEntry(keyEntry.Id, cellValue);
 
             var comment = entry.GetMetadata<Comment>();
             if (string.IsNullOrEmpty(cellNote))

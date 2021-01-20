@@ -22,5 +22,13 @@ apiRules:
       type: Namespace
   - exclude:
       # Samples.
-      uidRegex: Localization\.Samples*
+      uidRegex: Samples.*
       type: Namespace
+  - exclude:
+      uidRegex: ^Global Namespace.*
+      type: Namespace
+  - exclude:
+      # Scripting Samples.
+      uidRegex: ^Global Namespace.*
+      type: Namespace
+

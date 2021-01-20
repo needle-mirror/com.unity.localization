@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using UnityEngine.Localization.SmartFormat.Core.Formatting;
+using UnityEngine.Localization.SmartFormat.Extensions;
 using UnityEngine.Localization.SmartFormat.Tests.TestUtils;
 
 namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
@@ -130,38 +132,55 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             Smart.Default.Test(formats, args, expected);
         }
 
-        [Test] /* added due to problems with [ThreadStatic] see: https://github.com/scottrippey/SmartFormat.NET/pull/23 */
-        public void WithThreadPool_ShouldNotMixupCollectionIndex()
+        // Our object pool system does not support threads.
+        //[Test] /* added due to problems with [ThreadStatic] see: https://github.com/scottrippey/SmartFormat.NET/pull/23 */
+        //public void WithThreadPool_ShouldNotMixupCollectionIndex()
+        //{
+        //    // Old test did not show wrong Index value - it ALWAYS passed even when using ThreadLocal<int> or [ThreadStatic] respectively:
+        //    // const string format = "{wheres.Count::>0? where |}{wheres:{}| and }";
+        //    const string format = "Wheres-Index={Index}.";
+
+        //    var wheres = new List<string> {"test1 = test1", "test2 = test2"};
+
+        //    var tasks = new List<Task<string>>();
+        //    for (int i = 0; i < 10; ++i)
+        //    {
+        //        tasks.Add(Task.Factory.StartNew(val =>
+        //        {
+        //            Thread.Sleep(5 * (int)val);
+        //            string ret = Smart.Default.Format(format, wheres);
+        //            Thread.Sleep(5 * (int)val); /* add some delay to force ThreadPool swapping */
+        //            return ret;
+        //        }, i));
+        //    }
+
+        //    foreach (var t in tasks)
+        //    {
+        //        // Old test did not show wrong Index value:
+        //        // Assert.AreEqual(" where test = @test", t.Result);
+
+        //        // Note: Using "[ThreadStatic] private static int CollectionIndex", the result will be as expected only with the first task
+        //        if ("Wheres-Index=-1." == t.Result)
+        //            Console.WriteLine("Task {0} passed.", t.AsyncState);
+
+        //        Assert.AreEqual("Wheres-Index=-1.", t.Result);
+        //    }
+        //}
+
+        [Test]
+        public void Objects_Not_Implementing_IList_Are_Not_Processed()
         {
-            // Old test did not show wrong Index value - it ALWAYS passed even when using ThreadLocal<int> or [ThreadStatic] respectively:
-            // const string format = "{wheres.Count::>0? where |}{wheres:{}| and }";
-            const string format = "Wheres-Index={Index}.";
+            var items = new[] { "one", "two", "three" };
 
-            var wheres = new List<string>(){"test = @test"};
+            var formatter = new SmartFormatter();
+            var listFormatter = new ListFormatter(formatter);
+            formatter.SourceExtensions.Add(listFormatter);
+            formatter.FormatterExtensions.Add(listFormatter);
+            formatter.SourceExtensions.Add(new DefaultSource(formatter));
+            formatter.FormatterExtensions.Add(new DefaultFormatter());
 
-            var tasks = new List<Task<string>>();
-            for (int i = 0; i < 10; ++i)
-            {
-                tasks.Add(Task.Factory.StartNew(val =>
-                {
-                    Thread.Sleep(5 * (int)val);
-                    string ret = Smart.Default.Format(format, new {wheres});
-                    Thread.Sleep(5 * (int)val); /* add some delay to force ThreadPool swapping */
-                    return ret;
-                }, i));
-            }
-
-            foreach (var t in tasks)
-            {
-                // Old test did not show wrong Index value:
-                // Assert.AreEqual(" where test = @test", t.Result);
-
-                // Note: Using "[ThreadStatic] private static int CollectionIndex", the result will be as expected only with the first task
-                if ("Wheres-Index=-1." == t.Result)
-                    Console.WriteLine("Task {0} passed.", t.AsyncState);
-
-                Assert.AreEqual("Wheres-Index=-1.", t.Result);
-            }
+            Assert.AreEqual("one, two, and three", formatter.Format("{0:list:{}|, |, and }", new object[] { items }));
+            Assert.Throws<FormattingException>(() => formatter.Format("{0:list:{}|, |, and }", new { Index = 100 })); // no formatter found
         }
 
         [Test]

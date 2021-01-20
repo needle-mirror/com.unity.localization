@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
 using UnityEngine.Localization.SmartFormat.Core.Parsing;
 
@@ -5,12 +6,12 @@ namespace UnityEngine.Localization.SmartFormat.Core.Formatting
 {
     public class FormattingInfo : IFormattingInfo, ISelectorInfo
     {
-        public FormattingInfo(FormatDetails formatDetails, Format format, object currentValue)
-            : this(null, formatDetails, format, currentValue)
+        public void Init(FormatDetails formatDetails, Format format, object currentValue)
         {
+            Init(null, formatDetails, format, currentValue);
         }
 
-        public FormattingInfo(FormattingInfo parent, FormatDetails formatDetails, Format format, object currentValue)
+        public void Init(FormattingInfo parent, FormatDetails formatDetails, Format format, object currentValue)
         {
             Parent = parent;
             CurrentValue = currentValue;
@@ -18,8 +19,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Formatting
             FormatDetails = formatDetails;
         }
 
-        public FormattingInfo(FormattingInfo parent, FormatDetails formatDetails, Placeholder placeholder,
-                              object currentValue)
+        public void Init(FormattingInfo parent, FormatDetails formatDetails, Placeholder placeholder, object currentValue)
         {
             Parent = parent;
             FormatDetails = formatDetails;
@@ -28,19 +28,37 @@ namespace UnityEngine.Localization.SmartFormat.Core.Formatting
             CurrentValue = currentValue;
         }
 
-        public FormattingInfo Parent { get; }
+        public void ReleaseToPool()
+        {
+            Parent = null;
+            FormatDetails = null;
+            Placeholder = null;
+            Format = null;
+            CurrentValue = null;
+
+            foreach (var c in  Children)
+            {
+                FormattingInfoPool.Release(c);
+            }
+
+            Children.Clear();
+        }
+
+        public FormattingInfo Parent { get; private set; }
 
         public Selector Selector { get; set; }
 
-        public FormatDetails FormatDetails { get; }
+        public FormatDetails FormatDetails { get; private set; }
 
         public object CurrentValue { get; set; }
 
-        public Placeholder Placeholder { get; }
+        public Placeholder Placeholder { get; private set; }
         public int Alignment => Placeholder.Alignment;
         public string FormatterOptions => Placeholder.FormatterOptions;
 
-        public Format Format { get; }
+        public Format Format { get; private set; }
+
+        public List<FormattingInfo> Children { get; } = new List<FormattingInfo>();
 
         public void Write(string text)
         {
@@ -73,12 +91,16 @@ namespace UnityEngine.Localization.SmartFormat.Core.Formatting
 
         private FormattingInfo CreateChild(Format format, object currentValue)
         {
-            return new FormattingInfo(this, FormatDetails, format, currentValue);
+            var fi = FormattingInfoPool.Get(this, FormatDetails, format, currentValue);
+            Children.Add(fi);
+            return fi;
         }
 
         public FormattingInfo CreateChild(Placeholder placeholder)
         {
-            return new FormattingInfo(this, FormatDetails, placeholder, CurrentValue);
+            var fi = FormattingInfoPool.Get(this, FormatDetails, placeholder, CurrentValue);
+            Children.Add(fi);
+            return fi;
         }
     }
 }

@@ -221,5 +221,38 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             outputItem = parameter.Substring(newStartIndex);
             return true;
         }
+
+        public override bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+        {
+            var format = formattingInfo.Format;
+
+            if (format == null)
+                return false;
+            // Ignore a leading ":", which is used to bypass the PluralLocalizationExtension
+            if (format.baseString[format.startIndex] == ':')
+                format = format.Substring(1);
+
+            // See if the format string contains un-nested "|":
+            var parameters = format.Split('|');
+            if (parameters.Count == 1)
+                return false; // There are no parameters found.
+
+            for (int i = 0; i < parameters.Count; ++i)
+            {
+                var parameter = parameters[i];
+
+                // Let's evaluate the conditions into a boolean value:
+                var m = _complexConditionPattern.Match(parameter.baseString, parameter.startIndex,
+                    parameter.endIndex - parameter.startIndex);
+                if (m.Success)
+                {
+                    var newStartIndex = m.Index + m.Length - parameter.startIndex;
+                    parameter = parameter.Substring(newStartIndex);
+                }
+
+                formattingInfo.Write(parameter, null);
+            }
+            return true;
+        }
     }
 }

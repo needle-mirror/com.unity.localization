@@ -14,17 +14,18 @@ namespace UnityEngine.Localization.Tests
             public TableReference? LastTableReference { get; set; }
             public TableEntryReference? LastTableEntryReference { get; set; }
 
-            public override AsyncOperationHandle<TableEntryResult> GetTableEntryAsync(TableReference tableReference, TableEntryReference tableEntryReference)
+            public override AsyncOperationHandle<TableEntryResult> GetTableEntryAsync(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale, FallbackBehavior fallbackBehavior)
             {
                 LastTableReference = tableReference;
                 LastTableEntryReference = tableEntryReference;
-                return ResourceManager.CreateCompletedOperation(new TableEntryResult(), null);
+                return AddressablesInterface.ResourceManager.CreateCompletedOperation(new TableEntryResult(), null);
             }
         }
 
         GameObject m_GameObject;
         LocalizeStringEvent m_LocalizeStringEvent;
         FixtureStringDatabase m_FixtureStringDatabase;
+        Locale m_Selected;
 
         const string kDefaultTableCollectionName = "Default String Table";
         const string kDefaultEntryName = "Default String Table Entry";
@@ -50,9 +51,16 @@ namespace UnityEngine.Localization.Tests
             LocalizationSettingsHelper.SaveCurrentSettings();
 
             LocalizationSettings.Instance = ScriptableObject.CreateInstance<LocalizationSettings>();
+
+            var localeProvider = new TestLocaleProvider();
+            m_Selected = Locale.CreateLocale("en");
+            localeProvider.AddLocale(m_Selected);
+            LocalizationSettings.Instance.SetAvailableLocales(localeProvider);
+
             m_FixtureStringDatabase = new FixtureStringDatabase();
             LocalizationSettings.StringDatabase = m_FixtureStringDatabase;
 
+            m_FixtureStringDatabase.NoTranslationFoundMessage = "No translation found for '{key}'";
             m_GameObject = new GameObject(nameof(ChangingLocalizedStringUpdatesValues));
             m_LocalizeStringEvent = m_GameObject.AddComponent<LocalizeStringEvent>();
 
@@ -67,6 +75,7 @@ namespace UnityEngine.Localization.Tests
             // Delete GameObject first as it will call into LocalizationSettings during cleanup.
             Object.DestroyImmediate(m_GameObject);
             Object.DestroyImmediate(LocalizationSettings.Instance);
+            Object.DestroyImmediate(m_Selected);
             LocalizationSettingsHelper.RestoreSettings();
         }
 

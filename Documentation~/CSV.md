@@ -31,7 +31,7 @@ Example CSV structure when exporting English and French:
 | EXAMPLE_KEY | 1      | Example text.   | Exemple de texte. |
 | GREETING    | 2      | Hello.          | Bonjour.          |
 
-Example CSV structure when exporting English and Lithuanian with comments:
+Example CSV structure when exporting English and French with comments:
 
 | **Key**     | **Id** | **Shared Comments** | **English(en)** | **English(en) Comments**  | **French(fr)**    | **French(fr) Comments**  |
 | ----------- | ------ | ------------------- | --------------- | ------------------------- | ----------------- | ------------------------ |
@@ -48,7 +48,7 @@ The type of import depends on where you import the file to:
 - **String Table Collection window:** This imports all values for the selected String Table Collection.
 - **Localization window:** This imports all values for the selected String Table Collection.
 
-To export to CSV, select the vertical ellipsis (⋮), go to **Import** and select **CSV**, then select the CSV file from your file explorer. 
+To import from CSV, select the vertical ellipsis (⋮), go to **Import** and select **CSV**, then select the CSV file from your file explorer. 
 
 CSV data must contain a **Key** or **Id** column. All other columns are optional. 
 

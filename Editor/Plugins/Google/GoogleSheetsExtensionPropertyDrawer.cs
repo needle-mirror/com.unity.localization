@@ -24,6 +24,8 @@ namespace UnityEditor.Localization.Plugins.Google
         public Task pushTask;
 
         public SheetsServiceProvider Provider => m_SheetsServiceProvider.objectReferenceValue as SheetsServiceProvider;
+
+        public bool UsingApiKey => Provider?.Authentication != AuthenticationType.OAuth;
     }
 
     [CustomPropertyDrawer(typeof(GoogleSheetsExtension))]
@@ -45,6 +47,9 @@ namespace UnityEditor.Localization.Plugins.Google
             public static readonly GUIContent pull = new GUIContent("Pull");
             public static readonly GUIContent pushSelected = new GUIContent("Push Selected");
             public static readonly GUIContent pullSelected = new GUIContent("Pull Selected");
+            public static readonly GUIContent selectSheet = new GUIContent("Select Sheet");
+            public static readonly GUIContent sheetId = new GUIContent("Sheet Id", "The Sheet Id from your Google Spreadsheet. In the Spreadsheet’s Google URL, this is at the end of the URL: https://docs.google.com/spreadsheets/d/SpreadhsheetId/edit#gid=sheetId");
+            public static readonly GUIContent spreadSheetId = new GUIContent("Spreadsheet Id", "The Spreadsheet Id from your Google Spreadsheet. In the Spreadsheet’s Google URL, this is in the middle of the URL: https://docs.google.com/spreadsheets/d/SpreadhsheetId/edit#gid=sheetId");
         }
 
         /// <summary>
@@ -95,33 +100,37 @@ namespace UnityEditor.Localization.Plugins.Google
                     data.m_Columns.serializedObject.ApplyModifiedProperties();
                 });
 
-                if (string.IsNullOrEmpty(data.m_SpreadSheetId.stringValue) || data.m_SheetId.intValue <= 0)
+                // We can not extract the column data when using an
+                if (!data.UsingApiKey)
                 {
-                    menu.AddDisabledItem(Styles.extractColumns);
-                }
-                else
-                {
-                    menu.AddItem(Styles.extractColumns, false, () =>
+                    if (string.IsNullOrEmpty(data.m_SpreadSheetId.stringValue))
                     {
-                        var target = property.GetActualObjectForSerializedProperty<GoogleSheetsExtension>(fieldInfo);
-                        var google = GetGoogleSheets(data);
-                        var titles = google.GetColumnTitles(data.m_SheetId.intValue);
-                        List<string> unused = new List<string>();
-                        var columns = ColumnMapping.CreateMappingsFromColumnNames(titles, unused);
-
-                        if (unused.Count > 0)
+                        menu.AddDisabledItem(Styles.extractColumns);
+                    }
+                    else
+                    {
+                        menu.AddItem(Styles.extractColumns, false, () =>
                         {
-                            Debug.Log($"Could not map: {string.Join(", ", unused)}");
-                        }
+                            var target = property.GetActualObjectForSerializedProperty<GoogleSheetsExtension>(fieldInfo);
+                            var google = GetGoogleSheets(data);
+                            var titles = google.GetColumnTitles(data.m_SheetId.intValue);
+                            List<string> unused = new List<string>();
+                            var columns = ColumnMapping.CreateMappingsFromColumnNames(titles, unused);
 
-                        data.m_Columns.ClearArray();
-                        foreach (var c in columns)
-                        {
-                            var colElement = data.m_Columns.AddArrayElement();
-                            colElement.managedReferenceValue = c;
-                        }
-                        data.m_Columns.serializedObject.ApplyModifiedProperties();
-                    });
+                            if (unused.Count > 0)
+                            {
+                                Debug.Log($"Could not map: {string.Join(", ", unused)}");
+                            }
+
+                            data.m_Columns.ClearArray();
+                            foreach (var c in columns)
+                            {
+                                var colElement = data.m_Columns.AddArrayElement();
+                                colElement.managedReferenceValue = c;
+                            }
+                            data.m_Columns.serializedObject.ApplyModifiedProperties();
+                        });
+                    }
                 }
             };
 
@@ -158,17 +167,21 @@ namespace UnityEditor.Localization.Plugins.Google
             EditorGUI.BeginDisabledGroup(data.m_SheetsServiceProvider.objectReferenceValue == null);
             using (new EditorGUI.DisabledGroupScope(data.m_SheetsServiceProvider.objectReferenceValue == null))
             {
-                if (GUI.Button(position, Styles.createNewSpredsheet))
+                EditorGUI.BeginDisabledGroup(data.UsingApiKey);
                 {
-                    var google = GetGoogleSheets(data);
-                    var results = google.CreateSpreadsheet(PlayerSettings.productName, data.m_NewSheetName, data.Provider.NewSheetProperties, new ProgressBarReporter { ReportTaskSummaryInConsole = true });
-                    data.m_SpreadSheetId.stringValue = results.spreadSheetId;
-                    data.m_SheetId.intValue = results.sheetId;
+                    if (GUI.Button(position, Styles.createNewSpredsheet))
+                    {
+                        var google = GetGoogleSheets(data);
+                        var results = google.CreateSpreadsheet(PlayerSettings.productName, data.m_NewSheetName, data.Provider.NewSheetProperties, new ProgressBarReporter { ReportTaskSummaryInConsole = true });
+                        data.m_SpreadSheetId.stringValue = results.spreadSheetId;
+                        data.m_SheetId.intValue = results.sheetId;
+                    }
+                    position.MoveToNextLine();
                 }
-                position.MoveToNextLine();
+                EditorGUI.EndDisabledGroup();
 
                 var spreadSheetPos = position.SplitHorizontalFixedWidthRight(50);
-                EditorGUI.PropertyField(spreadSheetPos.left, data.m_SpreadSheetId, true);
+                EditorGUI.PropertyField(spreadSheetPos.left, data.m_SpreadSheetId, Styles.spreadSheetId);
 
                 using (new EditorGUI.DisabledGroupScope(string.IsNullOrEmpty(data.m_SpreadSheetId.stringValue)))
                 {
@@ -189,8 +202,10 @@ namespace UnityEditor.Localization.Plugins.Google
         {
             EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(data.m_SpreadSheetId.stringValue));
             // Add new sheet, select sheet
-            EditorGUI.PropertyField(position, data.m_SheetId);
+            EditorGUI.PropertyField(position, data.m_SheetId, Styles.sheetId);
             position.MoveToNextLine();
+
+            EditorGUI.BeginDisabledGroup(data.UsingApiKey);
 
             var sheetNamePos = position.SplitHorizontal();
             var buttonPos = sheetNamePos.right.SplitHorizontal();
@@ -214,7 +229,8 @@ namespace UnityEditor.Localization.Plugins.Google
                 }
             }
 
-            if (EditorGUI.DropdownButton(buttonPos.right, new GUIContent("Select Sheet"), FocusType.Passive))
+            EditorGUI.EndDisabledGroup();
+            if (EditorGUI.DropdownButton(buttonPos.right, Styles.selectSheet, FocusType.Passive))
             {
                 try
                 {
@@ -279,7 +295,7 @@ namespace UnityEditor.Localization.Plugins.Google
                 data.pushTask = null;
             }
 
-            using (new EditorGUI.DisabledGroupScope(data.pushTask != null || string.IsNullOrEmpty(data.m_SpreadSheetId.stringValue) || data.m_SheetId.intValue <= 0 || data.columnsList.count == 0))
+            using (new EditorGUI.DisabledGroupScope(data.pushTask != null || string.IsNullOrEmpty(data.m_SpreadSheetId.stringValue) || data.columnsList.count == 0))
             {
                 using (new EditorGUI.DisabledGroupScope(data.columnsList.index < 0))
                 {

@@ -10,15 +10,19 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
     /// </summary>
     public class ParsingErrors : Exception
     {
-        private readonly Format result;
+        private Format result;
 
-        public ParsingErrors(Format result)
+        public void Init(Format result)
         {
             this.result = result;
-            Issues = new List<ParsingIssue>();
         }
 
-        public List<ParsingIssue> Issues { get; }
+        public void Clear()
+        {
+            Issues.Clear();
+        }
+
+        public List<ParsingIssue> Issues { get; } = new List<ParsingIssue>();
         public bool HasIssues => Issues.Count > 0;
 
         public string MessageShort

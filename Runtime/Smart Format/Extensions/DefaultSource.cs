@@ -6,10 +6,6 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     [Serializable]
     public class DefaultSource : ISource
     {
-        // There is a bug with SerializeReference that causes empty instances to not deserialize. This is a workaround while we wait for the fix (case 1183547)
-        [SerializeField, HideInInspector]
-        int dummyObject;
-
         public DefaultSource(SmartFormatter formatter)
         {
             formatter.Parser.AddOperators(","); // This is for alignment.

@@ -10,10 +10,10 @@ namespace UnityEngine.Localization.SmartFormat.Core.Settings
     public class SmartSettings
     {
         [SerializeField]
-        ErrorAction m_FormatErrorAction = ErrorAction.Ignore;
+        ErrorAction m_FormatErrorAction = ErrorAction.ThrowError;
 
         [SerializeField]
-        ErrorAction m_ParseErrorAction = ErrorAction.Ignore;
+        ErrorAction m_ParseErrorAction = ErrorAction.ThrowError;
 
         [Tooltip("Determines whether placeholders are case-sensitive or not.")]
         [SerializeField]
@@ -30,8 +30,8 @@ namespace UnityEngine.Localization.SmartFormat.Core.Settings
         {
             CaseSensitivity = CaseSensitivityType.CaseSensitive;
             ConvertCharacterStringLiterals = true;
-            FormatErrorAction = ErrorAction.Ignore;
-            ParseErrorAction = ErrorAction.Ignore;
+            FormatErrorAction = ErrorAction.ThrowError;
+            ParseErrorAction = ErrorAction.ThrowError;
         }
 
         /// <summary>
@@ -80,9 +80,9 @@ namespace UnityEngine.Localization.SmartFormat.Core.Settings
                 switch (CaseSensitivity)
                 {
                     case CaseSensitivityType.CaseSensitive:
-                        return StringComparer.CurrentCulture;
+                        return StringComparer.Ordinal;
                     case CaseSensitivityType.CaseInsensitive:
-                        return StringComparer.CurrentCultureIgnoreCase;
+                        return StringComparer.OrdinalIgnoreCase;
                     default:
                         throw new InvalidOperationException(
                             $"The case sensitivity type [{CaseSensitivity}] is unknown.");
@@ -96,9 +96,9 @@ namespace UnityEngine.Localization.SmartFormat.Core.Settings
                 switch (CaseSensitivity)
                 {
                     case CaseSensitivityType.CaseSensitive:
-                        return StringComparison.CurrentCulture;
+                        return StringComparison.Ordinal;
                     case CaseSensitivityType.CaseInsensitive:
-                        return StringComparison.CurrentCultureIgnoreCase;
+                        return StringComparison.OrdinalIgnoreCase;
                     default:
                         throw new InvalidOperationException(
                             $"The case sensitivity type [{CaseSensitivity}] is unknown.");

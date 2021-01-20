@@ -63,12 +63,15 @@ namespace UnityEditor.Localization.UI
 
         List<LocalizationTable> m_SortedTables = new List<LocalizationTable>();
 
+        const string kSearch = "Localization-TablesView-Search";
+
         protected GenericAssetTableListView(LocalizationTableCollection tableCollection) :
             base(new TreeViewState())
         {
             TableCollection = tableCollection;
             m_SearchField = new SearchField();
             m_SearchField.downOrUpArrowKeyPressed += SetFocusAndEnsureSelectedItem;
+            searchString = SessionState.GetString(kSearch, string.Empty);
             Undo.undoRedoPerformed += UndoRedoPerformed;
             LocalizationEditorSettings.EditorEvents.TableEntryAdded += EditorEvents_TableEntryModified;
             LocalizationEditorSettings.EditorEvents.TableEntryRemoved += EditorEvents_TableEntryModified;
@@ -266,7 +269,12 @@ namespace UnityEditor.Localization.UI
             const float borderWidth = 2;
             const float borderHeight = 1;
             var searchRect = new Rect(rect.x + borderWidth, rect.y + borderHeight, rect.width - (2 * borderWidth), EditorGUIUtility.singleLineHeight);
+            EditorGUI.BeginChangeCheck();
             searchString = m_SearchField.OnToolbarGUI(searchRect, searchString);
+            if (EditorGUI.EndChangeCheck())
+            {
+                SessionState.SetString(kSearch, searchString);
+            }
             rect.yMin += EditorGUIUtility.singleLineHeight + (2 * borderHeight);
             return rect;
         }
@@ -360,6 +368,10 @@ namespace UnityEditor.Localization.UI
                 Undo.RecordObjects(objects, "Remove key from collection");
                 keyItem.OnDeleteKey();
                 TableCollection.SharedData.RemoveKey(keyItem.KeyId);
+
+                foreach (var o in objects)
+                    EditorUtility.SetDirty(o);
+
                 Reload();
             }
         }

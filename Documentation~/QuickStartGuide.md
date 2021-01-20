@@ -91,14 +91,7 @@ To create a String Table, open the New **Table Collection tab**, provide a name 
 Enable the **Smart** option to mark the entry as a [Smart String](SmartStrings.md).
 In this example we will use the Smart String reflection and plural features to print out a variable from the following script:
 
-```C#
-using UnityEngine;
-
-public class Apples : MonoBehaviour
-{
-    public int appleCount = 1;
-}
-```
+[!code-cs[apple-sample](../DocCodeSamples.Tests/Apples.cs)]
 
 ![Press the Add New Entry button to create a new String Table entry.](images/StringTable_Plurals.png)
 
@@ -107,7 +100,8 @@ public class Apples : MonoBehaviour
 To add a UI Text element to the Scene, go to **GameObject > UI > Text**.
 
 Right-click the Text component and select the **Localize** option. Unity adds a **Localize String** component and automatically configures it for the GameObject it is attached to. If the Text component contains a string value that is also in a String Table, then Unity automatically assigns this during the setup. If it does not, you can assign a value using the **String Reference** field pop-up.
-Add a reference to the GameObject that contains the Apples component.
+
+Expand the **Format Arguments** field, change the size to 1 and drag the **Apples** Component into the **Element 0** slot.
 
 ![Unity finds and pairs the table with the matching Key during setup.](images/LocalizeStringComponent.png)
 

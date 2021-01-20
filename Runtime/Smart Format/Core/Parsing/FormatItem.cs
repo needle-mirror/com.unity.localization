@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
 
 namespace UnityEngine.Localization.SmartFormat.Core.Parsing
@@ -8,34 +10,90 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
     /// </summary>
     public abstract class FormatItem
     {
-        public readonly string baseString;
+        public string baseString;
         public int endIndex;
         protected SmartSettings SmartSettings;
         public int startIndex;
+        protected string m_RawText;
 
-        protected FormatItem(SmartSettings smartSettings, FormatItem parent, int startIndex) : this(smartSettings,
-            parent.baseString, startIndex, parent.baseString.Length)
+        public FormatItem Parent { get; private set; }
+
+        public void Init(SmartSettings smartSettings, FormatItem parent, int startIndex)
         {
+            Init(smartSettings, parent, parent.baseString, startIndex, parent.baseString.Length);
         }
 
-        protected FormatItem(SmartSettings smartSettings, string baseString, int startIndex, int endIndex)
+        public void Init(SmartSettings smartSettings, FormatItem parent, int startIndex, int endIndex)
         {
+            Init(smartSettings, parent, parent.baseString, startIndex, endIndex);
+        }
+
+        public void Init(SmartSettings smartSettings, FormatItem parent, string baseString, int startIndex, int endIndex)
+        {
+            Parent = parent;
             SmartSettings = smartSettings;
             this.baseString = baseString;
             this.startIndex = startIndex;
             this.endIndex = endIndex;
         }
 
+        public virtual void Clear()
+        {
+            baseString = null;
+            endIndex = 0;
+            startIndex = 0;
+            SmartSettings = null;
+            m_RawText = null;
+            Parent = null;
+        }
+
         /// <summary>
         /// Retrieves the raw text that this item represents.
         /// </summary>
-        public string RawText => baseString.Substring(startIndex, endIndex - startIndex);
+        public string RawText
+        {
+            get
+            {
+                if (m_RawText == null)
+                    m_RawText = baseString.Substring(startIndex, endIndex - startIndex);
+                return m_RawText;
+            }
+        }
+
+        struct PartialCharEnumerator : IEnumerable<char>
+        {
+            string m_BaseString;
+            int m_From, m_To;
+
+            public PartialCharEnumerator(string s, int from, int to)
+            {
+                m_BaseString = s;
+                m_From = from;
+                m_To = to;
+            }
+
+            public IEnumerator<char> GetEnumerator()
+            {
+                for (int i = m_From; i < m_To; ++i)
+                {
+                    yield return m_BaseString[i];
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }
+
+        public IEnumerable<char> ToEnumerable()
+        {
+            // We need to copy the data as this instance may be returned back to the pool before the IEnumerable has completed which would clear the values.
+            return new PartialCharEnumerator(baseString, startIndex, endIndex);
+        }
 
         public override string ToString()
         {
             return endIndex <= startIndex
                 ? $"Empty ({baseString.Substring(startIndex)})"
-                : $"{baseString.Substring(startIndex, endIndex - startIndex)}";
+                : $"{RawText}";
         }
     }
 }

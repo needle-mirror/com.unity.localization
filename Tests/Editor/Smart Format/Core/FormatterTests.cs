@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEngine.Localization.SmartFormat.Core.Extensions;
 using UnityEngine.Localization.SmartFormat.Core.Formatting;
 using UnityEngine.Localization.SmartFormat.Core.Output;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
@@ -102,7 +103,41 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             // see issue https://github.com/scottrippey/SmartFormat.NET/issues/101
             var smart = Smart.CreateDefaultSmartFormat();
             object boxedNull = null;
-            Assert.AreEqual(smart.Format("{dummy}", null), smart.Format("{dummy}", boxedNull));
+            Assert.AreEqual(smart.Format("{0}", null), smart.Format("{0}", boxedNull));
+        }
+
+        class ExampleSourceFormatter : ISource, IFormatter
+        {
+            public string[] Names { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+            public bool TryEvaluateFormat(IFormattingInfo formattingInfo)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool TryEvaluateSelector(ISelectorInfo selectorInfo)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        [Test]
+        public void GetSourceExtension_ReturnsNullWhenNotFound()
+        {
+            var smart = Smart.CreateDefaultSmartFormat();
+            Assert.Null(smart.GetSourceExtension<ExampleSourceFormatter>());
+        }
+
+        [Test]
+        public void GetFormatterExtension_ReturnsNullWhenNotFound()
+        {
+            var smart = Smart.CreateDefaultSmartFormat();
+            Assert.Null(smart.GetFormatterExtension<ExampleSourceFormatter>());
         }
 
         [Test]
@@ -116,8 +151,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             formatter.Settings.ConvertCharacterStringLiterals = true;
             formatter.Settings.FormatErrorAction = ErrorAction.OutputErrorInResult;
             formatter.Settings.ParseErrorAction = ErrorAction.OutputErrorInResult;
-            var formatParsed = formatter.Parser.ParseFormat(format, new[] {string.Empty});
-            var formatDetails = new FormatDetails(formatter, formatParsed, args, null, null, output);
+            var formatParsed = formatter.Parser.ParseFormat(format, new List<string>  {string.Empty});
+            var formatDetails = FormatDetailsPool.Get(formatter, formatParsed, args, null, null, output);
 
             Assert.AreEqual(args, formatDetails.OriginalArgs);
             Assert.AreEqual(format, formatDetails.OriginalFormat.RawText);

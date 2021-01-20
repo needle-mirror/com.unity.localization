@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text;
+using UnityEditor.Localization.UI;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
@@ -222,7 +224,7 @@ namespace UnityEditor.Localization
         public virtual LocalizationTable AddNewTable(LocaleIdentifier localeIdentifier)
         {
             var defaultDirectory = Path.GetDirectoryName(AssetDatabase.GetAssetPath(this));
-            var relativePath = MakePathRelative(defaultDirectory);
+            var relativePath = PathHelper.MakePathRelative(defaultDirectory);
             var tableName = AddressHelper.GetTableAddress(TableCollectionName, localeIdentifier);
             var path = Path.Combine(relativePath, tableName + ".asset");
             return AddNewTable(localeIdentifier, path);
@@ -551,6 +553,30 @@ namespace UnityEditor.Localization
         /// </summary>
         internal protected virtual void ImportCollectionIntoProject()
         {
+            RefreshAddressables();
+
+            var missingLocales = new List<LocaleIdentifier>();
+            foreach (var table in Tables)
+            {
+                var locale = LocalizationEditorSettings.GetLocale(table.asset.LocaleIdentifier.Code);
+                if (locale == null)
+                {
+                    missingLocales.Add(new LocaleIdentifier(table.asset.LocaleIdentifier.Code));
+                }
+            }
+
+            if (missingLocales.Count > 0)
+            {
+                var defaultDirectory = Path.GetDirectoryName(AssetDatabase.GetAssetPath(this));
+                var relativePath = PathHelper.MakePathRelative(defaultDirectory);
+
+                LocaleGeneratorWindow.ExportSelectedLocales(relativePath, missingLocales);
+
+                var sb = new StringBuilder();
+                sb.AppendLine($"The following missing Locales have been added to the project because they are used by the Collection {TableCollectionName}:");
+                missingLocales.ForEach(l => sb.AppendLine(l.ToString()));
+                Debug.Log(sb.ToString());
+            }
         }
 
         /// <summary>
@@ -564,17 +590,6 @@ namespace UnityEditor.Localization
                     RemoveTableFromAddressables(tbl.asset, false);
             }
             LocalizationEditorSettings.EditorEvents.RaiseCollectionRemoved(this);
-        }
-
-        static string MakePathRelative(string path)
-        {
-            if (path.Contains(Application.dataPath))
-            {
-                var length = Application.dataPath.Length - "Assets".Length;
-                return path.Substring(length, path.Length - length);
-            }
-
-            return path;
         }
 
         void RemoveBrokenTables()

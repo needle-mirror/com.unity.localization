@@ -11,7 +11,7 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
         /// <summary>
         /// Holds the ISO language code as key, and the <see cref="PluralRuleDelegate"/> with the pluralization rule.
         /// </summary>
-        public static Dictionary<string, PluralRuleDelegate> IsoLangToDelegate =
+        public static readonly Dictionary<string, PluralRuleDelegate> IsoLangToDelegate =
             new Dictionary<string, PluralRuleDelegate>
         {
             // Singular

@@ -44,6 +44,21 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             return true;
         }
 
+        public override bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+        {
+            var formats = formattingInfo.Format.Split('|');
+
+            if (formats.Count == 0)
+                return true;
+
+            if (formats.Count != 2)
+                return false;
+
+            formattingInfo.Write(formats[0], formattingInfo.CurrentValue);
+            formattingInfo.Write(formats[1], formattingInfo.CurrentValue);
+            return true;
+        }
+
         public RegexOptions RegexOptions { get; set; }
     }
 }

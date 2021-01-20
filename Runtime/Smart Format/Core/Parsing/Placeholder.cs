@@ -1,6 +1,6 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using UnityEngine.Localization.SmartFormat.Core.Settings;
 
 namespace UnityEngine.Localization.SmartFormat.Core.Parsing
 {
@@ -17,21 +17,27 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
     /// </example>
     public class Placeholder : FormatItem
     {
-        public readonly Format parent;
-
-        public Placeholder(SmartSettings smartSettings, Format parent, int startIndex, int nestedDepth) : base(
-            smartSettings, parent, startIndex)
+        public void ReleaseToPool()
         {
-            this.parent = parent;
-            Selectors = new List<Selector>();
-            NestedDepth = nestedDepth;
-            FormatterName = "";
-            FormatterOptions = "";
+            Clear();
+
+            if (Format != null)
+                FormatItemPool.ReleaseFormat(Format);
+            Format = null;
+
+            NestedDepth = 0;
+            Alignment = 0;
+
+            foreach (var sel in Selectors)
+            {
+                FormatItemPool.ReleaseSelector(sel);
+            }
+            Selectors.Clear();
         }
 
         public int NestedDepth { get; set; }
 
-        public List<Selector> Selectors { get; }
+        public List<Selector> Selectors { get; } = new List<Selector>();
         public int Alignment { get; set; }
         public string FormatterName { get; set; }
         public string FormatterOptions { get; set; }
@@ -39,35 +45,42 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
 
         public override string ToString()
         {
-            var result = new StringBuilder(endIndex - startIndex);
-            result.Append('{');
-            foreach (var s in Selectors) result.Append(s.baseString, s.operatorStart, s.endIndex - s.operatorStart);
-            if (Alignment != 0)
+            using (StringBuilderPool.Get(out var result))
             {
-                result.Append(',');
-                result.Append(Alignment);
-            }
+                int size = endIndex - startIndex;
+                if (result.Capacity < size)
+                    result.Capacity = size;
 
-            if (FormatterName != "")
-            {
-                result.Append(':');
-                result.Append(FormatterName);
-                if (FormatterOptions != "")
+                result.Append('{');
+                foreach (var s in Selectors)
+                    result.Append(s.baseString, s.operatorStart, s.endIndex - s.operatorStart);
+                if (Alignment != 0)
                 {
-                    result.Append('(');
-                    result.Append(FormatterOptions);
-                    result.Append(')');
+                    result.Append(',');
+                    result.Append(Alignment);
                 }
-            }
 
-            if (Format != null)
-            {
-                result.Append(':');
-                result.Append(Format);
-            }
+                if (FormatterName != "")
+                {
+                    result.Append(':');
+                    result.Append(FormatterName);
+                    if (FormatterOptions != "")
+                    {
+                        result.Append('(');
+                        result.Append(FormatterOptions);
+                        result.Append(')');
+                    }
+                }
 
-            result.Append('}');
-            return result.ToString();
+                if (Format != null)
+                {
+                    result.Append(':');
+                    result.Append(Format);
+                }
+
+                result.Append('}');
+                return result.ToString();
+            }
         }
     }
 }

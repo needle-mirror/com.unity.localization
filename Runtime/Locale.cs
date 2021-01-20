@@ -2,50 +2,22 @@ using System;
 using System.Globalization;
 using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Pseudo;
+using UnityEngine.Localization.Settings;
 
 namespace UnityEngine.Localization
 {
     /// <summary>
-    /// The identifier containing the identification information for a language or regional variant.
+    /// Represents identification information for a language or its regional variant.
+    /// Also includes access to the CultureInfo which provides culture-specific instances
+    /// of the DateTimeFormatInfo, NumberFormatInfo, CompareInfo, and TextInfo objects.
     /// </summary>
     /// <example>
     /// This example shows the various ways to create a LocaleIdentifier.
-    /// <code>
-    /// public class LocaleIdentifierIdExample1 : MonoBehaviour
-    /// {
-    ///     void Start()
-    ///     {
-    ///         // Create a locale identifier to represent English
-    ///         var localeEnglishSystemLanguage = new LocaleIdentifier(SystemLanguage.English);
-    ///         var localeEnglishCode = new LocaleIdentifier("en");
-    ///         var localeEnglishCi = new LocaleIdentifier(CultureInfo.GetCultureInfo("en"));
-    ///
-    ///         Debug.Log(localeEnglishSystemLanguage);
-    ///         Debug.Log(localeEnglishCode);
-    ///         Debug.Log(localeEnglishCi);
-    ///     }
-    /// }
-    /// </code>
+    /// <code source="../DocCodeSamples.Tests/LocaleSamples.cs" region="locale-identifier-1"/>
     /// </example>
     /// <example>
     /// This shows how to create a Locale for English and a regional Locale for English(UK).
-    /// <code>
-    /// public class LocaleIdentifierIdExample2 : MonoBehaviour
-    /// {
-    ///     void Start()
-    ///     {
-    ///         // Create a Locale to represent English.
-    ///         var localeId = new LocaleIdentifier(SystemLanguage.English);
-    ///         var locale = Locale.CreateLocale(localeId);
-    ///         Debug.Log("English locale: " + locale);
-    ///
-    ///         // Create a regional Locale to represent English UK.
-    ///         var regionalLocaleId = new LocaleIdentifier("en-GB");
-    ///         var regionalLocale = Locale.CreateLocale(regionalLocaleId);
-    ///         Debug.Log("English(en-GB) locale: " + regionalLocale);
-    ///     }
-    /// }
-    /// </code>
+    /// <code source="../DocCodeSamples.Tests/LocaleSamples.cs" region="locale-identifier-2"/>
     /// </example>
     [Serializable]
     public struct LocaleIdentifier : IEquatable<LocaleIdentifier>, IComparable<LocaleIdentifier>
@@ -60,28 +32,21 @@ namespace UnityEngine.Localization
 
         /// <summary>
         /// The culture name in the format [language]-[region].
-        /// </summary>
-        /// <remarks>
+        /// The name is a combination of an ISO 639 two-letter lowercase culture code associated with a language and an ISO 3166
+        /// two-letter uppercase subculture code associated with a country or region.
         /// For example, Language English would be 'en', Regional English(UK) would be 'en-GB' and Regional English(US) would be 'en-US'.
-        /// </remarks>
+        /// It is possible to use any string value when representing a non-standard identifier.
+        /// </summary>
         public string Code => m_Code;
 
         /// <summary>
         /// A <see cref="CultureInfo"/> representation of the Locale.
         /// The <see cref="Code"/> is used to query for a valid <see cref="CultureInfo"/>.
+        /// If a value can not be determined from the <see cref="Code"/> then <c>null</c> will be returned.
         /// </summary>
         /// <example>
         /// This example shows how the CultureInfo can be retrieved after creating a LocaleIdentifier using a Code.
-        /// <code>
-        /// public class LocaleIdentifierCultureInfoExample : MonoBehaviour
-        /// {
-        ///     void Start()
-        ///     {
-        ///         var localeIdentifier = new LocaleIdentifier("en");
-        ///         Debug.Log("Code 'en' maps to the CultureInfo: " + localeIdentifier.CultureInfo.EnglishName);
-        ///     }
-        /// }
-        /// </code>
+        /// <code source="../DocCodeSamples.Tests/LocaleSamples.cs" region="culture-info"/>
         /// </example>
         public CultureInfo CultureInfo
         {
@@ -197,8 +162,6 @@ namespace UnityEngine.Localization
         /// <returns></returns>
         public override int GetHashCode()
         {
-            if (CultureInfo != null)
-                return CultureInfo.GetHashCode();
             return !string.IsNullOrEmpty(Code) ? Code.GetHashCode() : base.GetHashCode();
         }
 
@@ -235,7 +198,7 @@ namespace UnityEngine.Localization
     /// <summary>
     /// A Locale represents a language. It supports regional variations and can be configured with an optional fallback Locale via metadata.
     /// </summary>
-    public class Locale : ScriptableObject, IComparable<Locale>
+    public class Locale : ScriptableObject, IComparable<Locale>, ISerializationCallbackReceiver
     {
         [SerializeField]
         LocaleIdentifier m_Identifier;
@@ -245,7 +208,15 @@ namespace UnityEngine.Localization
         MetadataCollection m_Metadata = new MetadataCollection();
 
         [SerializeField]
+        string m_CustomFormatCultureCode;
+
+        [SerializeField]
+        bool m_UseCustomFormatter = false;
+
+        [SerializeField]
         ushort m_SortOrder = 10000; // Default to a large value so new Locales are always at the end of a list.
+
+        IFormatProvider m_Formatter;
 
         /// <summary>
         /// The identifier contains the identifying information such as the id and culture Code for this Locale.
@@ -274,6 +245,79 @@ namespace UnityEngine.Localization
         {
             get => m_SortOrder;
             set => m_SortOrder = value;
+        }
+
+        public virtual Locale GetFallback()
+        {
+            var fallBack = Metadata?.GetMetadata<FallbackLocale>()?.Locale;
+            if (fallBack == null)
+            {
+                var cultureInfo = Identifier.CultureInfo;
+                if (cultureInfo != null)
+                {
+                    while (cultureInfo != CultureInfo.InvariantCulture && fallBack == null)
+                    {
+                        fallBack = LocalizationSettings.AvailableLocales.GetLocale(cultureInfo);
+                        cultureInfo = cultureInfo.Parent;
+                    }
+                }
+            }
+            return fallBack;
+        }
+
+        /// <summary>
+        /// When <c>true</c>, <see cref="CustomFormatterIdentifier"/> will be used for any culture sensitive formatting instead of <see cref="Identifier"/>.
+        /// </summary>
+        public bool UseCustomFormatter
+        {
+            get => m_UseCustomFormatter;
+            set
+            {
+                m_UseCustomFormatter = value;
+                m_Formatter = null;
+            }
+        }
+
+        /// <summary>
+        /// The Language code to use when applying any culture specific string formatting, such as date, time, currency.
+        /// By default, the <see cref="Identifier"/> Code will be used however this field can be used to override this such as when you
+        /// are using a custom Locale which has no known formatter.
+        /// </summary>
+        public string CustomFormatterCode
+        {
+            get => m_CustomFormatCultureCode;
+            set
+            {
+                m_CustomFormatCultureCode = value;
+                m_Formatter = null;
+            }
+        }
+
+        /// <summary>
+        /// The Formatter that will be applied to any Smart Strings for this Locale.
+        /// By default, the <see cref="Identifier"/> <c>CultureInfo</c> will be used when <see cref="CustomFormatterCode"/> is not set.
+        /// </summary>
+        public virtual IFormatProvider Formatter
+        {
+            get
+            {
+                if (m_Formatter == null)
+                    m_Formatter = GetFormatter(UseCustomFormatter, Identifier, CustomFormatterCode);
+                return m_Formatter;
+            }
+            set => m_Formatter = value;
+        }
+
+        internal static CultureInfo GetFormatter(bool useCustom, LocaleIdentifier localeIdentifier, string customCode)
+        {
+            CultureInfo cultureInfo = null;
+            if (useCustom)
+                cultureInfo = string.IsNullOrEmpty(customCode) ? CultureInfo.InvariantCulture : new LocaleIdentifier(customCode).CultureInfo;
+
+            if (cultureInfo == null)
+                cultureInfo = localeIdentifier.CultureInfo;
+
+            return cultureInfo;
         }
 
         /// <summary>
@@ -351,6 +395,15 @@ namespace UnityEngine.Localization
             if (other is PseudoLocale)
                 return -1;
             return 1;
+        }
+
+        public void OnAfterDeserialize()
+        {
+            m_Formatter = null;
+        }
+
+        public void OnBeforeSerialize()
+        {
         }
 
         /// <summary>

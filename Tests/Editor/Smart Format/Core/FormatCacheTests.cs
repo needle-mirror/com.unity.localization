@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 using NUnit.Framework;
-using UnityEngine.Localization.SmartFormat.Core.Formatting;
-using UnityEngine.Localization.SmartFormat.Core.Parsing;
 
 namespace UnityEngine.Localization.SmartFormat.Tests.Core
 {
@@ -11,12 +9,13 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
         public void Create_Cache()
         {
             var sf = new SmartFormatter();
-            var format = new Format(sf.Settings, "the base string");
-            var fc = new FormatCache(format);
+            var format = FormatItemPool.GetFormat(sf.Settings, "the base string");
+            var fc = FormatCachePool.Get(format);
             Assert.AreEqual(format, fc.Format);
             Assert.IsAssignableFrom<Dictionary<string, object>>(fc.CachedObjects);
             fc.CachedObjects.Add("key", "value");
             Assert.IsTrue(fc.CachedObjects["key"].ToString() == "value");
+            FormatCachePool.Release(fc);
         }
     }
 }

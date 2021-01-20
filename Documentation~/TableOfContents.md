@@ -26,6 +26,7 @@
       * [Data Sources](Data-Sources.md)
       * [Character Literals in Format Strings](Character-Literals-in-Format-Strings.md)
       * [SmartSettings](SmartSettings.md)
+      * [Global Variables](GlobalVariables.md)
     * Formatters
       * [Conditional](Conditional.md)
       * [Pluralization](Pluralization.md)

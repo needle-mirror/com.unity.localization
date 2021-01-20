@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
+using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
 
@@ -59,7 +60,7 @@ namespace UnityEngine.Localization
             m_ResourceKeys.Clear();
             m_ResourceKeys.Add(localeLabel);
             m_ResourceKeys.Add(LocalizationSettings.PreloadLabel);
-            m_LoadResourcesOperation = Addressables.LoadResourceLocationsAsync(m_ResourceKeys, Addressables.MergeMode.Intersection, typeof(TTable));
+            m_LoadResourcesOperation = AddressablesInterface.LoadResourceLocationsAsync(m_ResourceKeys, Addressables.MergeMode.Intersection, typeof(TTable));
 
             if (!m_LoadResourcesOperation.IsDone)
                 m_LoadResourcesOperation.Completed += LoadTables;
@@ -84,7 +85,7 @@ namespace UnityEngine.Localization
             }
 
             // Load the tables
-            m_LoadTablesOperation = Addressables.LoadAssetsAsync<TTable>(loadResourcesOperation.Result, TableLoaded);
+            m_LoadTablesOperation = AddressablesInterface.LoadAssetsFromLocations<TTable>(loadResourcesOperation.Result, TableLoaded);
             if (!m_LoadTablesOperation.IsDone)
                 m_LoadTablesOperation.Completed += LoadTableContents;
             else
@@ -109,7 +110,7 @@ namespace UnityEngine.Localization
             foreach (var table in loadTablesOperation.Result)
             {
                 Debug.Assert(!m_Database.TableOperations.ContainsKey((table.LocaleIdentifier, table.TableCollectionName)), $"A table with the same key `{table.TableCollectionName}` already exists. Something went wrong during preloading.");
-                m_Database.RegisterTableOperation(LocalizationSettings.ResourceManager.CreateCompletedOperation(table, null), table.LocaleIdentifier, table.TableCollectionName);
+                m_Database.RegisterTableOperation(AddressablesInterface.ResourceManager.CreateCompletedOperation(table, null), table.LocaleIdentifier, table.TableCollectionName);
 
                 if (table is IPreloadRequired preloadRequired)
                 {
@@ -127,7 +128,7 @@ namespace UnityEngine.Localization
                 return;
             }
 
-            var groupOperation = LocalizationSettings.ResourceManager.CreateGenericGroupOperation(m_PreloadTableContentsOperations);
+            var groupOperation = AddressablesInterface.ResourceManager.CreateGenericGroupOperation(m_PreloadTableContentsOperations);
             if (!groupOperation.IsDone)
                 groupOperation.CompletedTypeless += FinishPreloading;
             else
@@ -136,8 +137,16 @@ namespace UnityEngine.Localization
 
         void FinishPreloading(AsyncOperationHandle op)
         {
+            AddressablesInterface.Release(m_LoadResourcesOperation);
+            AddressablesInterface.Release(m_LoadTablesOperation);
+
             m_Progress = 1;
             Complete(m_Database, op.Status == AsyncOperationStatus.Succeeded, null);
+        }
+
+        protected override void Destroy()
+        {
+            GenericPool<PreloadDatabaseOperation<TTable, TEntry>>.Release(this);
         }
     }
 }

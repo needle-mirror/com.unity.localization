@@ -49,6 +49,12 @@ namespace UnityEngine.Localization.Settings
         {
             get
             {
+                #if UNITY_EDITOR
+                // Don't preload in Editor preview
+                if (!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+                    return AddressablesInterface.ResourceManager.CreateCompletedOperation(this, null);
+                #endif
+
                 if (!m_PreloadOperationHandle.HasValue)
                 {
                     var operation = GenericPool<PreloadDatabaseOperation<TTable, TEntry>>.Get();
@@ -67,45 +73,39 @@ namespace UnityEngine.Localization.Settings
 
         AsyncOperationHandle? m_PreloadOperationHandle;
 
-        static Action<AsyncOperationHandle> s_ReleaseNextFrame;
-        internal static Action<AsyncOperationHandle> ReleaseNextFrame
+        Action<AsyncOperationHandle> m_ReleaseNextFrame;
+        internal Action<AsyncOperationHandle> ReleaseNextFrame
         {
             get
             {
-                if (s_ReleaseNextFrame == null)
+                #if UNITY_EDITOR
+                if (!LocalizationSettings.Instance.IsPlaying)
                 {
-                    s_ReleaseNextFrame = OperationHandleDeferedRelease.Instance.ReleaseNextFrame;
+                    return AddressablesInterface.Release;
                 }
-                return s_ReleaseNextFrame;
+                #endif
+
+                if (m_ReleaseNextFrame == null)
+                {
+                    m_ReleaseNextFrame = OperationHandleDeferedRelease.Instance.ReleaseNextFrame;
+                }
+                return m_ReleaseNextFrame;
             }
         }
 
         // Used in place of the actual selected locale when it is still being loaded.
-        static readonly LocaleIdentifier s_SelectedLocaleId = new LocaleIdentifier("selected locale placeholder");
-
-        // These values should never go null however they currently do due to bug 1193322. As a workaround we check them in a property.
-        Dictionary<(LocaleIdentifier, string), AsyncOperationHandle<TTable>> m_TableOperations = new Dictionary<(LocaleIdentifier, string), AsyncOperationHandle<TTable>>();
-        Dictionary<Guid, AsyncOperationHandle<SharedTableData>> m_SharedTableDataOperations = new Dictionary<Guid, AsyncOperationHandle<SharedTableData>>();
+        internal static readonly LocaleIdentifier s_SelectedLocaleId = new LocaleIdentifier("selected locale placeholder");
 
         internal Dictionary<(LocaleIdentifier localeIdentifier, string tableNameOrGuid), AsyncOperationHandle<TTable>> TableOperations
         {
-            get
-            {
-                if (m_TableOperations == null)
-                    m_TableOperations = new Dictionary<(LocaleIdentifier, string), AsyncOperationHandle<TTable>>();
-                return m_TableOperations;
-            }
-        }
+            get;
+        } = new Dictionary<(LocaleIdentifier localeIdentifier, string tableNameOrGuid), AsyncOperationHandle<TTable>>();
 
-        Dictionary<Guid, AsyncOperationHandle<SharedTableData>> SharedTableDataOperations
+        internal Dictionary<Guid, AsyncOperationHandle<SharedTableData>> SharedTableDataOperations
         {
-            get
-            {
-                if (m_SharedTableDataOperations == null)
-                    m_SharedTableDataOperations = new Dictionary<Guid, AsyncOperationHandle<SharedTableData>>();
-                return m_SharedTableDataOperations;
-            }
-        }
+            get;
+            private set;
+        } = new Dictionary<Guid, AsyncOperationHandle<SharedTableData>>();
 
         /// <summary>
         /// The default table to use when no table collection name is provided.
@@ -136,28 +136,33 @@ namespace UnityEngine.Localization.Settings
 
         internal void RegisterTableOperation(AsyncOperationHandle<TTable> handle, LocaleIdentifier localeIdentifier, string tableName)
         {
-            AddressablesInterface.Acquire(handle);
-            TableOperations[(localeIdentifier, tableName)] = handle;
+            var localeAndName = (localeIdentifier, tableName);
+            if (!TableOperations.ContainsKey(localeAndName))
+                TableOperations[localeAndName] = handle;
 
             if (handle.IsDone)
-                RegisterSharedTableDataOperation(handle);
+                RegisterSharedTableOperation(handle);
             else
-                handle.Completed += RegisterSharedTableDataOperation;
+                handle.Completed += RegisterSharedTableOperation;
         }
 
-        void RegisterSharedTableDataOperation(AsyncOperationHandle<TTable> tableOperation)
+        void RegisterSharedTableOperation(AsyncOperationHandle<TTable> tableOperation)
         {
-            if (tableOperation.Result != null)
-            {
-                // Register the shared table data Guid
-                var sharedTableData = tableOperation.Result.SharedData;
-                var tableNameGuid = sharedTableData.TableCollectionNameGuid;
-                if (!SharedTableDataOperations.ContainsKey(tableNameGuid))
-                    SharedTableDataOperations[tableNameGuid] = AddressablesInterface.ResourceManager.CreateCompletedOperation(sharedTableData, null);
+            if (tableOperation.Result == null)
+                return;
 
-                // Register the table via the guid
+            // Register the shared table data Guid
+            var sharedTableData = tableOperation.Result.SharedData;
+            var tableNameGuid = sharedTableData.TableCollectionNameGuid;
+            if (!SharedTableDataOperations.ContainsKey(tableNameGuid))
+                SharedTableDataOperations[tableNameGuid] = AddressablesInterface.ResourceManager.CreateCompletedOperation(sharedTableData, null);
+
+            // Register the table via the locale identifier and guid
+            var localeAndGuid = (tableOperation.Result.LocaleIdentifier, TableReference.StringFromGuid(tableNameGuid));
+            if (!TableOperations.ContainsKey(localeAndGuid))
+            {
                 AddressablesInterface.Acquire(tableOperation);
-                TableOperations[(tableOperation.Result.LocaleIdentifier, TableReference.StringFromGuid(tableNameGuid))] = tableOperation;
+                TableOperations[localeAndGuid] = tableOperation;
             }
         }
 
@@ -208,59 +213,160 @@ namespace UnityEngine.Localization.Settings
             operation.Init(this, tableReference, locale);
             var handle = AddressablesInterface.ResourceManager.StartOperation(operation, LocalizationSettings.InitializationOperation);
 
-            // Register this operation for reuse
-            TableOperations[(localeId, tableIdString)] = handle;
-
-            // If we are using a placeholder then we need to register the correct locale so that this operation can be reused
-            if (useSelectedLocalePlaceholder)
+            if (useSelectedLocalePlaceholder || tableReference.ReferenceType == TableReference.Type.Guid)
             {
+                // We need an extra handle for the placeholder.
+                if (useSelectedLocalePlaceholder)
+                    AddressablesInterface.Acquire(handle);
+
+                // Register the guid or placeholder operation for reuse.
+                AddressablesInterface.Acquire(handle);
+                TableOperations[(localeId, tableIdString)] = handle;
+
+                // Register the table operation later when we have a Locale and/or the table name. (LOC-172)
                 if (handle.IsDone)
                     operation.RegisterTableOperation(handle);
                 else
                     handle.Completed += operation.RegisterTableOperation;
             }
+            else
+            {
+                // Register the table name and Guid
+                RegisterTableOperation(handle, localeId, tableIdString);
+            }
 
             return handle;
         }
 
-        // <summary>
-        /// Attempts to retrieve all the Tables at once
+        /// <summary>
+        /// Preloads the selected table. If the table is an <see cref="AssetTable"/> its assets will also be loaded.
         /// This function is asynchronous and may not have an immediate result.
         /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
         /// </summary>
-        /// <param name="tableReference">A reference to the table to check for the string.</param>
+        /// <param name="tableReference">A reference to the table. A table reference can be either the name of the table or the table collection name Guid.</param>
         /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
         /// <returns></returns>
-        public AsyncOperationHandle PreLoadTables(TableReference tableReference, Locale locale = null)
+        public AsyncOperationHandle PreloadTables(TableReference tableReference, Locale locale = null)
         {
             // Start a new operation
-            var operation = CreatePreLoadTablesOperation();
-            operation.Init(this, new List<TableReference> { tableReference }, locale);
+            var operation = CreatePreloadTablesOperation();
+            operation.Init(this, new [] { tableReference }, locale);
             var handle = AddressablesInterface.ResourceManager.StartOperation(operation, LocalizationSettings.InitializationOperation);
             handle.CompletedTypeless += ReleaseNextFrame;
             return handle;
         }
 
         /// <summary>
-        /// Attempts to retrieve all the Tables at once
+        /// Preloads the matching tables for the selected Locale. If the tables are <see cref="AssetTable"/> then their assets will also be loaded.
         /// This function is asynchronous and may not have an immediate result.
         /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
         /// </summary>
         /// <param name="tableReferences">An IList of tableReferences to check for the string.</param>
         /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
         /// <returns></returns>
-        public AsyncOperationHandle PreLoadTables(IList<TableReference> tableReferences, Locale locale = null)
+        /// <example>
+        /// This shows how to manually preload tables instead of marking them as Preload in the editor.
+        /// <code source="../../../DocCodeSamples.Tests/LocalizedStringDatabaseSamples.cs" region="preload-example"/>
+        /// </example>
+        public AsyncOperationHandle PreloadTables(IList<TableReference> tableReferences, Locale locale = null)
         {
             // Start a new operation
-            var operation = CreatePreLoadTablesOperation();
+            var operation = CreatePreloadTablesOperation();
             operation.Init(this, tableReferences, locale);
             var handle = AddressablesInterface.ResourceManager.StartOperation(operation, LocalizationSettings.InitializationOperation);
             handle.CompletedTypeless += ReleaseNextFrame;
             return handle;
         }
 
+        /// <summary>
+        /// Releases all references to the table that matches the <paramref name="tableReference"/> and <param name="locale"></param>.
+        /// This will also release any references to the <see cref="SharedTableData"/> providing there are no other references to it, such as different Locale versions of the table that have been loaded.
+        /// A table is released by calling <see cref="AddressableAssets.Addressables.Release"/> on it which decrements the ref-count.
+        /// When a given Asset's ref-count is zero, that Asset is ready to be unloaded.
+        /// For more information, read the Addressables section [on when memory is cleared](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/MemoryManagement.html).
+        /// </summary>
+        /// <param name="tableReference">A reference to the table. A table reference can be either the name of the table or the table collection name Guid.</param>
+        /// <param name="locale">The Locale version of the table that should be unloaded. When <c>null</c> the <see cref="LocalizationSettings.SelectedLocale"/> will be used.</param>
+        /// <example>
+        /// This shows how to release a table but prevent it from being unloaded.
+        /// <code source="../../../DocCodeSamples.Tests/LocalizedStringDatabaseSamples.cs" region="release-example"/>
+        /// </example>
+        public void ReleaseTable(TableReference tableReference, Locale locale = null)
+        {
+            tableReference.Validate();
+            if (locale == null)
+            {
+                locale = LocalizationSettings.SelectedLocaleAsync.Result;
+                if (locale == null)
+                    return;
+            }
+
+            // Get the shared table data
+            SharedTableData sharedTableData;
+            if (tableReference.ReferenceType == TableReference.Type.Guid)
+            {
+                if (!SharedTableDataOperations.TryGetValue(tableReference.TableCollectionNameGuid, out var sharedTableDataOperationHandle) || sharedTableDataOperationHandle.Result == null)
+                    return;
+                sharedTableData = sharedTableDataOperationHandle.Result;
+            }
+            else
+            {
+                var nameAndLocale = (locale.Identifier, tableReference.TableCollectionName);
+                if (!TableOperations.TryGetValue(nameAndLocale, out var operationHandleName) || operationHandleName.Result == null)
+                    return;
+                sharedTableData = operationHandleName.Result.SharedData;
+            }
+
+            if (sharedTableData == null)
+                return;
+
+            // We may have multiple references to the table(Guid, Table name, placeholders etc) so we will iterate through and remove them all.
+            // We also need to see if the Shared table data is still being used or if we can also release that.
+            int sharedTableDataUsers = 0;
+            bool removedContents = false;
+            using (ListPool<(LocaleIdentifier localeIdentifier, string tableNameOrGuid)>.Get(out var itemsToRemove))
+            {
+                foreach (var tableOperation in TableOperations)
+                {
+                    if (tableOperation.Value.Result == null || tableOperation.Value.Result.SharedData != sharedTableData)
+                        continue;
+
+                    // Check locale and placeholder
+                    if (tableOperation.Key.localeIdentifier == locale.Identifier || tableOperation.Key.localeIdentifier == s_SelectedLocaleId)
+                    {
+                        // We only want to do this once.
+                        if (!removedContents)
+                        {
+                            ReleaseTableContents(tableOperation.Value.Result);
+                            removedContents = true;
+                        }
+
+                        AddressablesInterface.Release(tableOperation.Value);
+                        itemsToRemove.Add(tableOperation.Key);
+                    }
+                    else
+                    {
+                        sharedTableDataUsers++;
+                    }
+                }
+
+                // Remove the items from the dictionary
+                foreach (var tableKey in itemsToRemove)
+                {
+                    TableOperations.Remove(tableKey);
+                }
+
+                // If there's no other references to the shared table data then we can also remove that.
+                if (sharedTableDataUsers == 0 && SharedTableDataOperations.TryGetValue(sharedTableData.TableCollectionNameGuid, out var sharedTableDataOperationHandle))
+                {
+                    AddressablesInterface.Release(sharedTableDataOperationHandle);
+                    SharedTableDataOperations.Remove(sharedTableData.TableCollectionNameGuid);
+                }
+            }
+        }
+
         internal virtual LoadTableOperation<TTable, TEntry> CreateLoadTableOperation() => GenericPool<LoadTableOperation<TTable, TEntry>>.Get();
-        internal virtual PreLoadTablesOperation<TTable, TEntry> CreatePreLoadTablesOperation() => GenericPool<PreLoadTablesOperation<TTable, TEntry>>.Get();
+        internal virtual PreloadTablesOperation<TTable, TEntry> CreatePreloadTablesOperation() => GenericPool<PreloadTablesOperation<TTable, TEntry>>.Get();
 
         /// <summary>
         /// Returns the entry from the requested table. A table entry will contain the localized item and metadata.
@@ -301,14 +407,25 @@ namespace UnityEngine.Localization.Settings
             return sharedTableDataOp;
         }
 
+        internal virtual void ReleaseTableContents(TTable table) {}
+
         /// <summary>
         /// Called before the LocaleChanged event is sent out in order to give the database a chance to prepare.
         /// </summary>
         public virtual void OnLocaleChanged(Locale locale)
         {
-            foreach (var to in TableOperations.Values)
+            using (HashSetPool<TTable>.Get(out var releasedTables))
             {
-                AddressablesInterface.Release(to);
+                foreach (var to in TableOperations.Values)
+                {
+                    // We may have multiple references to the table so we keep track in order to only call release once.
+                    if (to.Result != null && !releasedTables.Contains(to.Result))
+                    {
+                        ReleaseTableContents(to.Result);
+                        releasedTables.Add(to.Result);
+                    }
+                    AddressablesInterface.Release(to);
+                }
             }
 
             if (m_PreloadOperationHandle.HasValue)

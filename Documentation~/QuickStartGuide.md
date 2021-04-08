@@ -34,7 +34,7 @@ This demonstrates changing an Asset's Texture to the flag of that Locale's count
 
 First, you need to create an Asset Table. To do this, open the **Localization Tables Window** (menu: **Window > Asset Management > Localization Tables**).
 
-In the Asset Tables window, select the New **Table Collection tab**. Select which Locales you want to generate tables for, give the collection a name and click the Create Asset Table Collection e button  and choose a directory to generate the assets.
+In the Asset Tables window, select the New **Table Collection tab**. Select which Locales you want to generate tables for, give the collection a name and click the Create Asset Table Collection button and choose a directory to generate the assets.
 
 ![Creating Texture2D Asset Tables.](images/TutorialTextureTableCreation.png)
 

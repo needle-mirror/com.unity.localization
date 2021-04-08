@@ -4,14 +4,21 @@ using UnityEngine.Localization.Tables;
 
 namespace UnityEngine.Localization
 {
-    /// <summary>
-    /// Provides runtime access to an <see cref="AssetTable"/> for the current selected <see cref="Locale"/>.
-    /// When accessing multiple localized assets it may be more convenient to use a <see cref="LocalizedAssetTable"/> instead of multiple <see cref="LocalizedAsset{TObject}"/>.
-    /// This will fetch the table on demand or provide a callback whenever the table has finished loading, such as when the selected locale was changed.
-    /// </summary>
     [Serializable]
     public class LocalizedAssetTable : LocalizedTable<AssetTable, AssetTableEntry>
     {
         protected override LocalizedDatabase<AssetTable, AssetTableEntry> Database => LocalizationSettings.AssetDatabase;
+
+        /// <summary>
+        /// Initializes and returns an empty instance of a <see cref="LocalizedAssetTable"/>.
+        /// </summary>
+        public LocalizedAssetTable() {}
+
+        /// <summary>
+        /// Initializes and returns an instance of a <see cref="LocalizedAssetTable"/>.
+        /// </summary>
+        /// <param name="tableReference">Reference to the Asset Table Collection.
+        /// This can either be the name of the collection as a <c>string</c> or the Collection Guid as a [System.Guid](https://docs.microsoft.com/en-us/dotnet/api/system.guid).</param>
+        public LocalizedAssetTable(TableReference tableReference) => TableReference = tableReference;
     }
 }

@@ -14,6 +14,7 @@ namespace UnityEngine.Localization.Tests
         public void CreateTestLocalizationSettings()
         {
             m_Settings = LocalizationSettingsHelper.CreateEmpty();
+            m_Settings.IsPlayingOverride = true;
             m_LocalesProvider = m_Settings.GetAvailableLocales();
             m_LocalesProvider.AddLocale(Locale.CreateLocale(SystemLanguage.Arabic));
             m_LocalesProvider.AddLocale(Locale.CreateLocale(SystemLanguage.English));

@@ -377,7 +377,7 @@ namespace UnityEditor.Localization.UI
                 }
             }
 
-            var FallbackLocale = EditorGUI.PropertyField(rowPosition, data.fallbackState, Styles.useFallback);
+            EditorGUI.PropertyField(rowPosition, data.fallbackState, Styles.useFallback);
             rowPosition.MoveToNextLine();
         }
 

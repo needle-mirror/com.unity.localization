@@ -126,7 +126,7 @@ namespace UnityEditor.Localization.Plugins.CSV
             modifiedAssets.Add(collection.SharedData);
 
             if (createUndo)
-                Undo.RecordObjects(modifiedAssets.ToArray(), "Import CSV");
+                Undo.RegisterCompleteObjectUndo(modifiedAssets.ToArray(), "Import CSV");
 
             try
             {

@@ -37,12 +37,19 @@ namespace UnityEditor.Localization.UI
 
         void OnEnable()
         {
-            m_Name = serializedObject.FindProperty("m_Name");
+            m_Name = serializedObject.FindProperty("m_LocaleName");
             m_Code = serializedObject.FindProperty("m_Identifier.m_Code");
             m_FormatCultureCode = serializedObject.FindProperty("m_CustomFormatCultureCode");
             m_UseCustomFormatter = serializedObject.FindProperty("m_UseCustomFormatter");
             m_Metadata = serializedObject.FindProperty("m_Metadata");
             m_SortOrder = serializedObject.FindProperty("m_SortOrder");
+
+            if (string.IsNullOrEmpty(m_Name.stringValue))
+            {
+                m_Name.stringValue = serializedObject.FindProperty("m_Name").stringValue;
+                serializedObject.ApplyModifiedProperties();
+            }
+
             UpdateCultureLabels();
         }
 

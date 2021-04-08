@@ -5,7 +5,8 @@
         "UnityEditor.TestRunner",
         "Unity.Localization",
         "Unity.Localization.Editor",
-        "Unity.ResourceManager"
+        "Unity.ResourceManager",
+        "Unity.Addressables"
     ],
     "includePlatforms": [
         "Editor"

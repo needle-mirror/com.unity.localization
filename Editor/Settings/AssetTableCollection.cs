@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using UnityEditor.AddressableAssets.Settings;
+using UnityEditor.Localization.Addressables;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Tables;
+using UnityEngine.Pool;
 using Object = UnityEngine.Object;
 
 namespace UnityEditor.Localization
@@ -16,20 +18,18 @@ namespace UnityEditor.Localization
     /// </summary>
     public class AssetTableCollection : LocalizationTableCollection
     {
-        static readonly Type kTableType = typeof(AssetTable);
-        protected internal override  Type TableType => kTableType;
+        protected internal override Type TableType => typeof(AssetTable);
 
         protected internal override Type RequiredExtensionAttribute => typeof(AssetTableCollectionExtensionAttribute);
 
-        protected override string DefaultAddressablesGroupName => "Localization-AssetTables";
+        const string k_AssetTypeSetByScript = "set-by-script";
 
         /// <summary>
-        /// A helper property which is the contents of <see cref="Tables"/> loaded and cast to <see cref="AssetTable"/>.
+        /// A helper property which is the contents of <see cref="LocalizationTableCollection.Tables"/> loaded and cast to <see cref="AssetTable"/>.
         /// </summary>
         public virtual ReadOnlyCollection<AssetTable> AssetTables => new ReadOnlyCollection<AssetTable>(Tables.Select(t => t.asset as AssetTable).ToList().AsReadOnly());
 
         protected internal override string DefaultGroupName => "Asset Table";
-
         /// <summary>
         /// Returns an enumerator that can be used to step through each key and its localized values, such as in a foreach loop.
         /// Internally <see cref="SharedTableData"/> and <see cref="AssetTable"/>'s are separate assets with their own internal list of values.
@@ -100,73 +100,170 @@ namespace UnityEditor.Localization
             if (aaSettings == null)
                 return;
 
-            var undoGroup = Undo.GetCurrentGroup();
-            if (createUndo)
-                Undo.RecordObject(aaSettings, "Add asset to table");
-
-            // Remove the old asset first
-            var assetGuid = LocalizationEditorSettings.Instance.GetAssetGuid(asset);
-            var tableEntry = table.GetEntryFromReference(entryReference);
-            if (tableEntry != null)
+            using (new UndoScope("Add asset to table", createUndo))
             {
-                if (tableEntry.Guid == assetGuid)
-                    return;
+                if (createUndo)
+                    Undo.RecordObject(aaSettings, "Add asset to table");
 
-                RemoveAssetFromTable(table, entryReference, createUndo);
-            }
+                // Remove the old asset first
+                var assetGuid = LocalizationEditorSettings.Instance.GetAssetGuid(asset);
+                var tableEntry = table.GetEntryFromReference(entryReference);
+                if (tableEntry != null)
+                {
+                    if (tableEntry.Guid != assetGuid)
+                        RemoveAssetFromTable(table, entryReference, createUndo);
+                }
 
-            // Has the asset already been added? Perhaps it is being used by multiple tables or the user has added it manually.
-            var entry = aaSettings.FindAssetEntry(assetGuid);
-            var entryLabel = AddressHelper.FormatAssetLabel(table.LocaleIdentifier.Code);
-            aaSettings.AddLabel(entryLabel);
+                // Has the asset already been added? Perhaps it is being used by multiple tables or the user has added it manually.
+                var entry = aaSettings.FindAssetEntry(assetGuid);
+                var entryLabel = AddressHelper.FormatAssetLabel(table.LocaleIdentifier.Code);
+                aaSettings.AddLabel(entryLabel);
 
-            if (entry == null)
-            {
-                var group = LocalizationEditorSettings.Instance.GetGroup(aaSettings, FormatAssetTableCollectionName(table.LocaleIdentifier), true, createUndo);
+                if (entry == null)
+                {
+                    entry = AddressableGroupRules.AddAssetToGroup(asset, new[] {table.LocaleIdentifier}, aaSettings, createUndo);
+                    entry.SetLabel(entryLabel, true, true);
+                    entry.address = LocalizationEditorSettings.Instance.FindUniqueAssetAddress(asset.name);
+                }
+                else
+                {
+                    if (createUndo)
+                        Undo.RecordObject(entry.parentGroup, "Add asset to table");
+                    entry.SetLabel(entryLabel, true, true);
+                    UpdateAssetGroup(aaSettings, entry, createUndo);
+                }
 
                 if (createUndo)
-                    Undo.RecordObject(group,  "Add asset to table");
+                    Undo.RecordObjects(new Object[] { table, table.SharedData }, "Add asset to table");
 
-                entry = aaSettings.CreateOrMoveEntry(assetGuid, group, true);
-                entry.SetLabel(entryLabel, true);
-                entry.address = LocalizationEditorSettings.Instance.FindUniqueAssetAddress(asset.name);
-            }
-            else
-            {
-                Undo.RecordObject(entry.parentGroup, "Add asset to table");
-                entry.SetLabel(entryLabel, true);
-                UpdateAssetGroup(aaSettings, entry, createUndo);
-            }
-
-            // Update the table
-            if (createUndo)
-            {
-                Undo.RecordObject(table, "Add asset to table");
-                Undo.RecordObject(table.SharedData, "Add asset to table");
-            }
-            //else // Asset changes are not being saved correctly at the moment when using Undo. (LOC-82)
-            {
                 EditorUtility.SetDirty(table);
                 EditorUtility.SetDirty(table.SharedData);
-            }
 
-            tableEntry = table.AddEntryFromReference(entryReference, assetGuid);
+                tableEntry = table.AddEntryFromReference(entryReference, assetGuid);
+                SetEntryAssetType(tableEntry.KeyId, asset.GetType(), table.LocaleIdentifier.Code);
+                LocalizationEditorSettings.EditorEvents.RaiseAssetTableEntryAdded(this, table, tableEntry);
+            }
+        }
+
+        /// <summary>
+        /// Remove the asset mapping from the table entry and also cleans up the Addressables if necessary.
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="entryReference"></param>
+        /// <param name="createUndo"></param>
+        public void RemoveAssetFromTable(AssetTable table, TableEntryReference entryReference, bool createUndo = false)
+        {
+            using (new UndoScope("Remove asset from table", createUndo))
+            {
+                // Clear the asset but keep the key
+                var tableEntry = table.GetEntryFromReference(entryReference);
+                if (tableEntry == null)
+                    return;
+
+                var removedAssetGuid = tableEntry.Guid;
+                tableEntry.Guid = string.Empty;
+
+                var aaSettings = LocalizationEditorSettings.Instance.GetAddressableAssetSettings(false);
+                if (aaSettings == null)
+                    return;
+
+                EditorUtility.SetDirty(table);
+                EditorUtility.SetDirty(table.SharedData);
+
+                RemoveEntryAssetType(tableEntry.KeyId, table.LocaleIdentifier.Code);
+
+                // If the entry has metadata then we will leave an empty entry otherwise we just remove the whole thing.
+                if (tableEntry.MetadataEntries.Count == 0)
+                    table.RemoveEntry(tableEntry.KeyId);
+
+                // Determine if the asset is being referenced by any entries or tables with the same locale, if not then we can
+                // remove the locale label and if no other labels exist also remove the asset from the Addressables system.
+                var assetTableCollections = LocalizationEditorSettings.GetAssetTableCollections();
+                foreach (var collection in assetTableCollections)
+                {
+                    if (collection.GetTable(table.LocaleIdentifier) is AssetTable tableWithMatchingLocaleId && tableWithMatchingLocaleId.ContainsValue(removedAssetGuid))
+                    {
+                        // The asset is referenced elsewhere by a table with the same Locale so we can not remove the locale label or asset.
+                        return;
+                    }
+                }
+
+                // Remove the locale label for this asset
+                var assetEntry = aaSettings.FindAssetEntry(removedAssetGuid);
+                if (assetEntry != null)
+                {
+                    if (createUndo)
+                        Undo.RecordObject(assetEntry.parentGroup, "Remove asset from table");
+
+                    var assetLabel = AddressHelper.FormatAssetLabel(table.LocaleIdentifier);
+                    assetEntry.SetLabel(assetLabel, false);
+                    UpdateAssetGroup(aaSettings, assetEntry, createUndo);
+                }
+
+                LocalizationEditorSettings.EditorEvents.RaiseAssetTableEntryRemoved(this, table, tableEntry, removedAssetGuid);
+            }
+        }
+
+        /// <summary>
+        /// Returns the expected type for the entry.
+        /// When an asset is first added to an entry, the type is recorded so that the Editor can ensure all subsequent assets that are added are compatible.
+        /// </summary>
+        /// <param name="tableEntry">The entry to return the asset type for.</param>
+        /// <returns>The expected asset type or typeof(Object) if unknown.</returns>
+        public Type GetEntryAssetType(TableEntryReference tableEntry)
+        {
+            long keyId = tableEntry.ReferenceType == TableEntryReference.Type.Name ? SharedData.GetId(tableEntry.Key) : tableEntry.KeyId;
+
+            foreach (AssetTypeMetadata assetType in SharedData.Metadata.MetadataEntries)
+            {
+                if (assetType == null)
+                    continue;
+
+                if (assetType.Contains(keyId))
+                {
+                    return assetType.Type;
+                }
+            }
+            return typeof(Object);
+        }
+
+        /// <summary>
+        /// The type of asset that is expected by this entry. By default this is determined by the first asset that is added in the Editor
+        /// however this can be used to override it so it always expects this asset type instead of reverting back to Object when the last asset is removed.
+        /// </summary>
+        /// <param name="tableEntry">The entry to set the asset type for.</param>
+        /// <param name="assetType">The asset type to expect for this entry. To reset the override and allow the Editor to control the type pass <c>null</c> or <c>typeof(Object)</c>.</param>
+        public void SetEntryAssetType(TableEntryReference tableEntry, Type assetType)
+        {
+            if (assetType == null || assetType == typeof(Object))
+                RemoveEntryAssetType(tableEntry, k_AssetTypeSetByScript);
+            else
+                SetEntryAssetType(tableEntry, assetType, k_AssetTypeSetByScript);
+        }
+
+        void SetEntryAssetType(TableEntryReference tableEntry, Type assetType, string entryCode)
+        {
+            long keyId = tableEntry.ReferenceType == TableEntryReference.Type.Name ? SharedData.GetId(tableEntry.Key, true) : tableEntry.KeyId;
 
             // Update type metadata
             AssetTypeMetadata entryMetadata = null;
             AssetTypeMetadata typeMetadata = null;
-            var assetType = asset.GetType();
+
             // We cant use a foreach here as we are sometimes inside of a loop and exceptions will be thrown (Collection was modified).
-            for (int i = 0; i < table.SharedData.Metadata.MetadataEntries.Count; ++i)
+            for (int i = 0; i < SharedData.Metadata.MetadataEntries.Count; ++i)
             {
-                var md = table.SharedData.Metadata.MetadataEntries[i];
+                var md = SharedData.Metadata.MetadataEntries[i];
                 if (md is AssetTypeMetadata at)
                 {
-                    if (at.Contains(tableEntry.KeyId))
+                    if (at.Contains(keyId))
                     {
                         if (!at.Type.IsAssignableFrom(assetType))
                         {
-                            tableEntry.RemoveSharedMetadata(at);
+                            at.RemoveEntry(keyId, entryCode);
+                            if (at.IsEmpty)
+                            {
+                                SharedData.Metadata.RemoveMetadata(at);
+                            }
 
                             // Are other tables still using the type for the same id?
                             if (at.Contains(tableEntry.KeyId))
@@ -193,103 +290,36 @@ namespace UnityEditor.Localization
             if (foundMetadata == null)
             {
                 foundMetadata = new AssetTypeMetadata() { Type = assetType };
-            }
-            tableEntry.AddSharedMetadata(foundMetadata);
-
-            if (createUndo)
-            {
-                Undo.CollapseUndoOperations(undoGroup);
+                SharedData.Metadata.AddMetadata(foundMetadata);
             }
 
-            LocalizationEditorSettings.EditorEvents.RaiseAssetTableEntryAdded(this, table, tableEntry);
+            foundMetadata.AddEntry(keyId, entryCode);
         }
 
-        /// <summary>
-        /// Remove the asset mapping from the table entry and also cleans up the Addressables if necessary.
-        /// </summary>
-        /// <param name="table"></param>
-        /// <param name="entryReference"></param>
-        /// <param name="createUndo"></param>
-        public void RemoveAssetFromTable(AssetTable table, TableEntryReference entryReference, bool createUndo = false)
+        void RemoveEntryAssetType(TableEntryReference tableEntry, string entryCode)
         {
-            var undoGroup = Undo.GetCurrentGroup();
-            if (createUndo)
-            {
-                Undo.RecordObject(table, "Remove asset from table"); // We modify the table entry.
-                Undo.RecordObject(table.SharedData, "Remove asset from table"); // We modify the shared table metadata.
-            }
-            //else // Asset changes are not being saved correctly at the moment when using Undo. (LOC-82)
-            {
-                EditorUtility.SetDirty(table);
-                EditorUtility.SetDirty(table.SharedData);
-            }
-
-            // Clear the asset but keep the key
-            var tableEntry = table.GetEntryFromReference(entryReference);
-            if (tableEntry == null)
-                return;
-
-            var removedAssetGuid = tableEntry.Guid;
-            tableEntry.Guid = string.Empty;
-
-            var aaSettings = LocalizationEditorSettings.Instance.GetAddressableAssetSettings(false);
-            if (aaSettings == null)
+            long keyId = tableEntry.ReferenceType == TableEntryReference.Type.Name ? SharedData.GetId(tableEntry.Key) : tableEntry.KeyId;
+            if (keyId == SharedTableData.EmptyId)
                 return;
 
             // Update type metadata
             // We cant use a foreach here as we are sometimes inside of a loop and exceptions will be thrown (Collection was modified).
-            for (int i = 0; i < table.SharedData.Metadata.MetadataEntries.Count; ++i)
+            for (int i = 0; i < SharedData.Metadata.MetadataEntries.Count; ++i)
             {
-                var md = table.SharedData.Metadata.MetadataEntries[i];
+                var md = SharedData.Metadata.MetadataEntries[i];
                 if (md is AssetTypeMetadata at)
                 {
-                    if (at.Contains(tableEntry.KeyId))
+                    if (at.Contains(keyId))
                     {
-                        tableEntry.RemoveSharedMetadata(at);
+                        at.RemoveEntry(keyId, entryCode);
+                        if (at.IsEmpty)
+                        {
+                            SharedData.Metadata.RemoveMetadata(at);
+                        }
+                        return;
                     }
                 }
             }
-
-            // If the entry has metadata then we will leave an empty entry otherwise we just remove the whole thing.
-            if (tableEntry.MetadataEntries.Count == 0)
-                table.RemoveEntry(tableEntry.KeyId);
-
-            // Determine if the asset is being referenced by any entries or tables with the same locale, if not then we can
-            // remove the locale label and if no other labels exist also remove the asset from the Addressables system.
-            var assetTableCollections = LocalizationEditorSettings.GetAssetTableCollections();
-            foreach (var collection in assetTableCollections)
-            {
-                var tableWithMatchingLocaleId = collection.GetTable(table.LocaleIdentifier) as AssetTable;
-                if (tableWithMatchingLocaleId == null)
-                    continue;
-
-                if (tableWithMatchingLocaleId.ContainsValue(removedAssetGuid))
-                {
-                    // The asset is referenced elsewhere so we can not remove the label or asset.
-                    return;
-                }
-            }
-
-            // Remove the locale label for this asset
-            var assetEntry = aaSettings.FindAssetEntry(removedAssetGuid);
-            if (assetEntry != null)
-            {
-                if (createUndo)
-                {
-                    Undo.RecordObject(assetEntry.parentGroup, "Remove asset from table");
-                }
-
-                var assetLabel = AddressHelper.FormatAssetLabel(table.LocaleIdentifier);
-                assetEntry.SetLabel(assetLabel, false);
-                UpdateAssetGroup(aaSettings, assetEntry, createUndo);
-            }
-
-            if (createUndo)
-            {
-                Undo.CollapseUndoOperations(undoGroup);
-            }
-
-            LocalizationEditorSettings.EditorEvents.RaiseAssetTableEntryRemoved(this, table, tableEntry, removedAssetGuid);
         }
 
         /// <summary>
@@ -306,8 +336,17 @@ namespace UnityEditor.Localization
                 return;
 
             // Find all the locales that are using the asset using the Addressable labels.
-            var localesUsingAsset = assetEntry.labels.Where(AddressHelper.IsLocaleLabel);
-            if (localesUsingAsset.Count() == 0)
+            var localesUsingAsset = ListPool<LocaleIdentifier>.Get();
+            foreach (var label in assetEntry.labels)
+            {
+                if (AddressHelper.TryGetLocaleLabelToId(label, out var id))
+                {
+                    localesUsingAsset.Add(id);
+                }
+            }
+
+            // If no Locales depend on this asset then we can just remove it
+            if (localesUsingAsset.Count == 0)
             {
                 var oldGroup = assetEntry.parentGroup;
                 settings.RemoveAssetEntry(assetEntry.guid);
@@ -324,44 +363,33 @@ namespace UnityEditor.Localization
                     }
                 }
 
+                ListPool<LocaleIdentifier>.Release(localesUsingAsset);
                 return;
             }
 
-            AddressableAssetGroup newGroup;
-            if (localesUsingAsset.Count() == 1)
-            {
-                // If only 1 locale is using the asset then we will add it to a locale specific group.
-                var localeId = AddressHelper.LocaleLabelToId(localesUsingAsset.First());
-                newGroup = LocalizationEditorSettings.Instance.GetGroup(settings, FormatAssetTableCollectionName(localeId), true, createUndo);
-            }
-            else
-            {
-                // More than one locale uses the asset so it goes to the shared assets group.
-                newGroup = LocalizationEditorSettings.Instance.GetGroup(settings, LocalizationEditorSettings.SharedAssetGroupName, true, createUndo);
-            }
-
-            // Do we need to change the asset's group?
-            if (newGroup != assetEntry.parentGroup)
-            {
-                if (createUndo)
-                {
-                    Undo.RecordObject(newGroup, "Update asset group");
-                    Undo.RecordObject(assetEntry.parentGroup, "Update asset group");
-                }
-
-                var oldGroup = assetEntry.parentGroup;
-                settings.MoveEntry(assetEntry, newGroup, true);
-                if (oldGroup.entries.Count == 0)
-                {
-                    // We only delete the asset when not creating an undo as we can not undo asset deletion.
-                    if (!createUndo)
-                    {
-                        settings.RemoveGroup(oldGroup);
-                    }
-                }
-            }
+            AddressableGroupRules.AddAssetToGroup(assetEntry.MainAsset, localesUsingAsset, settings, createUndo);
         }
 
         static string FormatAssetTableCollectionName(LocaleIdentifier localeIdentifier) => string.Format(LocalizationEditorSettings.AssetGroupName, localeIdentifier.Code);
+
+        /// <summary>
+        /// Removes the entry from the <see cref="SharedTableData"/> and all tables that are part of this collection.
+        /// </summary>
+        /// <param name="id"></param>
+        public override void RemoveEntry(TableEntryReference entryReference)
+        {
+            if (entryReference.ReferenceType == TableEntryReference.Type.Name)
+            {
+                SharedData.RemoveKey(entryReference.Key);
+                foreach (var table in AssetTables)
+                    table.SharedData.RemoveKey(entryReference.Key);
+            }
+            else if (entryReference.ReferenceType == TableEntryReference.Type.Id)
+            {
+                SharedData.RemoveKey(entryReference.KeyId);
+                foreach (var table in AssetTables)
+                    table.SharedData.RemoveKey(entryReference.KeyId);
+            }
+        }
     }
 }

@@ -5,7 +5,6 @@ using System.Linq;
 using NUnit.Framework;
 using UnityEditor.Localization.UI;
 using UnityEditor.Localization.UI.Toolkit;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
@@ -105,9 +104,7 @@ namespace UnityEditor.Localization.Tests.UI
             Assert.That(locales, Is.Empty, "Expected all project locales to be in the ListView but they were not.");
         }
 
-        #if UNITY_2021_1_OR_NEWER
-        [Ignore("Failing on 2021.1 due to UI Toolkit changes.")]
-        #endif
+        [Ignore("Failing due to UI Toolkit changes.")]
         [UnityTest]
         public IEnumerator ListViewContainsAllProjectLocales()
         {
@@ -124,9 +121,7 @@ namespace UnityEditor.Localization.Tests.UI
             Assert.That(window.TestCompleted, Is.True);
         }
 
-        #if UNITY_2021_1_OR_NEWER
-        [Ignore("Failing on 2021.1 due to UI Toolkit changes.")]
-        #endif
+        [Ignore("Failing due to UI Toolkit changes.")]
         [UnityTest]
         public IEnumerator ListViewUpdatesWhenLocaleIsAdded()
         {
@@ -156,9 +151,7 @@ namespace UnityEditor.Localization.Tests.UI
             Assert.That(window.TestCompleted, Is.True);
         }
 
-        #if UNITY_2021_1_OR_NEWER
-        [Ignore("Failing on 2021.1 due to UI Toolkit changes.")]
-        #endif
+        [Ignore("Failing due to UI Toolkit changes.")]
         [UnityTest]
         public IEnumerator ListViewUpdatesWhenLocaleIsRemoved()
         {

@@ -129,7 +129,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             return m_DefaultPluralRule ?? (m_DefaultPluralRule = PluralRules.GetPluralRule(DefaultTwoLetterISOLanguageName));
         }
 
-        public override bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+        public override bool TryEvaluateAllLiterals(IFormattingInfo formattingInfo)
         {
             var format = formattingInfo.Format;
 

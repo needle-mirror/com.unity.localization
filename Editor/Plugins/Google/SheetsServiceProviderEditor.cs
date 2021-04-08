@@ -1,4 +1,7 @@
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using Google.Apis.Auth.OAuth2;
 using UnityEngine;
 
 namespace UnityEditor.Localization.Plugins.Google
@@ -11,6 +14,7 @@ namespace UnityEditor.Localization.Plugins.Google
             public static readonly GUIContent apiKey = new GUIContent("API Key");
             public static readonly GUIContent authorize = new GUIContent("Authorize", "Authorize the user. This is not required however the first time a connection to a Google sheet is required then authorization will be required.");
             public static readonly GUIContent authentication = new GUIContent("Authentication");
+            public static readonly GUIContent cancel = new GUIContent("Cancel Authentication");
             public static readonly GUIContent clientId = new GUIContent("Client Id");
             public static readonly GUIContent clientSecret = new GUIContent("Client Secret");
             public static readonly GUIContent noCredentials = new GUIContent("No Credentials Selected");
@@ -23,6 +27,9 @@ namespace UnityEditor.Localization.Plugins.Google
         SerializedProperty m_AuthenticationType;
         SerializedProperty m_ApplicationName;
         SerializedProperty m_NewSheetProperties;
+
+        static Task<UserCredential> s_AuthorizeTask;
+        static CancellationTokenSource s_CancellationToken;
 
         public void OnEnable()
         {
@@ -69,16 +76,35 @@ namespace UnityEditor.Localization.Plugins.Google
                 }
 
                 EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(m_ClientId.stringValue) || string.IsNullOrEmpty(m_ClientSecret.stringValue));
-                if (GUILayout.Button(Styles.authorize))
+
+                if (s_AuthorizeTask != null)
                 {
-                    var provider = target as SheetsServiceProvider;
-                    var userCredentials = provider.AuthoizeOAuth();
-                    Debug.Log($"Authorized: {userCredentials.Token.IssuedUtc}");
+                    if (GUILayout.Button(Styles.cancel))
+                    {
+                        s_CancellationToken.Cancel();
+                    }
+
+                    if (s_AuthorizeTask.IsCompleted)
+                    {
+                        if (s_AuthorizeTask.Status == TaskStatus.RanToCompletion)
+                            Debug.Log($"Authorized: {s_AuthorizeTask.Result.Token.IssuedUtc}");
+                        s_AuthorizeTask = null;
+                        s_CancellationToken = null;
+                    }
+                }
+                else
+                {
+                    if (GUILayout.Button(Styles.authorize))
+                    {
+                        var provider = target as SheetsServiceProvider;
+                        s_CancellationToken = new CancellationTokenSource();
+                        s_AuthorizeTask = provider.AuthorizeOAuthAsync(s_CancellationToken.Token);
+                    }
                 }
                 EditorGUI.EndDisabledGroup();
+                EditorGUILayout.PropertyField(m_NewSheetProperties, true);
             }
 
-            EditorGUILayout.PropertyField(m_NewSheetProperties, true);
             serializedObject.ApplyModifiedProperties();
         }
     }

@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Localization.Settings;
 using UnityEngine.Serialization;
 
 namespace UnityEngine.Localization.Tables
@@ -50,17 +51,60 @@ namespace UnityEngine.Localization.Tables
         public Guid TableCollectionNameGuid { get; private set; }
 
         /// <summary>
-        /// The table collection name when <see cref="ReferenceType"/> is <see cref="Type.String"/>.
+        /// The table collection name when <see cref="ReferenceType"/> is <see cref="Type.Name"/>.
+        /// If the <see cref="ReferenceType"/> is not <see cref="Type.Name"/> then an attempt will be made to extract the Table Collection Name, for debugging purposes, through
+        /// the AssetDatabase(in Editor) or by checking the <see cref="LocalizationSettings"/> to see if the <see cref="SharedTableData"/> has been loaded by the
+        /// <see cref="LocalizedStringDatabase"/> or <see cref="LocalizedAssetDatabase"/>, if the name can not be resolved then null will be returned.
         /// </summary>
         public string TableCollectionName
         {
+            get => ReferenceType == Type.Name ? m_TableCollectionName : SharedTableData?.TableCollectionName;
+            private set => m_TableCollectionName = value;
+        }
+
+        internal SharedTableData SharedTableData
+        {
             get
             {
-                if (ReferenceType == Type.Name)
-                    return m_TableCollectionName;
+                if (ReferenceType == Type.Guid)
+                {
+                    #if UNITY_EDITOR
+                    // We can extract the name through the shared table data GUID
+                    var guid = StringFromGuid(TableCollectionNameGuid);
+                    var path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        var sharedTableData = UnityEditor.AssetDatabase.LoadAssetAtPath<SharedTableData>(path);
+                        return sharedTableData;
+                    }
+                    #endif
+
+                    // We don't actually know what type of table we refer to so we will need to check both.
+                    // We only check shared table data that is loaded, we don't want to trigger any new operations as
+                    // the asset may not exist and we don't want to trigger errors when creating debug info.
+                    if (LocalizationSettings.StringDatabase != null && LocalizationSettings.StringDatabase.SharedTableDataOperations.TryGetValue(TableCollectionNameGuid, out var async))
+                        return async.Result;
+                    if (LocalizationSettings.AssetDatabase != null && LocalizationSettings.AssetDatabase.SharedTableDataOperations.TryGetValue(TableCollectionNameGuid, out async))
+                        return async.Result;
+                }
+                else if (ReferenceType == Type.Name)
+                {
+                    // We don't actually know what type of table we refer to so we will need to check both.
+                    // We only check shared table data that is loaded, we don't want to trigger any new operations as
+                    // the asset may not exist and we don't want to trigger errors when creating debug info.
+                    foreach (var sharedTableOperation in LocalizationSettings.StringDatabase?.SharedTableDataOperations)
+                    {
+                        if (sharedTableOperation.Value.Result?.TableCollectionName == m_TableCollectionName)
+                            return sharedTableOperation.Value.Result;
+                    }
+                    foreach (var sharedTableOperation in LocalizationSettings.AssetDatabase?.SharedTableDataOperations)
+                    {
+                        if (sharedTableOperation.Value.Result?.TableCollectionName == m_TableCollectionName)
+                            return sharedTableOperation.Value.Result;
+                    }
+                }
                 return null;
             }
-            private set => m_TableCollectionName = value;
         }
 
         #pragma warning disable CA2225 // CA2225: Operator overloads have named alternates
@@ -141,7 +185,7 @@ namespace UnityEngine.Localization.Tables
         public override string ToString()
         {
             if (ReferenceType == Type.Guid)
-                return $"{nameof(TableReference)}({TableCollectionNameGuid})";
+                return $"{nameof(TableReference)}({TableCollectionNameGuid} - {TableCollectionName})";
             if (ReferenceType == Type.Name)
                 return $"{nameof(TableReference)}({TableCollectionName})";
             return $"{nameof(TableReference)}(Empty)";
@@ -418,6 +462,40 @@ namespace UnityEngine.Localization.Tables
                     return $"{nameof(TableEntryReference)}({KeyId})";
             }
             return $"{nameof(TableEntryReference)}(Empty)";
+        }
+
+        /// <summary>
+        /// Returns a string representation.
+        /// </summary>
+        /// <param name="tableReference">The <see cref="TableReference"/> that this entry is part of. This is used to extract the <see cref="Key"/> or <see cref="KeyId"/></param>
+        /// <returns></returns>
+        public string ToString(TableReference tableReference)
+        {
+            var sharedTableData = tableReference.SharedTableData;
+            if (sharedTableData != null)
+            {
+                long id;
+                string key;
+
+                if (ReferenceType == Type.Name)
+                {
+                    key = Key;
+                    id = sharedTableData.GetId(key);
+                }
+                else if (ReferenceType == Type.Id)
+                {
+                    id = KeyId;
+                    key = sharedTableData.GetKey(id);
+                }
+                else
+                {
+                    return ToString();
+                }
+
+                return $"{nameof(TableEntryReference)}({id} - {key})";
+            }
+
+            return ToString();
         }
 
         /// <summary>

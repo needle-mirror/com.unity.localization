@@ -9,7 +9,7 @@ namespace UnityEngine.Localization.Settings
     /// The Localized Asset Database provides a single point of access for all localized assets.
     /// </summary>
     /// <remarks>
-    /// A localized asset must derive from <see cref="UnityEngine.Object"/>.
+    /// A localized asset must derive from <see cref="Object"/>.
     /// </remarks>
     [Serializable]
     public class LocalizedAssetDatabase : LocalizedDatabase<AssetTable, AssetTableEntry>
@@ -70,15 +70,6 @@ namespace UnityEngine.Localization.Settings
             return handle;
         }
 
-        /// <inheritdoc />
-        public override void OnLocaleChanged(Locale locale)
-        {
-            foreach (var tableOp in TableOperations.Values)
-            {
-                tableOp.Result?.ReleaseAssets();
-            }
-
-            base.OnLocaleChanged(locale);
-        }
+        internal override void ReleaseTableContents(AssetTable table) => table.ReleaseAssets();
     }
 }

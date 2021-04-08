@@ -94,29 +94,44 @@ namespace UnityEditor.Localization.UI
                 if (itemAttribute == null)
                     continue;
 
-                if (!itemAttribute.AllowedTypes.HasFlag(metadataType.Type))
+                if ((itemAttribute.AllowedTypes & metadataType.Type) == 0)
                     continue;
 
-                //bool enabled = true;
                 // Check if the item is already added.
-                //if (!attribute.AllowMultiple)
-                //{
-                //    for (int j = 0; j < m_ItemsProperty.arraySize; ++j)
-                //    {
-                //        var metadata = m_ItemsProperty.GetArrayElementAtIndex(j).objectReferenceValue;
-                //        if (metadata.GetType() == md.GetType())
-                //            enabled = false;
-                //    }
-                //}
+                bool enabled = true;
+                if (!itemAttribute.AllowMultiple)
+                {
+                    for (int j = 0; j < data.m_ItemsProperty.arraySize; ++j)
+                    {
+                        var typeName = data.m_ItemsProperty.GetArrayElementAtIndex(j).managedReferenceFullTypename;
+                        if (!string.IsNullOrEmpty(typeName))
+                        {
+                            var type = ManagedReferenceUtility.GetType(data.m_ItemsProperty.GetArrayElementAtIndex(j).managedReferenceFullTypename);
+                            if (type == md)
+                            {
+                                enabled = false;
+                                break;
+                            }
+                        }
+                    }
+                }
 
                 var name = itemAttribute.MenuItem;
                 if (string.IsNullOrEmpty(name))
                     name = ObjectNames.NicifyVariableName(md.Name);
 
-                menu.AddItem(new GUIContent(name), false, () =>
+                var label = new GUIContent(name);
+                if (enabled)
                 {
-                    data.m_DeferredAdd = md;
-                });
+                    menu.AddItem(label, false, () =>
+                    {
+                        data.m_DeferredAdd = md;
+                    });
+                }
+                else
+                {
+                    menu.AddDisabledItem(label);
+                }
             }
 
             menu.DropDown(rect);

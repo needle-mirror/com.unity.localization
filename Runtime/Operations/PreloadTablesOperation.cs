@@ -1,25 +1,22 @@
 using System.Collections.Generic;
-using UnityEngine.AddressableAssets;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using UnityEngine.ResourceManagement.ResourceLocations;
 
 namespace UnityEngine.Localization
 {
-    class PreLoadTablesOperation<TTable, TEntry> : AsyncOperationBase<LocalizedDatabase<TTable, TEntry>>
+    class PreloadTablesOperation<TTable, TEntry> : AsyncOperationBase<LocalizedDatabase<TTable, TEntry>>
         where TTable : DetailedLocalizationTable<TEntry>
         where TEntry : TableEntry
     {
         LocalizedDatabase<TTable, TEntry> m_Database;
-        List<AsyncOperationHandle<TTable>> loadTables = new List<AsyncOperationHandle<TTable>>();
-        List<AsyncOperationHandle> loadTablesOperation = new List<AsyncOperationHandle>();
-        List<AsyncOperationHandle> m_PreloadTablesOperations = new List<AsyncOperationHandle>();
+        readonly List<AsyncOperationHandle<TTable>> m_LoadTables = new List<AsyncOperationHandle<TTable>>();
+        readonly List<AsyncOperationHandle> m_LoadTablesOperation = new List<AsyncOperationHandle>();
+        readonly List<AsyncOperationHandle> m_PreloadTablesOperations = new List<AsyncOperationHandle>();
 
         IList<TableReference> m_TableReferences;
         Locale m_SelectedLocale;
-        string m_CollectionName;
 
         public void Init(LocalizedDatabase<TTable, TEntry> database, IList<TableReference> tableReference, Locale locale = null)
         {
@@ -30,25 +27,25 @@ namespace UnityEngine.Localization
 
         protected override void Execute()
         {
-            BeginPreLoadingTables();
+            BeginPreloadingTables();
         }
 
-        void BeginPreLoadingTables()
+        void BeginPreloadingTables()
         {
             foreach (var tableReference in m_TableReferences)
             {
                 var table = m_Database.GetTableAsync(tableReference, m_SelectedLocale);
-                loadTables.Add(table);
+                m_LoadTables.Add(table);
 
                 if (!table.IsDone)
                 {
-                    loadTablesOperation.Add(table);
+                    m_LoadTablesOperation.Add(table);
                 }
             }
 
-            if (loadTablesOperation.Count > 0)
+            if (m_LoadTablesOperation.Count > 0)
             {
-                var loadTablesOperationHandle = AddressablesInterface.ResourceManager.CreateGenericGroupOperation(loadTablesOperation);
+                var loadTablesOperationHandle = AddressablesInterface.ResourceManager.CreateGenericGroupOperation(m_LoadTablesOperation);
 
                 if (!loadTablesOperationHandle.IsDone)
                 {
@@ -68,14 +65,19 @@ namespace UnityEngine.Localization
         void LoadTableContents()
         {
             // Iterate through the loaded tables, add them to our known tables and preload the actual table contents if required.
-            foreach (var table in loadTables)
+            foreach (var table in m_LoadTables)
             {
-                if (table is IPreloadRequired preloadRequired)
+                if (table.Result == null)
+                {
+                    Complete(null, false, "Table is null.");
+                    return;
+                }
+
+                if (table.Result is IPreloadRequired preloadRequired)
                 {
                     m_PreloadTablesOperations.Add(preloadRequired.PreloadOperation);
                 }
             }
-
 
             if (m_PreloadTablesOperations.Count == 0)
             {
@@ -83,11 +85,11 @@ namespace UnityEngine.Localization
                 return;
             }
 
-            var m_PreloadTablesContents = AddressablesInterface.ResourceManager.CreateGenericGroupOperation(m_PreloadTablesOperations);
-            if (!m_PreloadTablesContents.IsDone)
-                m_PreloadTablesContents.CompletedTypeless += FinishPreloading;
+            var preloadTablesContents = AddressablesInterface.ResourceManager.CreateGenericGroupOperation(m_PreloadTablesOperations);
+            if (!preloadTablesContents.IsDone)
+                preloadTablesContents.CompletedTypeless += FinishPreloading;
             else
-                FinishPreloading(m_PreloadTablesContents);
+                FinishPreloading(preloadTablesContents);
         }
 
         void FinishPreloading(AsyncOperationHandle op)
@@ -97,11 +99,11 @@ namespace UnityEngine.Localization
 
         protected override void Destroy()
         {
-            loadTables.Clear();
-            loadTablesOperation.Clear();
+            m_LoadTables.Clear();
+            m_LoadTablesOperation.Clear();
             m_PreloadTablesOperations.Clear();
             m_TableReferences.Clear();
-            GenericPool<PreLoadTablesOperation<TTable, TEntry>>.Release(this);
+            GenericPool<PreloadTablesOperation<TTable, TEntry>>.Release(this);
         }
     }
 }

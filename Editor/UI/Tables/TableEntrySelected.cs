@@ -12,6 +12,7 @@ namespace UnityEditor.Localization.UI
         Locale m_Locale;
         long m_KeyId;
         VisualElement m_Editor;
+        MetadataTypeAttribute m_SharedMetadataType;
         MetadataTypeAttribute m_MetadataType;
 
         public bool Selected { get; set; }
@@ -21,7 +22,12 @@ namespace UnityEditor.Localization.UI
             m_Table = table;
             m_Locale = locale;
             m_KeyId = id;
-            m_MetadataType = new MetadataTypeAttribute(supportedType);
+
+            m_SharedMetadataType = new MetadataTypeAttribute(supportedType);
+
+            // Remove the shared entry flag
+            var entryFlags = supportedType & ~MetadataType.AllSharedTableEntries;
+            m_MetadataType = new MetadataTypeAttribute(entryFlags);
         }
 
         public VisualElement CreateEditor()
@@ -35,9 +41,9 @@ namespace UnityEditor.Localization.UI
                 var sharedIndex = m_Table.SharedData.Entries.FindIndex(e => e.Id == m_KeyId);
                 Debug.Assert(sharedIndex != -1, $"Could not find index of key {m_KeyId}");
                 var sharedSerializedObject = new SerializedObject(m_Table.SharedData);
-                var sharedSerializedEditor = new MetadataCollectionField(){ Type = m_MetadataType };
+                var sharedSerializedEditor = new MetadataCollectionField(){ Type = m_SharedMetadataType };
                 var sharedEntryProperty = sharedSerializedObject.FindProperty($"m_Entries.Array.data[{sharedIndex}].m_Metadata");
-                var sharedLabel = new GUIContent("Shared");
+                var sharedLabel = new GUIContent("Shared Entry");
                 var sharedEditor = new IMGUIContainer(() =>
                 {
                     sharedSerializedObject.Update();

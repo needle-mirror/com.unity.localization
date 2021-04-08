@@ -5,10 +5,13 @@ using UnityEngine.Localization.Settings;
 namespace UnityEngine.Localization
 {
     /// <summary>
-    /// A Localized Reference allows for referencing an entry inside of a specific <see cref="LocalizationTable"/>.
+    /// Provides a way to reference a table entry inside of a specific <see cref="LocalizationTable"/>.
     /// </summary>
     [Serializable]
     public abstract class LocalizedReference
+        #if UNITY_EDITOR
+        : ISerializationCallbackReceiver
+        #endif
     {
         [SerializeField]
         TableReference m_TableReference;
@@ -19,10 +22,24 @@ namespace UnityEngine.Localization
         [SerializeField]
         FallbackBehavior m_FallbackState = FallbackBehavior.UseProjectSettings;
 
+        #if UNITY_EDITOR
+        // This is so we can detect when a change is made via the inspector.
+        protected TableReference m_CurrentTable;
+        protected TableEntryReference m_CurrentTableEntry;
+        #endif
+
         /// <summary>
-        /// A reference to the <see cref="LocalizationTable"/>.
+        /// Provides a reference to the <see cref="LocalizationTable"/>.
         /// A table reference can be either the name of the table or the table collection name Guid.
         /// </summary>
+        /// <remarks>
+        /// Note: Changing this value triggers an update to any subscribers.
+        /// See <seealso cref="SetReference(TableReference, TableEntryReference)"/> if you wish to change both the table and entry.
+        /// </remarks>
+        /// <example>
+        /// This example shows the 2 ways a reference can be set.
+        /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="localized-string-table-reference"/>
+        /// </example>
         public TableReference TableReference
         {
             get => m_TableReference;
@@ -38,9 +55,15 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// A reference to the entry inside of <see cref="TableReference"/>.
-        /// The entry reference can either be the entry id or the entry name.
+        /// Provides a reference to the entry inside of the table.
+        /// The entry reference can be the Key name or Id.
         /// </summary>
+        /// Note: Changing this value triggers an update to any subscribers.
+        /// See <seealso cref="SetReference(TableReference, TableEntryReference)"/> if you wish to change both the table and entry.
+        /// <example>
+        /// This example shows the 2 ways a reference can be set.
+        /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="localized-string-table-entry-reference"/>
+        /// </example>
         public TableEntryReference TableEntryReference
         {
             get => m_TableEntryReference;
@@ -55,6 +78,9 @@ namespace UnityEngine.Localization
             }
         }
 
+        /// <summary>
+        /// Can be used to override the default fallback state.
+        /// </summary>
         public FallbackBehavior FallbackState
         {
             get => m_FallbackState;
@@ -62,15 +88,19 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// Does both <see cref="TableReference"/> and <see cref="TableEntryReference"/> contain valid references or is one of them Empty?
+        /// Checks whether both <see cref="TableReference"/> and <see cref="TableEntryReference"/> contain valid references, and returns true if one of them is empty.
         /// </summary>
         public bool IsEmpty => TableReference.ReferenceType == TableReference.Type.Empty || TableEntryReference.ReferenceType == TableEntryReference.Type.Empty;
 
         /// <summary>
-        /// Sets both the <see cref="TableReference"/> and <see cref="TableEntryReference"/>
+        /// Sets both the <see cref="TableReference"/> and <see cref="TableEntryReference"/> and triggers an update if there are any change subscribers.
         /// </summary>
-        /// <param name="table"></param>
-        /// <param name="entry"></param>
+        /// <param name="table">Reference to the table name of Guid.</param>
+        /// <param name="entry">Reference to the entry Key name or Id.</param>
+        /// <example>
+        /// This example shows the different ways SetReference can be called.
+        /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="localized-string-set-reference"/>
+        /// </example>
         public void SetReference(TableReference table, TableEntryReference entry)
         {
             bool update = false;
@@ -96,12 +126,36 @@ namespace UnityEngine.Localization
         /// <summary>
         /// Returns a string representation including the <see cref="TableReference"/> and <see cref="TableEntryReference"/>
         /// </summary>
-        /// <returns></returns>
-        public override string ToString() => $"[{TableReference}]{TableEntryReference}";
+        public override string ToString() => $"{TableReference}/{TableEntryReference.ToString(TableReference)}";
+
+        protected internal abstract void ForceUpdate();
 
         /// <summary>
-        /// Called when a value has been changed and an update may be required.
+        /// Called when values are changed due to a change made via serialization, such as via the inspector.
         /// </summary>
-        protected abstract void ForceUpdate();
+        protected abstract void Reset();
+
+        #if UNITY_EDITOR
+        void ChangedThroughSerialization()
+        {
+            Reset();
+            ForceUpdate();
+        }
+
+        public void OnBeforeSerialize() => UpdateIfChangedThroughSerialization();
+        public void OnAfterDeserialize() => UpdateIfChangedThroughSerialization();
+        void UpdateIfChangedThroughSerialization()
+        {
+            if (!m_CurrentTable.Equals(TableReference) || !m_CurrentTableEntry.Equals(TableEntryReference))
+            {
+                m_CurrentTable = TableReference;
+                m_CurrentTableEntry = TableEntryReference;
+
+                // We must defer as we can not call certain parts of Unity during serialization
+                UnityEditor.EditorApplication.delayCall += ChangedThroughSerialization;
+            }
+        }
+
+        #endif
     }
 }

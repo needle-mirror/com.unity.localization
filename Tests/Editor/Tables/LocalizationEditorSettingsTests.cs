@@ -4,6 +4,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
+using UnityEngine.Localization.Tests;
 using Object = UnityEngine.Object;
 
 namespace UnityEditor.Localization.Tests
@@ -20,6 +21,18 @@ namespace UnityEditor.Localization.Tests
                 Locale.CreateLocale(SystemLanguage.Japanese),
                 Locale.CreateLocale(SystemLanguage.Chinese)
             };
+        }
+
+        [SetUp]
+        public void Setup()
+        {
+            LocalizationSettingsHelper.SaveCurrentSettings();
+        }
+
+        [TearDown]
+        public void Teardown()
+        {
+            LocalizationSettingsHelper.RestoreSettings();
         }
 
         [Test]
@@ -62,6 +75,17 @@ namespace UnityEditor.Localization.Tests
             Assert.Throws<ArgumentException>(() => LocalizationEditorSettings.Instance.CreateCollection(typeof(StringTableCollection), "test", null, null));
         }
 
+        [TestCase("<invalid>")]
+        [TestCase("b%d name/")]
+        [TestCase("     ")]
+        [TestCase("")]
+        [TestCase(null)]
+        [TestCase("[no good]")]
+        public void CreateCollection_InvalidTableName_ThrowsException(string tableName)
+        {
+            Assert.Throws<ArgumentException>(() => LocalizationEditorSettings.Instance.CreateCollection(typeof(StringTableCollection), tableName, null, null));
+        }
+
         [Test]
         public void SettingShowLocaleMenuInGameViewUpdatesEditorPrefs()
         {
@@ -85,6 +109,8 @@ namespace UnityEditor.Localization.Tests
         [Test]
         public void ProjectLocalesIsUpdatedWhenRemoveLocaleIsUndone()
         {
+            Undo.ClearAll();
+
             const string localeAssetPath = "Assets/HebrewRemove.asset";
             var locale = Locale.CreateLocale(SystemLanguage.Hebrew);
 
@@ -98,12 +124,14 @@ namespace UnityEditor.Localization.Tests
             Undo.PerformUndo();
             Assert.That(LocalizationEditorSettings.GetLocales(), Does.Contain(locale), "Expected locale asset to be in project locale after calling Undo.");
 
-            AssetDatabase.DeleteAsset(localeAssetPath);
+            Assert.True(AssetDatabase.DeleteAsset(localeAssetPath), "Failed to delete asset");
+            Undo.ClearAll();
         }
 
         [Test]
         public void ProjectLocalesIsUpdatedWhenAddLocaleIsUndone()
         {
+            Undo.ClearAll();
             const string localeAssetPath = "Assets/HebrewAdd.asset";
             var locale = Locale.CreateLocale(SystemLanguage.Hebrew);
 
@@ -120,7 +148,8 @@ namespace UnityEditor.Localization.Tests
             Undo.PerformUndo();
             Assert.That(LocalizationEditorSettings.GetLocales(), Does.Not.Contains(locale), "Expected locale to not be in project locales after calling Undo.");
 
-            AssetDatabase.DeleteAsset(localeAssetPath);
+            Assert.True(AssetDatabase.DeleteAsset(localeAssetPath), "Failed to delete asset");
+            Undo.ClearAll();
         }
     }
 }

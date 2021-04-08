@@ -26,11 +26,6 @@ namespace UnityEngine.Localization
         CultureInfo m_CultureInfo;
 
         /// <summary>
-        /// Represents an undefined Local Identifier. One that does not define any language or region.
-        /// </summary>
-        public static LocaleIdentifier Undefined => new LocaleIdentifier("undefined");
-
-        /// <summary>
         /// The culture name in the format [language]-[region].
         /// The name is a combination of an ISO 639 two-letter lowercase culture code associated with a language and an ISO 3166
         /// two-letter uppercase subculture code associated with a country or region.
@@ -52,7 +47,7 @@ namespace UnityEngine.Localization
         {
             get
             {
-                if (m_CultureInfo == null && m_Code != null)
+                if (m_CultureInfo == null && !string.IsNullOrEmpty(m_Code))
                 {
                     try
                     {
@@ -73,12 +68,6 @@ namespace UnityEngine.Localization
         /// <param name="code"></param>
         public LocaleIdentifier(string code)
         {
-            if (string.IsNullOrEmpty(code))
-            {
-                this = Undefined;
-                return;
-            }
-
             m_Code = code;
             m_CultureInfo = null;
         }
@@ -136,7 +125,15 @@ namespace UnityEngine.Localization
         /// Returns a string representation.
         /// </summary>
         /// <returns></returns>
-        public override string ToString() => $"{(CultureInfo != null ? CultureInfo.EnglishName : "Custom")}({Code})";
+        public override string ToString()
+        {
+            if (string.IsNullOrEmpty(m_Code))
+            {
+                return "undefined";
+            }
+
+            return $"{(CultureInfo != null ? CultureInfo.EnglishName : "Custom")}({Code})";
+        }
 
         /// <summary>
         /// Compare the LocaleIdentifier to another LocaleIdentifier.
@@ -154,7 +151,13 @@ namespace UnityEngine.Localization
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
-        public bool Equals(LocaleIdentifier other) => Code == other.Code;
+        public bool Equals(LocaleIdentifier other)
+        {
+            if (string.IsNullOrEmpty(other.Code) && string.IsNullOrEmpty(Code))
+                return true;
+
+            return Code == other.Code;
+        }
 
         /// <summary>
         /// Returns the hash code of <see cref="CultureInfo"/> or <see cref="Code"/> if it is null.
@@ -166,16 +169,16 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// Compare to another LocaleIdentifer.
-        /// Performs a comparison against the <see cref="CultureInfo.EnglishName"/> property.
+        /// Compare to another <see cref="LocaleIdentifier"/>.
+        /// Performs a comparison against <c>CultureInfo.EnglishName</c> property.
         /// </summary>
-        /// <param name="other"></param>
+        /// <param name="other">Value to compare against.</param>
         /// <returns></returns>
         public int CompareTo(LocaleIdentifier other)
         {
             if (CultureInfo == null || other.CultureInfo == null)
                 return 1;
-            return string.Compare(CultureInfo.EnglishName, other.CultureInfo.EnglishName);
+            return string.CompareOrdinal(CultureInfo.EnglishName, other.CultureInfo.EnglishName);
         }
 
         /// <summary>
@@ -198,7 +201,7 @@ namespace UnityEngine.Localization
     /// <summary>
     /// A Locale represents a language. It supports regional variations and can be configured with an optional fallback Locale via metadata.
     /// </summary>
-    public class Locale : ScriptableObject, IComparable<Locale>, ISerializationCallbackReceiver
+    public class Locale : ScriptableObject, IEquatable<Locale>, IComparable<Locale>, ISerializationCallbackReceiver
     {
         [SerializeField]
         LocaleIdentifier m_Identifier;
@@ -208,10 +211,13 @@ namespace UnityEngine.Localization
         MetadataCollection m_Metadata = new MetadataCollection();
 
         [SerializeField]
+        string m_LocaleName;
+
+        [SerializeField]
         string m_CustomFormatCultureCode;
 
         [SerializeField]
-        bool m_UseCustomFormatter = false;
+        bool m_UseCustomFormatter;
 
         [SerializeField]
         ushort m_SortOrder = 10000; // Default to a large value so new Locales are always at the end of a list.
@@ -247,6 +253,23 @@ namespace UnityEngine.Localization
             set => m_SortOrder = value;
         }
 
+        /// <summary>
+        /// The name of the Locale.
+        /// This can be used to customize how the Locale name should be presented to the user, such as in a language selection menu.
+        /// </summary>
+        public string LocaleName
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(m_LocaleName))
+                    return m_LocaleName;
+                if (Identifier.CultureInfo != null)
+                    return Identifier.CultureInfo.EnglishName;
+                return name;
+            } 
+            set => m_LocaleName = value;
+        }
+
         public virtual Locale GetFallback()
         {
             var fallBack = Metadata?.GetMetadata<FallbackLocale>()?.Locale;
@@ -257,7 +280,9 @@ namespace UnityEngine.Localization
                 {
                     while (cultureInfo != CultureInfo.InvariantCulture && fallBack == null)
                     {
-                        fallBack = LocalizationSettings.AvailableLocales.GetLocale(cultureInfo);
+                        var fb = LocalizationSettings.AvailableLocales.GetLocale(cultureInfo);
+                        if (fb != this)
+                            fallBack = fb;
                         cultureInfo = cultureInfo.Parent;
                     }
                 }
@@ -347,7 +372,7 @@ namespace UnityEngine.Localization
             locale.m_Identifier = identifier;
             if (locale.m_Identifier.CultureInfo != null)
             {
-                locale.name = locale.m_Identifier.CultureInfo.EnglishName;
+                locale.LocaleName = locale.m_Identifier.CultureInfo.EnglishName;
             }
             return locale;
         }
@@ -379,6 +404,9 @@ namespace UnityEngine.Localization
         /// <returns></returns>
         public int CompareTo(Locale other)
         {
+            if (other == null)
+                return -1;
+
             // Sort by the sort order if they are different
             if (SortOrder != other.SortOrder)
             {
@@ -388,7 +416,7 @@ namespace UnityEngine.Localization
             // If they are both the same type then use the name to sort
             if (GetType() == other.GetType())
             {
-                return string.Compare(name, other.name);
+                return String.CompareOrdinal(LocaleName, other.LocaleName);
             }
 
             // Normal Locale's go before PseudoLocale's
@@ -404,12 +432,26 @@ namespace UnityEngine.Localization
 
         public void OnBeforeSerialize()
         {
+            if (string.IsNullOrEmpty(m_LocaleName))
+                m_LocaleName = name;
         }
 
         /// <summary>
-        /// Returns <see cref="name"/>
+        /// Returns <see cref="LocaleName"/> or <see cref="name"/> if it is null or empty.
         /// </summary>
         /// <returns></returns>
-        public override string ToString() => name;
+        public override string ToString() => string.IsNullOrEmpty(LocaleName) ? name : LocaleName;
+
+        /// <summary>
+        /// Compares the Locale <see cref="Identifier"/> properties.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public bool Equals(Locale other)
+        {
+            if (other == null)
+                return false;
+            return LocaleName == other.LocaleName && Identifier.Equals((other.Identifier));
+        }
     }
 }

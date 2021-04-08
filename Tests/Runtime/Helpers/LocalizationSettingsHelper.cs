@@ -13,15 +13,22 @@ namespace UnityEngine.Localization.Tests
         public static void SaveCurrentSettings()
         {
             Assert.IsNull(s_SavedSettings, "Expected there to be no saved settings.");
-            s_SavedSettings = LocalizationSettings.Instance;
+            s_SavedSettings = LocalizationSettings.GetInstanceDontCreateDefault();
             LocalizationSettings.Instance = null;
         }
 
         /// <summary>
         /// Restores any previously saved LocalizationSettings
         /// </summary>
-        public static void RestoreSettings()
+        public static void RestoreSettings(bool deleteOld = false)
         {
+            if (deleteOld)
+            {
+                var instance = LocalizationSettings.GetInstanceDontCreateDefault();
+                if (instance != null)
+                    Object.DestroyImmediate(instance);
+            }
+
             LocalizationSettings.Instance = s_SavedSettings;
             s_SavedSettings = null;
         }

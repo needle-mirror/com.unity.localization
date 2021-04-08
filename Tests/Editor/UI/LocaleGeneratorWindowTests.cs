@@ -1,7 +1,9 @@
+using System.Collections.ObjectModel;
 using System.IO;
 using NUnit.Framework;
 using UnityEditor.Localization.UI;
 using UnityEngine;
+using UnityEngine.Localization;
 using static UnityEditor.Localization.UI.LocaleGeneratorListView;
 
 namespace UnityEditor.Localization.Tests.UI
@@ -12,22 +14,34 @@ namespace UnityEditor.Localization.Tests.UI
 
         readonly string testPath = "Assets/" + nameof(LocaleGeneratorWindowTests);
 
+        class ProjectWithNoLocales : LocalizationEditorSettings
+        {
+            protected internal override ReadOnlyCollection<Locale> GetLocalesInternal()
+            {
+                return new ReadOnlyCollection<Locale>(new Locale[0]);
+            }
+        }
+
         [SetUp]
         public void Setup()
         {
+            LocalizationEditorSettings.Instance = new ProjectWithNoLocales();
             m_Window = EditorWindow.CreateInstance<LocaleGeneratorWindow>();
             m_Window.ShowUtility();
-            Assert.IsFalse(Directory.Exists(testPath), "Test directory already exists.");
+
+            if (Directory.Exists(testPath))
+                Directory.Delete(testPath, true);
+
             AssetDatabase.CreateFolder("Assets", nameof(LocaleGeneratorWindowTests));
         }
 
         [TearDown]
         public void Teardown()
         {
+            LocalizationEditorSettings.Instance = null;
             m_Window.Close();
             Object.DestroyImmediate(m_Window);
-            Directory.Delete(testPath, true);
-            AssetDatabase.Refresh();
+            AssetDatabase.DeleteAsset(testPath);
         }
 
         [Test]

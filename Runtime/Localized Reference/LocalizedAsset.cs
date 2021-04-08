@@ -6,10 +6,44 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 namespace UnityEngine.Localization
 {
     /// <summary>
-    /// Used to reference a localized asset and provide an interface to loading and registering to changes.
-    /// <seealso cref="LocalizedReference"/>
+    /// Provides a specialized <see cref="LocalizedAsset{TObject}"/> which can be used to localize [AudioClip](https://docs.unity3d.com/ScriptReference/AudioClip.html) assets.
     /// </summary>
-    /// <typeparam name="TObject"></typeparam>
+    [Serializable]
+    public class LocalizedAudioClip : LocalizedAsset<AudioClip> {}
+
+    /// <summary>
+    /// Provides a specialized <see cref="LocalizedAsset{TObject}"/> which can be used to localize [Prefabs](https://docs.unity3d.com/Manual/Prefabs.html).
+    /// </summary>
+    [Serializable]
+    public class LocalizedGameObject : LocalizedAsset<GameObject> {}
+
+    /// <summary>
+    /// Provides a specialized <see cref="LocalizedAsset{TObject}"/> which can be used to localize [Materials](https://docs.unity3d.com/ScriptReference/Material.html).
+    /// </summary>
+    [Serializable]
+    public class LocalizedMaterial : LocalizedAsset<Material> {}
+
+    /// <summary>
+    /// Provides a specialized <see cref="LocalizedAsset{TObject}"/> which can be used to localize [Sprites](https://docs.unity3d.com/ScriptReference/Sprite.html).
+    /// </summary>
+    [Serializable]
+    public class LocalizedSprite : LocalizedAsset<Sprite> {}
+
+    /// <summary>
+    /// Provides a specialized <see cref="LocalizedAsset{TObject}"/> which can be used to localize [Textures](https://docs.unity3d.com/ScriptReference/Texture.html) assets.
+    /// </summary>
+    [Serializable]
+    public class LocalizedTexture : LocalizedAsset<Texture> {}
+
+    /// <summary>
+    /// Provides a way to reference an <see cref="AssetTableEntry"/> inside of a specific <see cref="AssetTable"/> and request the localized asset.
+    /// </summary>
+    /// <typeparam name="TObject">The type that should be supported. This can be any type that inherits from [UnityEngine.Object](https://docs.unity3d.com/ScriptReference/Object.html).</typeparam>
+    /// <example>
+    /// This example shows how a <see cref="LocalizedAsset{TObject}"/> can be used to localize a [Prefabs](https://docs.unity3d.com/Manual/Prefabs.html).
+    /// See also <seealso cref="LocalizedGameObject"/> and <seealso cref="Components.LocalizedGameObjectEvent"/>.
+    /// <code source="../../DocCodeSamples.Tests/LocalizedAssetSamples.cs" region="localized-prefab"/>
+    /// </example>
     [Serializable]
     public partial class LocalizedAsset<TObject> : LocalizedReference where TObject : Object
     {
@@ -17,13 +51,13 @@ namespace UnityEngine.Localization
         AsyncOperationHandle<TObject>? m_CurrentLoadingOperation;
 
         /// <summary>
-        /// <inheritdoc cref="RegisterChangeHandler"/>
+        /// Delegate used by <see cref="AssetChanged"/>.
         /// </summary>
-        /// <param name="value"></param>
+        /// <param name="value">The localized asset.</param>
         public delegate void ChangeHandler(TObject value);
 
         /// <summary>
-        /// The current loading operation for the Asset when using a <see cref="AssetChanged"/>.
+        /// The current loading operation for the asset when using <see cref="AssetChanged"/>. This is <c>null</c> if a loading operation is not available.
         /// </summary>
         public AsyncOperationHandle<TObject>? CurrentLoadingOperation
         {
@@ -32,13 +66,23 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// Called whenever a localized asset is available.
-        /// When the first <see cref="ChangeHandler"/> is added, a loading operation will automatically start and the localized asset will be sent to the event when completed.
-        /// Any adding additional subscribers added after loading has completed will also be sent the latest localized asset when they are added.
-        /// This ensures that a subscriber will always have the correct localized asset regardless of when it was added.
-        /// The asset will be refreshed whenever <see cref="LocalizationSettings.SelectedLocaleChanged"/> is changed.
-        /// <seealso cref="LoadAssetAsync"/> when not using the event.
+        /// Provides a callback that will be invoked when the asset is available or has changed.
         /// </summary>
+        /// <remarks>
+        /// The following events will trigger an update:
+        /// - The first time the action is added to the event.
+        /// - The <seealso cref="LocalizationSettings.SelectedLocale"/> changing.
+        /// - The <see cref="TableReference"/> or <see cref="TableEntryReference"/> changing.
+        ///
+        /// When the first <see cref="ChangeHandler"/> is added, a loading operation (see <see cref="CurrentLoadingOperation"/>) will automatically
+        /// start and the localized asset will be sent to the subscriber when completed. Any adding additional subscribers added after
+        /// loading has completed will also be sent the latest localized asset when they are added.
+        /// This ensures that a subscriber will always have the correct localized value regardless of when it was added.
+        /// </remarks>
+        /// <example>
+        /// This example shows how the <see cref="AssetChanged"/> event could be used to change the Font on some localized Text.
+        /// <code source="../../DocCodeSamples.Tests/LocalizedAssetSamples.cs" region="localized-text-font"/>
+        /// </example>
         public event ChangeHandler AssetChanged
         {
             add
@@ -77,21 +121,30 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// True if <see cref="AssetChanged"/> has any subscribers.
+        /// Returns <c>true</c> if <seealso cref="AssetChanged"/> has any subscribers.
         /// </summary>
         public bool HasChangeHandler => m_ChangeHandler != null;
 
         /// <summary>
-        /// Load the referenced asset as type TObject.
+        /// Provides a localized asset from a <see cref="AssetTable"/> with the <see cref="TableReference"/> and the
+        /// the asset that matches <see cref="TableEntryReference"/>.
         /// </summary>
-        /// <returns>The load operation.</returns>
+        /// <remarks>
+        /// The asset may have already been loaded, either during a previous operation or if Preload mode is used. Check the <see cref="AsyncOperationHandle.IsDone"/> property to see if the asset is already loaded and therefore is immediately available.
+        /// See [Async operation handling](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/AddressableAssetsAsyncOperationHandle.html) for further details.
+        /// </remarks>
+        /// <returns>Returns the loading operation for the request.</returns>
+        /// <example>
+        /// This example shows how <see cref="GetLocalizedString"/> can be used to request an updated string when the <see cref="LocalizationSettings.SelectedLocale"/> changes.
+        /// <code source="../../DocCodeSamples.Tests/LocalizedAssetSamples.cs" region="localized-sprite"/>
+        /// </example>
         public AsyncOperationHandle<TObject> LoadAssetAsync()
         {
             LocalizationSettings.ValidateSettingsExist("Can not Load Asset.");
             return LocalizationSettings.AssetDatabase.GetLocalizedAssetAsync<TObject>(TableReference, TableEntryReference);
         }
 
-        protected override void ForceUpdate()
+        protected internal override void ForceUpdate()
         {
             if (m_ChangeHandler != null)
             {
@@ -104,9 +157,24 @@ namespace UnityEngine.Localization
             // Cancel any previous loading operations.
             ClearLoadingOperation();
 
-            // Don't try and load empty references.
-            if (IsEmpty)
+            #if UNITY_EDITOR
+            m_CurrentTable = TableReference;
+            m_CurrentTableEntry = TableEntryReference;
+
+            // Dont update if we have no selected Locale
+            if (!LocalizationSettings.Instance.IsPlaying && LocalizationSettings.SelectedLocale == null)
                 return;
+            #endif
+
+            if (IsEmpty)
+            {
+                #if UNITY_EDITOR
+                // If we are empty and playing or previewing then we should force an update.
+                if (!LocalizationSettings.Instance.IsPlaying)
+                    m_ChangeHandler(null);
+                #endif
+                return;
+            }
 
             m_CurrentLoadingOperation = LoadAssetAsync();
             if (m_CurrentLoadingOperation.Value.IsDone)
@@ -136,29 +204,10 @@ namespace UnityEngine.Localization
                 m_CurrentLoadingOperation = null;
             }
         }
+
+        protected override void Reset()
+        {
+            ClearLoadingOperation();
+        }
     }
-
-    /// <summary>
-    /// Holds a reference to an <see cref="AssetTable"/> and <see cref="AssetTableEntry"/> which references a Texture asset.
-    /// </summary>
-    [Serializable]
-    public class LocalizedTexture : LocalizedAsset<Texture> {}
-
-    /// <summary>
-    /// Holds a reference to an <see cref="AssetTable"/> and <see cref="AssetTableEntry"/> which references a AudioClip asset.
-    /// </summary>
-    [Serializable]
-    public class LocalizedAudioClip : LocalizedAsset<AudioClip> {}
-
-    /// <summary>
-    /// Holds a reference to an <see cref="AssetTable"/> and <see cref="AssetTableEntry"/> which references a Sprite asset.
-    /// </summary>
-    [Serializable]
-    public class LocalizedSprite : LocalizedAsset<Sprite> {}
-
-    /// <summary>
-    /// Holds a reference to an <see cref="AssetTable"/> and <see cref="AssetTableEntry"/> which references a GameObject asset/prefab.
-    /// </summary>
-    [Serializable]
-    public class LocalizedGameObject : LocalizedAsset<GameObject> {}
 }

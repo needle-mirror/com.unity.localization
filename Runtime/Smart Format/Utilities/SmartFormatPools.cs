@@ -41,7 +41,7 @@ namespace UnityEngine.Localization.SmartFormat
     {
         internal static readonly ObjectPool<FormatDetails> s_Pool = new ObjectPool<FormatDetails>(() => new FormatDetails(), null, fd => fd.Clear());
 
-        public static FormatDetails Get(SmartFormatter formatter, Format originalFormat, object[] originalArgs, FormatCache formatCache, IFormatProvider provider, IOutput output)
+        public static FormatDetails Get(SmartFormatter formatter, Format originalFormat, IList<object> originalArgs, FormatCache formatCache, IFormatProvider provider, IOutput output)
         {
             var fd = s_Pool.Get();
             fd.Init(formatter, originalFormat, originalArgs, formatCache, provider, output);

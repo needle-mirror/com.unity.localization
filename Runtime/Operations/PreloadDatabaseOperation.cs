@@ -17,7 +17,7 @@ namespace UnityEngine.Localization
         AsyncOperationHandle<IList<TTable>> m_LoadTablesOperation;
 
         List<AsyncOperationHandle> m_PreloadTableContentsOperations = new List<AsyncOperationHandle>();
-        List<string> m_ResourceKeys = new List<string>();
+        List<string> m_ResourceLabels = new List<string>();
         float m_Progress;
 
         protected override float Progress => m_Progress;
@@ -48,19 +48,22 @@ namespace UnityEngine.Localization
         /// <returns></returns>
         void BeginPreloading()
         {
+            m_Database.TableOperations.Clear();
+            m_Database.SharedTableDataOperations.Clear();
+
             var selectedLocale = LocalizationSettings.SelectedLocale;
             if (selectedLocale == null)
             {
-                Debug.LogError("Can not preload when `LocalizationSettings.SelectedLocale` is null.");
+                Complete(m_Database, true, null);
                 return;
             }
 
             m_Progress = 0;
             var localeLabel = AddressHelper.FormatAssetLabel(selectedLocale.Identifier);
-            m_ResourceKeys.Clear();
-            m_ResourceKeys.Add(localeLabel);
-            m_ResourceKeys.Add(LocalizationSettings.PreloadLabel);
-            m_LoadResourcesOperation = AddressablesInterface.LoadResourceLocationsAsync(m_ResourceKeys, Addressables.MergeMode.Intersection, typeof(TTable));
+            m_ResourceLabels.Clear();
+            m_ResourceLabels.Add(localeLabel);
+            m_ResourceLabels.Add(LocalizationSettings.PreloadLabel);
+            m_LoadResourcesOperation = AddressablesInterface.LoadResourceLocationsWithLabelsAsync(m_ResourceLabels, Addressables.MergeMode.Intersection, typeof(TTable));
 
             if (!m_LoadResourcesOperation.IsDone)
                 m_LoadResourcesOperation.Completed += LoadTables;
@@ -95,7 +98,9 @@ namespace UnityEngine.Localization
         void TableLoaded(TTable table)
         {
             // We only update the progress here.
-            m_Progress += 1.0f / m_LoadResourcesOperation.Result.Count;
+
+            // Disabled due to bug. This should be fixed when Addressables 1.17.14 is released. https://unity.slack.com/archives/C8Z80RV4K/p1616691899131500
+            //m_Progress += 1.0f / m_LoadResourcesOperation.Result.Count;
         }
 
         void LoadTableContents(AsyncOperationHandle<IList<TTable>> loadTablesOperation)
@@ -109,7 +114,13 @@ namespace UnityEngine.Localization
             // Iterate through the loaded tables, add them to our known tables and preload the actual table contents if required.
             foreach (var table in loadTablesOperation.Result)
             {
-                Debug.Assert(!m_Database.TableOperations.ContainsKey((table.LocaleIdentifier, table.TableCollectionName)), $"A table with the same key `{table.TableCollectionName}` already exists. Something went wrong during preloading.");
+                if (m_Database.TableOperations.TryGetValue((table.LocaleIdentifier, table.TableCollectionName), out var tableOp))
+                {
+                    if (tableOp.Result != table)
+                        Debug.LogError($"A table with the same key `{table.TableCollectionName}` already exists. Something went wrong during preloading.");
+                    continue;
+                }
+
                 m_Database.RegisterTableOperation(AddressablesInterface.ResourceManager.CreateCompletedOperation(table, null), table.LocaleIdentifier, table.TableCollectionName);
 
                 if (table is IPreloadRequired preloadRequired)

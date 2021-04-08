@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Pseudo;
 using UnityEngine.UIElements;
-using UnityEditor.UIElements;
 
 namespace UnityEditor.Localization.UI
 {
@@ -17,10 +18,15 @@ namespace UnityEditor.Localization.UI
             public Locale boundLocale;
         }
 
+        readonly VisualElement m_CollectionTypeContainer;
         readonly TextField m_TableCollectionName;
         readonly ScrollView m_LocalesList;
-        readonly Button m_CreateStringTablesButton;
-        readonly Button m_CreateAssetTablesButton;
+        readonly Button m_CreateTableCollectionButton;
+        readonly PopupField<Type> m_CollectionTypePopup;
+        readonly VisualElement m_LocaleHelpBox = HelpBoxFactory.CreateDefaultHelpBox("Must have at least one Locale selected.");
+        readonly VisualElement m_LocaleHelpBoxContainer;
+        readonly VisualElement m_TableNameHelpBoxContainer;
+        VisualElement m_TableNameHelpBox;
 
         public TableCreator()
         {
@@ -33,20 +39,30 @@ namespace UnityEditor.Localization.UI
             {
                 AddLocaleElement(locale);
             }
+            m_LocaleHelpBoxContainer = this.Q("locale-help-box-container");
 
-            m_CreateStringTablesButton = this.Q<Button>("create-string-tables-button");
-            m_CreateStringTablesButton.clickable.clicked += () => CreateCollection(LocalizationEditorSettings.CreateStringTableCollection);
+            var items = new List<Type> {typeof(StringTableCollection), typeof(AssetTableCollection)};
+            m_CollectionTypeContainer = this.Q<VisualElement>("table-collection-type-container");
+            m_CollectionTypePopup = new PopupField<Type>("Type", items, 0)
+            {
+                formatListItemCallback = type => ObjectNames.NicifyVariableName(type.Name),
+                formatSelectedValueCallback = type => ObjectNames.NicifyVariableName(type.Name)
+            };
+            m_CollectionTypePopup.RegisterValueChangedCallback(it => UpdateCreateButtonState());
+            m_CollectionTypeContainer.Add(m_CollectionTypePopup);
 
-            m_CreateAssetTablesButton = this.Q<Button>("create-asset-tables-button");
-            m_CreateAssetTablesButton.clickable.clicked += () => CreateCollection(LocalizationEditorSettings.CreateAssetTableCollection);
-
-            UpdateCreateButtonState();
+            m_CreateTableCollectionButton = this.Q<Button>("create-table-collection-button");
+            m_CreateTableCollectionButton.clickable.clicked += CreateCollection;
 
             this.Q<Button>("select-all-button").clickable.clicked += () => SelectAllLocales(true);
             this.Q<Button>("select-none-button").clickable.clicked += () => SelectAllLocales(false);
             this.Q<Button>("locale-generator-button").clickable.clicked += () => LocaleGeneratorWindow.ShowWindow();
 
             m_TableCollectionName = this.Q<TextField>("new-table-name-field");
+            m_TableCollectionName.RegisterValueChangedCallback(it => UpdateCreateButtonState());
+            InitializeTableName();
+
+            m_TableNameHelpBoxContainer = this.Q("table-name-help-box-container");
 
             LocalizationEditorSettings.EditorEvents.LocaleAdded += OnLocaleAdded;
             LocalizationEditorSettings.EditorEvents.LocaleRemoved += OnLocaleRemoved;
@@ -87,7 +103,7 @@ namespace UnityEditor.Localization.UI
             var visualElement = new VisualElement() { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center }, };
             var toggle = new Toggle() { value = true };
             toggle.RegisterValueChangedCallback((evt) => UpdateCreateButtonState());
-            var label = new LocaleLabel() { boundLocale = locale, bindingPath = "m_Name" };
+            var label = new LocaleLabel() { boundLocale = locale, bindingPath = "m_LocaleName" };
             visualElement.Add(toggle);
             visualElement.Add(label);
             visualElement.Bind(so);
@@ -97,19 +113,31 @@ namespace UnityEditor.Localization.UI
 
         void UpdateCreateButtonState()
         {
-            // If we have no active Locales then the buttons should be disabled.
-            foreach (var localeItem in m_LocalesList.Children())
+            RemoveHelpBoxes();
+
+            var atLeastOneActiveLocale = m_LocalesList.Children().Any(it => it.Q<Toggle>().value);
+            var tableNameError = LocalizationEditorSettings.Instance.IsTableNameValid(m_CollectionTypePopup.value, m_TableCollectionName?.value);
+
+            var createEnabled = atLeastOneActiveLocale && tableNameError == null;
+            if (!createEnabled)
             {
-                var toggle = localeItem.Q<Toggle>();
-                if (toggle.value)
+                if (!atLeastOneActiveLocale)
                 {
-                    m_CreateStringTablesButton.SetEnabled(true);
-                    m_CreateAssetTablesButton.SetEnabled(true);
-                    return;
+                    m_LocaleHelpBoxContainer.Add(m_LocaleHelpBox);
+                }
+                if (tableNameError != null)
+                {
+                    m_TableNameHelpBox = HelpBoxFactory.CreateDefaultHelpBox(tableNameError);
+                    m_TableNameHelpBoxContainer.Add(m_TableNameHelpBox);
                 }
             }
-            m_CreateStringTablesButton.SetEnabled(false);
-            m_CreateAssetTablesButton.SetEnabled(false);
+            m_CreateTableCollectionButton.SetEnabled(createEnabled);
+        }
+
+        void RemoveHelpBoxes()
+        {
+            m_TableNameHelpBox?.RemoveFromHierarchy();
+            m_LocaleHelpBox.RemoveFromHierarchy();
         }
 
         void SelectAllLocales(bool selected)
@@ -142,16 +170,34 @@ namespace UnityEditor.Localization.UI
             return selectedLocales;
         }
 
-        void CreateCollection(Func<string, string, IList<Locale>, LocalizationTableCollection> create)
+        void CreateCollection()
         {
             var assetDirectory = EditorUtility.SaveFolderPanel("Create Table Collection", "Assets/", "");
             if (string.IsNullOrEmpty(assetDirectory))
                 return;
-            var createdCollection = create(m_TableCollectionName.value, assetDirectory, GetSelectedLocales());
+
+            LocalizationTableCollection createdCollection = null;
+            if (m_CollectionTypePopup.value == typeof(StringTableCollection))
+            {
+                createdCollection = LocalizationEditorSettings.CreateStringTableCollection(m_TableCollectionName.value, assetDirectory, GetSelectedLocales());
+            }
+            if (m_CollectionTypePopup.value == typeof(AssetTableCollection))
+            {
+                createdCollection = LocalizationEditorSettings.CreateAssetTableCollection(m_TableCollectionName.value, assetDirectory, GetSelectedLocales());
+            }
 
             // Select the root asset and open the table editor window.
             Selection.activeObject = createdCollection;
             LocalizationTablesWindow.ShowWindow(createdCollection);
+            InitializeTableName();
+        }
+
+        void InitializeTableName()
+        {
+            m_TableCollectionName.value = LocalizationEditorSettings.Instance.GetUniqueTableCollectionName(
+                m_CollectionTypePopup.value,
+                "New Table");
+            UpdateCreateButtonState();
         }
     }
 }

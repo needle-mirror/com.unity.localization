@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 using UnityEngine.Pool;
@@ -12,9 +13,9 @@ namespace UnityEngine.Localization
         TableReference m_TableReference;
         TableEntryReference m_TableEntryReference;
         Locale m_SelectedLocale;
-        object[] m_Arguments;
+        IList<object> m_Arguments;
 
-        public void Init(AsyncOperationHandle<LocalizedDatabase<StringTable, StringTableEntry>.TableEntryResult> tableEntryOperation, Locale locale, LocalizedStringDatabase database, TableReference tableReference, TableEntryReference tableEntryReference, object[] arguments)
+        public void Init(AsyncOperationHandle<LocalizedDatabase<StringTable, StringTableEntry>.TableEntryResult> tableEntryOperation, Locale locale, LocalizedStringDatabase database, TableReference tableReference, TableEntryReference tableEntryReference, IList<object> arguments)
         {
             m_TableEntryOperation = tableEntryOperation;
             m_SelectedLocale = locale;

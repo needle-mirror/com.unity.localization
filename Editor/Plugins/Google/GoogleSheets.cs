@@ -29,7 +29,7 @@ namespace UnityEditor.Localization.Plugins.Google
 
         /// <summary>
         /// The Id of the Google Sheet. This can be found by examining the url:
-        /// https://docs.google.com/spreadsheets/d/<b>>SpreadsheetId</b>/edit#gid=<b>SheetId</b>
+        /// https://docs.google.com/spreadsheets/d/<b>SpreadsheetId</b>/edit#gid=<b>SheetId</b>
         /// Further information can be found <see href="https://developers.google.com/sheets/api/guides/concepts#spreadsheet_id">here.</see>
         /// </summary>
         public string SpreadSheetId { get; set;  }
@@ -417,7 +417,7 @@ namespace UnityEditor.Localization.Plugins.Google
 
                 if (createUndo)
                 {
-                    Undo.RecordObjects(modifiedAssets.ToArray(), $"Pull `{collection.TableCollectionName}` from Google sheets");
+                    Undo.RegisterCompleteObjectUndo(modifiedAssets.ToArray(), $"Pull `{collection.TableCollectionName}` from Google sheets");
                 }
 
                 reporter?.Start($"Pull `{collection.TableCollectionName}` from Google sheets", "Preparing columns");
@@ -465,7 +465,7 @@ namespace UnityEditor.Localization.Plugins.Google
                     }
                 }
 
-                MergePull(pulledColumns, collection, columnMapping, removeMissingEntries, reporter);
+                MergePull(pulledColumns, collection, columnMapping, UsingApiKey, removeMissingEntries, reporter);
 
                 // There is a bug that causes Undo to not set assets dirty (case 1240528) so we always set the asset dirty.
                 modifiedAssets.ForEach(EditorUtility.SetDirty);
@@ -530,7 +530,7 @@ namespace UnityEditor.Localization.Plugins.Google
             return request;
         }
 
-        void MergePull(List<(IList<RowData> rowData, int valueIndex)> columns, StringTableCollection collection, IList<SheetColumn> columnMapping, bool removeMissingEntries, ITaskReporter reporter)
+        void MergePull(List<(IList<RowData> rowData, int valueIndex)> columns, StringTableCollection collection, IList<SheetColumn> columnMapping, bool skipFirstRow, bool removeMissingEntries, ITaskReporter reporter)
         {
             reporter?.ReportProgress("Preparing to merge", 0.55f);
 
@@ -540,7 +540,7 @@ namespace UnityEditor.Localization.Plugins.Google
             var keyColumn = columnMapping[0] as IPullKeyColumn;
             Debug.Assert(keyColumn != null, "Expected the first column to be a Key column");
 
-            var rowCount = columns[0].rowData.Count;
+            var rowCount = columns[0].rowData != null ? columns[0].rowData.Count : 0;
 
             // Send the start message
             foreach (var col in columnMapping)
@@ -557,7 +557,7 @@ namespace UnityEditor.Localization.Plugins.Google
             long totalCellsProcessed = 0;
 
             var keyValueIndex = columns[0].valueIndex;
-            for (int row = 0; row < rowCount; row++)
+            for (int row = skipFirstRow ? 1 : 0; row < rowCount; row++)
             {
                 var keyRowData = columns[0].rowData[row];
                 var keyData = keyRowData?.Values ? [keyValueIndex];
@@ -590,7 +590,7 @@ namespace UnityEditor.Localization.Plugins.Google
                     var valueIndex = columns[col].valueIndex;
 
                     // Do we have data in this column for this row?
-                    if (colRowData.Count > row && colRowData[row]?.Values.Count > valueIndex)
+                    if (colRowData != null && colRowData.Count > row && colRowData[row]?.Values.Count > valueIndex)
                     {
                         var cellData = colRowData[row].Values[valueIndex];
                         if (cellData != null)
@@ -721,7 +721,7 @@ namespace UnityEditor.Localization.Plugins.Google
                             Condition = new BooleanCondition
                             {
                                 Type = "CUSTOM_FORMULA",
-                                Values = new[] { new ConditionValue { UserEnteredValue = "=countif(A:A,A1)>1" } }
+                                Values = new[] { new ConditionValue { UserEnteredValue = "=countif(A:A;A1)>1" } }
                             },
                             Format = new CellFormat { BackgroundColor = UnityColorToDataColor(newSheetProperties.DuplicateKeyColor) }
                         },

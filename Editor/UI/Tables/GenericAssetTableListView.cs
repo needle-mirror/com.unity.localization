@@ -186,7 +186,7 @@ namespace UnityEditor.Localization.UI
             // Add the tables in the order of Locales so Locale sorting order is respected.
             foreach (var locale in LocalizationEditorSettings.GetLocales())
             {
-                var matchingTableIdx = projectTables.FindIndex(tbl => tbl.asset.LocaleIdentifier.Code == locale.Identifier.Code);
+                var matchingTableIdx = projectTables.FindIndex(tbl => tbl.asset?.LocaleIdentifier.Code == locale.Identifier.Code);
                 if (matchingTableIdx != -1)
                 {
                     var table = projectTables[matchingTableIdx];
@@ -367,7 +367,7 @@ namespace UnityEditor.Localization.UI
                 objects[TableCollection.Tables.Count] = TableCollection.SharedData;
                 Undo.RecordObjects(objects, "Remove key from collection");
                 keyItem.OnDeleteKey();
-                TableCollection.SharedData.RemoveKey(keyItem.KeyId);
+                TableCollection.RemoveEntry(keyItem.KeyId);
 
                 foreach (var o in objects)
                     EditorUtility.SetDirty(o);

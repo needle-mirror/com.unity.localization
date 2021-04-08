@@ -205,19 +205,19 @@ namespace UnityEngine.Localization.SmartFormat
         /// <param name="format">A composite format string.</param>
         /// <param name="args">The objects to format.</param>
         /// <returns>Returns the formatted input with items replaced with their string representation.</returns>
-        public string FormatWithCache(ref FormatCache cache, string format, params object[] args)
+        public string FormatWithCache(ref FormatCache cache, string format, IList<object> args)
         {
             return FormatWithCache(ref cache, format, null, args);
         }
 
-        public string FormatWithCache(ref FormatCache cache, string format, IFormatProvider formatProvider, params object[] args)
+        public string FormatWithCache(ref FormatCache cache, string format, IFormatProvider formatProvider, IList<object> args)
         {
             args = args ?? k_Empty;
-            using (StringOutputPool.Get(format.Length + args.Length * 8, out var output))
+            using (StringOutputPool.Get(format.Length + args.Count * 8, out var output))
             {
                 if (cache == null)
                     cache = FormatCachePool.Get(Parser.ParseFormat(format, GetNotEmptyFormatterExtensionNames()));
-                var current = args.Length > 0 ? args[0] : args; // The first item is the default.
+                var current = args.Count > 0 ? args[0] : args; // The first item is the default.
                 var formatDetails = FormatDetailsPool.Get(this, cache.Format, args, cache, formatProvider, output);
                 Format(formatDetails, cache.Format, current);
                 FormatDetailsPool.Release(formatDetails);

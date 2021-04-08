@@ -29,6 +29,7 @@ namespace UnityEditor.Localization.UI
             var formatters = new ManagedReferenceReorderableList(property.FindPropertyRelative("m_Formatters"), typeof(IFormatter));
             formatters.HeaderTitle = "Formatters";
             formatters.HeaderTooltip = "Used to convert an object to a string. Checked in order of the list, top first.";
+            formatters.AddCallback = (l, i) => ShowAddMenu(l, i, property);
             root.Add(formatters);
 
             return root;

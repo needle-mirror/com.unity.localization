@@ -26,6 +26,6 @@ namespace UnityEngine.Localization.SmartFormat.Core.Extensions
         /// </summary>
         /// <param name="formattingInfo"></param>
         /// <returns></returns>
-        bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo);
+        bool TryEvaluateAllLiterals(IFormattingInfo formattingInfo);
     }
 }

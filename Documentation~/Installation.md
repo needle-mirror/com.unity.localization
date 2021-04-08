@@ -8,4 +8,4 @@ Further information can be found on the forum [here](https://forum.unity.com/thr
 ## Requirements
 This Localization package version is compatible with the following versions of the Unity Editor:
 
-* 2019.3 and later (recommended)
+* 2019.4 and later (recommended)

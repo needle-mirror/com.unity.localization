@@ -204,41 +204,42 @@ namespace UnityEditor.Localization.Plugins.Google
         /// <returns></returns>
         public UserCredential AuthoizeOAuth()
         {
+            // Prevents Unity locking up if the user canceled the auth request.
+            // Auto cancel after 60 secs
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+
+            var connectTask = AuthorizeOAuthAsync(cts.Token);
+            if (!connectTask.IsCompleted)
+                connectTask.RunSynchronously();
+
+            if (connectTask.Status == TaskStatus.Faulted)
+            {
+                throw new Exception($"Failed to connect to Google Sheets.\n{connectTask.Exception}");
+            }
+            return connectTask.Result;
+        }
+
+        /// <summary>
+        /// Call to preauthorize when using OAuth authorization. This will cause a browser to open a Google authorization
+        /// page after which the token will be stored in <see cref="IDataStore"/> so that this does not need to be done each time.
+        /// If this is not called then the first time <see cref="Service"/> is called it will be performed then.
+        /// </summary>
+        /// <param name="cancellationToken">Token that can be used to cancel the task prematurely.</param>
+        /// <returns>The authotization Task that can be monitored.</returns>
+        public Task<UserCredential> AuthorizeOAuthAsync(CancellationToken cancellationToken)
+        {
             if (string.IsNullOrEmpty(ClientSecret))
                 throw new Exception($"{nameof(ClientSecret)} is empty");
 
             if (string.IsNullOrEmpty(ClientId))
                 throw new Exception($"{nameof(ClientId)} is empty");
 
-            try
-            {
-                // Prevents Unity locking up if the user canceled the auth request.
-                var cts = new CancellationTokenSource();
+            // We create a separate area for each so that multiple providers dont clash.
+            var dataStore = DataStore ?? new FileDataStore($"Library/Google/{name}", true);
 
-                // We create a separate area for each so that multiple providers dont clash.
-                var dataStore = DataStore ?? new FileDataStore($"Library/Google/{name}", true);
-
-                var secrets = new ClientSecrets { ClientId = m_ClientId, ClientSecret = m_ClientSecret };
-                var connectTask = GoogleWebAuthorizationBroker.AuthorizeAsync(secrets, k_Scopes, "user", cts.Token, dataStore);
-
-                while (!connectTask.IsCompleted)
-                {
-                    if (EditorUtility.DisplayCancelableProgressBar("Authorizing with Google", string.Empty, 0))
-                    {
-                        cts.Cancel();
-                    }
-                }
-
-                if (connectTask.Status == TaskStatus.Faulted)
-                {
-                    throw new Exception($"Failed to connect to Google Sheets.\n{connectTask.Exception}");
-                }
-                return connectTask.Result;
-            }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
-            }
+            var secrets = new ClientSecrets { ClientId = m_ClientId, ClientSecret = m_ClientSecret };
+            var connectTask = GoogleWebAuthorizationBroker.AuthorizeAsync(secrets, k_Scopes, "user", cancellationToken, dataStore);
+            return connectTask;
         }
 
         /// <summary>

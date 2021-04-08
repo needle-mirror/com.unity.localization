@@ -15,11 +15,15 @@ namespace UnityEditor.Localization
         /// <summary>
         /// The collection this extension is attached to.
         /// </summary>
-        public LocalizationTableCollection TargetCollection => m_Collection;
-
-        internal void Init(LocalizationTableCollection target)
+        public LocalizationTableCollection TargetCollection
         {
-            m_Collection = target;
+            get => m_Collection;
+            internal set => m_Collection = value;
         }
+
+        /// <summary>
+        /// Called when the Extension is first added to the table collection.
+        /// </summary>
+        public virtual void Initialize() {}
     }
 }

@@ -10,7 +10,7 @@ namespace UnityEditor.Localization.Plugins.CSV
     public class CsvExtension : CollectionExtension
     {
         [SerializeReference]
-        List<CsvColumns> m_ColumnsList = ColumnMapping.CreateDefaultMapping();
+        List<CsvColumns> m_ColumnsList;
 
         [SerializeField]
         string m_ConnectedFile;
@@ -21,6 +21,14 @@ namespace UnityEditor.Localization.Plugins.CSV
         {
             get => m_ConnectedFile;
             set => m_ConnectedFile = value;
+        }
+
+        /// <summary>
+        /// Initializes the CSV extension with <see cref="ColumnMapping.CreateDefaultMapping(bool)"/>.
+        /// </summary>
+        public override void Initialize()
+        {
+            m_ColumnsList = ColumnMapping.CreateDefaultMapping();
         }
     }
 }

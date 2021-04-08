@@ -48,11 +48,11 @@ namespace UnityEngine.Localization
             var localeOp = m_Settings.GetSelectedLocaleAsync();
             if (!localeOp.IsDone)
             {
-                localeOp.Completed += async => PreLoadTables();
+                localeOp.Completed += async => PreloadTables();
             }
             else
             {
-                PreLoadTables();
+                PreloadTables();
             }
         }
 
@@ -76,7 +76,7 @@ namespace UnityEngine.Localization
                 FinishInitializing();
         }
 
-        void PreLoadTables()
+        void PreloadTables()
         {
             Debug.Assert(m_PreloadingOperations == 0);
             m_Progress = k_LocalesProgress;

@@ -7,16 +7,16 @@ namespace UnityEditor.Localization.Tests
     public class LocaleIdentifierVerification
     {
         [Test]
-        public void SystemLanguageUnknownMapsToUndefined()
+        public void SystemLanguageUnknownMapsToDefault()
         {
             var localeId = new LocaleIdentifier(SystemLanguage.Unknown);
-            Assert.AreEqual(LocaleIdentifier.Undefined, localeId);
+            Assert.AreEqual(new LocaleIdentifier(), localeId);
         }
 
         [Test]
-        public void UndefinedCultureInfoIsNull()
+        public void DefaultCultureInfoIsNull()
         {
-            Assert.IsNull(LocaleIdentifier.Undefined.CultureInfo, "Expected undefined to have no CultureInfo.");
+            Assert.IsNull(new LocaleIdentifier().CultureInfo, "Expected undefined to have no CultureInfo.");
         }
 
         [Test]
@@ -24,6 +24,21 @@ namespace UnityEditor.Localization.Tests
         {
             LocaleIdentifier id = new LocaleIdentifier((string)null);
             Assert.IsNull(id.CultureInfo);
+        }
+
+        [Test]
+        public void FromDefault_EqualsDefault()
+        {
+            LocaleIdentifier li1 = default;
+            LocaleIdentifier li2 = default;
+            Assert.AreEqual(li1, li2);
+        }
+
+        [Test]
+        public void FromEmptyString_EqualsDefault()
+        {
+            LocaleIdentifier id = new LocaleIdentifier(string.Empty);
+            Assert.AreEqual(new LocaleIdentifier(), id);
         }
     }
 }

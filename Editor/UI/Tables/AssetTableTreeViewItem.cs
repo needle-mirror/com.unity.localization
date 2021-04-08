@@ -103,7 +103,7 @@ namespace UnityEditor.Localization.UI
         {
             if (m_TableProperties[colIdx].selected == null)
             {
-                var s = new TableEntrySelected(m_TableProperties[colIdx].table, KeyId, locale, MetadataType.AssetTableEntry);
+                var s = new TableEntrySelected(m_TableProperties[colIdx].table, KeyId, locale, MetadataType.AssetTableEntry | MetadataType.SharedAssetTableEntry);
                 m_TableProperties[colIdx].selected = s;
             }
             return m_TableProperties[colIdx].selected;

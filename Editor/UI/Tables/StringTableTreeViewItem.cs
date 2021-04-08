@@ -66,7 +66,7 @@ namespace UnityEditor.Localization.UI
                 var iselected = m_TableProperties[colIdx].selected;
                 if (iselected == null)
                 {
-                    iselected = new TableEntrySelected(editor.Table, editor.KeyId, LocalizationEditorSettings.GetLocale(editor.Table.LocaleIdentifier.Code), MetadataType.StringTableEntry);
+                    iselected = new TableEntrySelected(editor.Table, editor.KeyId, LocalizationEditorSettings.GetLocale(editor.Table.LocaleIdentifier.Code), MetadataType.StringTableEntry | MetadataType.SharedStringTableEntry);
                     m_TableProperties[colIdx].selected = iselected;
                 }
                 listView.Selected = iselected;

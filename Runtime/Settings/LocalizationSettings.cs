@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine.Localization.Metadata;
+using UnityEngine.Localization.Platform;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
@@ -9,12 +11,13 @@ namespace UnityEngine.Localization.Settings
     /// The localization settings is the core component to the localization system.
     /// It provides the entry point to all player based localization features.
     /// </summary>
-    public partial class LocalizationSettings : ScriptableObject
+    public partial class LocalizationSettings : ScriptableObject, IReset
     {
         /// <summary>
         /// The name to use when retrieving the LocalizationSettings from CustomObject API.
         /// </summary>
         internal const string ConfigName = "com.unity.localization.settings";
+        internal const string ConfigEditorLocale = "com.unity.localization-edit-locale";
 
         internal const string LocaleLabel = "Locale";
         internal const string PreloadLabel = "Preload";
@@ -36,10 +39,13 @@ namespace UnityEngine.Localization.Settings
         [SerializeReference]
         LocalizedStringDatabase m_StringDatabase = new LocalizedStringDatabase();
 
+        [MetadataType(MetadataType.LocalizationSettings)]
+        [SerializeField]
+        MetadataCollection m_Metadata = new MetadataCollection();
+
         AsyncOperationHandle<LocalizationSettings>? m_InitializingOperationHandle;
 
         AsyncOperationHandle<Locale>? m_SelectedLocaleAsync;
-        Locale m_SelectedLocale;
 
         static LocalizationSettings s_Instance;
 
@@ -123,6 +129,12 @@ namespace UnityEngine.Localization.Settings
         }
 
         /// <summary>
+        /// Returns the Localization Settings Metadata.
+        /// Metadata can be used to contain additional information such as App Name localization settings.
+        /// </summary>
+        public static MetadataCollection Metadata => Instance.GetMetadata();
+
+        /// <summary>
         /// The current selected <see cref="Locale"/>. This is the Locale that will be used by default when localizing assets and strings.
         /// If you are calling this before <see cref="InitializationOperation"/> has been completed then a null value may be returned.
         /// See <see cref="SelectedLocaleAsync"/> for a version that will ensure the Locale is not null(when possible).
@@ -160,20 +172,23 @@ namespace UnityEngine.Localization.Settings
             }
 
             #if UNITY_EDITOR
-            // Properties may persist during runs in the editor, so we reset them here to keep each play consistent.
-            m_SelectedLocale = null;
-            m_SelectedLocaleAsync = null;
-            m_InitializingOperationHandle = null;
+            UnityEditor.EditorApplication.playModeStateChanged += EditorApplication_playModeStateChanged;
             #endif
         }
 
         #if UNITY_EDITOR
+        void EditorApplication_playModeStateChanged(UnityEditor.PlayModeStateChange obj)
+        {
+            if (obj == UnityEditor.PlayModeStateChange.ExitingEditMode || obj == UnityEditor.PlayModeStateChange.ExitingPlayMode)
+            {
+                ResetState();
+            }
+        }
+
         void OnDisable()
         {
-            // Properties may persist during runs in the editor, so we reset them here to keep each play consistent.
-            m_SelectedLocale = null;
-            m_SelectedLocaleAsync = null;
-            m_InitializingOperationHandle = null;
+            ResetState();
+            UnityEditor.EditorApplication.playModeStateChanged -= EditorApplication_playModeStateChanged;
         }
 
         #endif
@@ -207,7 +222,28 @@ namespace UnityEngine.Localization.Settings
             return m_InitializingOperationHandle.Value;
         }
 
-        internal virtual bool IsPlaying => Application.isPlaying;
+        #if UNITY_EDITOR
+        /// <summary>
+        /// We use this for testing so we dont have to enter play mode.
+        /// </summary>
+        internal bool? IsPlayingOverride { get; set; }
+        #endif
+
+        internal bool IsPlaying
+        {
+            get
+            {
+                #if UNITY_EDITOR
+                if (IsPlayingOverride.HasValue)
+                    return IsPlayingOverride.Value;
+                return UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode;
+                #else
+                return true;
+                #endif
+            }
+        }
+
+        internal virtual RuntimePlatform Platform => Application.platform;
 
         /// <summary>
         /// <inheritdoc cref="IStartupLocaleSelector"/>
@@ -225,7 +261,7 @@ namespace UnityEngine.Localization.Settings
         /// <inheritdoc cref="AvailableLocales"/>
         /// </summary>
         /// <returns>\</returns>
-        public ILocalesProvider GetAvailableLocales() => m_AvailableLocales;
+        public virtual ILocalesProvider GetAvailableLocales() => m_AvailableLocales;
 
         /// <summary>
         /// <inheritdoc cref="AssetDatabase"/>
@@ -252,11 +288,25 @@ namespace UnityEngine.Localization.Settings
         public virtual LocalizedStringDatabase GetStringDatabase() => m_StringDatabase;
 
         /// <summary>
+        /// Returns the Localization Settings Metadata.
+        /// Metadata can be used to contain additional information such as App Name localization settings.
+        /// </summary>
+        /// <returns></returns>
+        public MetadataCollection GetMetadata() => m_Metadata;
+
+        /// <summary>
         /// Sends out notifications when the locale has changed. Ensures the the events are sent in the correct order.
         /// </summary>
         /// <param name="locale">The new locale.</param>
-        void SendLocaleChangedEvents(Locale locale)
+        internal void SendLocaleChangedEvents(Locale locale)
         {
+            #if UNITY_EDITOR
+            if (locale == null)
+            {
+                LocalizationPropertyDriver.UnregisterProperties();
+            }
+            #endif
+
             if (m_StringDatabase != null)
                 m_StringDatabase.OnLocaleChanged(locale);
 
@@ -284,10 +334,7 @@ namespace UnityEngine.Localization.Settings
             }
         }
 
-        /// <summary>
-        /// Uses <see cref="StartupLocaleSelectors"/> to select the most appropriate <see cref="Locale"/>.
-        /// </summary>
-        protected virtual Locale SelectLocale()
+        Locale SelectActiveLocale()
         {
             if (m_AvailableLocales == null)
             {
@@ -301,6 +348,22 @@ namespace UnityEngine.Localization.Settings
                 return null;
             }
 
+            #if UNITY_EDITOR
+            if (!IsPlaying)
+            {
+                var code = UnityEditor.SessionState.GetString(ConfigEditorLocale, string.Empty);
+                return m_AvailableLocales.GetLocale(code);
+            }
+            #endif
+
+            return SelectLocaleUsingStartupSelectors();
+        }
+
+        /// <summary>
+        /// Uses <see cref="StartupLocaleSelectors"/> to select the most appropriate <see cref="Locale"/>.
+        /// </summary>
+        internal protected virtual Locale SelectLocaleUsingStartupSelectors()
+        {
             foreach (var sel in m_StartupSelectors)
             {
                 var locale = sel.GetStartupLocale(m_AvailableLocales);
@@ -374,15 +437,38 @@ namespace UnityEngine.Localization.Settings
         /// <param name="locale"></param>
         public void SetSelectedLocale(Locale locale)
         {
-            if (!ReferenceEquals(m_SelectedLocale, locale))
+            if (m_SelectedLocaleAsync != null && ReferenceEquals(m_SelectedLocaleAsync.Value.Result, locale))
+                return;
+
+            // We need to ensure initialization has been started
+            GetInitializationOperation();
+
+            #if UNITY_EDITOR
+            // Running the player loop outside of play mode will force an update for many types, especially UGUI.
+            if (!IsPlaying)
             {
-                m_SelectedLocale = locale;
+                UnityEditor.EditorApplication.QueuePlayerLoopUpdate();
+            }
+            #endif
 
-                if (locale == null)
-                    m_SelectedLocaleAsync = null;
-                else
-                    m_SelectedLocaleAsync = AddressablesInterface.ResourceManager.CreateCompletedOperation(m_SelectedLocale, null);
+            // Ignore null locales in play mode
+            if (locale == null && IsPlaying)
+                return;
 
+            if (!m_SelectedLocaleAsync.HasValue || !ReferenceEquals(m_SelectedLocaleAsync.Value.Result, locale))
+            {
+                #if UNITY_EDITOR
+                if (!IsPlaying)
+                {
+                    var code = locale == null ? string.Empty : locale.Identifier.Code;
+                    UnityEditor.SessionState.SetString(ConfigEditorLocale, code);
+                }
+                #endif
+
+                if (m_SelectedLocaleAsync.HasValue)
+                    AddressablesInterface.Release(m_SelectedLocaleAsync.Value);
+
+                m_SelectedLocaleAsync = AddressablesInterface.ResourceManager.CreateCompletedOperation(locale, null);
                 SendLocaleChangedEvents(locale);
             }
         }
@@ -393,18 +479,15 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public virtual AsyncOperationHandle<Locale> GetSelectedLocaleAsync()
         {
-            if (!Application.isPlaying)
-                return AddressablesInterface.ResourceManager.CreateCompletedOperation<Locale>(null, null);
-
             if (!m_SelectedLocaleAsync.HasValue)
             {
                 if (m_AvailableLocales is IPreloadRequired localesProvider && !localesProvider.PreloadOperation.IsDone)
                 {
-                    m_SelectedLocaleAsync = AddressablesInterface.ResourceManager.CreateChainOperation<Locale>(localesProvider.PreloadOperation, (op) => AddressablesInterface.ResourceManager.CreateCompletedOperation(GetSelectedLocale(), null));
+                    m_SelectedLocaleAsync = AddressablesInterface.ResourceManager.CreateChainOperation(localesProvider.PreloadOperation, (op) => AddressablesInterface.ResourceManager.CreateCompletedOperation(SelectActiveLocale(), null));
                 }
                 else
                 {
-                    m_SelectedLocaleAsync = AddressablesInterface.ResourceManager.CreateCompletedOperation(GetSelectedLocale(), null);
+                    m_SelectedLocaleAsync = AddressablesInterface.ResourceManager.CreateCompletedOperation(SelectActiveLocale(), null);
                 }
             }
             return m_SelectedLocaleAsync.Value;
@@ -416,8 +499,8 @@ namespace UnityEngine.Localization.Settings
         /// <returns>\</returns>
         public virtual Locale GetSelectedLocale()
         {
-            if (m_SelectedLocale != null)
-                return m_SelectedLocale;
+            if (m_SelectedLocaleAsync.HasValue)
+                return m_SelectedLocaleAsync.Value.Result;
 
             if (m_AvailableLocales is IPreloadRequired localesProvider && !localesProvider.PreloadOperation.IsDone)
             {
@@ -425,8 +508,7 @@ namespace UnityEngine.Localization.Settings
                 return null;
             }
 
-            m_SelectedLocale = SelectLocale();
-            return m_SelectedLocale;
+            return GetSelectedLocaleAsync().Result;
         }
 
         /// <summary>
@@ -436,8 +518,20 @@ namespace UnityEngine.Localization.Settings
         /// <param name="locale"></param>
         public void OnLocaleRemoved(Locale locale)
         {
-            if (ReferenceEquals(m_SelectedLocale, locale))
-                SetSelectedLocale(null);
+            if (m_SelectedLocaleAsync.HasValue && ReferenceEquals(m_SelectedLocaleAsync.Value.Result, locale))
+            {
+                AddressablesInterface.Release(m_SelectedLocaleAsync.Value);
+                m_SelectedLocaleAsync = null;
+            }
+        }
+
+        public void ResetState()
+        {
+            m_SelectedLocaleAsync = null;
+            m_InitializingOperationHandle = null;
+            (m_AvailableLocales as IReset)?.ResetState();
+            (m_AssetDatabase as IReset)?.ResetState();
+            (m_StringDatabase as IReset)?.ResetState();
         }
 
         /// <summary>

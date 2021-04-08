@@ -2,13 +2,13 @@ namespace UnityEngine.Localization
 {
     class AddressHelper
     {
-        const char Seperator = '_';
+        const char k_Separator = '_';
 
         const string k_AssetLabelPrefix = "Locale-";
 
         public static string GetTableAddress(string tableName, LocaleIdentifier localeId)
         {
-            return $"{tableName}{Seperator}{localeId.Code}";
+            return $"{tableName}{k_Separator}{localeId.Code}";
         }
 
         public static string FormatAssetLabel(LocaleIdentifier localeIdentifier) => k_AssetLabelPrefix + localeIdentifier.Code;
@@ -17,8 +17,21 @@ namespace UnityEngine.Localization
 
         public static LocaleIdentifier LocaleLabelToId(string label)
         {
-            Debug.Assert(IsLocaleLabel(label));
-            return label.Substring(k_AssetLabelPrefix.Length, label.Length - k_AssetLabelPrefix.Length);
+            LocaleIdentifier id = default;
+            Debug.Assert(TryGetLocaleLabelToId(label, out id), $"Expected label {label} to be a Locale label.");
+            return id;
+        }
+
+        public static bool TryGetLocaleLabelToId(string label, out LocaleIdentifier localeId)
+        {
+            if (!IsLocaleLabel(label))
+            {
+                localeId = default;
+                return false;
+            }
+
+            localeId = label.Substring(k_AssetLabelPrefix.Length, label.Length - k_AssetLabelPrefix.Length);
+            return true;
         }
     }
 }

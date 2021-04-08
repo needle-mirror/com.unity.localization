@@ -1,6 +1,6 @@
-using System;
 using System.Collections.Generic;
-using UnityEngine.Events;
+using UnityEngine.Localization.Events;
+using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 
 namespace UnityEngine.Localization.Components
@@ -8,7 +8,7 @@ namespace UnityEngine.Localization.Components
     /// <summary>
     /// Component that can be used to Localize a string.
     /// Provides an update event <see cref="UpdateString(string)"/> that can be used to automatically update the string
-    /// when the <see cref="Settings.LocalizationSettings.SelectedLocale"/> or <see cref="StringReference"/> changes.
+    /// when the <see cref="LocalizationSettings.SelectedLocale"/> or <see cref="StringReference"/> changes.
     /// Allows for configuring optional arguments that will be used by **Smart Format** or <c>String.Format</c>.
     /// </summary>
     /// <example>
@@ -29,14 +29,8 @@ namespace UnityEngine.Localization.Components
     /// ![Example results in Game](../manual/images/scripting/LocalizeStringEventExample_GameView.gif)
     /// </example>
     [AddComponentMenu("Localization/Localize String Event")]
-    public class LocalizeStringEvent : MonoBehaviour
+    public class LocalizeStringEvent : LocalizedMonoBehaviour
     {
-        /// <summary>
-        /// [UnityEvent](https://docs.unity3d.com/ScriptReference/Events.UnityEvent.html) which contains the Localized String as an argument.
-        /// </summary>
-        [Serializable]
-        public class StringUnityEvent : UnityEvent<string> {};
-
         [SerializeField]
         LocalizedString m_StringReference = new LocalizedString();
 
@@ -44,7 +38,7 @@ namespace UnityEngine.Localization.Components
         List<Object> m_FormatArguments = new List<Object>();
 
         [SerializeField]
-        StringUnityEvent m_UpdateString = new StringUnityEvent();
+        UnityEventString m_UpdateString = new UnityEventString();
 
         /// <summary>
         /// References the <see cref="StringTable"/> and <see cref="StringTableEntry"/> of the localized string.
@@ -59,7 +53,7 @@ namespace UnityEngine.Localization.Components
 
                 m_StringReference = value;
 
-                if (enabled)
+                if (isActiveAndEnabled)
                     RegisterChangeHandler();
             }
         }
@@ -67,7 +61,7 @@ namespace UnityEngine.Localization.Components
         /// <summary>
         /// Event that will be sent when the localized string is available.
         /// </summary>
-        public StringUnityEvent OnUpdateString
+        public UnityEventString OnUpdateString
         {
             get => m_UpdateString;
             set => m_UpdateString = value;
@@ -95,19 +89,40 @@ namespace UnityEngine.Localization.Components
         /// Invokes the <see cref="OnUpdateString"/> event.
         /// </summary>
         /// <param name="value"></param>
-        protected virtual void UpdateString(string value) => OnUpdateString.Invoke(value);
-
-        void RegisterChangeHandler()
+        protected virtual void UpdateString(string value)
         {
-            if (m_FormatArguments.Count > 0)
+            #if UNITY_EDITOR
+            if (!LocalizationSettings.Instance.IsPlaying)
             {
-                StringReference.Arguments = m_FormatArguments.ToArray();
-            }
+                if (StringReference.IsEmpty)
+                {
+                    Editor_UnregisterKnownDrivenProperties(OnUpdateString);
+                    return;
+                }
 
+                Editor_RegisterKnownDrivenProperties(OnUpdateString);
+                OnUpdateString.Invoke(value);
+                Editor_RefreshEventObjects(OnUpdateString);
+            }
+            else
+            #endif
+            {
+                OnUpdateString.Invoke(value);
+            }
+        }
+
+        void OnValidate()
+        {
+            RefreshString();
+        }
+
+        internal virtual void RegisterChangeHandler()
+        {
+            StringReference.Arguments = m_FormatArguments.Count > 0 ? m_FormatArguments.ToArray() : null;
             StringReference.StringChanged += UpdateString;
         }
 
-        void ClearChangeHandler()
+        internal virtual void ClearChangeHandler()
         {
             StringReference.StringChanged -= UpdateString;
         }

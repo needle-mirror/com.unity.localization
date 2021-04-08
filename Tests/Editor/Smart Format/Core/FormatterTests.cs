@@ -120,7 +120,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
                 throw new NotImplementedException();
             }
 
-            public bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+            public bool TryEvaluateAllLiterals(IFormattingInfo formattingInfo)
             {
                 throw new NotImplementedException();
             }

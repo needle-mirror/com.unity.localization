@@ -64,6 +64,16 @@ namespace UnityEditor.Localization
             LocalizationEditorSettings.EditorEvents.TableRemovedFromCollection -= OnTableRemovedFromCollection;
         }
 
+        internal LocalizationTableCollection FindTableCollection(Type collectionType, TableReference tableReference)
+        {
+            if (collectionType == typeof(StringTableCollection))
+                return FindStringTableCollection(tableReference);
+            if (collectionType == typeof(AssetTableCollection))
+                return FindAssetTableCollection(tableReference);
+
+            return null;
+        }
+
         public StringTableCollection FindStringTableCollection(TableReference tableReference) => FindTableCollection(StringTableCollections, tableReference);
         public AssetTableCollection FindAssetTableCollection(TableReference tableReference) => FindTableCollection(AssetTableCollections, tableReference);
 

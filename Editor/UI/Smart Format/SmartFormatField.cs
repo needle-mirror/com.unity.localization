@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+#if !UNITY_2021_2_OR_NEWER
+using UnityEditor.Localization.Bridge;
+#endif
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.SmartFormat;
@@ -236,11 +239,35 @@ namespace UnityEditor.Localization.UI
         public SmartFormatField()
         {
             m_SmartFormatter = LocalizationEditorSettings.ActiveLocalizationSettings?.GetStringDatabase()?.SmartFormatter;
-            // TODO: Only do this when in debug view.
-            SubscribeToHyperlinkEvent();
+#if UNITY_2021_2_OR_NEWER
+            EditorGUI.hyperLinkClicked += EditorGUI_HyperLinkClicked;
+#else
+            EditorGUIBridge.hyperLinkClicked += EditorGUI_HyperLinkClicked;
+#endif
 
             m_TextAreaStyle = new GUIStyle("TextField") { wordWrap = true };
             m_DebugTextAreaStyle = new GUIStyle("TextField") { wordWrap = false, richText = true };
+
+            LocalizationEditorSettings.EditorEvents.TableEntryModified += OnValueChange;
+        }
+
+        ~SmartFormatField()
+        {
+            LocalizationEditorSettings.EditorEvents.TableEntryModified -= OnValueChange;
+#if UNITY_2021_2_OR_NEWER
+            EditorGUI.hyperLinkClicked -= EditorGUI_HyperLinkClicked;
+#else
+            EditorGUIBridge.hyperLinkClicked -= EditorGUI_HyperLinkClicked;
+#endif
+        }
+
+        void OnValueChange(SharedTableData.SharedTableEntry tableEntry)
+        {
+            var entry = Table.SharedData.GetEntry(KeyId);
+            if (entry != null && entry == tableEntry)
+            {
+                RefreshData();
+            }
         }
 
         /// <summary>
@@ -282,46 +309,43 @@ namespace UnityEditor.Localization.UI
         }
 
         /// <summary>
-        /// Subscribe to the hyperLinkClicked event, this lets us click on text elements and provide debug info for them.
-        /// </summary>
-        void SubscribeToHyperlinkEvent()
-        {
-            var hyperLinkClicked = typeof(EditorGUI).GetEvent("hyperLinkClicked", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
-
-            var callback = GetType().GetMethod("EditorGUI_HyperLinkClicked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var callbackDelegate = Delegate.CreateDelegate(hyperLinkClicked.EventHandlerType, this, callback);
-
-            var addHandler = hyperLinkClicked.GetAddMethod(true);
-            object[] args = { callbackDelegate };
-            addHandler.Invoke(null, args);
-        }
-
-        /// <summary>
         /// Called when a hyper link is clicked in Debug mode.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+#if UNITY_2021_2_OR_NEWER
+        void EditorGUI_HyperLinkClicked(EditorWindow window, HyperLinkClickedEventArgs args)
+        {
+            ProcessHyperLinkData(args.hyperLinkData);
+        }
+
+#else
         void EditorGUI_HyperLinkClicked(object sender, EventArgs e)
         {
             var o = e.GetType().GetProperty("hyperlinkInfos").GetValue(e, null);
-            if (o is Dictionary<string, string> dict)
+            if (o is Dictionary<string, string> hyperLinkData)
             {
-                if (dict.TryGetValue("href", out var formatId) && m_FormatItemLookup.TryGetValue(formatId, out var formatItem))
-                {
-                    if (formatItem is Placeholder ph)
-                    {
-                        var mousePos =  Event.current.mousePosition;
-                        mousePos.y -= EditorWindow.mouseOverWindow.position.height * 0.5f;
-                        mousePos.y += 80;
+                ProcessHyperLinkData(hyperLinkData);
+            }
+        }
 
-                        // relative to the window
-                        var rect = new Rect(mousePos.x, mousePos.y, 200, 200);
-                        PopupWindow.Show(rect, new SmartFormatFieldInfoWindow(ph));
-                    }
-                    else
-                    {
-                        Debug.Log("Cant show " + formatItem.GetType());
-                    }
+#endif
+
+        void ProcessHyperLinkData(IReadOnlyDictionary<string, string> hyperLinkData)
+        {
+            if (hyperLinkData.TryGetValue("href", out var formatId) && m_FormatItemLookup.TryGetValue(formatId, out var formatItem))
+            {
+                if (formatItem is Placeholder ph)
+                {
+                    var mousePos =  Event.current.mousePosition;
+                    mousePos.y -= EditorWindow.mouseOverWindow.position.height * 0.5f;
+                    mousePos.y += 80;
+
+                    // relative to the window
+                    var rect = new Rect(mousePos.x, mousePos.y, 200, 200);
+                    PopupWindow.Show(rect, new SmartFormatFieldInfoWindow(ph));
+                }
+                else
+                {
+                    Debug.Log("Cant show " + formatItem.GetType());
                 }
             }
         }
@@ -411,6 +435,8 @@ namespace UnityEditor.Localization.UI
             entry.IsSmart = value;
             IsSmart = value;
             CalcHeight();
+
+            LocalizationEditorSettings.EditorEvents.RaiseTableEntryModified(Table.SharedData.GetEntry(entry.KeyId));
         }
 
         internal void SetValue(string value)
@@ -424,6 +450,8 @@ namespace UnityEditor.Localization.UI
             entry.Value = value;
             RawText = value;
             CalcHeight();
+
+            LocalizationEditorSettings.EditorEvents.RaiseTableEntryModified(Table.SharedData.GetEntry(entry.KeyId));
         }
 
         /// <summary>

@@ -9,8 +9,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 namespace UnityEngine.Localization
 {
     /// <summary>
-    /// A Localized String contains a reference to a <see cref="StringTableEntry"/> inside of a specific <see cref="StringTable"/>.
-    /// This provides a centralized way to work with localized strings.
+    /// Provides a way to reference a <see cref="StringTableEntry"/> inside of a specific <see cref="StringTable"/> and request the localized string.
     /// </summary>
     [Serializable]
     public partial class LocalizedString : LocalizedReference
@@ -19,14 +18,14 @@ namespace UnityEngine.Localization
         AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult>? m_CurrentLoadingOperation;
         string m_CurrentStringChangedValue;
         List<IGlobalVariableValueChanged> m_LastUsedGlobalVariables = new List<IGlobalVariableValueChanged>();
-        Action<IGlobalVariable> m_OnGlobaleVariableChanged;
-        object[] m_SmartArguments;
+        Action<IGlobalVariable> m_OnGlobalVariableChanged;
+        IList<object> m_SmartArguments;
         bool m_WaitingForGlobalVariablesEndUpdate;
 
         /// <summary>
-        /// Arguments that will be passed through to Smart Format. These arguments are not serialized and will need to be set during play mode.
+        /// Arguments that will be passed through to Smart Format. These arguments are not serialized and will need to be set at runtime.
         /// </summary>
-        public object[] Arguments
+        public IList<object> Arguments
         {
             get => m_SmartArguments;
             set
@@ -40,14 +39,8 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// <inheritdoc cref="RegisterChangeHandler"/>
-        /// </summary>
-        /// <param name="value"></param>
-        public delegate void ChangeHandler(string value);
-
-        /// <summary>
-        /// The current loading operation for the string when using <see cref="StringChanged"/>.
-        /// A string may not be immediately available, such as when loading the <see cref="StringTable"/>, so all string operations are wrapped
+        /// The current loading operation for the string when using <see cref="StringChanged"/> or null if one is not available.
+        /// A string may not be immediately available, such as when loading the <see cref="StringTable"/> asset, so all string operations are wrapped
         /// with an <see cref="AsyncOperationHandle"/>.
         /// See also <seealso cref="RefreshString"/>
         /// </summary>
@@ -58,46 +51,31 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// Called whenever a localized string is available.
-        /// When the first <see cref="ChangeHandler"/> is added, a loading operation will automatically start and the localized string value will be sent to the event when completed.
-        /// Any adding additional subscribers added after loading has completed will also be sent the latest localized string value when they are added.
-        /// This ensures that a subscriber will always have the correct localized value regardless of when it was added.
-        /// The string will be refreshed whenever <see cref="LocalizationSettings.SelectedLocaleChanged"/> is changed and when <see cref="RefreshString"/> is called.
-        /// <seealso cref="GetLocalizedString"/> when not using the event.
+        /// Delegate used by <see cref="StringChanged"/>.
         /// </summary>
+        /// <param name="value">The localized string.</param>
+        public delegate void ChangeHandler(string value);
+
+        /// <summary>
+        /// Provides a callback that will be invoked when the translated string has changed.
+        /// </summary>
+        /// <remarks>
+        /// The following events will trigger an update:
+        /// - The first time the action is added to the event.
+        /// - The <seealso cref="LocalizationSettings.SelectedLocale"/> changing.
+        /// - The <see cref="Arguments"/> changing.
+        /// - If the string is currently using a <see cref="IGlobalVariable"/> which supports <see cref="IGlobalVariableValueChanged"/> and it's value has changed.
+        /// - When <see cref="RefreshString"/> is called.
+        /// - The <see cref="TableReference"/> or <see cref="TableEntryReference"/> changing.
+        ///
+        /// When the first <see cref="ChangeHandler"/> is added, a loading operation (see <see cref="CurrentLoadingOperation"/>) automatically starts.
+        /// When the loading operation is completed, the localized string value is sent to the subscriber.
+        /// If you add additional subscribers after loading has completed, they are also sent the latest localized string value.
+        /// This ensures that a subscriber will always have the correct localized value regardless of when it was added.
+        /// </remarks>
         /// <example>
-        /// This example shows how we can fetch and update a single string value.
-        /// <code>
-        /// public class LocalizedStringWithChangeHandlerExample : MonoBehaviour
-        /// {
-        ///     // A LocalizedString provides an interface to retrieving translated strings.
-        ///     // This example assumes a String Table Collection with the name "My String Table" and an entry with the Key "Hello World" exists.
-        ///     // You can change the Table Collection and Entry target in the inspector.
-        ///     public LocalizedString stringRef = new LocalizedString() { TableReference = "My String Table", TableEntryReference = "Hello World" };
-        ///     string m_TranslatedString;
-        ///
-        ///     void OnEnable()
-        ///     {
-        ///         stringRef.StringChanged += UpdateString;
-        ///     }
-        ///
-        ///     void OnDisable()
-        ///     {
-        ///         stringRef.StringChanged -= UpdateString;
-        ///     }
-        ///
-        ///     void UpdateString(string translatedValue)
-        ///     {
-        ///         m_TranslatedString = translatedValue;
-        ///         Debug.Log("Translated Value Updated: " + translatedValue);
-        ///     }
-        ///
-        ///     void OnGUI()
-        ///     {
-        ///         GUILayout.Label(m_TranslatedString);
-        ///     }
-        /// }
-        /// </code>
+        /// This example shows how the <see cref="StringChanged"/> event can be used to trigger updates to a string.
+        /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="localized-string-events"/>
         /// </example>
         public event ChangeHandler StringChanged
         {
@@ -137,16 +115,52 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// True if <see cref="StringChanged"/> has any subscribers.
+        /// Returns <c>true</c> if <seealso cref="StringChanged"/> has any subscribers.
         /// </summary>
         public bool HasChangeHandler => m_ChangeHandler != null;
 
         /// <summary>
-        /// Forces a refresh of the string when using <see cref="StringChanged"/>.
-        /// Note, this will only only force the refresh if there is currently no loading operation, if one is still being executed then it will be ignored and false will be returned.
-        /// If a string is not static and will change during game play, such as when using format arguments, then this can be used to force the string to update itself.
+        /// Initializes and returns an empty instance of a <see cref="LocalizedString"/>.
         /// </summary>
-        /// <returns>True if a refresh was requested or false if it could not.</returns>
+        public LocalizedString() {}
+
+        /// <summary>
+        /// Initializes and returns an instance of a <see cref="LocalizedString"/>.
+        /// </summary>
+        /// <param name="tableReference">Reference to the String Table Collection.
+        /// This can either be the name of the collection as a <c>string</c> or the Collection Guid as a [System.Guid](https://docs.microsoft.com/en-us/dotnet/api/system.guid).</param>
+        /// <param name="entryReference">Reference to the String Table Collection entry.
+        /// This can either be the name of the Key as a <c>string</c> or the <c>long</c> Key Id.</param>
+        /// <example>
+        /// This example shows the different ways to construct a LocalizedString.
+        /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="localized-string-constructor"/>
+        /// </example>
+        /// <example>
+        /// This example shows how a LocalizedString could be set up in the Editor.
+        /// By using the Guid and Id the table and entry references will not be lost if the table collection name or entry name was to be changed.
+        /// Note: The performance benefits to using a Guid and Id are negligible.
+        /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="localized-string-constructor-editor"/>
+        /// </example>
+        public LocalizedString(TableReference tableReference, TableEntryReference entryReference)
+        {
+            TableReference = tableReference;
+            TableEntryReference = entryReference;
+        }
+
+        /// <summary>
+        /// Provides a way to force a refresh of the string when using <see cref="StringChanged"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>This will only force the refresh if there is currently no active <see cref="CurrentLoadingOperation"/>, if one is still being executed then it will be ignored and <c>false</c> will be returned.
+        /// If a string is not static and will change during game play, such as when using format arguments, then this can be used to force the string to update itself.</para>
+        /// You may wish to call this if the values <b>inside</b> of the <see cref="Arguments"/> list have changed or you wish to force all <see cref="StringChanged"/> subscribers to update.
+        /// Note if setting the <see cref="Arguments"/> with a new list value then you do not need to call this as it will be called by the <see cref="Arguments"/> set method automatically.
+        /// </remarks>
+        /// <returns>Returns <c>true</c> if a new refresh could be requested or <c>false</c> if it could not, such as when <see cref="CurrentLoadingOperation"/> is still loading.</returns>
+        /// <example>
+        /// This example shows how the string can be refreshed, such as when showing dynamic values like the current time.
+        /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="localized-string-smart"/>
+        /// </example>
         public bool RefreshString()
         {
             if (m_ChangeHandler == null || m_CurrentLoadingOperation == null || !m_CurrentLoadingOperation.Value.IsDone)
@@ -165,53 +179,51 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// This function will load the requested string table and return the translated string.
-        /// The Completed event will provide notification once the operation has finished and the string has been
-        /// found or an error has occurred, this will be called during LateUpdate.
-        /// It is possible that a string table may have already been loaded, such as during a previous operation
-        /// or when using Preload mode, the IsDone property can be checked as it is possible the translated
-        /// string is immediately available.
+        /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and the
+        /// the translated string that matches <see cref="TableEntryReference"/>.
         /// </summary>
-        /// <returns></returns>
+        /// <remarks>
+        /// The Completed event provides a notification once the operation has finished and the string has been found or an error has occurred.
+        /// A string table may have already been loaded during a previous operation or when using Preload mode.
+        /// Check the <see cref="AsyncOperationHandle.IsDone"/> property to see if the string table has already been loaded and the translated string is immediately available.
+        /// See [Async operation handling](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/AddressableAssetsAsyncOperationHandle.html) for further details.
+        /// </remarks>
+        /// <returns>Returns the loading operation for the request.</returns>
         /// <example>
-        /// <code>
-        /// // A LocalizedString provides an interface to retrieving translated strings.
-        /// // This example assumes a String Table Collection with the name "My String Table" and an entry with the Key "Hello World" exists.
-        /// // You can change the Table Collection and Entry target in the inspector.
-        /// public LocalizedString stringRef = new LocalizedString() { TableReference = "My String Table", TableEntryReference = "Hello World" };
-        ///
-        /// void OnGUI()
-        /// {
-        ///     // This will make a request to the StringDatabase each time using the LocalizedString properties.
-        ///     var stringOperation = stringRef.GetLocalizedString();
-        ///     if (stringOperation.IsDone && stringOperation.Status == AsyncOperationStatus.Succeeded)
-        ///         GUILayout.Label(stringOperation.Result);
-        /// }
-        /// </code>
+        /// This example shows how <see cref="GetLocalizedString"/> can be used to request an updated string when the <see cref="LocalizationSettings.SelectedLocale"/> changes.
+        /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="get-localized-string"/>
         /// </example>
         public AsyncOperationHandle<string> GetLocalizedString()
         {
             LocalizationSettings.ValidateSettingsExist();
-            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, null, FallbackState, Arguments);
+            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, Arguments, null, FallbackState);
         }
 
         /// <summary>
-        /// Loads the requested string table and return the translated string after being formatted using the provided arguments.
-        /// The Completed event will provide notification once the operation has finished and the string has been
-        /// found or an error has occurred, this will be called during LateUpdate.
-        /// It is possible that a string table may have already been loaded, such as during a previous operation
-        /// or when using Preload mode, the IsDone property can be checked as it is possible the translated
-        /// string is immediately available.
+        /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and the
+        /// the translated string that matches <see cref="TableEntryReference"/>.
         /// </summary>
-        /// <param name="arguments">Arguments that will be passed to Smart Format or String.Format.</param>
-        /// <returns></returns>
+        /// <param name="arguments">The arguments to pass into the Smart String formatter or <c>String.Format</c>.</param>
+        /// <returns>Returns the loading operation for the request.</returns>
         public AsyncOperationHandle<string> GetLocalizedString(params object[] arguments)
         {
             LocalizationSettings.ValidateSettingsExist();
-            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, null, FallbackState, arguments);
+            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, arguments, null, FallbackState);
         }
 
-        protected override void ForceUpdate()
+        /// <summary>
+        /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and the
+        /// the translated string that matches <see cref="TableEntryReference"/>.
+        /// </summary>
+        /// <param name="arguments">The arguments to pass into the Smart String formatter or <c>String.Format</c>.</param>
+        /// <returns>Returns the loading operation for the request.</returns>
+        public AsyncOperationHandle<string> GetLocalizedString(IList<object> arguments)
+        {
+            LocalizationSettings.ValidateSettingsExist();
+            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, arguments, null, FallbackState);
+        }
+
+        protected internal override void ForceUpdate()
         {
             if (m_ChangeHandler != null)
             {
@@ -221,13 +233,13 @@ namespace UnityEngine.Localization
 
         void UpdateGlobalVariableListeners(List<IGlobalVariableValueChanged> variables)
         {
-            if (m_OnGlobaleVariableChanged == null)
-                m_OnGlobaleVariableChanged = OnGlobaleVariableChanged;
+            if (m_OnGlobalVariableChanged == null)
+                m_OnGlobalVariableChanged = OnGlobalVariableChanged;
 
             // Unsubscribe from any old ones
             foreach (var gv in m_LastUsedGlobalVariables)
             {
-                gv.ValueChanged -= m_OnGlobaleVariableChanged;
+                gv.ValueChanged -= m_OnGlobalVariableChanged;
             }
 
             m_LastUsedGlobalVariables.Clear();
@@ -237,11 +249,11 @@ namespace UnityEngine.Localization
             foreach (var gv in variables)
             {
                 m_LastUsedGlobalVariables.Add(gv);
-                gv.ValueChanged += m_OnGlobaleVariableChanged;
+                gv.ValueChanged += m_OnGlobalVariableChanged;
             }
         }
 
-        void OnGlobaleVariableChanged(IGlobalVariable globalVariable)
+        void OnGlobalVariableChanged(IGlobalVariable globalVariable)
         {
             if (m_WaitingForGlobalVariablesEndUpdate)
                 return;
@@ -268,14 +280,28 @@ namespace UnityEngine.Localization
 
         void HandleLocaleChange(Locale _)
         {
-            m_CurrentStringChangedValue = null;
-
             // Cancel any previous loading operations.
             ClearLoadingOperation();
+            m_CurrentStringChangedValue = null;
 
-            // Don't try and load empty references.
-            if (IsEmpty)
+            #if UNITY_EDITOR
+            m_CurrentTable = TableReference;
+            m_CurrentTableEntry = TableEntryReference;
+
+            // Dont update if we have no selected Locale
+            if (!LocalizationSettings.Instance.IsPlaying && LocalizationSettings.SelectedLocale == null)
                 return;
+            #endif
+
+            if (IsEmpty)
+            {
+                #if UNITY_EDITOR
+                // If we are empty and playing or previewing then we should force an update.
+                if (!LocalizationSettings.Instance.IsPlaying)
+                    m_ChangeHandler(null);
+                #endif
+                return;
+            }
 
             CurrentLoadingOperation = LocalizationSettings.StringDatabase.GetTableEntryAsync(TableReference, TableEntryReference, null, FallbackState);
 
@@ -307,6 +333,11 @@ namespace UnityEngine.Localization
                 AddressablesInterface.Release(m_CurrentLoadingOperation.Value);
                 CurrentLoadingOperation = null;
             }
+        }
+
+        protected override void Reset()
+        {
+            ClearLoadingOperation();
         }
     }
 }

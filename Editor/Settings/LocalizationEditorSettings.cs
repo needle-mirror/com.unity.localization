@@ -6,6 +6,7 @@ using System.Linq;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
+using UnityEditor.Localization.Addressables;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Pseudo;
@@ -20,6 +21,7 @@ namespace UnityEditor.Localization
     /// </summary>
     public class LocalizationEditorSettings
     {
+        static readonly char[] k_InvalidFileNameChars = Path.GetInvalidFileNameChars();
         internal const string LocaleGroupName = "Localization-Locales";
         internal const string AssetGroupName = "Localization-Assets-{0}";
         internal const string SharedAssetGroupName = "Localization-Assets-Shared";
@@ -30,6 +32,7 @@ namespace UnityEditor.Localization
 
         // Cached searches to help performance.
         ReadOnlyCollection<Locale> m_ProjectLocales;
+        ReadOnlyCollection<PseudoLocale> m_ProjectPseudoLocales;
 
         // Allows for overriding the default behavior, used for testing.
         internal static LocalizationEditorSettings Instance
@@ -101,6 +104,12 @@ namespace UnityEditor.Localization
         public static ReadOnlyCollection<Locale> GetLocales() => Instance.GetLocalesInternal();
 
         /// <summary>
+        /// Returns all <see cref="PseudoLocale"/> that are part of the Addressables system.
+        /// </summary>
+        /// <returns></returns>
+        public static ReadOnlyCollection<PseudoLocale> GetPsuedoLocales() => Instance.GetPseudoLocalesInternal();
+
+        /// <summary>
         /// Returns the locale for the code if it exists in the project.
         /// </summary>
         /// <param name="code"></param>
@@ -165,7 +174,7 @@ namespace UnityEditor.Localization
         /// <summary>
         /// Creates a <see cref="StringTableCollection"/> using the project Locales.
         /// </summary>
-        /// <param name="tableName">The name of the new collection.</param>
+        /// <param name="tableName">The name of the new collection. Cannot be blank or whitespace, cannot contain invalid filename characters, and cannot contain "[]".</param>
         /// <param name="assetDirectory">The directory to save the generated assets, must be in the project Assets directory.</param>
         /// <returns></returns>
         public static StringTableCollection CreateStringTableCollection(string tableName, string assetDirectory) => CreateStringTableCollection(tableName, assetDirectory, GetLocales());
@@ -173,7 +182,7 @@ namespace UnityEditor.Localization
         /// <summary>
         /// Creates a <see cref="StringTableCollection"/> using the provided Locales.
         /// </summary>
-        /// <param name="tableName">The name of the new collection.</param>
+        /// <param name="tableName">The name of the new collection. Cannot be blank or whitespace, cannot contain invalid filename characters, and cannot contain "[]".</param>
         /// <param name="assetDirectory">The directory to save the generated assets, must be in the project Assets directory.</param>
         /// <param name="selectedLocales">The locales to generate the collection with. A <see cref="StringTable"/> will be created for each Locale.</param>
         /// <returns></returns>
@@ -182,7 +191,7 @@ namespace UnityEditor.Localization
         /// <summary>
         /// Creates a <see cref="AssetTableCollection"/> using the project Locales.
         /// </summary>
-        /// <param name="tableName">The name of the new collection.</param>
+        /// <param name="tableName">The name of the new collection. Cannot be blank or whitespace, cannot contain invalid filename characters, and cannot contain "[]".</param>
         /// <param name="assetDirectory">The directory to save the generated assets, must be in the project Assets directory.</param>
         /// <returns></returns>
         public static AssetTableCollection CreateAssetTableCollection(string tableName, string assetDirectory) => CreateAssetTableCollection(tableName, assetDirectory, GetLocales());
@@ -190,48 +199,47 @@ namespace UnityEditor.Localization
         /// <summary>
         /// Creates a <see cref="AssetTableCollection"/> using the provided Locales.
         /// </summary>
-        /// <param name="tableName"></param>
+        /// <param name="tableName">The name of the new collection. Cannot be blank or whitespace, cannot contain invalid filename characters, and cannot contain "[]".</param>
         /// <param name="assetDirectory"></param>
         /// <param name="selectedLocales">The locales to generate the collection with. A <see cref="AssetTable"/> will be created for each Locale</param>
         /// <returns></returns>
         public static AssetTableCollection CreateAssetTableCollection(string tableName, string assetDirectory, IList<Locale> selectedLocales) => Instance.CreateCollection(typeof(AssetTableCollection), tableName, assetDirectory, selectedLocales) as AssetTableCollection;
 
-        internal protected string GetUniqueCollectionName(Type collectionType, string name)
+        internal static void RefreshEditorPreview()
         {
-            if (string.IsNullOrEmpty(name))
-                name = $"New {collectionType.Name}";
+            if (ActiveLocalizationSettings != null && ActiveLocalizationSettings.GetSelectedLocale() != null)
+            {
+                ActiveLocalizationSettings.SendLocaleChangedEvents(LocalizationSettings.SelectedLocale);
+            }
+        }
 
+        protected internal string GetUniqueTableCollectionName(Type collectionType, string name)
+        {
             int suffix = 1;
             var nameToTest = name;
             while (true)
             {
-                if (collectionType == typeof(StringTableCollection))
-                {
-                    if (TableCollectionCache.FindStringTableCollection(nameToTest) == null)
-                        return nameToTest;
-                }
-                else
-                {
-                    if (TableCollectionCache.FindAssetTableCollection(nameToTest) == null)
-                        return nameToTest;
-                }
+                if (TableCollectionCache.FindTableCollection(collectionType, nameToTest) == null)
+                    return nameToTest;
 
                 nameToTest = $"{name} {suffix}";
                 suffix++;
             }
         }
 
-        internal protected virtual LocalizationTableCollection CreateCollection(Type collectionType, string tableName, string assetDirectory, IList<Locale> selectedLocales)
+        protected internal virtual LocalizationTableCollection CreateCollection(Type collectionType, string tableName, string assetDirectory, IList<Locale> selectedLocales)
         {
             if (!typeof(LocalizationTableCollection).IsAssignableFrom(collectionType))
                 throw new ArgumentException($"{collectionType.Name} Must be derived from {nameof(LocalizationTableCollection)}", nameof(collectionType));
             if (string.IsNullOrEmpty(assetDirectory))
-                throw new ArgumentException(nameof(assetDirectory), "Must not be null or empty.");
-
-            tableName = GetUniqueCollectionName(collectionType, tableName);
+                throw new ArgumentException("Must not be null or empty.", nameof(assetDirectory));
+            var tableNameError = IsTableNameValid(collectionType, tableName);
+            if (tableNameError != null)
+            {
+                throw new ArgumentException(tableNameError, nameof(tableName));
+            }
 
             var collection = ScriptableObject.CreateInstance(collectionType) as LocalizationTableCollection;
-            List<LocalizationTable> createdTables;
 
             AssetDatabase.StartAssetEditing();
 
@@ -240,24 +248,24 @@ namespace UnityEditor.Localization
             Directory.CreateDirectory(relativePath);
 
             var sharedDataPath = Path.Combine(relativePath, tableName + " Shared Data.asset");
-            var SharedTableData = ScriptableObject.CreateInstance<SharedTableData>();
-            SharedTableData.TableCollectionName = tableName;
-            CreateAsset(SharedTableData, sharedDataPath);
-            collection.SharedData = SharedTableData;
+            var sharedTableData = ScriptableObject.CreateInstance<SharedTableData>();
+            sharedTableData.TableCollectionName = tableName;
+            CreateAsset(sharedTableData, sharedDataPath);
+            collection.SharedData = sharedTableData;
             collection.AddSharedTableDataToAddressables();
 
             // Extract the SharedTableData Guid and assign it so we can use it as a unique id for the table collection name.
-            var sharedDataGuid = GetAssetGuid(SharedTableData);
-            SharedTableData.TableCollectionNameGuid = Guid.Parse(sharedDataGuid);
-            EditorUtility.SetDirty(SharedTableData); // We need to set it dirty so the change to TableCollectionNameGuid is saved.
+            var sharedDataGuid = GetAssetGuid(sharedTableData);
+            sharedTableData.TableCollectionNameGuid = Guid.Parse(sharedDataGuid);
+            EditorUtility.SetDirty(sharedTableData); // We need to set it dirty so the change to TableCollectionNameGuid is saved.
 
             if (selectedLocales?.Count > 0)
             {
-                createdTables = new List<LocalizationTable>(selectedLocales.Count);
+                var createdTables = new List<LocalizationTable>(selectedLocales.Count);
                 foreach (var locale in selectedLocales)
                 {
                     var table = ScriptableObject.CreateInstance(collection.TableType) as LocalizationTable;
-                    table.SharedData = SharedTableData;
+                    table.SharedData = sharedTableData;
                     table.LocaleIdentifier = locale.Identifier;
                     table.name = AddressHelper.GetTableAddress(tableName, locale.Identifier);
                     createdTables.Add(table);
@@ -297,7 +305,7 @@ namespace UnityEditor.Localization
             if (looseTables == null || looseTables.Count == 0)
                 return null;
 
-            var isStringTable = typeof(StringTable).IsAssignableFrom(looseTables[0].GetType());
+            var isStringTable = looseTables[0] is StringTable;
 
             var collectionType = isStringTable ? typeof(StringTableCollection) : typeof(AssetTableCollection);
             var collection = ScriptableObject.CreateInstance(collectionType) as LocalizationTableCollection;
@@ -378,7 +386,34 @@ namespace UnityEditor.Localization
 
         internal virtual AddressableAssetSettings GetAddressableAssetSettings(bool create)
         {
-            return AddressableAssetSettingsDefaultObject.GetSettings(create);
+            var settings = AddressableAssetSettingsDefaultObject.GetSettings(create);
+            if (settings != null)
+                return settings;
+
+            // By default Addressables wont return the settings if updating or compiling. This causes issues for us, especially if we are trying to get the Locales.
+            // We will just ignore this state and try to get the settings regardless.
+            if (EditorApplication.isUpdating || EditorApplication.isCompiling)
+            {
+                // Legacy support
+                if (EditorBuildSettings.TryGetConfigObject(AddressableAssetSettingsDefaultObject.kDefaultConfigAssetName, out settings))
+                {
+                    return settings;
+                }
+
+                AddressableAssetSettingsDefaultObject so;
+                if (EditorBuildSettings.TryGetConfigObject(AddressableAssetSettingsDefaultObject.kDefaultConfigObjectName, out so))
+                {
+                    // Extract the guid
+                    var serializedObject = new SerializedObject(so);
+                    var guid = serializedObject.FindProperty("m_AddressableAssetSettingsGuid")?.stringValue;
+                    if (!string.IsNullOrEmpty(guid))
+                    {
+                        var path = AssetDatabase.GUIDToAssetPath(guid);
+                        return AssetDatabase.LoadAssetAtPath<AddressableAssetSettings>(path);
+                    }
+                }
+            }
+            return null;
         }
 
         internal virtual AddressableAssetEntry GetAssetEntry(Object asset) => GetAssetEntry(asset.GetInstanceID());
@@ -394,37 +429,11 @@ namespace UnityEditor.Localization
         }
 
         /// <summary>
-        /// Returns the Addressables group with the matching name or creates a new one, if one could not be found.
-        /// </summary>
-        /// <param name="settings"></param>
-        /// <param name="groupName"></param>
-        /// <param name="create"></param>
-        /// <param name="createUndo">Used to indicate if an Undo operation should be created.</param>
-        /// <returns></returns>
-        internal protected virtual AddressableAssetGroup GetGroup(AddressableAssetSettings settings, string groupName, bool create, bool createUndo)
-        {
-            var group = settings.FindGroup(groupName);
-            if (group == null && create)
-            {
-                group = settings.CreateGroup(groupName, false, true, true, new List<AddressableAssetGroupSchema>() { ScriptableObject.CreateInstance<ContentUpdateGroupSchema>() }, typeof(BundledAssetGroupSchema));
-
-                // Default to just the name of the group, no hashes.
-                var schema = group.GetSchema<BundledAssetGroupSchema>();
-                schema.BundleNaming = BundledAssetGroupSchema.BundleNamingStyle.NoHash;
-
-                if (createUndo)
-                    Undo.RegisterCreatedObjectUndo(group, "Create group");
-            }
-
-            return group;
-        }
-
-        /// <summary>
         /// Tries to find a unique address for the asset to be stored in Addressables.
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        internal protected virtual string FindUniqueAssetAddress(string address)
+        protected internal virtual string FindUniqueAssetAddress(string address)
         {
             var aaSettings = GetAddressableAssetSettings(false);
             if (aaSettings == null)
@@ -473,30 +482,23 @@ namespace UnityEditor.Localization
             if (aaSettings == null)
                 return;
 
-            if (createUndo)
-                Undo.RecordObject(aaSettings, "Add locale");
-
-            var assetEntry = GetAssetEntry(locale);
-            if (assetEntry == null)
+            using (new UndoScope("Add Locale", createUndo))
             {
-                var group = GetGroup(aaSettings, LocaleGroupName, true, createUndo);
+                var assetEntry = AddressableGroupRules.AddLocaleToGroup(locale, aaSettings, createUndo);
+                assetEntry.address = locale.LocaleName;
 
-                if (createUndo)
-                    Undo.RecordObject(group, "Add locale");
+                // Clear the locales cache.
+                m_ProjectLocales = null;
+                if (!LocalizationSettings.Instance.IsPlaying)
+                    LocalizationSettings.Instance.ResetState();
 
-                var guid = GetAssetGuid(locale);
-                assetEntry = aaSettings.CreateOrMoveEntry(guid, group, true);
-                assetEntry.address = locale.name;
-            }
-
-            // Clear the locales cache.
-            m_ProjectLocales = null;
-
-            if (!assetEntry.labels.Contains(LocalizationSettings.LocaleLabel))
-            {
-                aaSettings.AddLabel(LocalizationSettings.LocaleLabel);
-                assetEntry.SetLabel(LocalizationSettings.LocaleLabel, true);
-                EditorEvents.RaiseLocaleAdded(locale);
+                if (!assetEntry.labels.Contains(LocalizationSettings.LocaleLabel))
+                {
+                    if (createUndo)
+                        Undo.RecordObjects(new Object[] { aaSettings, assetEntry.parentGroup } , "Add locale");
+                    assetEntry.SetLabel(LocalizationSettings.LocaleLabel, true, true);
+                    EditorEvents.RaiseLocaleAdded(locale);
+                }
             }
         }
 
@@ -511,30 +513,30 @@ namespace UnityEditor.Localization
             if (aaSettings == null)
                 return;
 
-            if (createUndo)
-                Undo.RecordObject(aaSettings, "Remove locale");
-
             var localeAssetEntry = GetAssetEntry(locale);
             if (localeAssetEntry == null)
                 return;
 
-            if (createUndo)
+            using (new UndoScope("Remove locale", createUndo))
             {
-                Undo.RecordObject(localeAssetEntry.parentGroup, "Remove locale");
+                if (createUndo)
+                    Undo.RecordObjects(new Object[] { aaSettings, localeAssetEntry.parentGroup }, "Remove locale");
+
+                // Clear the locale cache
+                m_ProjectLocales = null;
+                if (!LocalizationSettings.Instance)
+                    LocalizationSettings.Instance.ResetState();
+
+                aaSettings.RemoveAssetEntry(localeAssetEntry.guid);
+                EditorEvents.RaiseLocaleRemoved(locale);
             }
-
-            // Clear the locale cache
-            m_ProjectLocales = null;
-
-            aaSettings.RemoveAssetEntry(localeAssetEntry.guid);
-            EditorEvents.RaiseLocaleRemoved(locale);
         }
 
         /// <summary>
         /// <inheritdoc cref="GetLocales"/>
         /// </summary>
         /// <returns></returns>
-        internal protected virtual ReadOnlyCollection<Locale> GetLocalesInternal()
+        protected internal virtual ReadOnlyCollection<Locale> GetLocalesInternal()
         {
             if (m_ProjectLocales != null)
                 return m_ProjectLocales;
@@ -566,6 +568,49 @@ namespace UnityEditor.Localization
             return m_ProjectLocales;
         }
 
+        protected internal virtual ReadOnlyCollection<PseudoLocale> GetPseudoLocalesInternal()
+        {
+            if (m_ProjectPseudoLocales == null)
+                CollectProjectLocales();
+            return m_ProjectPseudoLocales;
+        }
+
+        void CollectProjectLocales()
+        {
+            var foundLocales = new List<Locale>();
+            var foundPseudoLocales = new List<PseudoLocale>();
+
+            var aaSettings = GetAddressableAssetSettings(false);
+            if (aaSettings != null)
+            {
+                var foundAssets = new List<AddressableAssetEntry>();
+                aaSettings.GetAllAssets(foundAssets, false, group => group != null, entry =>
+                {
+                    return entry.labels.Contains(LocalizationSettings.LocaleLabel);
+                });
+
+                foreach (var localeAddressable in foundAssets)
+                {
+                    if (localeAddressable.MainAsset != null && localeAddressable.MainAsset is Locale locale)
+                    {
+                        if (locale is PseudoLocale pseudoLocale)
+                        {
+                            foundPseudoLocales.Add(pseudoLocale);
+                        }
+                        else
+                        {
+                            foundLocales.Add(locale);
+                        }
+                    }
+                }
+            }
+
+            foundLocales.Sort();
+            foundPseudoLocales.Sort();
+            m_ProjectLocales = foundLocales.AsReadOnly();
+            m_ProjectPseudoLocales = foundPseudoLocales.AsReadOnly();
+        }
+
         /// <summary>
         /// <inheritdoc cref="GetLocale"/>
         /// </summary>
@@ -580,6 +625,13 @@ namespace UnityEditor.Localization
                 var localesList = m_ProjectLocales.ToList();
                 localesList.Sort();
                 m_ProjectLocales = localesList.AsReadOnly();
+            }
+
+            if (m_ProjectPseudoLocales != null)
+            {
+                var pseudoLocalesList = m_ProjectPseudoLocales.ToList();
+                pseudoLocalesList.Sort();
+                m_ProjectPseudoLocales = pseudoLocalesList.AsReadOnly();
             }
         }
 
@@ -607,8 +659,7 @@ namespace UnityEditor.Localization
             if (createUndo)
                 Undo.RecordObjects(new Object[] { aaSettings, tableEntry.parentGroup }, "Set Preload flag");
 
-            aaSettings.AddLabel(LocalizationSettings.PreloadLabel);
-            tableEntry.SetLabel(LocalizationSettings.PreloadLabel, preload);
+            tableEntry.SetLabel(LocalizationSettings.PreloadLabel, preload, preload);
         }
 
         /// <summary>
@@ -673,6 +724,7 @@ namespace UnityEditor.Localization
             AssetDatabase.CreateAsset(asset, path);
         }
 
+        // TODO: Remove me?
         internal virtual string GetAssetGuid(int instanceId)
         {
             Debug.Assert(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(instanceId, out string guid, out long _), "Failed to extract the asset Guid");
@@ -683,6 +735,33 @@ namespace UnityEditor.Localization
         {
             Debug.Assert(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out string guid, out long _), "Failed to extract the asset Guid", asset);
             return guid;
+        }
+
+        internal string IsTableNameValid(Type collectionType, string tableName)
+        {
+            if (string.IsNullOrWhiteSpace(tableName))
+            {
+                return "Table collection name cannot be blank or whitespace";
+            }
+
+            // Addressables restriction
+            if (tableName.Contains('[') && tableName.Contains(']'))
+            {
+                return "Table collection name cannot contain both '[' and ']'";
+            }
+
+            var values = k_InvalidFileNameChars.Intersect(tableName).ToList();
+            if (values.Any())
+            {
+                return $"Table collection name cannot contain invalid filename characters but contains '{string.Join(", ", values)}'";
+            }
+
+            if (TableCollectionCache.FindTableCollection(collectionType, tableName) != null)
+            {
+                return $"{collectionType.Name} with name '{tableName}' already exists";
+            }
+
+            return null;
         }
     }
 }

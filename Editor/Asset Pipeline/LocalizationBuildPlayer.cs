@@ -10,8 +10,6 @@ namespace UnityEditor.Localization
     {
         LocalizationSettings m_Settings;
 
-        Object[] m_OriginalPreloadedAssets;
-
         bool m_RemoveFromPreloadedAssets;
 
         public int callbackOrder => 0;
@@ -24,14 +22,13 @@ namespace UnityEditor.Localization
                 return;
 
             // Add the localization settings to the preloaded assets.
-            m_OriginalPreloadedAssets = PlayerSettings.GetPreloadedAssets();
+            var preloadedAssets = PlayerSettings.GetPreloadedAssets();
             bool wasDirty = IsPlayerSettingsDirty();
 
-            if (!m_OriginalPreloadedAssets.Contains(m_Settings))
+            if (!preloadedAssets.Contains(m_Settings))
             {
-                var preloadedAssets = m_OriginalPreloadedAssets.ToList();
-                preloadedAssets.Add(m_Settings);
-                PlayerSettings.SetPreloadedAssets(preloadedAssets.ToArray());
+                ArrayUtility.Add(ref preloadedAssets, m_Settings);
+                PlayerSettings.SetPreloadedAssets(preloadedAssets);
 
                 // If we have to add the settings then we should also remove them.
                 m_RemoveFromPreloadedAssets = true;
@@ -49,8 +46,11 @@ namespace UnityEditor.Localization
 
             bool wasDirty = IsPlayerSettingsDirty();
 
-            // Revert back to original state
-            PlayerSettings.SetPreloadedAssets(m_OriginalPreloadedAssets);
+            var preloadedAssets = PlayerSettings.GetPreloadedAssets();
+            ArrayUtility.Remove(ref preloadedAssets, m_Settings);
+            PlayerSettings.SetPreloadedAssets(preloadedAssets);
+
+            m_Settings = null;
 
             // Clear the dirty flag so we dont flush the modified file (case 1254502)
             if (!wasDirty)

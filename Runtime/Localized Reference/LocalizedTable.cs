@@ -6,10 +6,14 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 namespace UnityEngine.Localization
 {
     /// <summary>
-    /// A Localized Table allows for referencing a <see cref="LocalizationTable"/> at runtime.
+    /// Provides a way to access a <see cref="LocalizationTable"/> at runtime.
+    /// See <seealso cref="LocalizedStringTable"/> and <seealso cref="LocalizedAssetTable"/> for implementations.
     /// </summary>
     [Serializable]
     public abstract class LocalizedTable<TTable, TEntry>
+        #if UNITY_EDITOR
+        : ISerializationCallbackReceiver
+        #endif
         where TTable : DetailedLocalizationTable<TEntry>
         where TEntry : TableEntry
     {
@@ -19,11 +23,15 @@ namespace UnityEngine.Localization
         ChangeHandler m_ChangeHandler;
         AsyncOperationHandle<TTable>? m_CurrentLoadingOperation;
 
+        #if UNITY_EDITOR
+        // This is so we can detect when a change is made via the inspector.
+        protected TableReference m_CurrentTable;
+        #endif
+
         protected abstract LocalizedDatabase<TTable, TEntry> Database { get; }
 
         /// <summary>
-        /// The current loading operation for the table. A table may not be immediately available,
-        /// so all operations are wrapped with an <see cref="AsyncOperationHandle"/>.
+        /// The current loading operation for the table when using <see cref="TableChanged"/> or null if one is not available.
         /// </summary>
         public AsyncOperationHandle<TTable>? CurrentLoadingOperation
         {
@@ -32,15 +40,18 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// <inheritdoc cref="RegisterChangeHandler"/>
+        /// Delegate used by <see cref="TableChanged"/>.
         /// </summary>
-        /// <param name="value"></param>
+        /// <param name="value">The localized table.</param>
         public delegate void ChangeHandler(TTable value);
 
         /// <summary>
-        /// A reference to the <see cref="LocalizationTable"/>.
+        /// Provides a reference to the <see cref="LocalizationTable"/>.
         /// A table reference can be either the name of the table or the table collection name Guid.
         /// </summary>
+        /// <remarks>
+        /// Note: Changing this value will trigger an update to any <see cref="TableChanged"/> subscribers.
+        /// </remarks>
         public TableReference TableReference
         {
             get => m_TableReference;
@@ -61,13 +72,23 @@ namespace UnityEngine.Localization
         public bool IsEmpty => TableReference.ReferenceType == TableReference.Type.Empty;
 
         /// <summary>
-        /// Called whenever a table is available.
-        /// When the first <see cref="ChangeHandler"/> is added, a loading operation will automatically start and the table will be sent to the event when completed.
-        /// Any adding additional subscribers added after loading has completed will also be sent the latest table when they are added.
-        /// This ensures that a subscriber will always have the correct table regardless of when it was added.
-        /// The table will be refreshed whenever <see cref="LocalizationSettings.SelectedLocaleChanged"/> is changed.
-        /// <seealso cref="GetTable"/> when not using the event.
+        /// Provides a callback that will be invoked when the table is available or has changed.
         /// </summary>
+        /// <remarks>
+        /// The following events will trigger an update:
+        /// - The first time the action is added to the event.
+        /// - The <seealso cref="LocalizationSettings.SelectedLocale"/> changing.
+        /// - The <see cref="TableReference"/> changing.
+        ///
+        /// When the first <see cref="ChangeHandler"/> is added, a loading operation (see <see cref="CurrentLoadingOperation"/>) automatically starts.
+        /// When the operation completes, the localized table is sent to the subscriber.
+        /// If you add any additional subscribers added after loading has completed, they are also sent the latest localized table.
+        /// This ensures that a subscriber will always have the correct localized value regardless of when it was added.
+        /// </remarks>
+        /// <example>
+        /// This example shows how the <see cref="TableChanged"/> event can be used to print out the contents of the table.
+        /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs"/>
+        /// </example>
         public event ChangeHandler TableChanged
         {
             add
@@ -103,8 +124,17 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// Called when a value has been changed and an update may be required.
+        /// Provides the table with the <see cref="TableReference"/>.
         /// </summary>
+        /// <remarks>
+        /// The <see cref="AsyncOperationHandle.Completed"/> event provides notification once the operation has finished and the table has been found or an error has occurred.
+        /// A table may have already been loaded during a previous operation or when using Preload mode.
+        /// Check the <see cref="AsyncOperationHandle.IsDone"/> property to see if the table is already loaded and immediately available.
+        /// See [Async operation handling](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/AddressableAssetsAsyncOperationHandle.html) for further details.
+        /// </remarks>
+        /// <returns>Returns the loading operation for the requested table.</returns>
+        public AsyncOperationHandle<TTable> GetTable() => Database.GetTableAsync(TableReference);
+
         protected void ForceUpdate()
         {
             if (m_ChangeHandler != null)
@@ -151,12 +181,32 @@ namespace UnityEngine.Localization
             }
         }
 
-        public AsyncOperationHandle<TTable> GetTable() => Database.GetTableAsync(TableReference);
-
         /// <summary>
         /// Returns a string representation including the <see cref="TableReference"/>.
         /// </summary>
         /// <returns></returns>
         public override string ToString() => TableReference;
+
+        #if UNITY_EDITOR
+        void ChangedThroughSerialization()
+        {
+            ClearLoadingOperation();
+            ForceUpdate();
+        }
+
+        public void OnBeforeSerialize() => UpdateIfChangedThroughSerialization();
+        public void OnAfterDeserialize() => UpdateIfChangedThroughSerialization();
+        void UpdateIfChangedThroughSerialization()
+        {
+            if (!m_CurrentTable.Equals(TableReference))
+            {
+                m_CurrentTable = TableReference;
+
+                // We must defer as we can not call certain parts of Unity during serialization
+                UnityEditor.EditorApplication.delayCall += ChangedThroughSerialization;
+            }
+        }
+
+        #endif
     }
 }

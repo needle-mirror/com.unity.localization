@@ -1,9 +1,11 @@
+using System;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
 using UnityEngine.Localization.SmartFormat.Core.Formatting;
 using UnityEngine.Localization.SmartFormat.Utilities;
 
 namespace UnityEngine.Localization.SmartFormat.Extensions
 {
+    [Serializable]
     public class ValueTupleSource : ISource
     {
         private readonly SmartFormatter _formatter;

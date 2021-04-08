@@ -1,4 +1,5 @@
 using UnityEngine.Events;
+using UnityEngine.Localization.Settings;
 
 namespace UnityEngine.Localization.Components
 {
@@ -14,7 +15,8 @@ namespace UnityEngine.Localization.Components
     /// </example>
     /// <typeparam name="TObject">The type of Asset to be Localized. Must inherit from [UnityEngine.Object](https://docs.unity3d.com/ScriptReference/Object.html)</typeparam>
     /// <typeparam name="TReference">The **Serializable** LocalizedAsset class. This will be used for the <see cref="AssetReference"/> property.</typeparam>
-    public abstract class LocalizedAssetBehaviour<TObject, TReference> : MonoBehaviour
+    [ExecuteAlways]
+    public abstract class LocalizedAssetBehaviour<TObject, TReference> : LocalizedMonoBehaviour
         where TObject : Object
         where TReference : LocalizedAsset<TObject>, new()
     {
@@ -29,17 +31,32 @@ namespace UnityEngine.Localization.Components
             get => m_LocalizedAssetReference;
             set
             {
-                m_LocalizedAssetReference.AssetChanged -= UpdateAsset;
+                ClearChangeHandler();
                 m_LocalizedAssetReference = value;
 
-                if (enabled)
-                    m_LocalizedAssetReference.AssetChanged += UpdateAsset;
+                if (isActiveAndEnabled)
+                    RegisterChangeHandler();
             }
         }
 
-        protected virtual void OnEnable() => m_LocalizedAssetReference.AssetChanged += UpdateAsset;
+        protected virtual void OnEnable() => RegisterChangeHandler();
 
-        protected virtual void OnDisable() => m_LocalizedAssetReference.AssetChanged -= UpdateAsset;
+        protected virtual void OnDisable() => ClearChangeHandler();
+
+        void OnValidate()
+        {
+            AssetReference.ForceUpdate();
+        }
+
+        internal virtual void RegisterChangeHandler()
+        {
+            AssetReference.AssetChanged += UpdateAsset;
+        }
+
+        internal virtual void ClearChangeHandler()
+        {
+            AssetReference.AssetChanged -= UpdateAsset;
+        }
 
         /// <summary>
         /// Called when <see cref="AssetReference"/> has been loaded. This will occur when the game first starts after
@@ -78,7 +95,24 @@ namespace UnityEngine.Localization.Components
 
         protected override void UpdateAsset(TObject localizedAsset)
         {
-            OnUpdateAsset.Invoke(localizedAsset);
+            #if UNITY_EDITOR
+            if (!LocalizationSettings.Instance.IsPlaying)
+            {
+                if (AssetReference.IsEmpty)
+                {
+                    Editor_UnregisterKnownDrivenProperties(OnUpdateAsset);
+                    return;
+                }
+
+                Editor_RegisterKnownDrivenProperties(OnUpdateAsset);
+                OnUpdateAsset.Invoke(localizedAsset);
+                Editor_RefreshEventObjects(OnUpdateAsset);
+            }
+            else
+            #endif
+            {
+                OnUpdateAsset.Invoke(localizedAsset);
+            }
         }
     }
 }

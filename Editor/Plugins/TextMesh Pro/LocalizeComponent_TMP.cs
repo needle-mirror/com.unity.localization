@@ -3,12 +3,20 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Localization;
 using UnityEngine.Localization.Components;
 
 namespace UnityEditor.Localization.Plugins.TMPro
 {
+    [InitializeOnLoad]
     internal static class LocalizeComponent_TMPro
     {
+        static LocalizeComponent_TMPro()
+        {
+            // Register known driven properties
+            LocalizationPropertyDriver.UnityEventDrivenPropertiesLookup[(typeof(TextMeshProUGUI), "set_text")] = "m_text";
+        }
+
         [MenuItem("CONTEXT/TextMeshProUGUI/Localize")]
         static void LocalizeTMProText(MenuCommand command)
         {
@@ -22,6 +30,7 @@ namespace UnityEditor.Localization.Plugins.TMPro
             var setStringMethod = target.GetType().GetProperty("text").GetSetMethod();
             var methodDelegate = System.Delegate.CreateDelegate(typeof(UnityAction<string>), target, setStringMethod) as UnityAction<string>;
             Events.UnityEventTools.AddPersistentListener(comp.OnUpdateString, methodDelegate);
+            comp.OnUpdateString.SetPersistentListenerState(0, UnityEventCallState.EditorAndRuntime);
 
             const int kMatchThreshold = 5;
             var foundKey = LocalizationEditorSettings.FindSimilarKey(target.text);
@@ -31,7 +40,7 @@ namespace UnityEditor.Localization.Plugins.TMPro
                 comp.StringReference.TableReference = foundKey.collection.TableCollectionNameReference;
             }
 
-            return null;
+            return comp;
         }
     }
 }

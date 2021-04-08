@@ -29,18 +29,54 @@ namespace UnityEditor.Localization.UI
         }
     }
 
+
+    internal class EntryTreeView : TableEntryTreeView
+    {
+        LocalizationTableCollection m_Selected;
+
+        public EntryTreeView(Type assetType, LocalizationTableCollection selected, Action<LocalizationTableCollection, SharedTableData.SharedTableEntry> selectionHandler)
+        {
+            m_Selected = selected;
+            m_AssetType = assetType;
+            m_SelectionHandler = selectionHandler;
+            Reload();
+        }
+
+        protected internal override ReadOnlyCollection<AssetTableCollection> GetAssetTableCollections()
+        {
+            return new ReadOnlyCollection<AssetTableCollection>(new[] { m_Selected as AssetTableCollection });
+        }
+
+        protected internal override ReadOnlyCollection<StringTableCollection> GetStringTableCollections()
+        {
+            return new ReadOnlyCollection<StringTableCollection>(new[] { m_Selected as StringTableCollection });
+        }
+
+        protected override TreeViewItem FindOrCreateGroup(TreeViewItem root, LocalizationTableCollection collection, ref int nodeId)
+        {
+            return root;
+        }
+    }
+
     /// <summary>
     /// Allows for selecting a table entry from the projects tables.
     /// </summary>
     internal class TableEntryTreeView : TreeView
     {
-        readonly Type m_AssetType;
-        readonly Action<LocalizationTableCollection, SharedTableData.SharedTableEntry> m_SelectionHandler;
+        protected Type m_AssetType;
+        protected Action<LocalizationTableCollection, SharedTableData.SharedTableEntry> m_SelectionHandler;
 
         public TreeViewItem Root { get; private set; }
 
-        public TableEntryTreeView(Type assetType, Action<LocalizationTableCollection, SharedTableData.SharedTableEntry> selectionHandler)
+        public TableEntryTreeView()
             : base(new TreeViewState())
+        {
+            showAlternatingRowBackgrounds = true;
+            showBorder = true;
+        }
+
+        public TableEntryTreeView(Type assetType, Action<LocalizationTableCollection, SharedTableData.SharedTableEntry> selectionHandler)
+            : this()
         {
             m_AssetType = assetType;
             m_SelectionHandler = selectionHandler;
@@ -127,7 +163,7 @@ namespace UnityEditor.Localization.UI
             return Root;
         }
 
-        TreeViewItem FindOrCreateGroup(TreeViewItem root, LocalizationTableCollection collection, ref int nodeId)
+        protected virtual TreeViewItem FindOrCreateGroup(TreeViewItem root, LocalizationTableCollection collection, ref int nodeId)
         {
             var currentRoot = root;
             if (collection.Group == collection.DefaultGroupName)

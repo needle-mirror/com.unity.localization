@@ -1,5 +1,6 @@
 using UnityEditor.Localization.UI.Toolkit;
 using UnityEditor.UIElements;
+using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Settings;
 using UnityEngine.UIElements;
 
@@ -19,6 +20,10 @@ namespace UnityEditor.Localization.UI
 
             root.Add(new PropertyField(serializedObject.FindProperty("m_AssetDatabase")));
             root.Add(new PropertyField(serializedObject.FindProperty("m_StringDatabase")));
+
+            var metadata = new MetadataReorderableList(serializedObject.FindProperty("m_Metadata.m_Items"), new MetadataTypeAttribute(MetadataType.LocalizationSettings));
+            metadata.HeaderTitle = "Metadata";
+            root.Add(metadata);
 
             return root;
         }

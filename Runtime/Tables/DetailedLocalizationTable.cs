@@ -11,6 +11,8 @@ namespace UnityEngine.Localization.Tables
     /// </summary>
     public class TableEntry : IMetadataCollection
     {
+        SharedTableData.SharedTableEntry m_SharedTableEntry;
+
         /// <summary>
         /// The table that this entry is part of.
         /// </summary>
@@ -20,6 +22,22 @@ namespace UnityEngine.Localization.Tables
         /// The serialized data
         /// </summary>
         internal TableEntryData Data { get; set; }
+
+        /// <summary>
+        /// The shared table entry contains information for all locales, this is taken from <see cref="SharedTableData"/>.
+        /// </summary>
+        public SharedTableData.SharedTableEntry SharedEntry
+        {
+            get
+            {
+                if (m_SharedTableEntry == null)
+                {
+                    Assertions.Assert.IsNotNull(Table);
+                    m_SharedTableEntry = Table.SharedData.GetEntry(KeyId);
+                }
+                return m_SharedTableEntry;
+            }
+        }
 
         /// <summary>
         /// Key Id for this table entry.
@@ -182,7 +200,7 @@ namespace UnityEngine.Localization.Tables
 
         /// <summary>
         /// Removes the entry from the shared Metadata in the table and removes the
-        /// shared Metadata if no other entires are using it.
+        /// shared Metadata if no other entries are using it.
         /// </summary>
         /// <param name="md"></param>
         public void RemoveSharedMetadata(SharedTableEntryMetadata md)
@@ -199,7 +217,7 @@ namespace UnityEngine.Localization.Tables
 
         /// <summary>
         /// Removes the entry from the Shared Metadata and removes it from the
-        /// <see cref="SharedTableData"/> if no other entires are using it.
+        /// <see cref="SharedTableData"/> if no other entries are using it.
         /// </summary>
         /// <param name="md"></param>
         public void RemoveSharedMetadata(SharedTableCollectionMetadata md)
@@ -378,7 +396,7 @@ namespace UnityEngine.Localization.Tables
         {
             if (entryReference.ReferenceType == TableEntryReference.Type.Id)
                 return AddEntry(entryReference.KeyId, localized);
-            else if (entryReference.ReferenceType == TableEntryReference.Type.Name)
+            if (entryReference.ReferenceType == TableEntryReference.Type.Name)
                 return AddEntry(entryReference.Key, localized);
             throw new ArgumentException($"{nameof(TableEntryReference)} should not be Empty", nameof(entryReference));
         }
@@ -391,7 +409,7 @@ namespace UnityEngine.Localization.Tables
         public bool RemoveEntry(string key)
         {
             var keyId = FindKeyId(key, false);
-            return keyId == 0 ? false : RemoveEntry(keyId);
+            return keyId != 0 && RemoveEntry(keyId);
         }
 
         /// <summary>

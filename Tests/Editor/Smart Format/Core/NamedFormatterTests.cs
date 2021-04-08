@@ -112,7 +112,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
                 return true;
             }
 
-            public bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+            public bool TryEvaluateAllLiterals(IFormattingInfo formattingInfo)
             {
                 throw new System.NotImplementedException();
             }
@@ -130,7 +130,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
                 return true;
             }
 
-            public bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+            public bool TryEvaluateAllLiterals(IFormattingInfo formattingInfo)
             {
                 throw new System.NotImplementedException();
             }

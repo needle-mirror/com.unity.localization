@@ -63,10 +63,9 @@ namespace UnityEngine.Localization
         void FindTableByName(string collectionName)
         {
             m_CollectionName = collectionName;
-            var tableAddress = AddressHelper.GetTableAddress(m_CollectionName, m_SelectedLocale.Identifier);
 
             // Check the table exists
-            var tableResourceOp = AddressablesInterface.LoadResourceLocationsAsync(tableAddress, typeof(TTable));
+            var tableResourceOp = AddressablesInterface.LoadTableLocationsAsync(m_CollectionName, m_SelectedLocale.Identifier, typeof(TTable));
             if (!tableResourceOp.IsDone)
                 tableResourceOp.Completed += LoadTableResource;
             else
@@ -82,7 +81,7 @@ namespace UnityEngine.Localization
                 return;
             }
 
-            var loadTableOperation = AddressablesInterface.LoadAssetFromLocation<TTable>(operationHandle.Result[0]);
+            var loadTableOperation = AddressablesInterface.LoadTableFromLocation<TTable>(operationHandle.Result[0]);
             if (loadTableOperation.IsDone)
                 TableLoaded(loadTableOperation);
             else

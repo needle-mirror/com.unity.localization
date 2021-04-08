@@ -95,7 +95,7 @@ namespace UnityEditor.Localization.UI.Toolkit
             }
         }
 
-        void AddManagedItem(ReorderableList list, Type type, int index)
+        protected void AddManagedItem(ReorderableList list, Type type, int index)
         {
             var instance = CreateInstance != null ? CreateInstance(type) : Activator.CreateInstance(type);;
             var element = list.ListProperty.InsertArrayElement(index);

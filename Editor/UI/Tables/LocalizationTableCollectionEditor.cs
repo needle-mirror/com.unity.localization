@@ -23,6 +23,7 @@ namespace UnityEditor.Localization.UI
             public static readonly GUIContent missingTablesInfo = new GUIContent("These are tables that are missing for the Locales in the project.");
             public static readonly GUIContent noExtensions = new GUIContent("No Available Extensions");
             public static readonly GUIContent removeTable = new GUIContent("Remove", "Remove the table from the collection");
+            public static readonly GUIContent tables = new GUIContent("Tables");
         }
 
         LocalizationTableCollection m_Collection;
@@ -52,7 +53,8 @@ namespace UnityEditor.Localization.UI
             m_ExtensionsList.CreateNewInstance = (type) =>
             {
                 var instance = Activator.CreateInstance(type) as CollectionExtension;
-                instance.Init(target as LocalizationTableCollection);
+                instance.TargetCollection = (target as LocalizationTableCollection);
+                instance.Initialize();
                 return instance;
             };
 
@@ -112,7 +114,8 @@ namespace UnityEditor.Localization.UI
                 return;
             }
 
-            if (EditorGUILayout.PropertyField(m_Tables, false))
+            m_Tables.isExpanded = EditorGUILayout.Foldout(m_Tables.isExpanded, Styles.tables, true);
+            if (m_Tables.isExpanded)
             {
                 EditorGUI.indentLevel++;
                 var tables = m_Collection.Tables;

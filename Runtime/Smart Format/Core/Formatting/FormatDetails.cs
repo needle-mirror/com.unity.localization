@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine.Localization.SmartFormat.Core.Output;
 using UnityEngine.Localization.SmartFormat.Core.Parsing;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
@@ -11,7 +12,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Formatting
     /// </summary>
     public class FormatDetails
     {
-        public void Init(SmartFormatter formatter, Format originalFormat, object[] originalArgs,
+        public void Init(SmartFormatter formatter, Format originalFormat, IList<object> originalArgs,
             FormatCache formatCache, IFormatProvider provider, IOutput output)
         {
             Formatter = formatter;
@@ -48,7 +49,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Formatting
         /// The original set of arguments passed to the format function.
         /// These provide global-access to the original arguments.
         /// </summary>
-        public object[] OriginalArgs { get; private set; }
+        public IList<object> OriginalArgs { get; private set; }
 
         /// <summary>
         /// This object can be used to cache resources between formatting calls.

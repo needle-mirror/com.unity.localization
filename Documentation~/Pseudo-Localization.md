@@ -59,3 +59,9 @@ To create a new Pseudo-Locale Asset, go to **Assets > Create > Localization > Ps
 | **Metadata**                    | Use the Metadata list to add two type of data: <ul><li>Comment</li><li>Fallback locale</li></ul>
 | **Pseudo-Localization Methods** | Use the **Methods** list to define which methods of pseudo-localization this Pseudo-Locale Asset should apply to your application’s text. By default, the Pseudo-Locale includes the **Accenter**, **Expander** and **Encapsulator**. <br><br>See [Methods](Pseudo-Localization-Methods.md) for a full description of each Method.
 | **Pseudo-Localization Preview** | This displays a preview of the pseudo-localization settings you have configured. You can edit the text field to see a preview of any text string.
+
+## Apply it to your Scene at runtime
+
+To apply a Pseudo-Locale, the Selected Locale should be changed to the new Pseudo-Locale asset. This can be done in the Editor through the **Locale Game View Menu** or through Script by changing the [LocalizationSettings.SelectedLocale](xref:UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocale).
+The package **Samples**, which can be found in the Package Manager, contain examples of changing the Locale and example Locale Selection menus.
+

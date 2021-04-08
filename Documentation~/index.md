@@ -3,5 +3,5 @@ The Localization package provides tools for adding support for multiple language
 
 To get started, check the [Installation](Installation.md) and [Quick Start Guide](QuickStartGuide.md) sections.
 
-# Feedback
-Localization is still in development and subject to change. Your feedback is welcome [here](https://forum.unity.com/forums/localisation-tools-previews.205/)
+# Feedback 
+Your feedback is welcome [here](https://forum.unity.com/forums/localisation-tools-previews.205/)

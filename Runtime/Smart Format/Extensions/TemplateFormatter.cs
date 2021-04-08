@@ -12,7 +12,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     [Serializable]
     public class TemplateFormatter : FormatterBase
     {
-        [SerializeReference]
+        [SerializeReference, HideInInspector]
         SmartFormatter m_Formatter;
 
         private IDictionary<string, Format> m_Templates;
@@ -95,7 +95,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             Templates.Clear();
         }
 
-        public override bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+        public override bool TryEvaluateAllLiterals(IFormattingInfo formattingInfo)
         {
             // Not implemented
             return true;

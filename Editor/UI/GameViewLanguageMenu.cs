@@ -31,6 +31,9 @@ namespace UnityEditor.Localization.UI
             focusable = false;
             labelElement.style.minWidth = 60;
             labelElement.style.maxWidth = 60;
+
+            formatListItemCallback = loc => loc == null ? "None" : loc.ToString();
+            formatSelectedValueCallback = loc => loc == null ? "None" : loc.ToString();
         }
 
         /// <summary>
@@ -63,6 +66,19 @@ namespace UnityEditor.Localization.UI
             if (LocalizationSettings.HasSettings)
                 LocalizationSettings.SelectedLocaleChanged -= OnLanguageChanged;
             ClearViews();
+        }
+
+        public override void SetValueWithoutNotify(Locale newValue)
+        {
+            var choices = GetChoices();
+
+            // If the value is not contained in the known Locales(such as null) then we add a temp entry.
+            if (!choices.Contains(newValue))
+            {
+                choices.Insert(0, newValue);
+            }
+
+            base.SetValueWithoutNotify(newValue);
         }
 
         static void PlayModeStateChanged(PlayModeStateChange obj)

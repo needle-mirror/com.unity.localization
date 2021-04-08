@@ -5,7 +5,7 @@ using static UnityEditor.Localization.UI.LocalizedStringPropertyDrawer;
 namespace UnityEditor.Localization.UI
 {
     [CustomEditor(typeof(LocalizeStringEvent))]
-    class LocalizeStringEditor : UnityEditor.Editor
+    class LocalizeStringEventEditor : UnityEditor.Editor
     {
         SerializedProperty m_StringReference;
         SerializedProperty m_FormatArguments;

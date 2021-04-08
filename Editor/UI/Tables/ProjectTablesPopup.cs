@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.Localization.Tables;
 using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.UI
@@ -13,13 +14,15 @@ namespace UnityEditor.Localization.UI
     {
         class NoTables : LocalizationTableCollection
         {
-            protected override string DefaultAddressablesGroupName => null;
             protected internal override Type TableType => null;
             protected internal override Type RequiredExtensionAttribute => null;
 
             protected internal override string DefaultGroupName => "No Tables";
 
             public override string ToString() => k_NoTablesMessage;
+
+            public override void RemoveEntry(TableEntryReference entryReference)
+            {}
         }
 
         const string k_EditorPrefValueKey = "Localization-SelectedAssetTable";

@@ -1,4 +1,4 @@
-<UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+<UXML xmlns:ui="UnityEngine.UIElements">
     <ui:PopupWindow text="Selected Locales">
         <ui:ScrollView name="locales-list" itemHeight="16" />
     </ui:PopupWindow>
@@ -7,9 +7,14 @@
         <ui:Button text="Select None" name="select-none-button" />
         <ui:Button text="Locale Generator" name="locale-generator-button" />
     </ui:VisualElement>
-    <ui:TextField label="Table Collection Name" tooltip="The name to use for a set of newly created localization tables." name="new-table-name-field" text="[New Table]" class="unity-property-field-input" />
+    <ui:VisualElement name="table-collection-type-container"/>
+    <ui:TextField label="Name"
+                  tooltip="The name to use for a set of newly created localization tables."
+                  name="new-table-name-field"
+                  class="unity-property-field-input" />
+    <ui:VisualElement name="locale-help-box-container"/>
+    <ui:VisualElement name="table-name-help-box-container"/>
     <ui:VisualElement style="flex-direction: row-reverse;">
-        <ui:Button text="Create String Table Collection" name="create-string-tables-button" />
-        <ui:Button text="Create Asset Table Collection" name="create-asset-tables-button" />
+        <ui:Button text="Create" name="create-table-collection-button" />
     </ui:VisualElement>
 </UXML>

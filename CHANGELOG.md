@@ -1,9 +1,81 @@
 # Changelog
 All notable changes to this package will be documented in this file.
 
+## [0.11.0] - 2021-04-08
+
+### Added
+
+- Added **Addressable Group Rules** asset. This can be used to configure what Addressable groups assets should be placed into. See Addressables Integration docs for further details.
+- Added `CollectionExtension.Initialize`, this will be called when the extension is first added to a table collection.
+- Added `IEntryOverride`. This can be used to create overrides for table entries to direct to different localized values.
+- Added `Locale.LocaleName` property. This can be used to customize the name of the Locale instead of using the name of the Locale Asset in the `name` property. ([LOC-144](https://issuetracker.unity3d.com/issues/localization-locale-assets-name-is-not-saved-when-renaming-it-through-the-inspector))
+- Added `LocalizationEditorSettings.GetPsuedoLocales`. This returns all Pseudo Locales that are included in the project.
+- Added `LocalizedGameObjectEvent` component. This can be used to localize Prefabs.
+- Added `LocalizedMaterial` & `LocalizedGameObject`.
+- Added `PlatformOverride` **Metadata**. This can be used to override the value for an entry for a chosen platform, the override can change the entry, table or both.
+- Added `ReleaseAsset` method in `AssetTable`. This can be used to release an asset from memory for the provided AssetTableEntry.
+- Added `ReleaseTables` to `LocalizedDatabase`. This can be used to force a table to be released from the database so that it may be unloaded providing there are no other references to it.
+- Added `SetEntryAssetType` and `GetEntryAssetType` to `AssetTableCollection.`. This can be used to control the expected asset type for an entry.
+- Added `SharedEntry` property to `StringTableEntry` and `AssetTableEntry`. This will return the `SharedTableData` entry for the current Locale specific entry.
+- Added `SharedStringTableEntry` and `SharedAssetTableEntry` to `MetadataType`. These can be used to only show **Metadata** for a shared table entry only.
+- Added 3 new Addressable Analyzer rules which can be used to check for Addressable issues and upgrade when changing the **Addressable Group Rules**.
+- Added additional override for `StringTableEntry.GetLocalized` which allows for passing in an optional **Pseudo Locale**. By default the **Selected Locale** will be used. (LOC-162)
+- Added constructors to `LocalizedString`, `LocalizedAsset`, `LocalizedStringTable` and `LocalizedAssetTable`. These show the minimum arguments required for the class to function correctly.
+- Added extra override for method `GetLocalizedString` which now accepts the parameters as list of objects [IList<object>].
+- Added language change menu to Device Simulator window.
+- Added metadata support to **LocalizationSettings**.
+- Added method `TableEntryReference.ToString(TableReference)`. This will use the `TableReference` to gather additional data such as the **Key** or **Key Id**.
+- Added support for localizing **Android App name**. Only the **Display Name** is currently supported on the Android Platform. To configure the Android App add the **Android/AppInfo** metadata to the LocalizationSettings.
+- Added support for localizing Android app Icon. We currently support  Adaptive Icon, Round Icon, and Legacy Icon on the Android Platform. To configure the Android app icons, add the Android/Android Adaptive Icon or Android/Android Round Icon or Android/Android Legacy Icon metadata to the LocalizationSettings.
+- Added support for localizing iOS App components. Display Name, Microphone description, Camera description and Location description are currently supported. To configure the iOS App, add the **iOS/AppInfo** metadata to the **LocalizationSettings**.
+- Added the functionality to **Preview Localization** without entering Play mode. Do this through the **Localization Scene Controls** window. See Edit Mode Support docs for further details.
+- Added UI validation hints for table collection creation.
+- When a `TableReference` is a Guid type, the `TableCollectionName` will now attempt to resolve the name from the `AssetDatabase` or `LocalizationSettings`. This is particularly helpful when debugging as `ToString` will now also contain the `TableCollectionName` as well as the `Guid`.
+
+### Changed
+
+- `MetadataAttribute.AllowMultiple` is now respected. Metadata that already exists will now be disabled in the add menu.
+- Changed `LocalizedString.Arguments` to be an `IList<object>` instead of `object[]`.
+- Changed table collection names so they can no longer be comprised of whitespace, cannot contain invalid filename characters, and cannot contain "[]".
+- Changed table collections so you can no longer create table collections of the same type with duplicate names.
+- Changed the **Google Sheets Service - New Sheet Properties** field so it is now only visible when using **OAuth** authentication.
+- Moved `UnityEventAudioClip`, `UnityEventSprite`, `UnityEventString` and `UnityEventTexture` to `UnityEngine.Localization.Events` namespace.
+- Removed `LocaleIdentifier.Undefined`. You should compare against `default` to see if a `LocaleIdentifier` is defined. ([LOC-150](https://issuetracker.unity3d.com/issues/inconsistent-behaviour-between-localeidentifier-constructors-and-deserialization-when-using-different-empty-instances))
+- Renamed `StringUnityEvent` to `UnityEventString`.
+- Updated **Addressables** to **1.17.15**.
+
+### Fixed
+
+- `StringTableEntry.GetLocalizedString` variants now use the table's locale formatter if no formatter is provided.
+- Added new functionality, so loading a table via its **Table Collection Name Guid** will now complete immediately if it was previously loaded using the **Table Collection Name**. (LOC-172). (LOC-172)
+- Fixed **Psuedo Localization** so that when it is enabled, it will now be applied when calling `StringTableEntry.GetLocalized`. (LOC-162)
+- Fixed `AssetTypeMetadata` being added multiple times to **Shared Table Data** when adding new entries.
+- Fixed `CollectionExtension.TargetCollection` not being set when adding an extension via script.
+- Fixed `LocaleIdentifier` Equality comparisons when comparing undefined versions. ([LOC-150](https://issuetracker.unity3d.com/issues/inconsistent-behaviour-between-localeidentifier-constructors-and-deserialization-when-using-different-empty-instances))
+- Fixed `LocaleIdentifier` property drawer not updating when changing the Locale object. ([LOC-148](https://issuetracker.unity3d.com/issues/localization-localizationsettings-slash-locale-id-field-is-not-updated-when-selecting-locale-with-object-picker))
+- Fixed `MissingMethodException` exception being thrown when adding a **Smart String** Formatter that does not contain a default constructor. ([LOC-164](https://issuetracker.unity3d.com/issues/adding-smart-format-formatters-via-inspector-throws-exception))
+- Fixed `NullReferenceException` being thrown when pulling from an empty Google Sheet. (LOC-161)
+- Fixed `ValueTupleSource` not being marked as `Serializable` which could cause serialization issues. ([LOC-147](https://issuetracker.unity3d.com/issues/unknown-managed-type-referenced-unity-dot-localization-unityengine-dot-localization-dot-smartformat-dot-extensions-dot-valuetuplesource))
+- Fixed a bug where invoking `RemoveKey` was not removing the Keys from other tables. Now, this is handled by abstract overrides in StringTableCollection and AssetTableCollection.
+- Fixed corruption of PlayerSettings preloaded assets when building with the **InputSystem** package in the project. ([LOC-146](https://issuetracker.unity3d.com/issues/localization-slash-inputsystem-asset-is-not-removed-from-preloaded-assets-list))
+- Fixed Editor becoming unresponsive when using the **Google Sheets Service Authorize** button. (LOC-166)
+- Fixed error regarding nested header foldouts in LocalizedString inspector. ([LOC-163](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-163))
+- Fixed exception being thrown when adding a **CSV Extension** to a table collection. ([LOC-158](https://issuetracker.unity3d.com/issues/unityexception-is-thrown-while-moving-or-creating-scripts-after-adding-csv-extension-to-serialized-string-table-collection))
+- Fixed incorrect formula syntax in Google Sheets duplicate key rule. This would cause errors when creating a new sheet and the default Google Sheet Language was not English. ([case 1286943](https://issuetracker.unity3d.com/product/unity/issues/guid/1286943))
+- Fixed issue so that pulling from a **Google Sheet** with an **API Key** will no longer create an entry from the sheets header row.
+- Fixed Localization being applied twice when changing the reference on a `LocalizationStringEvent` or `LocalizedAssetBehaviour` on a disabled GameObject which was then activated. ([LOC-132](https://issuetracker.unity3d.com/issues/localizestringevent-applies-localization-twice-when-activating-object-if-stringreference-was-set-when-object-was-inactive))
+- Fixed Localization Tables window not updating when a value was changed in the LocalizedString property drawer.
+- Fixed Localization Tables window not updating when Converting Table Entry to Smart String in the LocalizedString property drawer.
+- Fixed NullReferenceException when pulling from a **Google Sheet** that contains an empty row. (LOC-149)
+- Fixed NullReferenceException when pulling from a Google Sheet that contains an empty row. ([LOC-149](https://issuetracker.unity3d.com/issues/googlesheets-nullrefexception-when-pulling-empty-cell))
+- Fixed possible infinite loop when calling `Locale.GetFallback()`.
+- Fixed the **Table Collection Editor** incorrectly showing the Tables field as a ReoderableList in 2020.2+. (LOC-167)
+- Regenerated Object Pool guids to prevent conflicts when using the package in a project with other packages that use the ObjectPool classes.
+
 ## [0.10.0] - 2021-01-20
 
 ### Added 
+
 - Added `GetDefaultTableAsync` to `LocalizedDatabase`. This can be used to get the DefaultTable directly. 
 - Added `HasChangeHandler` to `LocalizedString` and `LocalizedAsset`. ([LOC-111](https://issuetracker.unity3d.com/issues/localization-unable-to-check-if-registerchangehandler-is-null-when-using-localisestringevent))
 - Added `GenerateCharacterSet` to `StringTable` and `StringTableCollection`. This can be used to extract the unique characters used by 1 or more `String Tables`. This could then be used with a Font Atlas creator. It is also possible to export a **Character Set** file from the Export menu of the String Table window, the String Table Collection window, or the Localization Tables window.
@@ -52,7 +124,7 @@ All notable changes to this package will be documented in this file.
 - **String Table Entries** which have a null or empty localized string will now be treated as missing translations and use the `No Translation Found Format`. ([LOC-126](https://issuetracker.unity3d.com/issues/localization-no-translation-found-format-variable-isnt-used-when-an-entry-locale-is-empty))
 - Fixed exception when calling GetLocale and no Addressables settings exists in the project.
 - Fixed **XLIFF 2.0** generating empty **notes** nodes. ([LOC-131](https://issuetracker.unity3d.com/issues/localization-export-xliff-generates-table-with-notes-node-when-notes-are-not-added))
-- Fixed **Google Sheets** `PullEnd` not being called after pulling from a Google Sheet. ([LOC-133](https://issuetracker.unity3d.com/issues/googlesheets-does-not-call-pullend-on-custom-columns)
+- Fixed **Google Sheets** `PullEnd` not being called after pulling from a Google Sheet. ([LOC-133](https://issuetracker.unity3d.com/issues/googlesheets-does-not-call-pullend-on-custom-columns))
 - **Google Sheets** `PullCellData` is now called for all cells even if the sheet cell is empty. (LOC-134)
 - Pulling a **Google Sheet** using an **API Key** will now use the correct public API and no longer produce authorization errors. ([LOC-139](https://issuetracker.unity3d.com/issues/localization-using-api-key-to-retrieve-data-outputs-request-is-missing-required-authentication-credential-expected-oauth-2))
 - Calling `LocalizationEditorSettings.GetLocales` will no longer create a new Addressable Assets Settings file if one does not exist. ([LOC-142](https://issuetracker.unity3d.com/issues/a-new-addresableassetsdata-folder-is-created-when-recompiling-a-script-while-the-localization-tables-window-is-open))

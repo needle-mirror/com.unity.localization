@@ -39,6 +39,23 @@ namespace UnityEngine.Localization.Metadata
         AssetTableEntry = 32,
 
         /// <summary>
+        /// Metadata can be added to the Shared <see cref="StringTable"/> entry.
+        /// This will be accessible by all locales for the chosen Entry.
+        /// </summary>
+        SharedStringTableEntry = 64,
+
+        /// <summary>
+        /// Metadata can be added to the Shared <see cref="AssetTable"/> entry.
+        /// This will be accessible by all locales for the chosen Entry.
+        /// </summary>
+        SharedAssetTableEntry = 128,
+
+        /// <summary>
+        /// Metadata can be added to the <see cref="LocalizationSettings"/>.
+        /// </summary>
+        LocalizationSettings = 256,
+
+        /// <summary>
         /// Metadata can be added to any table type.
         /// </summary>
         AllTables = StringTable | AssetTable,
@@ -47,6 +64,12 @@ namespace UnityEngine.Localization.Metadata
         /// Metadata can be added to any table entry.
         /// </summary>
         AllTableEntries = StringTableEntry | AssetTableEntry,
+
+        /// <summary>
+        /// Metadata can be added to any shared table entry.
+        /// This will be accessible by all locales for the chosen Entry.
+        /// </summary>
+        AllSharedTableEntries = SharedStringTableEntry | SharedAssetTableEntry,
 
         /// <summary>
         /// Metadata can be added to anything.

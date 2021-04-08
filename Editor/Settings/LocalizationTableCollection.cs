@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using UnityEditor.Localization.Addressables;
 using UnityEditor.Localization.UI;
 using UnityEngine;
 using UnityEngine.Localization;
@@ -55,17 +56,13 @@ namespace UnityEditor.Localization
         ReadOnlyCollection<LazyLoadReference<LocalizationTable>> m_ReadOnlyTables;
         ReadOnlyCollection<CollectionExtension> m_ReadOnlyExtensions;
 
-        internal protected abstract Type TableType { get; }
+        protected internal abstract Type TableType { get; }
 
-        internal protected abstract Type RequiredExtensionAttribute { get; }
+        protected internal abstract Type RequiredExtensionAttribute { get; }
 
-        /// <summary>
-        /// The Addressables group that the tables will be added to for this collection.
-        /// </summary>
-        protected abstract string DefaultAddressablesGroupName { get; }
+        public abstract void RemoveEntry(TableEntryReference entryReference);
 
-        internal protected abstract string DefaultGroupName { get; }
-
+        protected internal abstract string DefaultGroupName { get; }
         internal (bool valid, string error) IsValid
         {
             get
@@ -146,6 +143,11 @@ namespace UnityEditor.Localization
         {
             if (name == TableCollectionName)
                 return;
+            var tableNameError = LocalizationEditorSettings.Instance.IsTableNameValid(GetType(), name);
+            if (tableNameError != null)
+            {
+                throw new ArgumentException(tableNameError, nameof(name));
+            }
 
             var undoGroup = Undo.GetCurrentGroup();
             if (createUndo)
@@ -202,19 +204,30 @@ namespace UnityEditor.Localization
             if (table.SharedData != SharedData)
                 throw new Exception($"Can not add table {table}, it has different Shared Data. Table uses {table.SharedData.name} but collection uses {SharedData.name}");
 
-            if (!CanAddTable(table))
+            if (!table.GetType().IsAssignableFrom(TableType))
                 return;
 
-            if (createUndo)
-                Undo.RecordObject(this, "Add table to collection");
+            using (new UndoScope("Add table to collection", createUndo))
+            {
+                if (createUndo)
+                    Undo.RegisterCompleteObjectUndo(this, "Add table to collection");
 
-            EditorUtility.SetDirty(this);
+                AddTableToAddressables(table, createUndo);
 
-            AddTableToAddressables(table, createUndo);
-            m_Tables.Add(new LazyLoadReference<LocalizationTable> { asset = table });
+                // We always run to this point in case we need to fix Addressable issues.
+                // We only send the event if the table has been added for the first time though.
+                if (!m_Tables.Any(tbl => tbl.asset == table || tbl.asset?.LocaleIdentifier == table.LocaleIdentifier))
+                {
+                    // We need to SetDirty after AddTableToAddressables as AddTableToAddressables may call
+                    // SaveAssets which would reset the dirty state before we have finished making changes.
+                    EditorUtility.SetDirty(this);
 
-            if (postEvent)
-                LocalizationEditorSettings.EditorEvents.RaiseTableAddedToCollection(this, table);
+                    m_Tables.Add(new LazyLoadReference<LocalizationTable> { asset = table });
+
+                    if (postEvent)
+                        LocalizationEditorSettings.EditorEvents.RaiseTableAddedToCollection(this, table);
+                }
+            }
         }
 
         /// <summary>
@@ -302,9 +315,13 @@ namespace UnityEditor.Localization
         {
             RemoveBrokenTables();
             AddSharedTableDataToAddressables();
-            foreach (var table in m_Tables)
+
+            using (new UndoScope("Add table to collection", createUndo))
             {
-                AddTableToAddressables(table.asset, createUndo);
+                foreach (var table in m_Tables)
+                {
+                    AddTableToAddressables(table.asset, createUndo);
+                }
             }
         }
 
@@ -340,14 +357,21 @@ namespace UnityEditor.Localization
 
             if (!Attribute.IsDefined(extension.GetType(), RequiredExtensionAttribute))
                 throw new ArgumentException($"Can not add extension. It requires the Attribute {RequiredExtensionAttribute}.", nameof(extension));
+
+            extension.TargetCollection = this;
             m_Extensions.Add(extension);
+            extension.Initialize();
         }
 
         /// <summary>
         /// Removes the extension from <see cref="Extensions"/>.
         /// </summary>
         /// <param name="extension"></param>
-        public void RemoveExtension(CollectionExtension extension) => m_Extensions.Remove(extension);
+        public void RemoveExtension(CollectionExtension extension)
+        {
+            m_Extensions.Remove(extension);
+            extension.TargetCollection = null;
+        }
 
         protected static IEnumerable<Row<TEntry>> GetRowEnumerator<TTable, TEntry>(IEnumerable<TTable> tables)
             where TTable : DetailedLocalizationTable<TEntry>
@@ -444,40 +468,18 @@ namespace UnityEditor.Localization
         }
 
         /// <summary>
-        /// Can this table be added to the collection?
-        /// Checks if the table is already in the collection or if a table with the same <see cref="LocaleIdentifier"/> is in the collection.
-        /// </summary>
-        /// <param name="table">The table to add.</param>
-        /// <returns></returns>
-        protected virtual bool CanAddTable(LocalizationTable table)
-        {
-            // Don't add the same table or if a table with the same locale id exists.
-            if (m_Tables.Any(tbl => tbl.asset == table || tbl.asset?.LocaleIdentifier == table.LocaleIdentifier))
-                return false;
-            return table.GetType().IsAssignableFrom(TableType);
-        }
-
-        /// <summary>
         /// Adds <see cref="SharedData"/> to Addressables.
         /// </summary>
-        /// <param name="sharedTableData"></param>
-        /// <param name="createUndo"></param>
-        internal protected virtual void AddSharedTableDataToAddressables()
+        protected internal virtual void AddSharedTableDataToAddressables()
         {
             var aaSettings = LocalizationEditorSettings.Instance.GetAddressableAssetSettings(true);
             if (aaSettings == null)
                 return;
 
-            // Add the shared table data
-            var sharedDataGuid = LocalizationEditorSettings.Instance.GetAssetGuid(SharedData);
-            var sharedDataEntry = aaSettings.FindAssetEntry(sharedDataGuid);
-            if (sharedDataEntry == null)
-            {
-                // Add to the shared assets group
-                var sharedGroup = LocalizationEditorSettings.Instance.GetGroup(aaSettings, LocalizationEditorSettings.SharedAssetGroupName, true, false);
-                sharedDataEntry = aaSettings.CreateOrMoveEntry(sharedDataGuid, sharedGroup);
-                sharedDataEntry.address = SharedData.name;
-            }
+            if (TableType == typeof(StringTable))
+                AddressableGroupRules.AddStringTableSharedAsset(SharedData, aaSettings, false);
+            else
+                AddressableGroupRules.AddAssetTableSharedAsset(SharedData, aaSettings, false);
         }
 
         /// <summary>
@@ -491,35 +493,17 @@ namespace UnityEditor.Localization
             if (aaSettings == null)
                 return;
 
+            var tableEntry = TableType == typeof(StringTable) ? AddressableGroupRules.AddStringTableAsset(table, aaSettings, createUndo) : AddressableGroupRules.AddAssetTableAsset(table, aaSettings, createUndo);
+
             if (createUndo)
-                Undo.RecordObject(aaSettings, "Update table");
-
-            // Has the asset already been added?
-            var tableEntry = LocalizationEditorSettings.Instance.GetAssetEntry(table);
-            var tableAdded = tableEntry == null;
-            if (tableEntry == null)
-            {
-                var groupName = DefaultAddressablesGroupName;
-                var group = LocalizationEditorSettings.Instance.GetGroup(aaSettings, groupName, true, createUndo);
-
-                if (createUndo)
-                    Undo.RecordObject(group, "Update table");
-
-                var tableGuid = LocalizationEditorSettings.Instance.GetAssetGuid(table);
-                tableEntry = aaSettings.CreateOrMoveEntry(tableGuid, group, true);
-            }
-            else if (createUndo)
-            {
-                Undo.RecordObject(tableEntry.parentGroup, "Update table");
-            }
+                Undo.RecordObjects(new UnityEngine.Object[] { aaSettings, tableEntry.parentGroup }, "Update table");
 
             tableEntry.address = AddressHelper.GetTableAddress(table.TableCollectionName, table.LocaleIdentifier);
             tableEntry.labels.RemoveWhere(AddressHelper.IsLocaleLabel); // Locale may have changed so clear the old ones.
 
             // Label the locale
             var localeLabel = AddressHelper.FormatAssetLabel(table.LocaleIdentifier);
-            aaSettings.AddLabel(localeLabel);
-            tableEntry.SetLabel(localeLabel, true);
+            tableEntry.SetLabel(localeLabel, true, true);
         }
 
         /// <summary>
@@ -541,9 +525,7 @@ namespace UnityEditor.Localization
                 return;
 
             if (createUndo)
-            {
                 Undo.RecordObjects(new UnityEngine.Object[] { settings, tableEntry.parentGroup }, "Remove table");
-            }
 
             settings.RemoveAssetEntry(tableEntry.guid);
         }
@@ -609,6 +591,7 @@ namespace UnityEditor.Localization
             if (brokenCount > 0)
             {
                 Debug.LogWarning($"{brokenCount} Broken table reference was found and removed for {TableCollectionName} collection. References to this table or its assets may have not been cleaned up.", this);
+                EditorUtility.SetDirty(this);
             }
         }
 

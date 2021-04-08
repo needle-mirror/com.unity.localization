@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Localization.Metadata;
+using UnityEngine.Localization.Pseudo;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.SmartFormat;
 using UnityEngine.Localization.SmartFormat.Core.Formatting;
@@ -89,46 +90,78 @@ namespace UnityEngine.Localization.Tables
         /// This will use SmartFormat if <see cref="IsSmart"/> is true else it will return the raw unformatted value.
         /// </summary>
         /// <returns></returns>
-        public string GetLocalizedString() => GetLocalizedString(null, null);
+        public string GetLocalizedString() => GetLocalizedString(null, null, LocalizationSettings.SelectedLocaleAsync.Result as PseudoLocale);
 
         /// <summary>
         /// Returns the localized text after formatting has been applied.
         /// Formatting will use SmartFormat if <see cref="IsSmart"/> is true else it will default to String.Format.
         /// </summary>
-        /// <param name="args"></param>
+        /// <param name="args">Arguments that will be applied to Smart Format or <c>String.Format.</c></param>
         /// <returns></returns>
-        public string GetLocalizedString(params object[] args) => GetLocalizedString(null, args);
+        public string GetLocalizedString(params object[] args) => GetLocalizedString(null, args, LocalizationSettings.SelectedLocaleAsync.Result as PseudoLocale);
+
+        /// <summary>
+        /// Returns the localized text after formatting has been applied.
+        /// Formatting will use SmartFormat if <see cref="IsSmart"/> is true else it will default to String.Format.
+        /// </summary>
+        /// <param name="args">Arguments that will be applied to Smart Format or <c>String.Format.</c></param>
+        /// <returns></returns>
+        public string GetLocalizedString(IList<object> args) => GetLocalizedString(null, args, LocalizationSettings.SelectedLocaleAsync.Result as PseudoLocale);
 
         /// <summary>
         /// Returns the localized text after formatting has been applied.
         /// Formatting will use SmartFormat is <see cref="IsSmart"/> is true else it will default to String.Format.
         /// </summary>
-        /// <param name="formatProvider">Custom format provider used with String.Format and smart strings.</param>
-        /// <param name="args"></param>
+        /// <param name="formatProvider">Custom format provider used with String.Format and smart strings.
+        /// If formatProvider is <c>null</c>, RemoveFromTable uses the <see cref="LocalizationTable.LocaleIdentifier"/>'s <see cref="Locale.Formatter"/>.</param>
+        /// <param name="args">Arguments that will be applied to Smart Format or <c>String.Format.</c></param>
         /// <returns></returns>
-        public string GetLocalizedString(IFormatProvider formatProvider, params object[] args)
+        public string GetLocalizedString(IFormatProvider formatProvider, IList<object> args) => GetLocalizedString(formatProvider, args, LocalizationSettings.SelectedLocaleAsync.Result as PseudoLocale);
+
+        /// <summary>
+        /// Returns the localized text after formatting has been applied.
+        /// Formatting will use SmartFormat is <see cref="IsSmart"/> is true else it will default to String.Format.
+        /// </summary>
+        /// <param name="formatProvider">Custom format provider used with String.Format and smart strings.
+        /// If formatProvider is <c>null</c>, RemoveFromTable uses the <see cref="LocalizationTable.LocaleIdentifier"/>'s <see cref="Locale.Formatter"/>.</param>
+        /// <param name="args">Arguments that are be applied to Smart Format or <c>String.Format.</c></param>
+        /// <param name="pseudoLocale">Optional <see cref="PseudoLocale"/> that will be applied to the final string.</param>
+        /// <returns></returns>
+        public string GetLocalizedString(IFormatProvider formatProvider, IList<object> args, PseudoLocale pseudoLocale)
         {
+            if (formatProvider == null)
+                formatProvider = LocalizationSettings.AvailableLocales?.GetLocale(Table.LocaleIdentifier)?.Formatter;
+
             string translatedText = null;
 
             if (IsSmart)
             {
                 #if UNITY_EDITOR
                 if (!LocalizationSettings.Instance.IsPlaying)
-                {
-                    FormatCache formatCache = null;
-                    translatedText = LocalizationSettings.StringDatabase.SmartFormatter.FormatWithCache(ref formatCache, Data.Localized, formatProvider, args);
-                }
-                else
+                    m_FormatCache = null;
                 #endif
                 translatedText = LocalizationSettings.StringDatabase.SmartFormatter.FormatWithCache(ref m_FormatCache, Data.Localized, formatProvider, args);
             }
             else if (!string.IsNullOrEmpty(Data.Localized))
             {
                 if (args != null)
-                    translatedText = formatProvider == null ? string.Format(Data.Localized, args) : string.Format(formatProvider, Data.Localized, args);
+                {
+                    try
+                    {
+                        translatedText = formatProvider == null ? string.Format(Data.Localized, args as object[] ?? args.ToArray()) : string.Format(formatProvider, Data.Localized, args as object[] ?? args.ToArray());
+                    }
+                    catch (FormatException)
+                    {
+                        // Supplement with a better error message as its likely that the string was a Smart String.
+                        throw new FormatException($"Input string was not in the correct format for String.Format. Ensure that the string is marked as Smart if you intended to use Smart Format.\n`{Data.Localized}`");
+                    }
+                }
                 else
                     translatedText = Data.Localized;
             }
+
+            if (pseudoLocale != null && !string.IsNullOrEmpty(translatedText))
+                translatedText = pseudoLocale.GetPseudoString(translatedText);
 
             return translatedText;
         }

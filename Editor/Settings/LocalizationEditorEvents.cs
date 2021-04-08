@@ -15,6 +15,9 @@ namespace UnityEditor.Localization
         public event EventHandler<Locale> LocaleSortOrderChanged;
         internal virtual void RaiseLocaleSortOrderChanged(object sender, Locale locale) => LocaleSortOrderChanged?.Invoke(sender, locale);
 
+        public event Action<SharedTableData.SharedTableEntry> TableEntryModified;
+        internal virtual void RaiseTableEntryModified(SharedTableData.SharedTableEntry tableEntry) => TableEntryModified?.Invoke(tableEntry);
+
         public event Action<LocalizationTableCollection, SharedTableData.SharedTableEntry> TableEntryAdded;
         internal virtual void RaiseTableEntryAdded(LocalizationTableCollection collection, SharedTableData.SharedTableEntry entry) => TableEntryAdded?.Invoke(collection, entry);
 

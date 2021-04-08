@@ -1,3 +1,4 @@
+using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 using UnityEngine.Pool;
@@ -55,6 +56,90 @@ namespace UnityEngine.Localization
             }
 
             var entry = asyncOperation.Result?.GetEntryFromReference(m_TableEntryReference);
+
+            if (HandleEntryOverride(asyncOperation, entry) || HandleFallback(asyncOperation, entry))
+                return;
+
+            Complete(new LocalizedDatabase<TTable, TEntry>.TableEntryResult(entry, asyncOperation.Result), true, null);
+            AddressablesInterface.Release(asyncOperation);
+        }
+
+        bool HandleEntryOverride(AsyncOperationHandle<TTable> asyncOperation, TEntry entry)
+        {
+            // First check for an Entry level override. This applies to Locale only.
+            if (entry != null)
+            {
+                foreach (var md in entry.MetadataEntries)
+                {
+                    if (md is IEntryOverride entryOverride)
+                    {
+                        if (ApplyEntryOverride(entryOverride, asyncOperation, entry))
+                            return true;
+                    }
+                }
+            }
+
+            // Now check for a shared override. This applies to all Locales for this table entry.
+            var sharedEntry = entry?.SharedEntry ?? asyncOperation.Result?.SharedData.GetEntryFromReference(m_TableEntryReference);
+            if (sharedEntry != null)
+            {
+                foreach (var md in sharedEntry.Metadata.MetadataEntries)
+                {
+                    if (md is IEntryOverride entryOverride)
+                    {
+                        if (ApplyEntryOverride(entryOverride, asyncOperation, entry))
+                            return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        bool ApplyEntryOverride(IEntryOverride entryOverride, AsyncOperationHandle<TTable> asyncOperation, TEntry entry)
+        {
+            if (entryOverride == null)
+                return false;
+
+            var overrideType = entryOverride.GetOverride(out var tableReference, out var tableEntry);
+            if (overrideType == EntryOverrideType.None)
+                return false;
+
+            if (overrideType == EntryOverrideType.Entry)
+            {
+                // Swap the entry but keep the same table.
+                m_TableEntryReference = tableEntry;
+
+                // Start the process again with the new entry
+                ExtractEntryFromTable(asyncOperation);
+                return true;
+            }
+
+            if (overrideType == EntryOverrideType.Table)
+            {
+                var sharedEntry = entry?.SharedEntry ?? asyncOperation.Result?.SharedData.GetEntryFromReference(m_TableEntryReference);
+
+                // Use the key as the id may not be the same in both tables
+                m_TableEntryReference = sharedEntry.Key;
+            }
+            else if (overrideType == EntryOverrideType.TableAndEntry)
+            {
+                m_TableEntryReference = tableEntry;
+            }
+
+            AddressablesInterface.Release(asyncOperation);
+            asyncOperation = m_Database.GetTableAsync(tableReference, m_CurrentLocale);
+            AddressablesInterface.Acquire(asyncOperation);
+
+            if (asyncOperation.IsDone)
+                ExtractEntryFromTable(asyncOperation);
+            else
+                asyncOperation.Completed += ExtractEntryFromTable;
+            return true;
+        }
+
+        bool HandleFallback(AsyncOperationHandle<TTable> asyncOperation, TEntry entry)
+        {
             if ((entry == null || string.IsNullOrEmpty(entry.Data.Localized)) && m_UseFallback)
             {
                 var fallbackLocale = m_CurrentLocale.GetFallback();
@@ -74,12 +159,11 @@ namespace UnityEngine.Localization
                     else
                         asyncOperation.Completed += ExtractEntryFromTable;
 
-                    return;
+                    return true;
                 }
             }
 
-            Complete(new LocalizedDatabase<TTable, TEntry>.TableEntryResult(entry, asyncOperation.Result), true, null);
-            AddressablesInterface.Release(asyncOperation);
+            return false;
         }
 
         protected override void Destroy()

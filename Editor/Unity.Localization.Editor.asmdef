@@ -8,7 +8,8 @@
         "Unity.ResourceManager",
         "Unity.TextMeshPro",
         "Unity.ugui",
-        "Unity.Nuget.NewtonsoftJson.EditorTests"
+        "Unity.Nuget.NewtonsoftJson.EditorTests",
+        "Unity.DeviceSimulator.Editor"
     ],
     "includePlatforms": [
         "Editor"
@@ -31,6 +32,16 @@
             "name": "com.unity.textmeshpro",
             "expression": "1.0.0",
             "define": "PACKAGE_TMP"
+        },
+        {
+            "name": "com.unity.device-simulator",
+            "expression": "1.0.0",
+            "define": "PACKAGE_DEVICE_SIMULATOR "
+        },
+        {
+            "name": "com.unity.modules.audio",
+            "expression": "1.0.0",
+            "define": "MODULE_AUDIO"
         }
     ],
     "noEngineReferences": false

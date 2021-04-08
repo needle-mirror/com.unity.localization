@@ -9,6 +9,8 @@ namespace UnityEditor.Localization.UI
         protected VisualElement m_TableContentsPanel;
         protected VisualElement m_PropertiesPanel;
         protected TextField m_NameField;
+        protected VisualElement m_TableNameHelpBoxContainer;
+        protected VisualElement m_TableNameHelpBox;
 
         public virtual void OnEnable()
         {
@@ -24,6 +26,8 @@ namespace UnityEditor.Localization.UI
             m_NameField.value = TableCollection.TableCollectionName;
             m_NameField.RegisterCallback<ChangeEvent<string>>(TableCollectionNameChanged);
             m_NameField.isDelayed = true; // Prevent an undo per char change.
+
+            m_TableNameHelpBoxContainer = this.Q("table-name-help-box-container");
         }
 
         public virtual void OnDisable()
@@ -44,6 +48,19 @@ namespace UnityEditor.Localization.UI
 
         void TableCollectionNameChanged(ChangeEvent<string> evt)
         {
+            m_TableNameHelpBox?.RemoveFromHierarchy();
+
+            if (TableCollection.TableCollectionName == evt.newValue)
+                return;
+
+            var tableNameError = LocalizationEditorSettings.Instance.IsTableNameValid(TableCollection.GetType(), evt.newValue);
+            if (tableNameError != null)
+            {
+                m_TableNameHelpBox = HelpBoxFactory.CreateDefaultHelpBox(tableNameError);
+                m_TableNameHelpBoxContainer.Add(m_TableNameHelpBox);
+                return;
+            }
+
             TableCollection.SetTableCollectionName(evt.newValue, true);
 
             // Force the label to update itself.

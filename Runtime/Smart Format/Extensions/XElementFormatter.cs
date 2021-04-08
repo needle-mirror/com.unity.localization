@@ -36,7 +36,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             return false;
         }
 
-        public override bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo)
+        public override bool TryEvaluateAllLiterals(IFormattingInfo formattingInfo)
         {
             return true;
         }

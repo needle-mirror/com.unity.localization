@@ -219,6 +219,7 @@ namespace UnityEditor.Localization.UI
                     var listPos = EditorGUI.PrefixLabel(rowPosition, GUIContent.none);
                     stringPropertyData.previewArgumentsList.DoList(listPos);
                 }
+                EditorGUI.EndFoldoutHeaderGroup();
             }
         }
 

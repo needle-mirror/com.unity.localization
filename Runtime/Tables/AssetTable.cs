@@ -200,6 +200,39 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
+        /// Release an asset for a single entry that have been preloaded  or cached
+        /// </summary>
+        /// <param name="entry">A reference to the entry in the table.</param>
+        /// <returns></returns>
+        public void ReleaseAsset(AssetTableEntry entry)
+        {
+            if (entry == null)
+                return;
+
+            if (m_PreloadOperationHandle.HasValue)
+            {
+                AddressablesInterface.Release(m_PreloadOperationHandle.Value);
+                m_PreloadOperationHandle = null;
+            }
+
+            if (entry.AsyncOperation.HasValue)
+            {
+                AddressablesInterface.Release(entry.AsyncOperation.Value);
+                entry.AsyncOperation = null;
+            }
+        }
+
+        /// <summary>
+        /// Release an asset for a single entry that have been preloaded  or cached
+        /// </summary>
+        /// <param name="entry">A reference to the entry in the table.</param>
+        /// <returns></returns>
+        public void ReleaseAsset(TableEntryReference entry)
+        {
+            ReleaseAsset(GetEntryFromReference(entry));
+        }
+
+        /// <summary>
         /// Creates a new, empty AssetTableEntry.
         /// </summary>
         /// <returns></returns>

@@ -177,7 +177,7 @@ namespace UnityEditor.Localization.UI
         void RefreshPreloadToggle()
         {
             // TODO: We could use the instanceId instead of the asset so that we do not need to load the asset. (e.g for hidden columns)
-            int preloadCount = m_TableCollection.Tables.Count(tbl => LocalizationEditorSettings.GetPreloadTableFlag(tbl.asset));
+            int preloadCount = m_TableCollection.Tables.Count(tbl => tbl.asset != null && LocalizationEditorSettings.GetPreloadTableFlag(tbl.asset));
             if (preloadCount == 0)
             {
                 m_PreloadAllToggle = false;

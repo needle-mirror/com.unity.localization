@@ -9,13 +9,9 @@ namespace UnityEditor.Localization
 {
     public class StringTableCollection : LocalizationTableCollection
     {
-        static readonly Type kTableType = typeof(StringTable);
-        protected internal override Type TableType => kTableType;
+        protected internal override Type TableType => typeof(StringTable);
 
         protected internal override Type RequiredExtensionAttribute => typeof(StringTableCollectionExtensionAttribute);
-
-        protected override string DefaultAddressablesGroupName => "Localization-StringTables";
-
         protected internal override string DefaultGroupName => "String Table";
 
         /// <summary>
@@ -110,5 +106,25 @@ namespace UnityEditor.Localization
         /// <param name="tables"></param>
         /// <returns></returns>
         public static IEnumerable<Row<StringTableEntry>> GetRowEnumerator(params StringTable[] tables) => GetRowEnumerator<StringTable, StringTableEntry>(tables);
+
+        /// <summary>
+        /// Removes the entry from the <see cref="SharedTableData"/> and all tables that are part of this collection.
+        /// </summary>
+        /// <param name="id"></param>
+        public override void RemoveEntry(TableEntryReference entryReference)
+        {
+            if (entryReference.ReferenceType == TableEntryReference.Type.Name)
+            {
+                SharedData.RemoveKey(entryReference.Key);
+                foreach (var table in StringTables)
+                    table.SharedData.RemoveKey(entryReference.Key);
+            }
+            else if (entryReference.ReferenceType == TableEntryReference.Type.Id)
+            {
+                SharedData.RemoveKey(entryReference.KeyId);
+                foreach (var table in StringTables)
+                    table.SharedData.RemoveKey(entryReference.KeyId);
+            }
+        }
     }
 }

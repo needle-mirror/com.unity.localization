@@ -9,7 +9,7 @@ namespace UnityEngine.Localization.Settings
     /// Responsible for providing the list of locales that are currently available to this application.
     /// </summary>
     [Serializable]
-    public class LocalesProvider : ILocalesProvider, IPreloadRequired
+    public class LocalesProvider : ILocalesProvider, IPreloadRequired, IReset
     {
         List<Locale> m_Locales = new List<Locale>();
         AsyncOperationHandle? m_LoadOperation;
@@ -21,7 +21,7 @@ namespace UnityEngine.Localization.Settings
         {
             get
             {
-                if (m_LoadOperation == null)
+                if (LocalizationSettings.Instance.IsPlaying && m_LoadOperation == null)
                     Debug.LogError("Locales PreloadOperation has not been initialized, can not return the available locales.");
                 return m_Locales;
             }
@@ -36,9 +36,6 @@ namespace UnityEngine.Localization.Settings
             {
                 if (m_LoadOperation == null)
                 {
-                    if (m_Locales == null)
-                        m_Locales = new List<Locale>();
-
                     m_Locales.Clear();
                     m_LoadOperation = AddressablesInterface.LoadAssetsWithLabel<Locale>(LocalizationSettings.LocaleLabel, AddLocale);
                 }
@@ -56,7 +53,7 @@ namespace UnityEngine.Localization.Settings
         {
             foreach (var locale in Locales)
             {
-                if (locale.Identifier.Equals(id))
+                if (locale != null && locale.Identifier.Equals(id))
                     return locale;
             }
             return null;
@@ -71,6 +68,9 @@ namespace UnityEngine.Localization.Settings
         {
             foreach (var locale in Locales)
             {
+                if (locale == null)
+                    continue;
+
                 // Ignore PseudoLocale's
                 if (locale is PseudoLocale)
                     continue;
@@ -123,6 +123,12 @@ namespace UnityEngine.Localization.Settings
             var settings = LocalizationSettings.GetInstanceDontCreateDefault();
             settings?.OnLocaleRemoved(locale);
             return ret;
+        }
+
+        public void ResetState()
+        {
+            m_Locales.Clear();
+            m_LoadOperation = null;
         }
     }
 }

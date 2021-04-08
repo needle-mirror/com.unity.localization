@@ -1,15 +1,9 @@
 * Guides
   * [Installation](Installation.md)
   * [Quick start guide](QuickStartGuide.md)
-
 * Reference
-  * [Localization Settings](LocalizationSettings.md)
-  * [Locale](Locale.md)
-  * Tables
-    * [Localization Tables Window](LocalizationTablesWindow.md)
-    * [String Tables](StringTables.md)
-    * [Asset Tables](AssetTables.md)
-    * [Table Keys](TableEntryKeys.md)
+  * [Addressables Integration](Addressables.md)
+  * [Component Localizers](ComponentLocalizers.md)
   * Extensions
     * [CSV](CSV.md)
     * [Google Sheets](Google-Sheets.md)
@@ -17,7 +11,17 @@
       * [Configuring Authentication](Google-Sheets-Configuring-Authentication.md)
       * [Syncing String Table Collections](Google-Sheets-Syncing-StringTableCollections.md)
     * [XLIFF](XLIFF.md)
+  * [Locale](Locale.md)
+  * [Localization Settings](LocalizationSettings.md)
   * [Metadata](Metadata.md)
+    * [Platform Overrides](Metadata-Platform-Overrides.md)
+  * Platforms
+    * [Android](Android-App-Localization.md)
+    * [Editor](EditModeSupport.md)
+    * [iOS](iOS-App-Localization.md)
+  * [Pseudo-Localization](Pseudo-Localization.md)
+    * [Methods](Pseudo-Localization-Methods.md)
+  * [Scripting](Scripting.md)
   * [Smart Strings](SmartStrings.md)
     * [Common Pitfalls](Common-Pitfalls.md)
     * Main Features
@@ -38,7 +42,8 @@
       * [Creating your own extension](Writing-an-Extension.md)
       * [Performance](Performance.md)
       * [Compatibility with string.Format](Compatibility-with-string.Format.md)
-  * [Pseudo-Localization](Pseudo-Localization.md)
-    * [Methods](Pseudo-Localization-Methods.md)
-  * [Scripting](Scripting.md)
-  * [Component Localizers](ComponentLocalizers.md)
+  * Tables
+    * [Localization Tables Window](LocalizationTablesWindow.md)
+    * [String Tables](StringTables.md)
+    * [Asset Tables](AssetTables.md)
+    * [Table Keys](TableEntryKeys.md)

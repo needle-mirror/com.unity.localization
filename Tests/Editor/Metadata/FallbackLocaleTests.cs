@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
@@ -12,13 +13,9 @@ namespace UnityEditor.Localization.Tests.Metadata
         static Locale CreateLocaleWithFallback(string name)
         {
             var locale = ScriptableObject.CreateInstance<Locale>();
-            Undo.RegisterCreatedObjectUndo(locale, "Created locale");
             locale.name = name;
-
             var fallback = new FallbackLocale();
-            Undo.RegisterCreatedObjectUndo(locale, "Created fallback");
             locale.Metadata.AddMetadata(fallback);
-
             return locale;
         }
 
@@ -37,6 +34,9 @@ namespace UnityEditor.Localization.Tests.Metadata
 
             Assert.IsNotNull(fallbackA.Locale, "Expected Fallback to not be null");
             Assert.IsNull(fallbackB.Locale, "Expected Fallback locale to be null.");
+
+            Object.DestroyImmediate(localeA);
+            Object.DestroyImmediate(localeB);
         }
 
         [Test]
@@ -65,6 +65,8 @@ namespace UnityEditor.Localization.Tests.Metadata
             fallback.Locale = locales[numLocales - 1];
 
             Assert.IsNull(fallback.Locale, "Expected Fallback locale to be null.");
+
+            locales.ToList().ForEach(Object.DestroyImmediate);
         }
 
         [Test]
@@ -78,6 +80,7 @@ namespace UnityEditor.Localization.Tests.Metadata
             fallbackA.Locale = localeA;
 
             Assert.IsNull(fallbackA.Locale, "Expected Fallback locale to be null.");
+            Object.DestroyImmediate(localeA);
         }
     }
 }

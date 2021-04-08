@@ -4,6 +4,7 @@ using UnityEngine.Localization.SmartFormat.GlobalVariables;
 
 namespace UnityEngine.Localization.Samples
 {
+    [ExecuteAlways]
     public class SetupScene : MonoBehaviour
     {
         public GlobalVariablesGroup group;

@@ -1,76 +1,73 @@
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.Localization;
+using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.UI
 {
-    class LocaleIdentifierPropertyDrawerData
-    {
-        public Locale selectedLocale;
-        public SerializedProperty code;
-        public bool undoPerformed;
-    }
-
     [CustomPropertyDrawer(typeof(LocaleIdentifier))]
-    class LocaleIdentifierPropertyDrawer : PropertyDrawerExtended<LocaleIdentifierPropertyDrawerData>
+    class LocaleIdentifierPropertyDrawer : PropertyDrawer
     {
-        readonly float k_ExpandedHeight = (2.0f * EditorGUIUtility.singleLineHeight) + (2.0f * EditorGUIUtility.standardVerticalSpacing);
+        readonly float k_ExpandedHeight = (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * 2;
 
-        public LocaleIdentifierPropertyDrawer() => Undo.undoRedoPerformed += UndoRedoPerformed;
-
-        ~LocaleIdentifierPropertyDrawer() => Undo.undoRedoPerformed -= UndoRedoPerformed;
-
-        void UndoRedoPerformed()
+        /// <summary>
+        /// UI Toolkit version
+        /// </summary>
+        /// <param name="property"></param>
+        /// <returns></returns>
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            foreach (var propertyData in PropertyData)
+            var code = property.FindPropertyRelative("m_Code");
+
+            var foldout = new Foldout { text = "Identifier" };
+            foldout.BindProperty(property);
+
+            var localeField = new ObjectField { objectType = typeof(Locale), value = LocalizationEditorSettings.GetLocale(code.stringValue) };
+            localeField.AddToClassList("unity-base-field__input");
+            localeField.RegisterCallback<MouseDownEvent>(evt => evt.StopPropagation());
+            localeField.RegisterCallback<MouseUpEvent>(evt => evt.StopPropagation());
+            localeField.RegisterValueChangedCallback(evt =>
             {
-                propertyData.Value.undoPerformed = true;
-            }
+                var locale = evt.newValue as Locale;
+                code.stringValue = locale != null ? locale.Identifier.Code : string.Empty;
+                code.serializedObject.ApplyModifiedProperties();
+            });
+            foldout.hierarchy[0].Add(localeField);
+            foldout.hierarchy[0].hierarchy[0].RemoveFromClassList("unity-base-field__input");
+            foldout.hierarchy[0].hierarchy[0].AddToClassList("unity-base-field__label");
+
+            var codeField = new TextField { label = "Code" };
+            codeField.RegisterValueChangedCallback(evt =>
+            {
+                localeField.SetValueWithoutNotify(LocalizationEditorSettings.GetLocale(evt.newValue));
+            });
+            codeField.BindProperty(code);
+            foldout.Add(codeField);
+
+            return foldout;
         }
 
-        public override LocaleIdentifierPropertyDrawerData CreatePropertyData(SerializedProperty property)
+        /// <summary>
+        /// IMGUI Version
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="property"></param>
+        /// <param name="label"></param>
+        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            var data =  new LocaleIdentifierPropertyDrawerData
-            {
-                code = property.FindPropertyRelative("m_Code")
-            };
-            FindLocaleFromIdentifier(data);
-            return data;
-        }
+            var code = property.FindPropertyRelative("m_Code");
 
-        void FindLocaleFromIdentifier(LocaleIdentifierPropertyDrawerData data)
-        {
-            data.undoPerformed = false;
-
-            var assets = AssetDatabase.FindAssets("t:Locale");
-            foreach (var assetGuid in assets)
-            {
-                var path = AssetDatabase.GUIDToAssetPath(assetGuid);
-                var locale = AssetDatabase.LoadAssetAtPath<Locale>(path);
-
-                if (data.code.stringValue == locale.Identifier.Code)
-                {
-                    data.selectedLocale = locale;
-                    return;
-                }
-            }
-
-            data.selectedLocale = null;
-        }
-
-        public override void OnGUI(LocaleIdentifierPropertyDrawerData data, Rect position, SerializedProperty property, GUIContent label)
-        {
             var foldRect = new Rect(position.x, position.y, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight);
             property.isExpanded = EditorGUI.Foldout(foldRect, property.isExpanded, label, true);
 
             EditorGUI.BeginChangeCheck();
             EditorGUI.BeginProperty(foldRect, GUIContent.none, property);
             var localeRect = new Rect(position.x + EditorGUIUtility.labelWidth, position.y, position.width - foldRect.width, foldRect.height);
-            var newSelectedLocale = EditorGUI.ObjectField(localeRect, data.selectedLocale, typeof(Locale), false);
+            var newSelectedLocale = EditorGUI.ObjectField(localeRect, LocalizationEditorSettings.GetLocale(code.stringValue), typeof(Locale), false) as Locale;
             EditorGUI.EndProperty();
             if (EditorGUI.EndChangeCheck())
             {
-                data.selectedLocale = newSelectedLocale as Locale;
-                data.code.stringValue = data.selectedLocale != null ? data.selectedLocale.Identifier.Code : string.Empty;
+                code.stringValue = newSelectedLocale != null ? newSelectedLocale.Identifier.Code : string.Empty;
             }
 
             if (property.isExpanded)
@@ -78,18 +75,13 @@ namespace UnityEditor.Localization.UI
                 EditorGUI.indentLevel++;
                 position.height = EditorGUIUtility.singleLineHeight;
 
-                EditorGUI.BeginChangeCheck();
                 position.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
-                EditorGUI.PropertyField(position, data.code);
-                if (EditorGUI.EndChangeCheck() || data.undoPerformed)
-                {
-                    FindLocaleFromIdentifier(data);
-                }
+                EditorGUI.PropertyField(position, code);
                 EditorGUI.indentLevel--;
             }
         }
 
-        public override float GetPropertyHeight(LocaleIdentifierPropertyDrawerData data, SerializedProperty property, GUIContent label)
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             return property.isExpanded ? k_ExpandedHeight : EditorGUIUtility.singleLineHeight;
         }

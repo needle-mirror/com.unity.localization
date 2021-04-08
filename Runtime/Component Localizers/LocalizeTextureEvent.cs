@@ -1,14 +1,7 @@
-using System;
-using UnityEngine.Events;
+using UnityEngine.Localization.Events;
 
 namespace UnityEngine.Localization.Components
 {
-    /// <summary>
-    /// [UnityEvent](https://docs.unity3d.com/ScriptReference/Events.UnityEvent.html) which can pass an [Texture](https://docs.unity3d.com/ScriptReference/Texture.html) as an argument.
-    /// </summary>
-    [Serializable]
-    public class UnityEventTexture : UnityEvent<Texture> {}
-
     /// <summary>
     /// Component that can be used to Localize a [Texture](https://docs.unity3d.com/ScriptReference/Texture.html) asset.
     /// Provides an update event <see cref="LocalizedAssetEvent{TObject, TReference, TEvent}.OnUpdateAsset"/> that can be used to automatically

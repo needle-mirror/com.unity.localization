@@ -45,7 +45,7 @@ namespace UnityEngine.Localization.SmartFormat
                 {
                     if (!formatterExtension.Names.Contains(formatterName))
                         continue;
-                    var handled = formatterExtension.TryEvalulateAllLiterals(childFormattingInfo);
+                    var handled = formatterExtension.TryEvaluateAllLiterals(childFormattingInfo);
                     if (handled)
                         continue;
                 }

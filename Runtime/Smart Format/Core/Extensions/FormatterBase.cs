@@ -15,7 +15,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Extensions
 
         public abstract bool TryEvaluateFormat(IFormattingInfo formattingInfo);
 
-        public abstract bool TryEvalulateAllLiterals(IFormattingInfo formattingInfo);
+        public abstract bool TryEvaluateAllLiterals(IFormattingInfo formattingInfo);
 
         public void OnAfterDeserialize()
         {

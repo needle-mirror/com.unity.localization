@@ -102,7 +102,7 @@ namespace UnityEngine.Localization
             m_LoadTables.Clear();
             m_LoadTablesOperation.Clear();
             m_PreloadTablesOperations.Clear();
-            m_TableReferences.Clear();
+            m_TableReferences = null;
             GenericPool<PreloadTablesOperation<TTable, TEntry>>.Release(this);
         }
     }

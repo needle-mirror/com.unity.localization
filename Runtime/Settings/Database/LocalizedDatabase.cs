@@ -21,7 +21,7 @@ namespace UnityEngine.Localization.Settings
     }
 
     [Serializable]
-    public abstract class LocalizedDatabase<TTable, TEntry> : IPreloadRequired
+    public abstract class LocalizedDatabase<TTable, TEntry> : IPreloadRequired, IReset
         where TTable : DetailedLocalizationTable<TEntry>
         where TEntry : TableEntry
     {
@@ -94,7 +94,7 @@ namespace UnityEngine.Localization.Settings
         }
 
         // Used in place of the actual selected locale when it is still being loaded.
-        internal static readonly LocaleIdentifier s_SelectedLocaleId = new LocaleIdentifier("selected locale placeholder");
+        internal static readonly LocaleIdentifier k_SelectedLocaleId = new LocaleIdentifier("selected locale placeholder");
 
         internal Dictionary<(LocaleIdentifier localeIdentifier, string tableNameOrGuid), AsyncOperationHandle<TTable>> TableOperations
         {
@@ -115,7 +115,6 @@ namespace UnityEngine.Localization.Settings
             get => m_DefaultTableReference;
             set => m_DefaultTableReference = value;
         }
-
 
         /// <summary>
         /// Should the fallback Locale be used when a translation could not be found?.
@@ -204,7 +203,7 @@ namespace UnityEngine.Localization.Settings
             // Do we have a cached operation already running?
             tableReference.Validate();
             var tableIdString = tableReference.ReferenceType == TableReference.Type.Guid ? TableReference.StringFromGuid(tableReference.TableCollectionNameGuid) : tableReference.TableCollectionName;
-            var localeId = useSelectedLocalePlaceholder ? s_SelectedLocaleId : locale.Identifier;
+            var localeId = useSelectedLocalePlaceholder ? k_SelectedLocaleId : locale.Identifier;
             if (TableOperations.TryGetValue((localeId, tableIdString), out var operationHandle))
                 return operationHandle;
 
@@ -332,7 +331,7 @@ namespace UnityEngine.Localization.Settings
                         continue;
 
                     // Check locale and placeholder
-                    if (tableOperation.Key.localeIdentifier == locale.Identifier || tableOperation.Key.localeIdentifier == s_SelectedLocaleId)
+                    if (tableOperation.Key.localeIdentifier == locale.Identifier || tableOperation.Key.localeIdentifier == k_SelectedLocaleId)
                     {
                         // We only want to do this once.
                         if (!removedContents)
@@ -436,5 +435,14 @@ namespace UnityEngine.Localization.Settings
 
             TableOperations.Clear();
         }
+
+        /// <summary>
+        /// Resets the state of the provider by removing all the cached tables and clearing the preload operation.
+        /// </summary>
+        public void ResetState()
+        {
+            m_ReleaseNextFrame = null;
+            OnLocaleChanged(null);
+        } 
     }
 }

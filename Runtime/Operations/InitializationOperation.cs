@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -14,7 +13,6 @@ namespace UnityEngine.Localization
         LocalizationSettings m_Settings;
         string m_Error;
         float m_Progress;
-        List<IInitialize> m_PostInitializers;
 
         const float k_LocalesProgress = 0.2f;
         const float k_DatabaseProgress = 0.4f;
@@ -26,12 +24,6 @@ namespace UnityEngine.Localization
 
         public void Init(LocalizationSettings settings)
         {
-            // Collect the post initializers?
-            if (m_Settings != settings)
-            {
-                m_PostInitializers = settings.GetInitializers();
-            }
-
             m_Settings = settings;
             m_Error = null;
             m_PreloadingOperations = 0;
@@ -108,13 +100,14 @@ namespace UnityEngine.Localization
 
         void PostInitializeExtensions()
         {
-            if (m_PostInitializers == null)
-                return;
-
-            foreach (var init in m_PostInitializers)
+            foreach (var startupLocaleSelector in m_Settings.GetStartupLocaleSelectors())
             {
-                init.PostInitialization(m_Settings);
+                (startupLocaleSelector as IInitialize)?.PostInitialization(m_Settings);
             }
+
+            (m_Settings.GetAvailableLocales() as IInitialize)?.PostInitialization(m_Settings);
+            (m_Settings.GetAssetDatabase() as IInitialize)?.PostInitialization(m_Settings);
+            (m_Settings.GetStringDatabase() as IInitialize)?.PostInitialization(m_Settings);
         }
 
         void FinishInitializing()

@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this package will be documented in this file.
 
+## [0.11.1] - 2021-04-23
+
+### Fixed
+
+- Fixed errors being generated when using Play Mode with Domain and Scene reload disabled. ([LOC-165](https://issuetracker.unity3d.com/issues/errors-thrown-when-entering-playmode-and-using-enter-play-mode-options-experimental))
+- Fixed `NotSupportedException: Collection is read-only` error sometimes being produced by preload operation.
+
 ## [0.11.0] - 2021-04-08
 
 ### Added

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.Localization.Metadata;
-using UnityEngine.Localization.Platform;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
@@ -11,7 +10,7 @@ namespace UnityEngine.Localization.Settings
     /// The localization settings is the core component to the localization system.
     /// It provides the entry point to all player based localization features.
     /// </summary>
-    public partial class LocalizationSettings : ScriptableObject, IReset
+    public class LocalizationSettings : ScriptableObject, IReset
     {
         /// <summary>
         /// The name to use when retrieving the LocalizationSettings from CustomObject API.
@@ -75,12 +74,6 @@ namespace UnityEngine.Localization.Settings
         /// This operation can be used to check when the system is ready. You can yield on this in a coroutine to wait.
         /// </summary>
         public static AsyncOperationHandle<LocalizationSettings> InitializationOperation => Instance.GetInitializationOperation();
-
-        /// <summary>
-        /// Does the LocalizationSettings exist and contain a string database?
-        /// </summary>
-        /// <value><c>true</c> if has string database; otherwise, <c>false</c>.</value>
-        public static bool HasStringDatabase => HasSettings && s_Instance.m_StringDatabase != null;
 
         /// <summary>
         /// Singleton instance for the Localization Settings.
@@ -150,10 +143,7 @@ namespace UnityEngine.Localization.Settings
         /// If <see cref="InitializationOperation"/> has not been completed yet then this will wait for the <see cref="AvailableLocales"/> part to complete first.
         /// It will not wait for the entire <see cref="InitializationOperation"/> but just the part that initializes the Locales.
         /// </summary>
-        public static AsyncOperationHandle<Locale> SelectedLocaleAsync
-        {
-            get => Instance.GetSelectedLocaleAsync();
-        }
+        public static AsyncOperationHandle<Locale> SelectedLocaleAsync => Instance.GetSelectedLocaleAsync();
 
         /// <summary>
         /// Event that is sent when the <see cref="SelectedLocale"/> is changed.
@@ -224,7 +214,7 @@ namespace UnityEngine.Localization.Settings
 
         #if UNITY_EDITOR
         /// <summary>
-        /// We use this for testing so we dont have to enter play mode.
+        /// We use this for testing so we don't have to enter play mode.
         /// </summary>
         internal bool? IsPlayingOverride { get; set; }
         #endif
@@ -307,11 +297,8 @@ namespace UnityEngine.Localization.Settings
             }
             #endif
 
-            if (m_StringDatabase != null)
-                m_StringDatabase.OnLocaleChanged(locale);
-
-            if (m_AssetDatabase != null)
-                m_AssetDatabase.OnLocaleChanged(locale);
+            m_StringDatabase?.OnLocaleChanged(locale);
+            m_AssetDatabase?.OnLocaleChanged(locale);
 
             if (m_InitializingOperationHandle.HasValue)
             {
@@ -362,7 +349,7 @@ namespace UnityEngine.Localization.Settings
         /// <summary>
         /// Uses <see cref="StartupLocaleSelectors"/> to select the most appropriate <see cref="Locale"/>.
         /// </summary>
-        internal protected virtual Locale SelectLocaleUsingStartupSelectors()
+        protected internal virtual Locale SelectLocaleUsingStartupSelectors()
         {
             foreach (var sel in m_StartupSelectors)
             {
@@ -400,35 +387,6 @@ namespace UnityEngine.Localization.Settings
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Collates all the extensions that have the <see cref="IInitialize"/> interface.
-        /// </summary>
-        /// <returns></returns>
-        internal List<IInitialize> GetInitializers()
-        {
-            var postInitializers = new List<IInitialize>();
-
-            // Startup selectors
-            foreach (var startSelector in m_StartupSelectors)
-            {
-                if (startSelector is IInitialize selectorInit)
-                {
-                    postInitializers.Add(selectorInit);
-                }
-            }
-
-            if (m_AvailableLocales is IInitialize localeInit)
-                postInitializers.Add(localeInit);
-
-            if (m_AssetDatabase is IInitialize assetInit)
-                postInitializers.Add(assetInit);
-
-            if (m_StringDatabase is IInitialize stringInit)
-                postInitializers.Add(stringInit);
-
-            return postInitializers;
         }
 
         /// <summary>

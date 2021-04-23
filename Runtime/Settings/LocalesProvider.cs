@@ -125,6 +125,9 @@ namespace UnityEngine.Localization.Settings
             return ret;
         }
 
+        /// <summary>
+        /// Resets the state of the provider by removing all the Locales and clearing the preload operation.
+        /// </summary>
         public void ResetState()
         {
             m_Locales.Clear();

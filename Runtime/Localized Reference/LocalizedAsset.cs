@@ -5,11 +5,13 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization
 {
+    #if MODULE_AUDIO
     /// <summary>
     /// Provides a specialized <see cref="LocalizedAsset{TObject}"/> which can be used to localize [AudioClip](https://docs.unity3d.com/ScriptReference/AudioClip.html) assets.
     /// </summary>
     [Serializable]
     public class LocalizedAudioClip : LocalizedAsset<AudioClip> {}
+    #endif
 
     /// <summary>
     /// Provides a specialized <see cref="LocalizedAsset{TObject}"/> which can be used to localize [Prefabs](https://docs.unity3d.com/Manual/Prefabs.html).

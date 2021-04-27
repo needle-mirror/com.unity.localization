@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this package will be documented in this file.
 
+## [1.0.0-pre.8] - 2021-04-27
+
+### Changed
+
+- Changed to Pre-release.
+
 ## [0.11.1] - 2021-04-23
 
 ### Fixed

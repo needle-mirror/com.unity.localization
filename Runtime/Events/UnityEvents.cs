@@ -3,11 +3,13 @@ using UnityEngine.Events;
 
 namespace UnityEngine.Localization.Events
 {
+    #if MODULE_AUDIO
     /// <summary>
     /// [UnityEvent](https://docs.unity3d.com/ScriptReference/Events.UnityEvent.html) which can pass an [AudioClip](https://docs.unity3d.com/ScriptReference/AudioClip.html) as an argument.
     /// </summary>
     [Serializable]
     public class UnityEventAudioClip : UnityEvent<AudioClip> {}
+    #endif
 
     /// <summary>
     /// [UnityEvent](https://docs.unity3d.com/ScriptReference/Events.UnityEvent.html) which can pass a [GameObject](https://docs.unity3d.com/ScriptReference/GameObject.html) as an argument.

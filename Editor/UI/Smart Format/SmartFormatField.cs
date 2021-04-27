@@ -311,41 +311,37 @@ namespace UnityEditor.Localization.UI
         /// <summary>
         /// Called when a hyper link is clicked in Debug mode.
         /// </summary>
-#if UNITY_2021_2_OR_NEWER
-        void EditorGUI_HyperLinkClicked(EditorWindow window, HyperLinkClickedEventArgs args)
-        {
-            ProcessHyperLinkData(args.hyperLinkData);
-        }
-
-#else
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        #if UNITY_2021_2_OR_NEWER
+        void EditorGUI_HyperLinkClicked(EditorWindow wnd, HyperLinkClickedEventArgs args)
+        #else
         void EditorGUI_HyperLinkClicked(object sender, EventArgs e)
+        #endif
         {
+            #if UNITY_2021_2_OR_NEWER
+            var o = args.hyperLinkData;
+            #else
             var o = e.GetType().GetProperty("hyperlinkInfos").GetValue(e, null);
-            if (o is Dictionary<string, string> hyperLinkData)
+            #endif
+            if (o is Dictionary<string, string> dict)
             {
-                ProcessHyperLinkData(hyperLinkData);
-            }
-        }
-
-#endif
-
-        void ProcessHyperLinkData(IReadOnlyDictionary<string, string> hyperLinkData)
-        {
-            if (hyperLinkData.TryGetValue("href", out var formatId) && m_FormatItemLookup.TryGetValue(formatId, out var formatItem))
-            {
-                if (formatItem is Placeholder ph)
+                if (dict.TryGetValue("href", out var formatId) && m_FormatItemLookup.TryGetValue(formatId, out var formatItem))
                 {
-                    var mousePos =  Event.current.mousePosition;
-                    mousePos.y -= EditorWindow.mouseOverWindow.position.height * 0.5f;
-                    mousePos.y += 80;
+                    if (formatItem is Placeholder ph)
+                    {
+                        var mousePos =  Event.current.mousePosition;
+                        mousePos.y -= EditorWindow.mouseOverWindow.position.height * 0.5f;
+                        mousePos.y += 80;
 
-                    // relative to the window
-                    var rect = new Rect(mousePos.x, mousePos.y, 200, 200);
-                    PopupWindow.Show(rect, new SmartFormatFieldInfoWindow(ph));
-                }
-                else
-                {
-                    Debug.Log("Cant show " + formatItem.GetType());
+                        // relative to the window
+                        var rect = new Rect(mousePos.x, mousePos.y, 200, 200);
+                        PopupWindow.Show(rect, new SmartFormatFieldInfoWindow(ph));
+                    }
+                    else
+                    {
+                        Debug.Log("Cant show " + formatItem.GetType());
+                    }
                 }
             }
         }

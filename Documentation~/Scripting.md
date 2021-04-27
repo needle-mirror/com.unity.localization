@@ -44,10 +44,11 @@ The following Unity assets are already supported:
 
 | **Type**   | **Class**       |
 | ---------- | --------------- |
-| Texture    | `LocalizedTexture`
-| AudioClip  | `LocalizedAudioClip`
-| Sprite     | `LocalizedSprite`
-| GameObject | `LocalizedGameObject`
+| AudioClip         | `LocalizedAudioClip`
+| GameObject/Prefab | `LocalizedGameObject`
+| Material          | `LocalizedMaterial`
+| Sprite            | `LocalizedSprite`
+| Texture           | `LocalizedTexture`
 
 ### TableReference
 

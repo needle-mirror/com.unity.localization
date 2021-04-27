@@ -1,9 +1,9 @@
 {
   "name": "com.unity.localization",
   "displayName": "Localization",
-  "version": "0.11.1-preview",
+  "version": "1.0.0-pre.8",
   "unity": "2019.4",
-  "description": "Player localization system. Provides tools for localizing your built application.",
+  "description": "Use the Localization package to easily configure localization settings for your application.\n\nAdd support for multiple languages and regional variants, including:\n\n• String localization set different strings to display based on locale. Use the Smart Strings feature to add logic to automatically replace specific strings, such as placeholders and plurals\n• Asset localization - use a different asset (such as a texture, model, or audio file) based on a locale.\n• Pseudo-localization - test how your project will adapt to different localizations at an early stage, before adding your translations.\n• Import and Export localization data to XLIFF, CSV and Google sheets.\n\nAdd localization to your projects using the Localization package to help make your applications more accessible to a wider audience.",
   "keywords": [
     "localization",
     "locale",
@@ -13,12 +13,12 @@
     "com.unity.addressables": "1.17.15"
   },
   "upmCi": {
-    "footprint": "88283cfa24909702d608602478226c6ee5115b9a"
+    "footprint": "9f95f1b64746cb89cb98275055c28e2041b2de8f"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.localization.git",
     "type": "git",
-    "revision": "a9b77a257318576b36cfb9f2ca974ed690bdd9c0"
+    "revision": "711ebcca931149fce3f51546975449ddda7fbf45"
   },
   "samples": [
     {

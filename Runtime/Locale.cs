@@ -266,7 +266,7 @@ namespace UnityEngine.Localization
                 if (Identifier.CultureInfo != null)
                     return Identifier.CultureInfo.EnglishName;
                 return name;
-            } 
+            }
             set => m_LocaleName = value;
         }
 

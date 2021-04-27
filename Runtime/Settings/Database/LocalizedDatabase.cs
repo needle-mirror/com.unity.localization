@@ -249,7 +249,7 @@ namespace UnityEngine.Localization.Settings
         {
             // Start a new operation
             var operation = CreatePreloadTablesOperation();
-            operation.Init(this, new [] { tableReference }, locale);
+            operation.Init(this, new[] { tableReference }, locale);
             var handle = AddressablesInterface.ResourceManager.StartOperation(operation, LocalizationSettings.InitializationOperation);
             handle.CompletedTypeless += ReleaseNextFrame;
             return handle;
@@ -443,6 +443,6 @@ namespace UnityEngine.Localization.Settings
         {
             m_ReleaseNextFrame = null;
             OnLocaleChanged(null);
-        } 
+        }
     }
 }

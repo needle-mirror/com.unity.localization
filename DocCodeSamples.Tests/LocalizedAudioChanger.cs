@@ -1,3 +1,5 @@
+#if MODULE_AUDIO
+
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Components;
@@ -49,3 +51,5 @@ public class LocalizedAudioChanger : MonoBehaviour
         localizeAudioClipEvent.AssetReference = clip;
     }
 }
+
+#endif

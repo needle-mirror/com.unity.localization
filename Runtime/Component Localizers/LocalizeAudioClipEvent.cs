@@ -1,3 +1,5 @@
+#if MODULE_AUDIO
+
 using UnityEngine.Localization.Events;
 
 namespace UnityEngine.Localization.Components
@@ -22,3 +24,5 @@ namespace UnityEngine.Localization.Components
     {
     }
 }
+
+#endif

@@ -38,7 +38,6 @@ namespace UnityEditor.Localization.UI.Addressables
                 AddCallback = ShowAddItemMenu,
                 RemoveCallback = RemoveItem,
                 ReorderCallback = MoveItem
-
             };
             root.Add(list);
 

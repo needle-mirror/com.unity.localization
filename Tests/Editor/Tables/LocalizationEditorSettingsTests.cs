@@ -75,15 +75,19 @@ namespace UnityEditor.Localization.Tests
             Assert.Throws<ArgumentException>(() => LocalizationEditorSettings.Instance.CreateCollection(typeof(StringTableCollection), "test", null, null));
         }
 
-        [TestCase("<invalid>")]
-        [TestCase("b%d name/")]
-        [TestCase("     ")]
-        [TestCase("")]
-        [TestCase(null)]
-        [TestCase("[no good]")]
-        public void CreateCollection_InvalidTableName_ThrowsException(string tableName)
+        [TestCase("<invalid>", "Table collection name cannot contain invalid filename characters.*")]
+        [TestCase("b%d name/", "Table collection name cannot contain invalid filename characters.*")]
+        [TestCase("     ", "Table collection name cannot be blank or whitespace")]
+        [TestCase("", "Table collection name cannot be blank or whitespace")]
+        [TestCase(null, "Table collection name cannot be blank or whitespace")]
+        [TestCase("[no good]", @"Table collection name cannot contain both '\[' and '\]'")]
+        [TestCase(" leading whitespace", "Table collection name cannot contain leading or trailing whitespace")]
+        [TestCase("trailing whitespace ", "Table collection name cannot contain leading or trailing whitespace")]
+        [TestCase(" leading trailing whitespace ", "Table collection name cannot contain leading or trailing whitespace")]
+        public void CreateCollection_InvalidTableName_ThrowsException(string tableName, string exceptionRegex)
         {
-            Assert.Throws<ArgumentException>(() => LocalizationEditorSettings.Instance.CreateCollection(typeof(StringTableCollection), tableName, null, null));
+            var exception = Assert.Throws<ArgumentException>(() => LocalizationEditorSettings.Instance.CreateCollection(typeof(StringTableCollection), tableName, "Assets/Temp", null));
+            StringAssert.IsMatch(exceptionRegex, exception.Message);
         }
 
         [Test]

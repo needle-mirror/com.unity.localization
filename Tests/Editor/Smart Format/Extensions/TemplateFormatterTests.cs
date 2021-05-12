@@ -7,18 +7,22 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
 {
     public class TemplateFormatterTests
     {
-        private SmartFormatter smart;
+        SmartFormatter m_Smart;
+
+        public TemplateFormatterTests()
+        {
+            m_Smart = Smart.CreateDefaultSmartFormat();
+        }
 
         [OneTimeSetUp]
         public void SetupSmart()
         {
-            this.smart = Smart.CreateDefaultSmartFormat();
-            RegisterTemplates(this.smart);
+            RegisterTemplates(m_Smart);
         }
 
         private void RegisterTemplates(SmartFormatter smart)
         {
-            var templates = new TemplateFormatter(smart);
+            var templates = new TemplateFormatter() { Formatter = smart };
             smart.AddExtensions(templates);
 
             templates.Register("firstLast", "{First} {Last}");
@@ -42,7 +46,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
                 Last = "Rippey",
             };
 
-            var actual = smart.Format(format, person);
+            var actual = m_Smart.Format(format, person);
             Assert.AreEqual(expected, actual);
         }
 
@@ -55,7 +59,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
                 new { First = "Dwight", Last = "Schrute" },
             };
 
-            var actual = smart.Format(format, (object)people);
+            var actual = m_Smart.Format(format, (object)people);
             Assert.AreEqual(expected, actual);
         }
 
@@ -106,8 +110,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
         [TestCase("{:template():AAAA}")]
         public void Templates_must_be_defined(string format)
         {
-            smart.Settings.FormatErrorAction = ErrorAction.ThrowError;
-            Assert.Throws<FormattingException>(() => smart.Format(format, 5));
+            m_Smart.Settings.FormatErrorAction = ErrorAction.ThrowError;
+            Assert.Throws<FormattingException>(() => m_Smart.Format(format, 5));
         }
 
         [Test]
@@ -116,8 +120,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
         [TestCase("{:template:LaSt}")]
         public void Templates_are_case_sensitive(string format)
         {
-            smart.Settings.FormatErrorAction = ErrorAction.ThrowError;
-            Assert.Throws<FormattingException>(() => smart.Format(format, 5));
+            m_Smart.Settings.FormatErrorAction = ErrorAction.ThrowError;
+            Assert.Throws<FormattingException>(() => m_Smart.Format(format, 5));
         }
 
         [Test]
@@ -131,9 +135,9 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
         [TestCase("{:template:fIrStLaSt}", "Scott Rippey")]
         public void Templates_can_be_case_insensitive_and_overwrite_each_other(string format, string expected)
         {
-            this.smart = Smart.CreateDefaultSmartFormat();
-            this.smart.Settings.CaseSensitivity = CaseSensitivityType.CaseInsensitive;
-            RegisterTemplates(this.smart);
+            this.m_Smart = Smart.CreateDefaultSmartFormat();
+            this.m_Smart.Settings.CaseSensitivity = CaseSensitivityType.CaseInsensitive;
+            RegisterTemplates(this.m_Smart);
             TestWithScottRippey(format, expected);
 
             // Reset:

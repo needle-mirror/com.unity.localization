@@ -8,8 +8,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
 {
     public class SubStringFormatterTests
     {
-        private List<object> m_People;
-        private SmartFormatter m_Smart;
+        readonly List<object> m_People;
+        readonly SmartFormatter m_Smart;
 
         public SubStringFormatterTests()
         {
@@ -24,6 +24,42 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
 
             m_People = new List<object>
             {new {Name = "Long John", City = "New York"}, new {Name = "Short Mary", City = "Massachusetts"}, };
+        }
+
+        [Test]
+        public void LengthLongerThanString_ReturnEmptyString()
+        {
+            var formatter = m_Smart.GetFormatterExtension<SubStringFormatter>();
+            var behavior = formatter.OutOfRangeBehavior;
+
+            formatter.OutOfRangeBehavior = SubStringFormatter.SubStringOutOfRangeBehavior.ReturnEmptyString;
+            Assert.AreEqual(string.Empty, m_Smart.Format("{Name:substr(0,999)}", m_People.First()));
+
+            formatter.OutOfRangeBehavior = behavior;
+        }
+
+        [Test]
+        public void LengthLongerThanString_ReturnStartIndexToEndOfString()
+        {
+            var formatter = m_Smart.GetFormatterExtension<SubStringFormatter>();
+            var behavior = formatter.OutOfRangeBehavior;
+
+            formatter.OutOfRangeBehavior = SubStringFormatter.SubStringOutOfRangeBehavior.ReturnStartIndexToEndOfString;
+            Assert.AreEqual("Long John", m_Smart.Format("{Name:substr(0,999)}", m_People.First()));
+
+            formatter.OutOfRangeBehavior = behavior;
+        }
+
+        [Test]
+        public void LengthLongerThanString_ThrowException()
+        {
+            var formatter = m_Smart.GetFormatterExtension<SubStringFormatter>();
+            var behavior = formatter.OutOfRangeBehavior;
+
+            formatter.OutOfRangeBehavior = SubStringFormatter.SubStringOutOfRangeBehavior.ThrowException;
+            Assert.Throws<SmartFormat.Core.Formatting.FormattingException>(() => m_Smart.Format("{Name:substr(0,999)}", m_People.First()));
+
+            formatter.OutOfRangeBehavior = behavior;
         }
 
         [Test]

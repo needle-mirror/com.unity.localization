@@ -1,59 +1,63 @@
-using UnityEngine.Localization.Tables;
+using UnityEngine.Localization.Settings;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization
 {
-    public class LoadAssetOperation<TObject> : AsyncOperationBase<TObject> where TObject : Object
+    class LoadAssetOperation<TObject> : WaitForCurrentOperationAsyncOperationBase<TObject> where TObject : Object
     {
-        AsyncOperationHandle<AssetTable> m_LoadTableOperation;
-        TableEntryReference m_TableEntryReference;
+        AsyncOperationHandle<LocalizedAssetDatabase.TableEntryResult> m_TableEntryOperation;
 
-        public void Init(AsyncOperationHandle<AssetTable> loadTableOperation, TableEntryReference tableEntryReference)
+        public void Init(AsyncOperationHandle<LocalizedAssetDatabase.TableEntryResult> loadTableEntryOperation)
         {
-            m_LoadTableOperation = loadTableOperation;
-            AddressablesInterface.Acquire(m_LoadTableOperation);
-
-            m_TableEntryReference = tableEntryReference;
+            m_TableEntryOperation = loadTableEntryOperation;
+            AddressablesInterface.Acquire(m_TableEntryOperation);
+            CurrentOperation = null;
         }
 
         protected override void Execute()
         {
-            if (m_LoadTableOperation.Status != AsyncOperationStatus.Succeeded)
+            if (m_TableEntryOperation.Status != AsyncOperationStatus.Succeeded)
             {
-                Complete(null, false, "Load Table Operation Failed");
+                Complete(null, false, "Load Table Entry Operation Failed");
+                AddressablesInterface.Release(m_TableEntryOperation);
+                return;
             }
+
+            if (m_TableEntryOperation.Result.Table == null || m_TableEntryOperation.Result.Entry == null)
+            {
+                // Missing entries are treated as null objects
+                CompleteAndRelease(default, true, null);
+                return;
+            }
+
+            var loadAssetOperation = m_TableEntryOperation.Result.Table.GetAssetAsync<TObject>(m_TableEntryOperation.Result.Entry);
+            if (loadAssetOperation.IsDone)
+                AssetLoaded(loadAssetOperation);
             else
             {
-                var entry = m_LoadTableOperation.Result?.GetEntryFromReference(m_TableEntryReference);
-
-                if (entry == null)
-                {
-                    // Empty entries are treated as null objects
-                    Complete(null, true, null);
-                }
-                else
-                {
-                    var handle = m_LoadTableOperation.Result.GetAssetAsync<TObject>(entry);
-                    if (handle.IsDone)
-                        AssetLoaded(handle);
-                    else
-                        handle.Completed += AssetLoaded;
-                }
+                CurrentOperation = loadAssetOperation;
+                loadAssetOperation.Completed += AssetLoaded;
             }
         }
 
         void AssetLoaded(AsyncOperationHandle<TObject> handle)
         {
             if (handle.Status != AsyncOperationStatus.Succeeded)
-                Complete(null, false, "GetAssetAsync failed");
+                CompleteAndRelease(null, false, "GetAssetAsync failed to load the asset.");
             else
-                Complete(handle.Result, true, null);
+                CompleteAndRelease(handle.Result, true, null);
+        }
+
+        public void CompleteAndRelease(TObject result, bool success, string errorMsg)
+        {
+            Complete(result, success, errorMsg);
+            AddressablesInterface.Release(m_TableEntryOperation);
         }
 
         protected override void Destroy()
         {
-            AddressablesInterface.Release(m_LoadTableOperation);
+            base.Destroy();
             GenericPool<LoadAssetOperation<TObject>>.Release(this);
         }
     }

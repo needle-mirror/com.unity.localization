@@ -163,8 +163,15 @@ namespace UnityEngine.Localization
         /// </example>
         public bool RefreshString()
         {
-            if (m_ChangeHandler == null || m_CurrentLoadingOperation == null || !m_CurrentLoadingOperation.Value.IsDone)
+            if (m_ChangeHandler == null || m_CurrentLoadingOperation == null)
                 return false;
+
+            if (!m_CurrentLoadingOperation.Value.IsDone)
+            {
+                if (!WaitForCompletion)
+                    return false;
+                m_CurrentLoadingOperation.Value.WaitForCompletion();                    
+            }
 
             // Clear any previous global variables.
             var entry = m_CurrentLoadingOperation.Value.Result.Entry;
@@ -183,17 +190,22 @@ namespace UnityEngine.Localization
         /// the translated string that matches <see cref="TableEntryReference"/>.
         /// </summary>
         /// <remarks>
-        /// The Completed event provides a notification once the operation has finished and the string has been found or an error has occurred.
+        /// The <see cref="AsyncOperationHandle.Completed"/> event provides a notification once the operation has finished and the string has been found or an error has occurred.
         /// A string table may have already been loaded during a previous operation or when using Preload mode.
         /// Check the <see cref="AsyncOperationHandle.IsDone"/> property to see if the string table has already been loaded and the translated string is immediately available.
         /// See [Async operation handling](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/AddressableAssetsAsyncOperationHandle.html) for further details.
+        /// To force the operation to complete immediately, call <see cref="AsyncOperationHandle.WaitForCompletion"/>.
         /// </remarks>
         /// <returns>Returns the loading operation for the request.</returns>
         /// <example>
-        /// This example shows how <see cref="GetLocalizedString"/> can be used to request an updated string when the <see cref="LocalizationSettings.SelectedLocale"/> changes.
+        /// This example shows how <see cref="GetLocalizedStringAsync"/> can be used to request an updated string when the <see cref="LocalizationSettings.SelectedLocale"/> changes.
         /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="get-localized-string"/>
         /// </example>
-        public AsyncOperationHandle<string> GetLocalizedString()
+        /// <example>
+        /// This example shows how <see cref="GetLocalizedStringAsync"/> can be forced to complete immediately using <see cref="AsyncOperationHandle.WaitForCompletion"/>.
+        /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="get-localized-string-synchronous"/>
+        /// </example>
+        public AsyncOperationHandle<string> GetLocalizedStringAsync()
         {
             LocalizationSettings.ValidateSettingsExist();
             return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, Arguments, null, FallbackState);
@@ -203,9 +215,15 @@ namespace UnityEngine.Localization
         /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and the
         /// the translated string that matches <see cref="TableEntryReference"/>.
         /// </summary>
+        public string GetLocalizedString() => GetLocalizedStringAsync().WaitForCompletion();
+
+        /// <summary>
+        /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and the
+        /// the translated string that matches <see cref="TableEntryReference"/>.
+        /// </summary>
         /// <param name="arguments">The arguments to pass into the Smart String formatter or <c>String.Format</c>.</param>
         /// <returns>Returns the loading operation for the request.</returns>
-        public AsyncOperationHandle<string> GetLocalizedString(params object[] arguments)
+        public AsyncOperationHandle<string> GetLocalizedStringAsync(params object[] arguments)
         {
             LocalizationSettings.ValidateSettingsExist();
             return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, arguments, null, FallbackState);
@@ -216,12 +234,28 @@ namespace UnityEngine.Localization
         /// the translated string that matches <see cref="TableEntryReference"/>.
         /// </summary>
         /// <param name="arguments">The arguments to pass into the Smart String formatter or <c>String.Format</c>.</param>
+        /// <returns></returns>
+        public string GetLocalizedString(params object[] arguments) => GetLocalizedStringAsync(arguments).WaitForCompletion();
+
+        /// <summary>
+        /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and the
+        /// the translated string that matches <see cref="TableEntryReference"/>.
+        /// </summary>
+        /// <param name="arguments">The arguments to pass into the Smart String formatter or <c>String.Format</c>.</param>
         /// <returns>Returns the loading operation for the request.</returns>
-        public AsyncOperationHandle<string> GetLocalizedString(IList<object> arguments)
+        public AsyncOperationHandle<string> GetLocalizedStringAsync(IList<object> arguments)
         {
             LocalizationSettings.ValidateSettingsExist();
             return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, arguments, null, FallbackState);
         }
+
+        /// <summary>
+        /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and
+        /// the translated string that matches <see cref="TableEntryReference"/>.
+        /// </summary>
+        /// <param name="arguments">The arguments to pass into the Smart String formatter or <c>String.Format</c>.</param>
+        /// <returns></returns>
+        public string GetLocalizedString(IList<object> arguments) => GetLocalizedStringAsync(arguments).WaitForCompletion();
 
         protected internal override void ForceUpdate()
         {

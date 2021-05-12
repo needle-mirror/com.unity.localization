@@ -89,6 +89,10 @@ namespace UnityEngine.Localization.Tables
         /// Returns the localized text after formatting has been applied.
         /// This will use SmartFormat if <see cref="IsSmart"/> is true else it will return the raw unformatted value.
         /// </summary>
+        /// <remarks>
+        /// The following process is applied when generating a localized string:
+        /// ![](../manual/images/scripting/ProcessStringEntry.dot.svg)
+        /// </remarks>
         /// <returns></returns>
         public string GetLocalizedString() => GetLocalizedString(null, null, LocalizationSettings.SelectedLocaleAsync.Result as PseudoLocale);
 

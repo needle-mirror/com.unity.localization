@@ -22,7 +22,7 @@ By default each rule set will use a **GroupResolver**. To create more complex ru
 
 The Group Resolver uses the following rules to pick a group:
 
-![Group Resolver.](images/GroupResolver.svg)
+![Group Resolver.](images/GroupResolver.dot.svg)
 
 | **Property**          | **Description** |
 | --------------------- | --------------- |

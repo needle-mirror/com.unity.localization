@@ -6,7 +6,7 @@ using UnityEngine.Localization.SmartFormat.Core.Parsing;
 namespace UnityEngine.Localization.SmartFormat.Extensions
 {
     [Serializable]
-    public class ChooseFormatter : FormatterBase
+    public class ChooseFormatter : FormatterBase, IFormatterLiteralExtractor
     {
         [SerializeField]
         char m_SplitChar = '|';
@@ -62,21 +62,19 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             return chosenFormat;
         }
 
-        public override bool TryEvaluateAllLiterals(IFormattingInfo formattingInfo)
+        public void WriteAllLiterals(IFormattingInfo formattingInfo)
         {
             if (formattingInfo.FormatterOptions == "")
-                return false;
+                return;
 
             var formats = formattingInfo.Format.Split(SplitChar);
             if (formats.Count < 2)
-                return false;
+                return;
 
             for (int i = 0; i < formats.Count; ++i)
             {
                 formattingInfo.Write(formats[i], null);
             }
-
-            return true;
         }
     }
 }

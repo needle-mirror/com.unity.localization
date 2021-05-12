@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -7,27 +8,32 @@ namespace UnityEngine.Localization
     /// <summary>
     /// Performs all initialization work for the LocalizationSettings.
     /// </summary>
-    class InitializationOperation : AsyncOperationBase<LocalizationSettings>
+    class InitializationOperation : WaitForCurrentOperationAsyncOperationBase<LocalizationSettings>
     {
-        int m_PreloadingOperations;
         LocalizationSettings m_Settings;
-        string m_Error;
-        float m_Progress;
+        readonly List<AsyncOperationHandle> m_LoadDatabasesOperations = new List<AsyncOperationHandle>();
 
-        const float k_LocalesProgress = 0.2f;
-        const float k_DatabaseProgress = 0.4f;
+        int m_RemainingSteps;
+        const int k_PreloadSteps = 3;
 
-        // TODO: More detailed progress. Take the progress form the sub operations.
-        protected override float Progress => m_Progress;
+        protected override float Progress
+        {
+            get
+            {
+                if (CurrentOperation.HasValue)
+                    return (k_PreloadSteps - m_RemainingSteps + CurrentOperation.Value.PercentComplete) / (k_PreloadSteps + 1);
+                return base.Progress;
+            }
+        }
 
         protected override string DebugName => "Localization Settings Initialization";
 
         public void Init(LocalizationSettings settings)
         {
             m_Settings = settings;
-            m_Error = null;
-            m_PreloadingOperations = 0;
-            m_Progress = 0;
+            m_LoadDatabasesOperations.Clear();
+            m_RemainingSteps = k_PreloadSteps;
+            CurrentOperation = null;
         }
 
         protected override void Execute()
@@ -40,6 +46,7 @@ namespace UnityEngine.Localization
             var localeOp = m_Settings.GetSelectedLocaleAsync();
             if (!localeOp.IsDone)
             {
+                CurrentOperation = localeOp;
                 localeOp.Completed += async => PreloadTables();
             }
             else
@@ -48,54 +55,30 @@ namespace UnityEngine.Localization
             }
         }
 
-        void PreloadOperationCompleted(AsyncOperationHandle asyncOperation)
-        {
-            m_Progress += k_DatabaseProgress;
-            m_PreloadingOperations--;
-
-            if (asyncOperation.Status != AsyncOperationStatus.Succeeded)
-            {
-                m_Error = "Failed to preload: " + asyncOperation.DebugName;
-                if (asyncOperation.OperationException != null)
-                {
-                    Debug.LogException(asyncOperation.OperationException);
-                    m_Error += "\n" + asyncOperation.OperationException;
-                }
-            }
-
-            Debug.Assert(m_PreloadingOperations >= 0);
-            if (m_PreloadingOperations == 0)
-                FinishInitializing();
-        }
-
         void PreloadTables()
         {
-            Debug.Assert(m_PreloadingOperations == 0);
-            m_Progress = k_LocalesProgress;
-            m_PreloadingOperations = 0;
+            m_RemainingSteps--;
 
             if (m_Settings.GetAssetDatabase() is IPreloadRequired assetOperation && !assetOperation.PreloadOperation.IsDone)
-            {
-                assetOperation.PreloadOperation.Completed += PreloadOperationCompleted;
-                m_PreloadingOperations++;
-            }
+                m_LoadDatabasesOperations.Add(assetOperation.PreloadOperation);
             else
-            {
-                m_Progress += k_DatabaseProgress;
-            }
+                m_RemainingSteps--;
 
             if (m_Settings.GetStringDatabase() is IPreloadRequired stringOperation && !stringOperation.PreloadOperation.IsDone)
+                m_LoadDatabasesOperations.Add(stringOperation.PreloadOperation);
+            else
+                m_RemainingSteps--;
+
+            if (m_LoadDatabasesOperations.Count > 0)
             {
-                stringOperation.PreloadOperation.Completed += PreloadOperationCompleted;
-                m_PreloadingOperations++;
+                var operation = AddressablesInterface.ResourceManager.CreateGenericGroupOperation(m_LoadDatabasesOperations, true);
+                CurrentOperation = operation;
+                operation.CompletedTypeless += FinishInitializing;
             }
             else
             {
-                m_Progress += k_DatabaseProgress;
+                FinishInitializing(true, null);
             }
-
-            if (m_PreloadingOperations == 0)
-                FinishInitializing();
         }
 
         void PostInitializeExtensions()
@@ -110,14 +93,17 @@ namespace UnityEngine.Localization
             (m_Settings.GetStringDatabase() as IInitialize)?.PostInitialization(m_Settings);
         }
 
-        void FinishInitializing()
+        void FinishInitializing(AsyncOperationHandle op) => FinishInitializing(op.Status == AsyncOperationStatus.Succeeded, op.OperationException?.Message);
+
+        void FinishInitializing(bool success, string error)
         {
             PostInitializeExtensions();
-            Complete(m_Settings, string.IsNullOrEmpty(m_Error), m_Error);
+            Complete(m_Settings, success, error);
         }
 
         protected override void Destroy()
         {
+            base.Destroy();
             GenericPool<InitializationOperation>.Release(this);
         }
     }

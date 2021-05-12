@@ -75,6 +75,16 @@ namespace UnityEngine.Localization.Metadata
         public bool HasData => MetadataEntries != null && MetadataEntries.Count > 0;
 
         /// <summary>
+        /// Returns true if any metadata of type TObject contains this entry.
+        /// </summary>
+        /// <typeparam name="TObject"></typeparam>
+        /// <returns></returns>
+        public bool HasMetadata<TObject>() where TObject : IMetadata
+        {
+            return GetMetadata<TObject>() != null;
+        }
+
+        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <typeparam name="TObject"></typeparam>

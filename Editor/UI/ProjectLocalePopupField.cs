@@ -28,8 +28,19 @@ namespace UnityEditor.Localization.UI
 
             this.RegisterValueChangedCallback(evt => LocalizationSettings.SelectedLocale = evt.newValue);
 
-            if (LocalizationSettings.SelectedLocale != null)
-                SetValueWithoutNotify(LocalizationSettings.SelectedLocale);
+            if (LocalizationSettings.SelectedLocaleAsync.IsDone)
+            {
+                if (LocalizationSettings.SelectedLocaleAsync.Result != null)
+                    SetValueWithoutNotify(LocalizationSettings.SelectedLocaleAsync.Result);
+            }
+            else
+            {
+                LocalizationSettings.SelectedLocaleAsync.Completed += op =>
+                {
+                    if (op.Result != null)
+                        SetValueWithoutNotify(op.Result);
+                };
+            }
         }
 
         ~ProjectLocalePopupField()

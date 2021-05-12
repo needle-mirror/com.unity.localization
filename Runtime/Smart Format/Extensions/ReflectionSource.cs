@@ -96,6 +96,8 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                             method = (MethodInfo)member;
                         }
 
+                        if (method == null) continue;
+
                         //  Check that this method is valid -- it needs to return a value and has to be parameterless:
                         //  We are only looking for a parameterless Function/Property:
                         if (method.GetParameters().Length > 0) continue;

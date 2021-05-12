@@ -17,7 +17,7 @@ namespace UnityEditor.Localization.Samples
         void OnGUI()
         {
             // This will make a request to the StringDatabase each time using the LocalizedString properties.
-            var stringOperation = stringRef.GetLocalizedString();
+            var stringOperation = stringRef.GetLocalizedStringAsync();
             if (stringOperation.IsDone && stringOperation.Status == AsyncOperationStatus.Succeeded)
                 GUILayout.Label(stringOperation.Result);
         }

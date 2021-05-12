@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
 using UnityEngine.Localization.SmartFormat.Core.Parsing;
 
@@ -12,10 +13,8 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     [Serializable]
     public class TemplateFormatter : FormatterBase
     {
-        [SerializeReference, HideInInspector]
+        IDictionary<string, Format> m_Templates;
         SmartFormatter m_Formatter;
-
-        private IDictionary<string, Format> m_Templates;
 
         IDictionary<string, Format> Templates
         {
@@ -23,7 +22,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             {
                 if (m_Templates == null)
                 {
-                    var stringComparer = m_Formatter.Settings.GetCaseSensitivityComparer();
+                    var stringComparer = Formatter.Settings.GetCaseSensitivityComparer();
                     m_Templates = new Dictionary<string, Format>(stringComparer);
                 }
 
@@ -31,9 +30,14 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             }
         }
 
-        public TemplateFormatter(SmartFormatter formatter)
+        public SmartFormatter Formatter
         {
-            m_Formatter = formatter;
+            get => m_Formatter ?? LocalizationSettings.StringDatabase.SmartFormatter;
+            set => m_Formatter = value;
+        }
+
+        public TemplateFormatter()
+        {
             Names = DefaultNames;
         }
 
@@ -47,7 +51,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {
             var templateName = formattingInfo.FormatterOptions;
-            if (templateName == "")
+            if (templateName == string.Empty)
             {
                 if (formattingInfo.Format.HasNested) return false;
                 templateName = formattingInfo.Format.RawText;
@@ -73,7 +77,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         /// <param name="template">The string to be used as a template.</param>
         public void Register(string templateName, string template)
         {
-            var parsed = m_Formatter.Parser.ParseFormat(template, m_Formatter.GetNotEmptyFormatterExtensionNames());
+            var parsed = Formatter.Parser.ParseFormat(template, Formatter.GetNotEmptyFormatterExtensionNames());
             Templates.Add(templateName, parsed);
         }
 
@@ -93,12 +97,6 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         public void Clear()
         {
             Templates.Clear();
-        }
-
-        public override bool TryEvaluateAllLiterals(IFormattingInfo formattingInfo)
-        {
-            // Not implemented
-            return true;
         }
     }
 }

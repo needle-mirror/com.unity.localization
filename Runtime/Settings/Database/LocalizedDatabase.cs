@@ -8,15 +8,34 @@ namespace UnityEngine.Localization.Settings
 {
     public enum FallbackBehavior
     {
+        /// <summary>
+        /// Uses the <see cref="LocalizedDatabase{TTable, TEntry}.UseFallback"/> value in <see cref="LocalizationSettings.StringDatabase"/>
+        /// when localizing a string or <see cref="LocalizationSettings.AssetDatabase"/> when localizing an asset.
+        /// </summary>
         UseProjectSettings,
+
+        /// <summary>
+        /// Do not fallback.
+        /// </summary>
         DontUseFallback,
+
+        /// <summary>
+        /// Attempts to use a fallback when a localized value is not found.
+        /// </summary>
         UseFallback
     }
 
     [Flags]
     public enum MissingTranslationBehavior
     {
+        /// <summary>
+        /// Includes the missing translation message in the translated string.
+        /// </summary>
         ShowMissingTranslationMessage = 1,
+
+        /// <summary>
+        /// Prints the missing translation message using [Debug.LogWarning](https://docs.unity3d.com/ScriptReference/Debug.LogWarning.html).
+        /// </summary>
         PrintWarning = 2
     }
 
@@ -167,8 +186,11 @@ namespace UnityEngine.Localization.Settings
 
         /// <summary>
         /// Returns the Default table.
-        /// This function is asynchronous and may not have an immediate result available.
-        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
+        /// This method is asynchronous and may not have an immediate result.
+        /// Check [IsDone](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.IsDone) to see if the data is available,
+        /// if it is false then you can use the [Completed](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.Completed) event to get a callback when it is finished,
+        /// yield on the operation or call [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion)
+        /// to force the operation to complete.
         /// </summary>
         /// <returns></returns>
         public AsyncOperationHandle<TTable> GetDefaultTableAsync()
@@ -178,9 +200,16 @@ namespace UnityEngine.Localization.Settings
 
         /// <summary>
         /// Returns the named table.
-        /// This function is asynchronous and may not have an immediate result available.
-        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
+        /// This method is asynchronous and may not have an immediate result.
+        /// Check [IsDone](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.IsDone) to see if the data is available,
+        /// if it is false then you can use the [Completed](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.Completed) event to get a callback when it is finished,
+        /// yield on the operation or call [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion)
+        /// to force the operation to complete.
         /// </summary>
+        /// <remarks>
+        /// Internally the following is performed when a table is requested:
+        /// ![](../manual/images/scripting/GetTable.dot.svg)
+        /// </remarks>
         /// <param name="tableReference">The table identifier. Can be either the name of the table or the table collection name Guid.</param>
         /// <param name="locale">The <see cref="Locale"/> to load the table from, use null to default to cref="LocalizationSettings.SelectedLocale"/>.</param>
         /// <returns></returns>
@@ -210,6 +239,7 @@ namespace UnityEngine.Localization.Settings
             // Start a new operation
             var operation = CreateLoadTableOperation();
             operation.Init(this, tableReference, locale);
+            operation.Dependency = LocalizationSettings.InitializationOperation;
             var handle = AddressablesInterface.ResourceManager.StartOperation(operation, LocalizationSettings.InitializationOperation);
 
             if (useSelectedLocalePlaceholder || tableReference.ReferenceType == TableReference.Type.Guid)
@@ -238,9 +268,22 @@ namespace UnityEngine.Localization.Settings
         }
 
         /// <summary>
+        /// Returns the named table.
+        /// Check [IsDone](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.IsDone) to see if the data is available,
+        /// if it is false then you can use the [Completed](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.Completed) event to get a callback when it is finished,
+        /// yield on the operation or call [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) to force the operation to complete.
+        /// </summary>
+        /// <param name="tableReference">The table identifier. Can be either the name of the table or the table collection name Guid.</param>
+        /// <param name="locale">The <see cref="Locale"/> to load the table from, use null to default to cref="LocalizationSettings.SelectedLocale"/>.</param>
+        /// <returns></returns>
+        public virtual TTable GetTable(TableReference tableReference, Locale locale = null) => GetTableAsync(tableReference, locale).WaitForCompletion();
+
+        /// <summary>
         /// Preloads the selected table. If the table is an <see cref="AssetTable"/> its assets will also be loaded.
-        /// This function is asynchronous and may not have an immediate result.
-        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
+        /// Check [IsDone](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.IsDone) to see if the data is available,
+        /// if it is false then you can use the [Completed](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.Completed) event to get a callback when it is finished,
+        /// yield on the operation or call [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion)
+        /// to force the operation to complete.
         /// </summary>
         /// <param name="tableReference">A reference to the table. A table reference can be either the name of the table or the table collection name Guid.</param>
         /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
@@ -250,6 +293,7 @@ namespace UnityEngine.Localization.Settings
             // Start a new operation
             var operation = CreatePreloadTablesOperation();
             operation.Init(this, new[] { tableReference }, locale);
+            operation.Dependency = LocalizationSettings.InitializationOperation;
             var handle = AddressablesInterface.ResourceManager.StartOperation(operation, LocalizationSettings.InitializationOperation);
             handle.CompletedTypeless += ReleaseNextFrame;
             return handle;
@@ -257,8 +301,10 @@ namespace UnityEngine.Localization.Settings
 
         /// <summary>
         /// Preloads the matching tables for the selected Locale. If the tables are <see cref="AssetTable"/> then their assets will also be loaded.
-        /// This function is asynchronous and may not have an immediate result.
-        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
+        /// Check [IsDone](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.IsDone) to see if the data is available,
+        /// if it is false then you can use the [Completed](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.Completed) event to get a callback when it is finished,
+        /// yield on the operation or call [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion)
+        /// to force the operation to complete.
         /// </summary>
         /// <param name="tableReferences">An IList of tableReferences to check for the string.</param>
         /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
@@ -272,6 +318,7 @@ namespace UnityEngine.Localization.Settings
             // Start a new operation
             var operation = CreatePreloadTablesOperation();
             operation.Init(this, tableReferences, locale);
+            operation.Dependency = LocalizationSettings.InitializationOperation;
             var handle = AddressablesInterface.ResourceManager.StartOperation(operation, LocalizationSettings.InitializationOperation);
             handle.CompletedTypeless += ReleaseNextFrame;
             return handle;
@@ -370,11 +417,21 @@ namespace UnityEngine.Localization.Settings
         /// <summary>
         /// Returns the entry from the requested table. A table entry will contain the localized item and metadata.
         /// This function is asynchronous and may not have an immediate result available.
-        /// Check IsDone to see if the data is available, if it is false then use the Completed event or yield on the operation.
+        /// This method is asynchronous and may not have an immediate result.
+        /// Check [IsDone](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.IsDone) to see if the data is available,
+        /// if it is false then you can use the [Completed](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.Completed) event to get a callback when it is finished,
+        /// yield on the operation or call [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion)
+        /// to force the operation to complete.
         /// Once the Completed event has been called, during the next update, the internal operation will be returned to a pool so that it can be reused.
         /// If you do plan to keep hold of the handle after completion then you should call <see cref="Addressables.ResourceManager.Acquire(AsyncOperationHandle)"/>
         /// to prevent the operation being reused and <see cref="Addressables.Release(AsyncOperationHandle)"/> to finally return the operation back to the pool.
         /// </summary>
+        /// <remarks>
+        /// Internally the following is performed when an Entry is requested.
+        /// First the table will be requested using <see cref="GetTableAsync(TableReference, Locale)"/>.
+        /// Once the table is loaded the entry will be extracted like so:
+        /// ![](../manual/images/GetEntry.dot.svg)
+        /// </remarks>
         /// <param name="tableReference">The table identifier. Can be either the name of the table or the table collection name Guid.</param>
         /// <param name="tableEntryReference">A reference to the entry in the table.</param>
         /// <param name="locale">The <see cref="Locale"/> to load the table from. Null will use <see cref="LocalizationSettings.SelectedLocale"/>.</param>
@@ -387,6 +444,7 @@ namespace UnityEngine.Localization.Settings
             var useFallback = fallbackBehavior != FallbackBehavior.UseProjectSettings ? fallbackBehavior == FallbackBehavior.UseFallback : UseFallback;
 
             getTableEntryOperation.Init(this, loadTableOperation, tableReference, tableEntryReference, locale, useFallback);
+            getTableEntryOperation.Dependency = loadTableOperation;
             var handle = AddressablesInterface.ResourceManager.StartOperation(getTableEntryOperation, loadTableOperation);
 
             // We don't want to force users to have to manage the reference counting so by default we will release the operation for reuse once completed in the next frame
@@ -394,6 +452,19 @@ namespace UnityEngine.Localization.Settings
             handle.CompletedTypeless += ReleaseNextFrame;
 
             return handle;
+        }
+
+        /// <summary>
+        /// Returns the entry from the requested table. A table entry will contain the localized item and metadata.
+        /// </summary>
+        /// <param name="tableReference">The table identifier. Can be either the name of the table or the table collection name Guid.</param>
+        /// <param name="tableEntryReference">A reference to the entry in the table.</param>
+        /// <param name="locale">The <see cref="Locale"/> to load the table from. Null will use <see cref="LocalizationSettings.SelectedLocale"/>.</param>
+        /// <param name="fallbackBehavior">A Enum which determines if a Fallback should be used when no value could be found for the Locale.</param>
+        /// <returns>The table entry result which contains the table </returns>
+        public virtual TableEntryResult GetTableEntry(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings)
+        {
+            return GetTableEntryAsync(tableReference, tableEntryReference, locale, fallbackBehavior).WaitForCompletion();
         }
 
         internal AsyncOperationHandle<SharedTableData> GetSharedTableData(Guid tableNameGuid)

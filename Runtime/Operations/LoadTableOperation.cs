@@ -7,7 +7,7 @@ using UnityEngine.ResourceManagement.ResourceLocations;
 
 namespace UnityEngine.Localization
 {
-    class LoadTableOperation<TTable, TEntry> : AsyncOperationBase<TTable>
+    class LoadTableOperation<TTable, TEntry> : WaitForCurrentOperationAsyncOperationBase<TTable>
         where TTable : DetailedLocalizationTable<TEntry>
         where TEntry : TableEntry
     {
@@ -21,6 +21,7 @@ namespace UnityEngine.Localization
             m_Database = database;
             m_TableReference = tableReference;
             m_SelectedLocale = locale;
+            CurrentOperation = null;
         }
 
         protected override void Execute()
@@ -29,7 +30,10 @@ namespace UnityEngine.Localization
             {
                 m_SelectedLocale = LocalizationSettings.SelectedLocale;
                 if (m_SelectedLocale == null)
+                {
                     Complete(null, false, "SelectedLocale is null");
+                    return;
+                }
             }
 
             // Extract the collection name
@@ -38,9 +42,14 @@ namespace UnityEngine.Localization
                 // We need to load the SharedTableData so we can resolve the name of the table
                 var operation = m_Database.GetSharedTableData(m_TableReference.TableCollectionNameGuid);
                 if (operation.IsDone)
+                {
                     LoadTableByGuid(operation);
+                }
                 else
+                {
+                    CurrentOperation = operation;
                     operation.Completed += LoadTableByGuid;
+                }
             }
             else
             {
@@ -66,15 +75,19 @@ namespace UnityEngine.Localization
 
             // Check the table exists
             var tableResourceOp = AddressablesInterface.LoadTableLocationsAsync(m_CollectionName, m_SelectedLocale.Identifier, typeof(TTable));
-            if (!tableResourceOp.IsDone)
-                tableResourceOp.Completed += LoadTableResource;
-            else
+            if (tableResourceOp.IsDone)
+            {
                 LoadTableResource(tableResourceOp);
+            }
+            else
+            {
+                CurrentOperation = tableResourceOp;
+                tableResourceOp.Completed += LoadTableResource;
+            }
         }
 
         void LoadTableResource(AsyncOperationHandle<IList<IResourceLocation>> operationHandle)
         {
-            // TODO: Fallback if table is not found
             if (operationHandle.Status != AsyncOperationStatus.Succeeded || operationHandle.Result.Count == 0)
             {
                 Complete(null, true, $"Could not find a {m_SelectedLocale} table with the name '{m_CollectionName}`");
@@ -83,9 +96,14 @@ namespace UnityEngine.Localization
 
             var loadTableOperation = AddressablesInterface.LoadTableFromLocation<TTable>(operationHandle.Result[0]);
             if (loadTableOperation.IsDone)
+            {
                 TableLoaded(loadTableOperation);
+            }
             else
+            {
+                CurrentOperation = loadTableOperation;
                 loadTableOperation.Completed += TableLoaded;
+            }
         }
 
         void TableLoaded(AsyncOperationHandle<TTable> operationHandle)
@@ -100,6 +118,7 @@ namespace UnityEngine.Localization
 
         protected override void Destroy()
         {
+            base.Destroy();
             GenericPool<LoadTableOperation<TTable, TEntry>>.Release(this);
         }
     }

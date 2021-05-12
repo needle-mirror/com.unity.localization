@@ -9,20 +9,20 @@ namespace UnityEngine.Localization.SmartFormat.Tests
     /// </summary>
     public class Address
     {
-        public Address(string NewStreetAddress, string NewCity, States NewState, string NewZip)
+        public Address(string newStreetAddress, string newCity, States newState, string newZip)
         {
-            this.mStreetAddress = NewStreetAddress;
-            this.mCity = NewCity;
-            this.mState = NewState;
-            this.mZip = NewZip;
+            StreetAddress = newStreetAddress;
+            City = newCity;
+            State = newState;
+            Zip = newZip;
         }
 
-        public Address(string NewStreetAddress, string NewCity, string NewState, string NewZip)
+        public Address(string newStreetAddress, string newCity, string newState, string newZip)
         {
-            this.mStreetAddress = NewStreetAddress;
-            this.mCity = NewCity;
-            this.mState = ParseState(NewState);
-            this.mZip = NewZip;
+            StreetAddress = newStreetAddress;
+            City = newCity;
+            State = ParseState(newState);
+            Zip = newZip;
         }
 
         public override string ToString()
@@ -30,33 +30,13 @@ namespace UnityEngine.Localization.SmartFormat.Tests
             return FullAddress;
         }
 
-        private string mStreetAddress;
-        public string StreetAddress
-        {
-            get { return mStreetAddress; }
-            set { mStreetAddress = value; }
-        }
+        public string StreetAddress { get; set; }
 
-        private string mCity;
-        public string City
-        {
-            get { return mCity; }
-            set { mCity = value; }
-        }
+        public string City { get; set; }
 
-        private States mState;
-        public States State
-        {
-            get { return mState; }
-            set { mState = value; }
-        }
+        public States State { get; set; }
 
-        private string mZip;
-        public string Zip
-        {
-            get { return mZip; }
-            set { mZip = value; }
-        }
+        public string Zip { get; set; }
 
         /// <summary>
         /// Parses the AddressString to determine the Street Address, City, State, and Zip.
@@ -64,10 +44,10 @@ namespace UnityEngine.Localization.SmartFormat.Tests
         ///
         /// Throws an exception if the address cannot be properly parsed!
         /// </summary>
-        /// <param name="AddressString">The entire Address.</param>
-        public static bool TryParse(string AddressString, ref Address result)
+        /// <param name="addressString">The entire Address.</param>
+        public static bool TryParse(string addressString, ref Address result)
         {
-            Match match = static_TryParse_AddressPattern.Match(AddressString);
+            Match match = static_TryParse_AddressPattern.Match(addressString);
             if (!match.Success)
                 return false;
 
@@ -76,10 +56,10 @@ namespace UnityEngine.Localization.SmartFormat.Tests
         }
 
         static Regex static_TryParse_AddressPattern = new Regex("(?<streetaddress>.*?)\\s*[\\n,]\\s*(?<city>.*?),\\s*(?<state>\\S\\S)\\s*(?<zip>\\S*)");
-        public static Address Parse(string AddressString)
+        public static Address Parse(string addressString)
         {
-            Address result = null;
-            if (!TryParse(AddressString, ref result))
+            Address result = new Address("", "", "", "");
+            if (!TryParse(addressString, ref result))
                 throw new Exception("The Address String could not be properly parsed.");
             return result;
         }
@@ -87,9 +67,6 @@ namespace UnityEngine.Localization.SmartFormat.Tests
         /// <summary>
         /// Returns the full, formatted address on two lines.
         /// </summary>
-        /// <param name="format">
-        /// Determines the format of the address.  Default is 2-line format.
-        /// </param>
         public string FullAddress
         {
             get
@@ -103,14 +80,9 @@ namespace UnityEngine.Localization.SmartFormat.Tests
         /// Returns the 2-letter abbreviation of the state.
         /// For example, States.California = "CA"
         /// </summary>
-        public string StateAbbreviation
-        {
-            get { return GetStateAbbreviation(this.State); }
-        }
-        public static string GetStateAbbreviation(States state)
-        {
-            return AbbreviationAttribute.GetAbbrevation(state);
-        }
+        public string StateAbbreviation => GetStateAbbreviation(State);
+
+        public static string GetStateAbbreviation(States state) => AbbreviationAttribute.GetAbbreviation(state);
 
         public static States ParseState(string state)
         {
@@ -285,7 +257,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests
         ///
         /// For example, GetAbbreviation(States.California) = "CA"
         /// </summary>
-        public static string GetAbbrevation(object value)
+        public static string GetAbbreviation(object value)
         {
             Type baseType = value.GetType();
             FieldInfo fieldInfo = baseType.GetField(Enum.GetName(baseType, value));
@@ -295,19 +267,6 @@ namespace UnityEngine.Localization.SmartFormat.Tests
             }
             // Couldn't find anything:
             return "";
-        }
-
-        /// <summary>
-        /// Returns the object from the abbreviation.
-        /// </summary>
-        public static TBaseType FindAbbreviation<TBaseType>(string abbreviation, bool ignoreCase)
-        {
-            TBaseType result = default(TBaseType);
-            if (TryFindAbbreviation(abbreviation, ignoreCase, ref result))
-            {
-                return result;
-            }
-            return default(TBaseType);
         }
 
         /// <summary>

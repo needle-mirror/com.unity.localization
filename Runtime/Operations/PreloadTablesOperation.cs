@@ -6,7 +6,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization
 {
-    class PreloadTablesOperation<TTable, TEntry> : AsyncOperationBase<LocalizedDatabase<TTable, TEntry>>
+    class PreloadTablesOperation<TTable, TEntry> : WaitForCurrentOperationAsyncOperationBase<LocalizedDatabase<TTable, TEntry>>
         where TTable : DetailedLocalizationTable<TEntry>
         where TEntry : TableEntry
     {
@@ -23,6 +23,7 @@ namespace UnityEngine.Localization
             m_Database = database;
             m_TableReferences = tableReference;
             m_SelectedLocale = locale;
+            CurrentOperation = null;
         }
 
         protected override void Execute()
@@ -46,9 +47,9 @@ namespace UnityEngine.Localization
             if (m_LoadTablesOperation.Count > 0)
             {
                 var loadTablesOperationHandle = AddressablesInterface.ResourceManager.CreateGenericGroupOperation(m_LoadTablesOperation);
-
                 if (!loadTablesOperationHandle.IsDone)
                 {
+                    CurrentOperation = loadTablesOperationHandle;
                     loadTablesOperationHandle.CompletedTypeless += LoadTableContents;
                     return;
                 }
@@ -87,9 +88,14 @@ namespace UnityEngine.Localization
 
             var preloadTablesContents = AddressablesInterface.ResourceManager.CreateGenericGroupOperation(m_PreloadTablesOperations);
             if (!preloadTablesContents.IsDone)
+            {
+                CurrentOperation = preloadTablesContents;
                 preloadTablesContents.CompletedTypeless += FinishPreloading;
+            }
             else
+            {
                 FinishPreloading(preloadTablesContents);
+            }
         }
 
         void FinishPreloading(AsyncOperationHandle op)
@@ -99,6 +105,7 @@ namespace UnityEngine.Localization
 
         protected override void Destroy()
         {
+            base.Destroy();
             m_LoadTables.Clear();
             m_LoadTablesOperation.Clear();
             m_PreloadTablesOperations.Clear();

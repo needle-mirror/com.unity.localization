@@ -28,7 +28,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     /// In this example, format = "{Width}x{Height}".  Notice the nested braces.
     /// </summary>
     [Serializable]
-    public class ListFormatter : FormatterBase, ISource
+    public class ListFormatter : FormatterBase, ISource, IFormatterLiteralExtractor
     {
         [SerializeReference, HideInInspector]
         SmartSettings m_SmartSettings;
@@ -206,15 +206,15 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             return true;
         }
 
-        public override bool TryEvaluateAllLiterals(IFormattingInfo formattingInfo)
+        public void WriteAllLiterals(IFormattingInfo formattingInfo)
         {
             var format = formattingInfo.Format;
             if (format == null)
-                return false;
+                return;
 
             var parameters = format.Split('|', 4);
             if (parameters.Count < 2)
-                return false;
+                return;
 
             var itemFormat = parameters[0];
 
@@ -241,8 +241,6 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             }
 
             formattingInfo.Write(itemFormat, null);
-
-            return true;
         }
     }
 }

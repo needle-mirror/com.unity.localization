@@ -34,18 +34,7 @@ namespace UnityEngine.Localization.SmartFormat
             return Default.Format(format, arg0); // call Default.Format in order to avoid infinite recursive method call
         }
 
-        private static SmartFormatter s_Default;
-
-        public static SmartFormatter Default
-        {
-            get
-            {
-                if (s_Default == null)
-                    s_Default = CreateDefaultSmartFormat();
-                return s_Default;
-            }
-            set => s_Default = value;
-        }
+        public static SmartFormatter Default { get; set; } = CreateDefaultSmartFormat();
 
         public static SmartFormatter CreateDefaultSmartFormat()
         {

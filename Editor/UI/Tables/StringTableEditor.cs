@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.UI
@@ -14,6 +15,11 @@ namespace UnityEditor.Localization.UI
             m_ImguiContainer = new IMGUIContainer(OnIMGUI);
             m_TableContentsPanel.Add(m_ImguiContainer);
             m_ImguiContainer.StretchToParentSize();
+            RegisterCallback<DetachFromPanelEvent>(evt =>
+            {
+                m_StringTableListView?.Dispose();
+                m_StringTableListView = null;
+            });
         }
 
         protected override void UndoRedoPerformed()

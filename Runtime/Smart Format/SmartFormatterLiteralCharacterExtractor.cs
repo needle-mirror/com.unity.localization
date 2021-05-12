@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Localization.SmartFormat.Core.Extensions;
 using UnityEngine.Localization.SmartFormat.Core.Formatting;
 using UnityEngine.Localization.SmartFormat.Core.Parsing;
 
@@ -43,11 +44,11 @@ namespace UnityEngine.Localization.SmartFormat
                 // Evaluate the named formatter (or, evaluate all "" formatters)
                 foreach (var formatterExtension in FormatterExtensions)
                 {
-                    if (!formatterExtension.Names.Contains(formatterName))
-                        continue;
-                    var handled = formatterExtension.TryEvaluateAllLiterals(childFormattingInfo);
-                    if (handled)
-                        continue;
+                    if (formatterExtension is IFormatterLiteralExtractor literalExtractor &&
+                        formatterExtension.Names.Contains(formatterName))
+                    {
+                        literalExtractor.WriteAllLiterals(childFormattingInfo);
+                    }
                 }
             }
         }

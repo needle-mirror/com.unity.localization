@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
@@ -11,6 +12,7 @@ namespace UnityEditor.Localization.Tests.Metadata
     [TestFixture(typeof(AssetTable))]
     public class MetadataCollectionTests<T> where T : class, IMetadataCollection, new()
     {
+        [Serializable]
         public class TestMetadata : IMetadata {}
         readonly bool k_IsScriptableObject = typeof(ScriptableObject).IsAssignableFrom(typeof(T));
 

@@ -1,6 +1,42 @@
 # Changelog
 All notable changes to this package will be documented in this file.
 
+## [1.0.0-pre.9] - 2021-05-12
+
+### Added
+
+- Added `ExcludeEntry` **Metadata** . This can be used to prevent an entry from being exported to Google Sheets, XLIFF, and CSV.
+- Added `WaitForCompletion` property to `LocalizedString` and `LocalizedAsset`. This can be set in the inspector or via script to force synchronous loading.
+- Added synchronous methods to `LocalizedString` and `LocalizedAsset`.
+
+### Changed
+
+- `LocalizationSettings.SelectedLocale` is now syncronous and does not need Initialization to have been completed.
+- Moved `TryEvaluateAllLiterals` into its own interface `IFormatterLiteralExtractor` and renamed to `WriteAllLiterals`.
+- Renamed `LocalizeString.GetLocalizedString` to `LocalizeString.GetLocalizedStringAsync`.
+- System Locale Selector will now only output the message The Locale X is not available, however the parent locale Y is available. in the player.
+- Updated Smart Format library to `aa9e4288612f79b86ab0cea36066797118d11a69` excluding the Nullable types support.
+  - Fixed: Take an erroneous format string like `"this is {uncomplete"` (missing closing brace). Before v2.7.0 the parser handled `{uncomplete` as a `TextLiteral`, not as an erroneous `Placeholder`.
+  - Fixed: Fixed issue where If the `Parser` encountered a `ParsingError.TooManyClosingBraces`, this closing brace was simply "swallowed-up". This way, the result with `Parser.ErrorAction.MaintainTokens` differs from the original format string. From v2.7.0, the redundant closing brace is handled as a `TextLiteral`. 
+  - Improved: For `ParsingError.TrailingOperatorsInSelector` and `ParsingError.InvalidCharactersInSelector` the causing character is now included in the `Exception.Message`.
+  - Fix: Fully implemented all `Settings.ParseErrorAction`.
+  - Enhanced SubString extension as described in [PR142](https://github.com/axuno/SmartFormat/pull/142).
+- Updated to Addressables `1.18.2`.
+
+### Fixed
+
+- Added support for `WaitForCompletion` so Async operations can be completed immediately and support synchronous workflows. (LOC-185)
+- Fixed `ArgumentException` when adding a new table collection in a new project. ([LOC-192](https://issuetracker.unity3d.com/issues/errors-thrown-first-time-entering-play-mode))
+- Fixed `LocalizeStringEvent` overwriting the `StringReference` Arguments when enabled.
+- Fixed `NullReferenceException` in LoadTableOperation when the Locale could not be found. ([LOC-192](https://issuetracker.unity3d.com/issues/errors-thrown-first-time-entering-play-mode))
+- Fixed `TemplateFormatter` not being added when selected through the Add Formatter menu. (LOC-179)
+- Fixed default table version of `GetLocalizedStringAsync` arguments being wrapped in an `object[]` when using `IList<object>`. (LOC-191)
+- Fixed Localized assets not using fallbacks.
+- Fixed table name validation - names can no longer contain leading or trailing whitespace, nor can they contain characters that Unity considers invalid. ([LOC-183](https://jira.unity3d.com/browse/LOC-183))
+- Fixed warning regarding `SelectedLocale` being thrown when entering play mode and the **Scene Controls Window** was open.
+- Locale Analyzer, String Table Analyzer and Asset Table Analyzer will now check the Addressables groups have valid schemas. (LOC-190)
+- Table Window now updates itself when Tables, Collections or Shared Table Data is deleted or restored in the project. (LOC-182)
+
 ## [1.0.0-pre.8] - 2021-04-27
 
 ### Changed

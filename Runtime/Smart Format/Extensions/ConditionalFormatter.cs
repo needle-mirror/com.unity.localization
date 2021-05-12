@@ -8,7 +8,7 @@ using UnityEngine.Localization.SmartFormat.Net.Utilities;
 namespace UnityEngine.Localization.SmartFormat.Extensions
 {
     [Serializable]
-    public class ConditionalFormatter : FormatterBase
+    public class ConditionalFormatter : FormatterBase, IFormatterLiteralExtractor
     {
         public ConditionalFormatter()
         {
@@ -40,11 +40,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                 current is byte || current is short || current is int || current is long
                 || current is float || current is double || current is decimal;
             // An Enum is a number too:
-#if !NET45
             if (currentIsNumber == false && current != null && current.GetType().GetTypeInfo().IsEnum)
-#else
-            if (currentIsNumber == false && current != null && current.GetType().IsEnum)
-#endif
                 currentIsNumber = true;
 
             var currentNumber = currentIsNumber ? Convert.ToDecimal(current) : 0;
@@ -222,12 +218,12 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             return true;
         }
 
-        public override bool TryEvaluateAllLiterals(IFormattingInfo formattingInfo)
+        public void WriteAllLiterals(IFormattingInfo formattingInfo)
         {
             var format = formattingInfo.Format;
 
             if (format == null)
-                return false;
+                return;
             // Ignore a leading ":", which is used to bypass the PluralLocalizationExtension
             if (format.baseString[format.startIndex] == ':')
                 format = format.Substring(1);
@@ -235,7 +231,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             // See if the format string contains un-nested "|":
             var parameters = format.Split('|');
             if (parameters.Count == 1)
-                return false; // There are no parameters found.
+                return; // There are no parameters found.
 
             for (int i = 0; i < parameters.Count; ++i)
             {
@@ -252,7 +248,6 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
 
                 formattingInfo.Write(parameter, null);
             }
-            return true;
         }
     }
 }

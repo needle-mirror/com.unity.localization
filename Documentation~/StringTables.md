@@ -11,7 +11,7 @@ When you create a new String Table Collection, Unity creates a String Table Coll
 
 ![Example String Table Collection assets for English, French and Japanese.](images/StringTableCollection_ProjectView.png)
 
-![A String Table Collection references all tables that are part of it and can be accessed through the editor or via Editor scripts.](images/StringTableCollection_Overview.png)
+![A String Table Collection references all tables that are part of it and can be accessed through the editor or via Editor scripts.](images/StringTableCollectionOverview.dot.svg)
 
 You can use the String Table Collection Editor to configure the Editor and player settings, and to add and remove tables from the collection. Removing a table from a collection removes the table from the Localization system, but leaves its data intact so that you can add it back in the future. This allows for chosen String Tables to be enabled and disabled.
 

@@ -20,6 +20,7 @@ namespace UnityEditor.Localization.UI
             public static readonly GUIContent noTableSelected = new GUIContent($"None({typeof(TCollection).Name})");
             public static readonly GUIContent previewArguments = new GUIContent("Preview Arguments", "Arguments to pass to the string formatter. These are for preview purposes only and are not stored.");
             public static readonly GUIContent selectedTable = new GUIContent("Table Collection");
+            public static readonly GUIContent waitForCompletion = new GUIContent("Wait For Completion", "Should the operation wait for the localization operation to complete before returning, blocking the main thread, or allow it to finish asyncronously?");
         }
 
         protected static Func<ReadOnlyCollection<TCollection>> GetProjectTableCollections { get; set; }
@@ -30,6 +31,7 @@ namespace UnityEditor.Localization.UI
             public SerializedTableReference tableReference;
             public SerializedTableEntryReference tableEntryReference;
             public SerializedProperty fallbackState;
+            public SerializedProperty waitForCompletion;
             public Type assetType;
             public GUIContent entryNameLabel;
 
@@ -169,6 +171,7 @@ namespace UnityEditor.Localization.UI
                 tableReference = new SerializedTableReference(property.FindPropertyRelative("m_TableReference"));
                 tableEntryReference = new SerializedTableEntryReference(property.FindPropertyRelative("m_TableEntryReference"));
                 fallbackState = property.FindPropertyRelative("m_FallbackState");
+                waitForCompletion = property.FindPropertyRelative("m_WaitForCompletion");
                 NeedsInitializing = false;
             }
         }
@@ -379,6 +382,8 @@ namespace UnityEditor.Localization.UI
 
             EditorGUI.PropertyField(rowPosition, data.fallbackState, Styles.useFallback);
             rowPosition.MoveToNextLine();
+            EditorGUI.PropertyField(rowPosition, data.waitForCompletion, Styles.waitForCompletion);
+            rowPosition.MoveToNextLine();
         }
 
         public override float GetPropertyHeight(Data data, SerializedProperty property, GUIContent label)
@@ -388,8 +393,7 @@ namespace UnityEditor.Localization.UI
             {
                 height += EditorGUIUtility.singleLineHeight; // Selected table
                 height += EditorGUIUtility.singleLineHeight; // create table/add entry button
-                height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing; // Add locale button
-                height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing; // Fallback
+                height += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * 3; // Add locale button, fallback & Wait For Completion
 
                 if (data.SelectedTableEntry != null)
                 {

@@ -8,16 +8,15 @@ using UnityEngine.ResourceManagement.ResourceLocations;
 
 namespace UnityEngine.Localization
 {
-    class PreloadDatabaseOperation<TTable, TEntry> : AsyncOperationBase<LocalizedDatabase<TTable, TEntry>>
+    class PreloadDatabaseOperation<TTable, TEntry> : WaitForCurrentOperationAsyncOperationBase<LocalizedDatabase<TTable, TEntry>>
         where TTable : DetailedLocalizationTable<TEntry>
         where TEntry : TableEntry
     {
         LocalizedDatabase<TTable, TEntry> m_Database;
         AsyncOperationHandle<IList<IResourceLocation>> m_LoadResourcesOperation;
         AsyncOperationHandle<IList<TTable>> m_LoadTablesOperation;
-
-        List<AsyncOperationHandle> m_PreloadTableContentsOperations = new List<AsyncOperationHandle>();
-        List<string> m_ResourceLabels = new List<string>();
+        readonly List<AsyncOperationHandle> m_PreloadTableContentsOperations = new List<AsyncOperationHandle>();
+        readonly List<string> m_ResourceLabels = new List<string>();
         float m_Progress;
 
         protected override float Progress => m_Progress;
@@ -28,6 +27,7 @@ namespace UnityEngine.Localization
         {
             m_Database = database;
             m_PreloadTableContentsOperations.Clear();
+            CurrentOperation = null;
         }
 
         /// <summary>
@@ -66,9 +66,14 @@ namespace UnityEngine.Localization
             m_LoadResourcesOperation = AddressablesInterface.LoadResourceLocationsWithLabelsAsync(m_ResourceLabels, Addressables.MergeMode.Intersection, typeof(TTable));
 
             if (!m_LoadResourcesOperation.IsDone)
+            {
+                CurrentOperation = m_LoadResourcesOperation;
                 m_LoadResourcesOperation.Completed += LoadTables;
+            }
             else
+            {
                 LoadTables(m_LoadResourcesOperation);
+            }
         }
 
         void LoadTables(AsyncOperationHandle<IList<IResourceLocation>> loadResourcesOperation)
@@ -90,17 +95,20 @@ namespace UnityEngine.Localization
             // Load the tables
             m_LoadTablesOperation = AddressablesInterface.LoadAssetsFromLocations<TTable>(loadResourcesOperation.Result, TableLoaded);
             if (!m_LoadTablesOperation.IsDone)
+            {
+                CurrentOperation = m_LoadTablesOperation;
                 m_LoadTablesOperation.Completed += LoadTableContents;
+            }
             else
+            {
                 LoadTableContents(m_LoadTablesOperation);
+            }
         }
 
         void TableLoaded(TTable table)
         {
             // We only update the progress here.
-
-            // Disabled due to bug. This should be fixed when Addressables 1.17.14 is released. https://unity.slack.com/archives/C8Z80RV4K/p1616691899131500
-            //m_Progress += 1.0f / m_LoadResourcesOperation.Result.Count;
+            m_Progress += 1.0f / m_LoadResourcesOperation.Result.Count;
         }
 
         void LoadTableContents(AsyncOperationHandle<IList<TTable>> loadTablesOperation)
@@ -141,7 +149,10 @@ namespace UnityEngine.Localization
 
             var groupOperation = AddressablesInterface.ResourceManager.CreateGenericGroupOperation(m_PreloadTableContentsOperations);
             if (!groupOperation.IsDone)
+            {
+                CurrentOperation = groupOperation;
                 groupOperation.CompletedTypeless += FinishPreloading;
+            }
             else
                 FinishPreloading(groupOperation);
         }
@@ -157,6 +168,7 @@ namespace UnityEngine.Localization
 
         protected override void Destroy()
         {
+            base.Destroy();
             GenericPool<PreloadDatabaseOperation<TTable, TEntry>>.Release(this);
         }
     }

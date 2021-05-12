@@ -20,6 +20,8 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
         {
             var source = RawText;
 
+            if (source.Length == 0) return source;
+
             // No character literal escaping - nothing to do
             if (source[0] != Parser.m_CharLiteralEscapeChar)
                 return source;

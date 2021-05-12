@@ -129,8 +129,8 @@ namespace UnityEngine.Localization.Settings
 
         /// <summary>
         /// The current selected <see cref="Locale"/>. This is the Locale that will be used by default when localizing assets and strings.
-        /// If you are calling this before <see cref="InitializationOperation"/> has been completed then a null value may be returned.
-        /// See <see cref="SelectedLocaleAsync"/> for a version that will ensure the Locale is not null(when possible).
+        /// Calling this when the Localization system has not initialized will force the Localization system to load all Locales before returning,
+        /// see <see cref="SelectedLocaleAsync"/> for a version that will load the Locales asynchronously.
         /// </summary>
         public static Locale SelectedLocale
         {
@@ -142,6 +142,7 @@ namespace UnityEngine.Localization.Settings
         /// The current selected Locale. This is the Locale that will be used by default when localizing assets and strings.
         /// If <see cref="InitializationOperation"/> has not been completed yet then this will wait for the <see cref="AvailableLocales"/> part to complete first.
         /// It will not wait for the entire <see cref="InitializationOperation"/> but just the part that initializes the Locales.
+        /// See <seealso cref="SelectedLocale"/> for a synchronous version that will block until the Locales have been loaded.
         /// </summary>
         public static AsyncOperationHandle<Locale> SelectedLocaleAsync => Instance.GetSelectedLocaleAsync();
 
@@ -457,17 +458,11 @@ namespace UnityEngine.Localization.Settings
         /// <returns>\</returns>
         public virtual Locale GetSelectedLocale()
         {
-            if (m_SelectedLocaleAsync.HasValue)
-                return m_SelectedLocaleAsync.Value.Result;
-
-            if (m_AvailableLocales is IPreloadRequired localesProvider && !localesProvider.PreloadOperation.IsDone)
-            {
-                Debug.LogWarning("Calling GetSelectedLocale when AvailableLocales preloading has not completed. Consider using SelectedLocaleAsync.");
-                return null;
-            }
-
-            return GetSelectedLocaleAsync().Result;
-        }
+            var localeOp = GetSelectedLocaleAsync();
+            if (localeOp.IsDone)
+                return localeOp.Result;
+            return localeOp.WaitForCompletion();
+        } 
 
         /// <summary>
         /// Indicates that the Locale is no longer available.

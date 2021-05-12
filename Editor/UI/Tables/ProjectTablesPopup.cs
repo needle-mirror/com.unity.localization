@@ -40,6 +40,19 @@ namespace UnityEditor.Localization.UI
 
             LocalizationEditorSettings.EditorEvents.CollectionAdded += OnCollectionAdded;
             LocalizationEditorSettings.EditorEvents.CollectionRemoved += OnCollectionRemoved;
+            LocalizationEditorSettings.EditorEvents.CollectionModified += OnCollectionModified;
+        }
+
+        ~ProjectTablesPopup()
+        {
+            LocalizationEditorSettings.EditorEvents.CollectionAdded -= OnCollectionAdded;
+            LocalizationEditorSettings.EditorEvents.CollectionRemoved -= OnCollectionRemoved;
+            LocalizationEditorSettings.EditorEvents.CollectionModified -= OnCollectionModified;
+        }
+
+        void OnCollectionModified(object called, LocalizationTableCollection col)
+        {
+            OnCollectionAdded(col);
         }
 
         void OnCollectionAdded(LocalizationTableCollection col)
@@ -58,12 +71,6 @@ namespace UnityEditor.Localization.UI
 
             if (value == col)
                 value = choices[0];
-        }
-
-        ~ProjectTablesPopup()
-        {
-            LocalizationEditorSettings.EditorEvents.CollectionAdded -= OnCollectionAdded;
-            LocalizationEditorSettings.EditorEvents.CollectionRemoved -= OnCollectionRemoved;
         }
 
         static int GetDefaultIndex()

@@ -6,6 +6,7 @@ using System.Linq;
 using CsvHelper;
 using UnityEditor.Localization.Plugins.CSV.Columns;
 using UnityEditor.Localization.Reporting;
+using UnityEngine.Localization.Metadata;
 
 namespace UnityEditor.Localization.Plugins.CSV
 {
@@ -71,6 +72,9 @@ namespace UnityEditor.Localization.Plugins.CSV
                     reporter?.ReportProgress("Writing Contents", 0.1f);
                     foreach (var row in collection.GetRowEnumerator())
                     {
+                        if (row.TableEntries[0] != null && row.TableEntries[0].SharedEntry.Metadata.HasMetadata<ExcludeEntryFromExport>())
+                            continue;
+
                         csvWriter.NextRecord();
                         foreach (var cell in columnMappings)
                         {

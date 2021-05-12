@@ -49,6 +49,10 @@ _The Platform Override Table._
 
 It is possible to create custom overrides that can be applied to a table entry or the shared table entry. 
 For example you may want to change a localized value for a particular region or another criteria such as the date.
+The Entry Override is evaluated during the Get Table Entry phase:
+
+![The Entry Override is evaluated during the Get Table Entry operation.](images/GetEntry.dot.svg)
+
 To create a custom override implement the `IEntryOverride` interface.
 The following example shows how to create an override that will only be applied on a chosen day of the week.
 

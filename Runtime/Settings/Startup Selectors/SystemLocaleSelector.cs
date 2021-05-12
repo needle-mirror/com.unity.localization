@@ -28,10 +28,13 @@ namespace UnityEngine.Localization.Settings
                     cultureInfo = cultureInfo.Parent;
                 }
 
+                // Only show this message in the player so we don't spam the Editor.
+                #if !UNITY_EDITOR
                 if (locale != null)
                 {
                     Debug.Log($"The Locale '{CultureInfo.CurrentUICulture}' is not available, however the parent locale '{locale.Identifier.CultureInfo}' is available.");
                 }
+                #endif
             }
 
             // Fallback to Application.systemLanguage

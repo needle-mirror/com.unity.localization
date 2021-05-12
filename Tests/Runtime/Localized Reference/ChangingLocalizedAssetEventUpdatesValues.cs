@@ -14,7 +14,7 @@ namespace UnityEngine.Localization.Tests
             public TableReference? LastTableReference { get; set; }
             public TableEntryReference? LastTableEntryReference { get; set; }
 
-            public override AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale)
+            public override AsyncOperationHandle<TObject> GetLocalizedAssetAsync<TObject>(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings)
             {
                 LastTableReference = tableReference;
                 LastTableEntryReference = tableEntryReference;
@@ -26,8 +26,8 @@ namespace UnityEngine.Localization.Tests
         LocalizeTextureEvent m_LocalizeTextureEvent;
         FixtureAssetDatabase m_FixtureAssetDatabase;
 
-        const string kDefaultTableCollectionName = "Default Asset Table";
-        const string kDefaultEntryName = "Default Asset Table Entry";
+        const string k_DefaultTableCollectionName = "Default Asset Table";
+        const string k_DefaultEntryName = "Default Asset Table Entry";
 
         void CheckEntryWasRequested(string expectedTableCollectionName, string expectedEntryName)
         {
@@ -57,7 +57,7 @@ namespace UnityEngine.Localization.Tests
             m_LocalizeTextureEvent = m_GameObject.AddComponent<LocalizeTextureEvent>();
 
             // Setup with a default value so we do not start with an empty StringReference.
-            m_LocalizeTextureEvent.AssetReference.SetReference(kDefaultTableCollectionName, kDefaultEntryName);
+            m_LocalizeTextureEvent.AssetReference.SetReference(k_DefaultTableCollectionName, k_DefaultEntryName);
             ClearLastGetTableEntryValues();
         }
 
@@ -85,7 +85,7 @@ namespace UnityEngine.Localization.Tests
         {
             const string tableName = "SettingTableReference Table Collection Name";
             m_LocalizeTextureEvent.AssetReference.TableReference = tableName;
-            CheckEntryWasRequested(tableName, kDefaultEntryName);
+            CheckEntryWasRequested(tableName, k_DefaultEntryName);
         }
 
         [Test]
@@ -93,7 +93,7 @@ namespace UnityEngine.Localization.Tests
         {
             const string entryName = "SettingTableEntryReference Entry Name";
             m_LocalizeTextureEvent.AssetReference.TableEntryReference = entryName;
-            CheckEntryWasRequested(kDefaultTableCollectionName, entryName);
+            CheckEntryWasRequested(k_DefaultTableCollectionName, entryName);
         }
 
         [Test]

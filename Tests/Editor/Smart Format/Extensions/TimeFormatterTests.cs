@@ -10,8 +10,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
 {
     public class TimeFormatterTests
     {
-        private SmartFormatter m_Smart;
-        private TimeFormatter m_TimeFormatter;
+        readonly SmartFormatter m_Smart;
 
         public TimeFormatterTests()
         {
@@ -19,12 +18,11 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
             m_Smart.Settings.FormatErrorAction = ErrorAction.ThrowError;
             m_Smart.Settings.ParseErrorAction = ErrorAction.ThrowError;
 
-            m_TimeFormatter = m_Smart.FormatterExtensions.FirstOrDefault(fmt => fmt.Names.Contains("time")) as TimeFormatter;
-            if (m_TimeFormatter == null)
+            var timeFormatter = m_Smart.FormatterExtensions.FirstOrDefault(fmt => fmt.Names.Contains("time")) as TimeFormatter;
+            if (timeFormatter == null)
             {
-                m_TimeFormatter = new TimeFormatter();
-                m_TimeFormatter.DefaultTwoLetterISOLanguageName = "en";
-                m_Smart.FormatterExtensions.Add(m_TimeFormatter);
+                timeFormatter = new TimeFormatter { DefaultTwoLetterISOLanguageName = "en" };
+                m_Smart.FormatterExtensions.Add(timeFormatter);
             }
         }
 

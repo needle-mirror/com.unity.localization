@@ -1,6 +1,7 @@
 using System;
 using UnityEngine.Localization.Tables;
 using UnityEngine.Localization.Settings;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization
 {
@@ -21,6 +22,9 @@ namespace UnityEngine.Localization
 
         [SerializeField]
         FallbackBehavior m_FallbackState = FallbackBehavior.UseProjectSettings;
+
+        [SerializeField]
+        bool m_WaitForCompletion = true;
 
         #if UNITY_EDITOR
         // This is so we can detect when a change is made via the inspector.
@@ -85,6 +89,16 @@ namespace UnityEngine.Localization
         {
             get => m_FallbackState;
             set => m_FallbackState = value;
+        }
+
+        /// <summary>
+        /// Determines if <see cref="AsyncOperationHandle{TObject}.WaitForCompletion"/> should be used to force loading to be completed immediately.
+        /// See [Synchronous Workflow](https://docs.unity3d.com/Packages/com.unity.addressables@latest?subfolder=/manual/SynchronousAddressables.html) for further details.
+        /// </summary>
+        public virtual bool WaitForCompletion
+        {
+            get => m_WaitForCompletion;
+            set => m_WaitForCompletion = value;
         }
 
         /// <summary>

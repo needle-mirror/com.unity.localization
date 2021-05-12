@@ -21,7 +21,8 @@ namespace UnityEditor.Localization
     /// </summary>
     public class LocalizationEditorSettings
     {
-        static readonly char[] k_InvalidFileNameChars = Path.GetInvalidFileNameChars();
+        static readonly char[] k_UnityInvalidFileNameChars = {'/', '?', '<', '>', '\\', ':', '|', '\"'};
+        static readonly IEnumerable<char> k_InvalidFileNameChars = Path.GetInvalidFileNameChars().Concat(k_UnityInvalidFileNameChars);
         internal const string LocaleGroupName = "Localization-Locales";
         internal const string AssetGroupName = "Localization-Assets-{0}";
         internal const string SharedAssetGroupName = "Localization-Assets-Shared";
@@ -288,8 +289,6 @@ namespace UnityEditor.Localization
             CreateAsset(collection, collectionPath);
 
             AssetDatabase.StopAssetEditing();
-
-            EditorEvents.RaiseCollectionAdded(collection);
 
             return collection;
         }
@@ -742,6 +741,11 @@ namespace UnityEditor.Localization
             if (string.IsNullOrWhiteSpace(tableName))
             {
                 return "Table collection name cannot be blank or whitespace";
+            }
+
+            if (tableName != tableName.Trim())
+            {
+                return "Table collection name cannot contain leading or trailing whitespace";
             }
 
             // Addressables restriction

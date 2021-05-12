@@ -9,11 +9,44 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     [Serializable]
     public class SubStringFormatter : FormatterBase
     {
+        /// <summary>
+        /// Specify behavior when start index and/or length is out of range
+        /// </summary>
+        public enum SubStringOutOfRangeBehavior
+        {
+            /// <summary>
+            /// Returns string.Empty
+            /// </summary>
+            ReturnEmptyString,
+
+            /// <summary>
+            /// Returns the remainder of the string, starting at StartIndex
+            /// </summary>
+            ReturnStartIndexToEndOfString,
+
+            /// <summary>
+            /// Throws <see cref="SmartFormat.Core.Formatting.FormattingException"/>
+            /// </summary>
+            ThrowException
+        }
+
         [SerializeField]
         char m_ParameterDelimiter = ',';
 
         [SerializeField]
         string m_NullDisplayString = "(null)";
+
+        [SerializeField]
+        SubStringOutOfRangeBehavior m_OutOfRangeBehavior = SubStringOutOfRangeBehavior.ReturnEmptyString;
+
+        /// <summary>
+        /// Get or set the behavior for when start index and/or length is too great, defaults to <see cref="SubStringOutOfRangeBehavior.ReturnEmptyString"/>.
+        /// </summary>
+        public SubStringOutOfRangeBehavior OutOfRangeBehavior
+        {
+            get => m_OutOfRangeBehavior;
+            set => m_OutOfRangeBehavior = value;
+        }
 
         public SubStringFormatter()
         {
@@ -65,21 +98,27 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                 startPos = currentValue.Length;
             if (length < 0)
                 length = currentValue.Length - startPos + length;
-            if (startPos + length > currentValue.Length)
-                length = 0;
+
+            switch (OutOfRangeBehavior)
+            {
+                case SubStringOutOfRangeBehavior.ReturnEmptyString:
+                    if (startPos + length > currentValue.Length)
+                        length = 0;
+                    break;
+                case SubStringOutOfRangeBehavior.ReturnStartIndexToEndOfString:
+                    if (startPos > currentValue.Length)
+                        startPos = currentValue.Length;
+                    if (startPos + length > currentValue.Length)
+                        length = (currentValue.Length - startPos);
+                    break;
+            }
+
             var substring = parameters.Length > 1
                 ? currentValue.Substring(startPos, length)
                 : currentValue.Substring(startPos);
 
             formattingInfo.Write(substring);
 
-            return true;
-        }
-
-        public override bool TryEvaluateAllLiterals(IFormattingInfo formattingInfo)
-        {
-            if (formattingInfo.FormatterOptions == string.Empty)
-                return false;
             return true;
         }
     }

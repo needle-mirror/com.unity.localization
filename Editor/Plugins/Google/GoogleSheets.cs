@@ -8,6 +8,7 @@ using Google.Apis.Sheets.v4.Data;
 using UnityEditor.Localization.Plugins.Google.Columns;
 using UnityEditor.Localization.Reporting;
 using UnityEngine;
+using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Tables;
 using static Google.Apis.Sheets.v4.SpreadsheetsResource;
 using static UnityEngine.Localization.Tables.SharedTableData;
@@ -383,6 +384,9 @@ namespace UnityEditor.Localization.Plugins.Google
                 // Now process each sheet column so they can update their requests.
                 foreach (var colReq in columnSheetRequests)
                 {
+                    if (tableEntries[0].SharedEntry.Metadata.HasMetadata<ExcludeEntryFromExport>())
+                        continue;
+
                     colReq.Column.PushCellData(keyEntry, tableEntries, out var value, out var note);
                     colReq.AddRow(value, note);
                 }
@@ -590,7 +594,7 @@ namespace UnityEditor.Localization.Plugins.Google
                     var valueIndex = columns[col].valueIndex;
 
                     // Do we have data in this column for this row?
-                    if (colRowData != null && colRowData.Count > row && colRowData[row]?.Values.Count > valueIndex)
+                    if (colRowData != null && colRowData.Count > row && colRowData[row]?.Values?.Count > valueIndex)
                     {
                         var cellData = colRowData[row].Values[valueIndex];
                         if (cellData != null)
@@ -638,6 +642,11 @@ namespace UnityEditor.Localization.Plugins.Google
                 {
                     // Missing entries that we want to keep go to the bottom of the list
                     sortedEntries.Add(entry);
+                }
+                else if (stringTables[0].GetEntry(entry.Id).SharedEntry.Metadata.HasMetadata<ExcludeEntryFromExport>())
+                {
+                    //add back the entry which has ExcludeEntryFromExport Metadata and was not exported to the google sheets.
+                    sortedEntries.Insert(i, entry);
                 }
                 else
                 {

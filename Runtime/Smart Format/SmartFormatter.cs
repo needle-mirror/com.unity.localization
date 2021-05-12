@@ -150,7 +150,12 @@ namespace UnityEngine.Localization.SmartFormat
         /// <returns>Returns the formatted input with items replaced with their string representation.</returns>
         public string Format(string format, params object[] args)
         {
-            return Format(null, format, args);
+            return Format(null, args, format);
+        }
+
+        public string Format(IList<object> args, string format)
+        {
+            return Format(null, args, format);
         }
 
         /// <summary>
@@ -162,11 +167,23 @@ namespace UnityEngine.Localization.SmartFormat
         /// <returns>Returns the formatted input with items replaced with their string representation.</returns>
         public string Format(IFormatProvider provider, string format, params object[] args)
         {
+            return Format(provider, args, format);
+        }
+
+        /// <summary>
+        /// Replaces one or more format items in a specified string with the string representation of a specific object.
+        /// </summary>
+        /// <param name="provider">The <see cref="IFormatProvider" /> to use.</param>
+        /// <param name="args">The object to format.</param>
+        /// <param name="format">A composite format string.</param>
+        /// <returns>Returns the formatted input with items replaced with their string representation.</returns>
+        public string Format(IFormatProvider provider, IList<object> args, string format)
+        {
             args = args ?? k_Empty;
-            using (StringOutputPool.Get(format.Length + args.Length * 8, out var output))
+            using (StringOutputPool.Get(format.Length + args.Count * 8, out var output))
             {
                 var formatParsed = Parser.ParseFormat(format, GetNotEmptyFormatterExtensionNames());
-                var current = args.Length > 0 ? args[0] : args; // The first item is the default.
+                var current = args.Count > 0 ? args[0] : args; // The first item is the default.
 
                 var formatDetails = FormatDetailsPool.Get(this, formatParsed, args, null, provider, output);
                 Format(formatDetails, formatParsed, current);
@@ -245,7 +262,7 @@ namespace UnityEngine.Localization.SmartFormat
             FormatDetailsPool.Release(formatDetails);
         }
 
-        private void Format(FormatDetails formatDetails, Format format, object current)
+        void Format(FormatDetails formatDetails, Format format, object current)
         {
             var formattingInfo = FormattingInfoPool.Get(formatDetails, format, current);
             Format(formattingInfo);
@@ -258,6 +275,8 @@ namespace UnityEngine.Localization.SmartFormat
         /// <param name="formattingInfo"></param>
         public virtual void Format(FormattingInfo formattingInfo)
         {
+            if (formattingInfo.Format is null) return;
+
             // Before we start, make sure we have at least one source extension and one formatter extension:
             CheckForExtensions();
             foreach (var item in formattingInfo.Format.Items)
@@ -334,9 +353,10 @@ namespace UnityEngine.Localization.SmartFormat
 
         private void EvaluateSelectors(FormattingInfo formattingInfo)
         {
-            var placeholder = formattingInfo.Placeholder;
+            if (formattingInfo.Placeholder == null) return;
+
             var firstSelector = true;
-            foreach (var selector in placeholder.Selectors)
+            foreach (var selector in formattingInfo.Placeholder.Selectors)
             {
                 formattingInfo.Selector = selector;
                 formattingInfo.Result = null;
@@ -396,6 +416,7 @@ namespace UnityEngine.Localization.SmartFormat
         /// <returns>True if an FormatterExtension was found, else False.</returns>
         private bool InvokeFormatterExtensions(FormattingInfo formattingInfo)
         {
+            if (formattingInfo.Placeholder == null) return false;
             var formatterName = formattingInfo.Placeholder.FormatterName;
 
             // Evaluate the named formatter (or, evaluate all "" formatters)

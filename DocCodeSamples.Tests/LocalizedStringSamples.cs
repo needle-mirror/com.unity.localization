@@ -110,7 +110,7 @@ public class LocalizedStringGetExample : MonoBehaviour
 
     void LoadString()
     {
-        var operation = myString.GetLocalizedString();
+        var operation = myString.GetLocalizedStringAsync();
         UpdateString(operation);
     }
 

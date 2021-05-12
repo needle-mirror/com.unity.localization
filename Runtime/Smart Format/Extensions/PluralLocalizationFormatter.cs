@@ -10,7 +10,7 @@ using UnityEngine.Localization.SmartFormat.Utilities;
 namespace UnityEngine.Localization.SmartFormat.Extensions
 {
     [Serializable]
-    public class PluralLocalizationFormatter : FormatterBase
+    public class PluralLocalizationFormatter : FormatterBase, IFormatterLiteralExtractor
     {
         [SerializeField]
         string m_DefaultTwoLetterISOLanguageName = "en";
@@ -129,26 +129,24 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             return m_DefaultPluralRule ?? (m_DefaultPluralRule = PluralRules.GetPluralRule(DefaultTwoLetterISOLanguageName));
         }
 
-        public override bool TryEvaluateAllLiterals(IFormattingInfo formattingInfo)
+        public void WriteAllLiterals(IFormattingInfo formattingInfo)
         {
             var format = formattingInfo.Format;
 
             // Ignore formats that start with "?" (this can be used to bypass this extension)
             if (format == null || format.baseString[format.startIndex] == ':')
-                return false;
+                return;
 
             // Extract the plural words from the format string:
             var pluralWords = format.Split('|');
             // This extension requires at least two plural words:
             if (pluralWords.Count == 1)
-                return false;
+                return;
 
             for (int i = 0; i < pluralWords.Count; ++i)
             {
                 formattingInfo.Write(pluralWords[i], null);
             }
-
-            return true;
         }
     }
 

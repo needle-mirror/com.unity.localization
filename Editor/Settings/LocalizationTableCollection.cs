@@ -218,15 +218,18 @@ namespace UnityEditor.Localization
                 // We only send the event if the table has been added for the first time though.
                 if (!m_Tables.Any(tbl => tbl.asset == table || tbl.asset?.LocaleIdentifier == table.LocaleIdentifier))
                 {
+                    m_Tables.Add(new LazyLoadReference<LocalizationTable> { asset = table });
+
                     // We need to SetDirty after AddTableToAddressables as AddTableToAddressables may call
                     // SaveAssets which would reset the dirty state before we have finished making changes.
                     EditorUtility.SetDirty(this);
 
-                    m_Tables.Add(new LazyLoadReference<LocalizationTable> { asset = table });
-
                     if (postEvent)
                         LocalizationEditorSettings.EditorEvents.RaiseTableAddedToCollection(this, table);
                 }
+
+                if (postEvent)
+                    LocalizationEditorSettings.EditorEvents.RaiseCollectionModified(this, this);
             }
         }
 
@@ -283,10 +286,9 @@ namespace UnityEditor.Localization
             if (createUndo)
                 Undo.RecordObject(this, "Remove table from collection");
 
-            EditorUtility.SetDirty(this);
-
             RemoveTableFromAddressables(table, false);
             m_Tables.RemoveAt(index);
+            EditorUtility.SetDirty(this);
             if (postEvent)
                 LocalizationEditorSettings.EditorEvents.RaiseTableRemovedFromCollection(this, table);
         }
@@ -559,6 +561,12 @@ namespace UnityEditor.Localization
                 missingLocales.ForEach(l => sb.AppendLine(l.ToString()));
                 Debug.Log(sb.ToString());
             }
+
+            var isInProject = TableType == typeof(StringTable) ? LocalizationEditorSettings.GetStringTableCollection(TableCollectionName) != null : LocalizationEditorSettings.GetAssetTableCollection(TableCollectionName) != null;
+            if (!isInProject)
+                LocalizationEditorSettings.EditorEvents.RaiseCollectionAdded(this);
+            else
+                LocalizationEditorSettings.EditorEvents.RaiseCollectionModified(this, this);
         }
 
         /// <summary>

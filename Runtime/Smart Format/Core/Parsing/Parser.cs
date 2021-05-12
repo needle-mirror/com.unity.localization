@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
 
 namespace UnityEngine.Localization.SmartFormat.Core.Parsing
@@ -144,7 +145,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
         /// <param name="format"></param>
         /// <param name="formatterExtensionNames"></param>
         /// <returns>Returns the <see cref="Format"/> for the parsed string.</returns>
-        public Format ParseFormat(string format, List<string> formatterExtensionNames)
+        public Format ParseFormat(string format, IList<string> formatterExtensionNames)
         {
             var result = FormatItemPool.GetFormat(Settings, format);
             var current = result;
@@ -219,6 +220,8 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                         // Make sure that this is a nested placeholder before we un-nest it:
                         if (current.parent == null)
                         {
+                            // Don't swallow-up redundant closing braces, but treat them as literals
+                            current.Items.Add(FormatItemPool.GetLiteralText(Settings, current, i, i + 1));
                             parsingErrors.AddIssue(s_ParsingErrorText[ParsingError.TooManyClosingBraces], i,
                                 i + 1);
                             continue;
@@ -250,7 +253,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                         }
                         else
                         {
-                            // **** Escaping of charater literals like \t, \n, \v etc. ****
+                            // **** Escaping of character literals like \t, \n, \v etc. ****
 
                             // Finish the last text item:
                             if (i != lastI) current.Items.Add(FormatItemPool.GetLiteralText(Settings, current, lastI, i));
@@ -368,8 +371,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                         if (i != lastI)
                             currentPlaceholder.Selectors.Add(FormatItemPool.GetSelector(Settings, currentPlaceholder, format, lastI, i, operatorIndex, selectorIndex));
                         else if (operatorIndex != i)
-                            parsingErrors.AddIssue(s_ParsingErrorText[ParsingError.TrailingOperatorsInSelector],
-                                operatorIndex, i);
+                            parsingErrors.AddIssue($"'0x{Convert.ToByte(c):X}': {s_ParsingErrorText[ParsingError.TrailingOperatorsInSelector]}", operatorIndex, i);
                         lastI = i + 1;
 
                         // Start the format:
@@ -386,8 +388,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                         if (i != lastI)
                             currentPlaceholder.Selectors.Add(FormatItemPool.GetSelector(Settings, currentPlaceholder, format, lastI, i, operatorIndex, selectorIndex));
                         else if (operatorIndex != i)
-                            parsingErrors.AddIssue(s_ParsingErrorText[ParsingError.TrailingOperatorsInSelector],
-                                operatorIndex, i);
+                            parsingErrors.AddIssue($"'0x{Convert.ToByte(c):X}': {s_ParsingErrorText[ParsingError.TrailingOperatorsInSelector]}", operatorIndex, i);
                         lastI = i + 1;
 
                         // End the placeholder with no format:
@@ -405,27 +406,31 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                             || m_AlphanumericSelectors && ('a' <= c && c <= 'z' || 'A' <= c && c <= 'Z')
                             || m_AllowedSelectorChars.IndexOf(c) != -1;
                         if (!isValidSelectorChar)
-                            parsingErrors.AddIssue(s_ParsingErrorText[ParsingError.InvalidCharactersInSelector],
-                                i, i + 1);
+                            parsingErrors.AddIssue($"'0x{Convert.ToByte(c):X}': {s_ParsingErrorText[ParsingError.TrailingOperatorsInSelector]}", i, i + 1);
                     }
                 }
             }
 
-            // finish the last text item:
-            if (lastI != format.Length)
-                current.Items.Add(FormatItemPool.GetLiteralText(Settings, current, lastI, format.Length));
+            // We're at the end of the input string
 
-            // Check that the format is finished:
+            // 1. Is the last item a placeholder, that is not finished yet?
             if (current.parent != null || currentPlaceholder != null)
             {
                 parsingErrors.AddIssue(s_ParsingErrorText[ParsingError.MissingClosingBrace], format.Length,
                     format.Length);
                 current.endIndex = format.Length;
-                while (current.parent != null)
-                {
-                    current = current.parent.Parent as Format;
-                    current.endIndex = format.Length;
-                }
+            }
+            else if (lastI != format.Length)
+            {
+                // 2. The last item must be a literal, so add it
+                current.Items.Add(FormatItemPool.GetLiteralText(Settings, current, lastI, format.Length));
+            }
+
+            // Todo v2.7.0: There is no unit test for this condition!
+            while (current.parent != null)
+            {
+                current = current.parent.Parent as Format;
+                current.endIndex = format.Length;
             }
 
             // Check for any parsing errors:
@@ -434,8 +439,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                 OnParsingFailure?.Invoke(this,
                     new ParsingErrorEventArgs(parsingErrors, Settings.ParseErrorAction == ErrorAction.ThrowError));
 
-                if (Settings.ParseErrorAction == ErrorAction.ThrowError)
-                    throw parsingErrors;
+                return HandleParsingErrors(parsingErrors, result);
             }
             else
             {
@@ -445,7 +449,49 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
             return result;
         }
 
-        private static bool FormatterNameExists(string name, List<string> formatterExtensionNames)
+        /// <summary>
+        /// Handles <see cref="ParsingError"/>s as defined in <see cref="SmartSettings.ParseErrorAction"/>.
+        /// </summary>
+        /// <param name="parsingErrors"></param>
+        /// <param name="currentResult"></param>
+        /// <returns>The <see cref="Format"/> which will be further processed by the formatter.</returns>
+        Format HandleParsingErrors(ParsingErrors parsingErrors, Format currentResult)
+        {
+            switch (Settings.ParseErrorAction)
+            {
+                case ErrorAction.ThrowError:
+                    throw parsingErrors;
+                case ErrorAction.MaintainTokens:
+                    // Replace erroneous Placeholders with tokens as LiteralText
+                    // Placeholder without issues are left unmodified
+                    for (var i = 0; i < currentResult.Items.Count; i++)
+                    {
+                        if (currentResult.Items[i] is Placeholder ph && parsingErrors.Issues.Any(errItem => errItem.Index >= currentResult.Items[i].startIndex && errItem.Index <= currentResult.Items[i].endIndex))
+                        {
+                            currentResult.Items[i] = FormatItemPool.GetLiteralText(Settings, ph.Format ?? FormatItemPool.GetFormat(Settings, ph.baseString), ph.startIndex, ph.endIndex);
+                        }
+                    }
+                    return currentResult;
+                case ErrorAction.Ignore:
+                    // Replace erroneous Placeholders with an empty LiteralText
+                    for (var i = 0; i < currentResult.Items.Count; i++)
+                    {
+                        if (currentResult.Items[i] is Placeholder ph && parsingErrors.Issues.Any(errItem => errItem.Index >= currentResult.Items[i].startIndex && errItem.Index <= currentResult.Items[i].endIndex))
+                        {
+                            currentResult.Items[i] = FormatItemPool.GetLiteralText(Settings, ph.Format ?? FormatItemPool.GetFormat(Settings, ph.baseString), ph.startIndex, ph.startIndex);
+                        }
+                    }
+                    return currentResult;
+                case ErrorAction.OutputErrorInResult:
+                    var fmt = FormatItemPool.GetFormat(Settings, parsingErrors.Message, 0, parsingErrors.Message.Length);
+                    fmt.Items.Add(FormatItemPool.GetLiteralText(Settings, fmt, 0));
+                    return fmt;
+                default:
+                    throw new ArgumentException("Illegal type for ParsingErrors", parsingErrors);
+            }
+        }
+
+        static bool FormatterNameExists(string name, IList<string> formatterExtensionNames)
         {
             foreach (var fen in formatterExtensionNames)
             {

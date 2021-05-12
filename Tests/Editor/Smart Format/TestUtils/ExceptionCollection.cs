@@ -185,7 +185,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
         /// <param name="args">An optional list of objects to use for formatting the message.</param>
         public void AddNewException(string message, params object[] args)
         {
-            AddNewException(null, message, args);
+            AddNewException(default, message, args);
         }
 
         /// <summary>

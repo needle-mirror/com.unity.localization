@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEditor.AddressableAssets.Build;
 using UnityEditor.AddressableAssets.Build.AnalyzeRules;
 using UnityEditor.AddressableAssets.Settings;
+using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
 
@@ -46,6 +47,9 @@ namespace UnityEditor.Localization.Addressables
                 EditorUtility.DisplayProgressBar(ruleName, "Finding Tables", 0);
                 var tables = AssetDatabase.FindAssets($"t:{typeof(TTable).Name}");
 
+                // Collate the groups so we can check them at the end.
+                var groups = new HashSet<AddressableAssetGroup>();
+
                 for (var i = 0; i < tables.Length; ++i)
                 {
                     var progress = i / (float)tables.Length;
@@ -86,6 +90,8 @@ namespace UnityEditor.Localization.Addressables
                         });
                         continue;
                     }
+
+                    groups.Add(entry.parentGroup);
 
                     // Group Name
                     var groupName = resolver.GetExpectedGroupName(new[] { table.LocaleIdentifier }, table, settings);
@@ -152,6 +158,8 @@ namespace UnityEditor.Localization.Addressables
                         continue;
                     }
 
+                    groups.Add(sharedEntry.parentGroup);
+
                     // Shared Group Name
                     var sharedGroupName = resolver.GetExpectedGroupName(null, table.SharedData, settings);
                     if (sharedEntry.parentGroup.Name != sharedGroupName)
@@ -173,6 +181,26 @@ namespace UnityEditor.Localization.Addressables
                             severity = MessageType.Warning,
                             FixAction = () => resolver.AddToGroup(table.SharedData, null, settings, false)
                         });
+                    }
+                }
+
+                if (groups.Count > 0)
+                {
+                    foreach (var g in groups)
+                    {
+                        if (g.Schemas.Count == 0 || g.Schemas.All(s => s == null))
+                        {
+                            m_Results.Add(new TableResult
+                            {
+                                resultName = $"{g.Name}:Addressables Group Contains No Schemas",
+                                severity = MessageType.Error,
+                                FixAction = () =>
+                                {
+                                    g.AddSchema<BundledAssetGroupSchema>();
+                                    g.AddSchema<ContentUpdateGroupSchema>();
+                                }
+                            });
+                        }
                     }
                 }
             }

@@ -42,9 +42,6 @@ The Localization Settings will query each selector in the list, starting at the 
 The Asset Database is responsible for retrieving the various Asset Tables and subsequent Assets, this involves querying and loading through the Addressable Assets system.
 The **Default Table** field can be used to set a default Asset Table name, this can then be used when loading assets and not providing an explicit table name.
 
-By default, the Asset Database works in the following way:
-![Asset Database example.](images/AssetDatabase_Flow.png)
-
 ## String Database
 The String Database is responsible for retrieving the various String Tables and subsequent localized strings.
 

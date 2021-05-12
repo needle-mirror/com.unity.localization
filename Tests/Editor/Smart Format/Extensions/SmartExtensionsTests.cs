@@ -90,7 +90,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
                 var format = bunchOfFormat[i % bunchOfFormat.Length];
                 var expected = bunchOfExpected[i % bunchOfExpected.Length];
 
-                string actual = null;
+                string actual = string.Empty;
 
                 try
                 {

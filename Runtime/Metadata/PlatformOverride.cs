@@ -33,12 +33,14 @@ namespace UnityEngine.Localization.Metadata
 
     /// <summary>
     /// Metadata that can be applied to <see cref="SharedTableData.SharedTableEntry"/> or a table entry to override the entry when loading a localized value.
+    /// </summary>
+    /// <remarks>
     /// When fetching a localized value, an Entry Override can be used to redirect to a different table entry, such as when running on a certain platform or in a specific region.
     /// The Entry Override is evaluated during <see cref="LocalizedDatabase{TTable, TEntry}.GetTableEntryAsync(TableReference, TableEntryReference, Locale, FallbackBehavior)"/>.
     /// The table entry will first be checked for an override and then the <see cref="SharedTableData.SharedTableEntry"/>.
-    ///
+    /// ![](../manual/images/GetEntry.dot.svg)
     /// See also <seealso cref="PlatformOverride"/>
-    /// </summary>
+    /// </remarks>
     /// <example>
     /// This example shows how to create an override that will be applied on a chosen day of the week.
     /// <code source="../../DocCodeSamples.Tests/PlatformOverrideExamples.cs" region="custom-entry-override"/>

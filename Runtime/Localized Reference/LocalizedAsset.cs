@@ -58,6 +58,19 @@ namespace UnityEngine.Localization
         /// <param name="value">The localized asset.</param>
         public delegate void ChangeHandler(TObject value);
 
+        public override bool WaitForCompletion
+        {
+            set
+            {
+                if (value == WaitForCompletion)
+                    return;
+
+                base.WaitForCompletion = value;
+                if (value && m_CurrentLoadingOperation.HasValue && !m_CurrentLoadingOperation.Value.IsDone)
+                    m_CurrentLoadingOperation.Value.WaitForCompletion();
+            }
+        }
+
         /// <summary>
         /// The current loading operation for the asset when using <see cref="AssetChanged"/>. This is <c>null</c> if a loading operation is not available.
         /// </summary>
@@ -146,6 +159,16 @@ namespace UnityEngine.Localization
             return LocalizationSettings.AssetDatabase.GetLocalizedAssetAsync<TObject>(TableReference, TableEntryReference);
         }
 
+        /// <summary>
+        /// Provides a localized asset from a <see cref="AssetTable"/> with the <see cref="TableReference"/> and the
+        /// the asset that matches <see cref="TableEntryReference"/>.
+        /// </summary>
+        /// <returns>Returns the localized asset.</returns>
+        public TObject LoadAsset()
+        {
+            return LoadAssetAsync().WaitForCompletion();
+        }
+
         protected internal override void ForceUpdate()
         {
             if (m_ChangeHandler != null)
@@ -179,10 +202,18 @@ namespace UnityEngine.Localization
             }
 
             m_CurrentLoadingOperation = LoadAssetAsync();
-            if (m_CurrentLoadingOperation.Value.IsDone)
-                AutomaticLoadingCompleted(m_CurrentLoadingOperation.Value);
-            else
-                m_CurrentLoadingOperation.Value.Completed += AutomaticLoadingCompleted;
+
+            if (!m_CurrentLoadingOperation.Value.IsDone)
+            {
+                if (!WaitForCompletion)
+                {
+                    m_CurrentLoadingOperation.Value.Completed += AutomaticLoadingCompleted;
+                    return;
+                }
+                m_CurrentLoadingOperation.Value.WaitForCompletion();
+            }
+
+            AutomaticLoadingCompleted(m_CurrentLoadingOperation.Value);
         }
 
         void AutomaticLoadingCompleted(AsyncOperationHandle<TObject> loadOperation)

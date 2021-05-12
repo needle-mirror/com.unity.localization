@@ -296,14 +296,17 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
         public delegate int PluralRuleDelegate(decimal value, int pluralCount);
 
         /// <summary>Construct a rule set for the language code.</summary>
-        /// <param name="twoLetterISOLanguageName">The language code in two-letter ISO-639 format.</param>
+        /// <param name="twoLetterIsoLanguageName">The language code in two-letter ISO-639 format.</param>
         /// <remarks>
         /// The pluralization rules are taken from
         /// http://unicode.org/repos/cldr-tmp/trunk/diff/supplemental/language_plural_rules.html
         /// </remarks>
-        public static PluralRuleDelegate GetPluralRule(string twoLetterISOLanguageName)
+        public static PluralRuleDelegate GetPluralRule(string twoLetterIsoLanguageName)
         {
-            IsoLangToDelegate.TryGetValue(twoLetterISOLanguageName, out var plural);
+            if (!IsoLangToDelegate.TryGetValue(twoLetterIsoLanguageName, out var plural))
+            {
+                throw new ArgumentException($"{nameof(IsoLangToDelegate)} not found for {twoLetterIsoLanguageName}", nameof(twoLetterIsoLanguageName));
+            }
             return plural;
         }
 

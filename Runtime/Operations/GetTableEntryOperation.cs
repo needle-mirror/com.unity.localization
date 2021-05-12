@@ -6,7 +6,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization
 {
-    public class GetTableEntryOperation<TTable, TEntry> : AsyncOperationBase<LocalizedDatabase<TTable, TEntry>.TableEntryResult>
+    class GetTableEntryOperation<TTable, TEntry> : WaitForCurrentOperationAsyncOperationBase<LocalizedDatabase<TTable, TEntry>.TableEntryResult>
         where TTable : DetailedLocalizationTable<TEntry>
         where TEntry : TableEntry
     {
@@ -27,6 +27,7 @@ namespace UnityEngine.Localization
             m_TableEntryReference = tableEntryReference;
             m_SelectedLocale = selectedLoale;
             m_UseFallback = UseFallBack;
+            CurrentOperation = null;
         }
 
         protected override void Execute()
@@ -132,9 +133,15 @@ namespace UnityEngine.Localization
             AddressablesInterface.Acquire(asyncOperation);
 
             if (asyncOperation.IsDone)
+            {
                 ExtractEntryFromTable(asyncOperation);
+            }
             else
+            {
+                CurrentOperation = asyncOperation;
                 asyncOperation.Completed += ExtractEntryFromTable;
+            }
+
             return true;
         }
 
@@ -155,9 +162,14 @@ namespace UnityEngine.Localization
                     m_UseFallback = false;
 
                     if (asyncOperation.IsDone)
+                    {
                         ExtractEntryFromTable(asyncOperation);
+                    }
                     else
+                    {
+                        CurrentOperation = asyncOperation;
                         asyncOperation.Completed += ExtractEntryFromTable;
+                    }
 
                     return true;
                 }
@@ -168,8 +180,8 @@ namespace UnityEngine.Localization
 
         protected override void Destroy()
         {
-            GenericPool<GetTableEntryOperation<TTable, TEntry>>.Release(this);
             base.Destroy();
+            GenericPool<GetTableEntryOperation<TTable, TEntry>>.Release(this);
         }
     }
 }

@@ -8,43 +8,6 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
 {
     public static class EnumerableExtensions
     {
-        /// <summary>Uses String.Format to format each item in the collection using the specified format.</summary>
-        /// <param name="source"></param>
-        /// <param name="format">
-        /// A composite format string; same as String.Format.
-        /// {0} refers to the source object, {1} refers to the index.
-        /// </param>
-        public static IEnumerable<string> FormatEach<T>(this IEnumerable<T> source, string format)
-        {
-            ArgumentValidator.CheckForNullReference(source, "source");
-            ArgumentValidator.CheckForNullReference(format, "format");
-            return source.Select((arg, index) => string.Format(format, new object[] { arg, index }));
-        }
-
-        // These extensions allow a list of strings to be joined together
-
-        /// <summary>
-        /// Joins all strings together into a single string, separating each item with the separator.
-        /// <para>For example: </para> <c>alphabet.JoinStrings(", ") == "a, b, ... y, z"</c>
-        /// </summary>
-        /// <param name="source">The source of strings to join together</param>
-        /// <param name="separator">The text to insert between items</param>
-        public static string JoinStrings(this IEnumerable<string> source, string separator)
-        {
-            ArgumentValidator.CheckForNullReference(source, "source");
-            return string.Join(separator, source as string[] ?? source.ToArray());
-        }
-
-        /// <summary>
-        /// Joins all strings together into a single string, separating each item with the separator,
-        /// and separating the last item with an alternate separator.
-        /// <para>For example: </para> <c>alphabet.JoinStrings(", ", " and ") == "a, b, ... x, y and z"</c>
-        /// </summary>
-        public static string JoinStrings(this IEnumerable<string> source, string separator, string lastSeparator)
-        {
-            return JoinStrings(source, separator, lastSeparator, null, -1);
-        }
-
         /// <summary>
         /// Joins all strings together into a single string, separating each item with the separator,
         /// and separating the last item with an alternate separator.
@@ -92,7 +55,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
         ///
         /// Throws an exception if there are no items.
         /// </summary>
-        public static T Random<T>(this IEnumerable<T> source)
+        public static T Random<T>(this IEnumerable<T> source) where T : new()
         {
             ArgumentValidator.CheckForEmpty(source, "source");
             return RandomIterator(source);
@@ -102,13 +65,13 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
         ///
         /// Returns default if there are no items.
         /// </summary>
-        public static T RandomOrDefault<T>(this IEnumerable<T> source)
+        public static T RandomOrDefault<T>(this IEnumerable<T> source) where T : new()
         {
             ArgumentValidator.CheckForNullReference(source, "source");
             return RandomIterator(source);
         }
 
-        private static T RandomIterator<T>(this IEnumerable<T> source)
+        static T RandomIterator<T>(this IEnumerable<T> source) where T : new()
         {
             // We need to know the count. We don't want to enumerate twice,
             // so if the source isn't a collection, let's create one:
@@ -116,7 +79,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
             var itemCount = sc.Count;
             if (itemCount == 0)
             {
-                return default(T);
+                return new T();
             }
 
             var index = (new System.Random()).Next(itemCount);
@@ -141,7 +104,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Common
             // Splits an enumeration into sections of equal size
             using (var enumerator = source.GetEnumerator())
             {
-                TSource[] section = null;
+                TSource[] section = {};
                 var index = -1;
 
                 while (enumerator.MoveNext())

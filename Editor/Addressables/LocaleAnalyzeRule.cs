@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEditor.AddressableAssets.Build;
 using UnityEditor.AddressableAssets.Build.AnalyzeRules;
 using UnityEditor.AddressableAssets.Settings;
+using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 
@@ -30,6 +31,10 @@ namespace UnityEditor.Localization.Addressables
             m_Results.Clear();
 
             var locales = AssetDatabase.FindAssets("t:Locale");
+
+            // Collate the groups so we can check them at the end.
+            var groups = new HashSet<AddressableAssetGroup>();
+
             foreach (var guid in locales)
             {
                 var entry = settings.FindAssetEntry(guid);
@@ -46,6 +51,8 @@ namespace UnityEditor.Localization.Addressables
                     });
                     continue;
                 }
+
+                groups.Add(entry.parentGroup);
 
                 var groupName = AddressableGroupRules.Instance.LocaleResolver.GetExpectedGroupName(new[] {locale.Identifier}, locale, settings);
 
@@ -71,6 +78,26 @@ namespace UnityEditor.Localization.Addressables
                             LocalizationEditorSettings.EditorEvents.RaiseLocaleAdded(locale);
                         }
                     });
+                }
+            }
+
+            if (groups.Count > 0)
+            {
+                foreach (var g in groups)
+                {
+                    if (g.Schemas.Count == 0 || g.Schemas.All(s => s == null))
+                    {
+                        m_Results.Add(new LocaleResult
+                        {
+                            resultName = $"{g.Name}:Addressables Group Contains No Schemas",
+                            severity = MessageType.Error,
+                            FixAction = () =>
+                            {
+                                g.AddSchema<BundledAssetGroupSchema>();
+                                g.AddSchema<ContentUpdateGroupSchema>();
+                            }
+                        });
+                    }
                 }
             }
 

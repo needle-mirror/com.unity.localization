@@ -42,6 +42,30 @@ namespace UnityEditor.Localization
                                 Debug.Assert(sharedTableData.TableCollectionNameGuid == guid, "SharedTableData Name Guid does not match the assets Guid. This may cause issues matching the correct TableCollectionName.", sharedTableData);
                             else
                                 sharedTableData.TableCollectionNameGuid = guid;
+
+                            // If the collection asset was deleted and then restored we may have a collection using an invalid handle (LOC-182)
+                            var collection = LocalizationEditorSettings.GetCollectionForSharedTableData(sharedTableData);
+                            if (collection != null)
+                            {
+                                bool modified = false;
+                                if (collection.SharedData == null)
+                                {
+                                    modified = true;
+                                    collection.SharedData = sharedTableData;
+                                }
+
+                                foreach (var tableReference in collection.Tables)
+                                {
+                                    if (tableReference.asset == null && tableReference.asset.SharedData != null)
+                                        continue;
+
+                                    modified = true;
+                                    tableReference.asset.SharedData = sharedTableData;
+                                }
+
+                                if (modified)
+                                    LocalizationEditorSettings.EditorEvents.RaiseCollectionModified(null, collection);
+                            }
                         }
                     }
                     else if (typeof(Locale).IsAssignableFrom(assetType))

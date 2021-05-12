@@ -118,7 +118,8 @@ namespace UnityEngine.Localization.Components
 
         internal virtual void RegisterChangeHandler()
         {
-            StringReference.Arguments = m_FormatArguments.Count > 0 ? m_FormatArguments.ToArray() : null;
+            if (m_FormatArguments.Count > 0)
+                StringReference.Arguments = m_FormatArguments.ToArray();
             StringReference.StringChanged += UpdateString;
         }
 

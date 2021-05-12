@@ -133,7 +133,13 @@ namespace UnityEngine.Localization
         /// See [Async operation handling](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/AddressableAssetsAsyncOperationHandle.html) for further details.
         /// </remarks>
         /// <returns>Returns the loading operation for the requested table.</returns>
-        public AsyncOperationHandle<TTable> GetTable() => Database.GetTableAsync(TableReference);
+        public AsyncOperationHandle<TTable> GetTableAsync() => Database.GetTableAsync(TableReference);
+
+        /// <summary>
+        /// Provides the table with the <see cref="TableReference"/>.
+        /// </summary>
+        /// <returns></returns>
+        public TTable GetTable() => GetTableAsync().WaitForCompletion();
 
         protected void ForceUpdate()
         {
@@ -152,7 +158,7 @@ namespace UnityEngine.Localization
             if (IsEmpty)
                 return;
 
-            CurrentLoadingOperation = GetTable();
+            CurrentLoadingOperation = GetTableAsync();
             if (CurrentLoadingOperation.Value.IsDone)
                 AutomaticLoadingCompleted(CurrentLoadingOperation.Value);
             else

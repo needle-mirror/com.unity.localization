@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.IMGUI.Controls;
@@ -6,6 +7,7 @@ using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
 using UnityEngine.Pool;
 using UnityEngine.UIElements;
+using Object = UnityEngine.Object;
 
 namespace UnityEditor.Localization.UI
 {
@@ -16,7 +18,7 @@ namespace UnityEditor.Localization.UI
         VisualElement CreateEditor();
     }
 
-    abstract class GenericAssetTableListView<T1, T2> : TreeView
+    abstract class GenericAssetTableListView<T1, T2> : TreeView, IDisposable
         where T1 : LocalizationTable
         where T2 : GenericAssetTableTreeViewItem<T1>, new()
     {
@@ -87,6 +89,11 @@ namespace UnityEditor.Localization.UI
 
         ~GenericAssetTableListView()
         {
+            Dispose();
+        }
+
+        public void Dispose()
+        {
             Undo.undoRedoPerformed -= UndoRedoPerformed;
             LocalizationEditorSettings.EditorEvents.TableEntryAdded -= EditorEvents_TableEntryModified;
             LocalizationEditorSettings.EditorEvents.TableEntryRemoved -= EditorEvents_TableEntryModified;
@@ -101,7 +108,11 @@ namespace UnityEditor.Localization.UI
         void EditorEvents_CollectionModified(object sender, LocalizationTableCollection collection)
         {
             if (sender != this && collection == TableCollection)
+            {
+                // Tables may have been modified.
+                InitializeColumns();
                 Reload();
+            }
         }
 
         void EditorEvents_TableEntryModified(LocalizationTableCollection collection, SharedTableData.SharedTableEntry entry)

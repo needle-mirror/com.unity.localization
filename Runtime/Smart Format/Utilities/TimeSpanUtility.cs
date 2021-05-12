@@ -182,13 +182,13 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
         /// <para>Returns the <c>TimeSpan</c> closest to the specified interval.</para>
         /// <para>For example: <c>Round("00:57:00", TimeSpan.TicksPerMinute * 5) =&gt; "00:55:00"</c></para>
         /// </summary>
-        /// <param name="FromTime">A <c>TimeSpan</c> to be rounded.</param>
+        /// <param name="fromTime">A <c>TimeSpan</c> to be rounded.</param>
         /// <param name="intervalTicks">Specifies the interval for rounding.  Use <c>TimeSpan.TicksPer____</c>.</param>
-        public static TimeSpan Round(this TimeSpan FromTime, long intervalTicks)
+        public static TimeSpan Round(this TimeSpan fromTime, long intervalTicks)
         {
-            var extra = FromTime.Ticks % intervalTicks;
+            var extra = fromTime.Ticks % intervalTicks;
             if (extra >= intervalTicks >> 1) extra -= intervalTicks;
-            return TimeSpan.FromTicks(FromTime.Ticks - extra);
+            return TimeSpan.FromTicks(fromTime.Ticks - extra);
         }
     }
 
@@ -477,6 +477,9 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
         public TimeTextInfo(string week, string day, string hour, string minute, string second, string millisecond,
                             string lessThan)
         {
+            // must not be null here
+            d = h = m = ms = s = w = new string[] {};
+
             // Always use singular:
             PluralRule = (d, c) => 0;
             this.week = new[] {week};
@@ -543,9 +546,9 @@ namespace UnityEngine.Localization.SmartFormat.Utilities
             "less than {0}"
         );
 
-        public static TimeTextInfo GetTimeTextInfo(string twoLetterISOLanguageName)
+        public static TimeTextInfo GetTimeTextInfo(string twoLetterIsoLanguageName)
         {
-            switch (twoLetterISOLanguageName)
+            switch (twoLetterIsoLanguageName)
             {
                 case "en":
                     return English;

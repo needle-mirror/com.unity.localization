@@ -8,7 +8,7 @@ When you create a new Asset Table Collection, Unity creates an Asset Table Colle
 
 ![Example Asset Table Collection assets for English, French and Japanese.](images/AssetTableCollection_ProjectView.png)
 
-![An Asset Table Collection references all tables that are part of it and can be accessed through the Editor or via Editor scripts.](images/AssetTableCollection_Overview.png)
+![An Asset Table Collection references all tables that are part of it and can be accessed through the Editor or via Editor scripts.](images/AssetTableCollectionOverview.dot.svg)
 
 ![Asset Table Collection inspector view.](images/AssetTableCollection_Inspector.png)
 

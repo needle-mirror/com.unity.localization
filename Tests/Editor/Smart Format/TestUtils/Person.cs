@@ -7,13 +7,13 @@ namespace UnityEngine.Localization.SmartFormat.Tests
     public class Person
     {
         [SerializeField]
-        string m_FirstName;
+        string m_FirstName = string.Empty;
 
         [SerializeField]
-        string m_LastName;
+        string m_LastName = string.Empty;
 
         [SerializeField]
-        string m_MiddleName;
+        string m_MiddleName = string.Empty;
 
         [SerializeField]
         long m_BirthdayTicks;
@@ -32,17 +32,17 @@ namespace UnityEngine.Localization.SmartFormat.Tests
 
         public Person()
         {
-            this.Friends = new List<Person>();
+            Friends = new List<Person>();
         }
 
         public Person(string newName, Gender gender, DateTime newBirthday, string newAddress, params Person[] newFriends)
         {
-            this.FullName = newName;
-            this.Gender = gender;
-            this.Birthday = newBirthday;
+            FullName = newName;
+            Gender = gender;
+            Birthday = newBirthday;
             if (!string.IsNullOrEmpty(newAddress))
-                this.Address = Address.Parse(newAddress);
-            this.Friends = new List<Person>(newFriends);
+                Address = Address.Parse(newAddress);
+            Friends = new List<Person>(newFriends);
         }
 
         public string FirstName { get => m_FirstName; set => m_FirstName = value; }
@@ -85,13 +85,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests
             }
         }
 
-        public string Name
-        {
-            get
-            {
-                return this.FirstName + " " + this.LastName;
-            }
-        }
+        public string Name => FirstName + " " + LastName;
 
         public DateTime Birthday
         {
@@ -124,10 +118,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests
 
         public List<Person> Friends { get => m_Friends; set => m_Friends = value; }
 
-        public int NumberOfFriends
-        {
-            get { return this.Friends.Count; }
-        }
+        public int NumberOfFriends => Friends.Count;
 
         public override string ToString()
         {

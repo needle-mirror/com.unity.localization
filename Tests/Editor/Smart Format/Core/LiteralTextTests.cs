@@ -17,7 +17,7 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
         public void FormatCharacterLiteralsAsString()
         {
             const string formatWithFileBehavior = @"No carriage return\r, no line feed\n";
-            const string formatWithCodeBahavior = "With carriage return\r, and with line feed\n";
+            const string formatWithCodeBehavior = "With carriage return\r, and with line feed\n";
 
             var formatter = Smart.CreateDefaultSmartFormat();
             formatter.Settings.ConvertCharacterStringLiterals = false;
@@ -25,8 +25,8 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
             var result = formatter.Format(formatWithFileBehavior);
             Assert.AreEqual(string.Format(formatWithFileBehavior), result);
 
-            result = formatter.Format(formatWithCodeBahavior);
-            Assert.AreEqual(string.Format(formatWithCodeBahavior), result);
+            result = formatter.Format(formatWithCodeBehavior);
+            Assert.AreEqual(string.Format(formatWithCodeBehavior), result);
         }
 
         [Test]
@@ -34,14 +34,35 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Core
         {
             var data = new Dictionary<string, string> { { "key", "value" } };
 
-            const string formatWithFileBehavior = @"All supported literal characters: \' \"" \\ \a \b \f \n \r \t \v {key}\0!";
-            const string formatWithCodeBahavior = "All supported literal characters: \' \" \\ \a \b \f \n \r \t \v {key}\0!";
+            const string formatWithFileBehavior = @"All supported literal characters: \' \"" \\ \a \b \f \n \r \t \v \u2022 {key}\0!";
+            const string formatWithCodeBehavior = "All supported literal characters: \' \" \\ \a \b \f \n \r \t \v \u2022 {key}\0!";
 
             var formatter = Smart.CreateDefaultSmartFormat();
             formatter.Settings.ConvertCharacterStringLiterals = true;
 
             var result = formatter.Format(formatWithFileBehavior, data);
-            Assert.AreEqual(string.Format(formatWithCodeBahavior.Replace("{" + data.First().Key + "}", data.First().Value)), result);
+            Assert.AreEqual(string.Format(formatWithCodeBehavior.Replace("{" + data.First().Key + "}", data.First().Value)), result);
+        }
+
+        [TestCase(@"Some text \u2022 with the value {0}", "Some text \u2022 with the value 123")]
+        [TestCase(@"\u2015 {0}", "\u2015 123")]
+        [TestCase(@"\u2010 {0} \u2015", "\u2010 123 \u2015")]
+        public void UnicodeEscapeSequenceIsParsed(string format, string expectedOutput)
+        {
+            var formatter = Smart.CreateDefaultSmartFormat();
+            formatter.Settings.ConvertCharacterStringLiterals = true;
+            Assert.AreEqual(expectedOutput, formatter.Format(format, 123));
+        }
+
+        [TestCase(@"Some text {0} \uABCP")]
+        [TestCase(@"Some text {0} \u-123")]
+        [TestCase(@"\u")]
+        [TestCase(@"Some text \uuuuu {0}")]
+        public void InvalidUnicodeEscapeSequenceThrowsException(string text)
+        {
+            var formatter = Smart.CreateDefaultSmartFormat();
+            formatter.Settings.ConvertCharacterStringLiterals = true;
+            Assert.Throws<ArgumentException>(() => formatter.Format(text, 123));
         }
 
         [Test]

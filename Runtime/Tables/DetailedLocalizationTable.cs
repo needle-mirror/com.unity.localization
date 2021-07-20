@@ -40,6 +40,15 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
+        /// The Key or Name of this table entry that is stored in <see cref="SharedEntry"/>.
+        /// </summary>
+        public string Key
+        {
+            get => SharedEntry?.Key;
+            set => Table.SharedData.RenameKey(KeyId, value);
+        }
+
+        /// <summary>
         /// Key Id for this table entry.
         /// </summary>
         public long KeyId => Data.Id;

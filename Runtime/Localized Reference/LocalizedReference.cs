@@ -34,7 +34,7 @@ namespace UnityEngine.Localization
 
         /// <summary>
         /// Provides a reference to the <see cref="LocalizationTable"/>.
-        /// A table reference can be either the name of the table or the table collection name Guid.
+        /// A table reference can be either the <see cref="LocalizationTable.TableCollectionName"/> of the table or the <see cref="SharedTableData.TableCollectionNameGuid"/>.
         /// </summary>
         /// <remarks>
         /// Note: Changing this value triggers an update to any subscribers.
@@ -60,7 +60,7 @@ namespace UnityEngine.Localization
 
         /// <summary>
         /// Provides a reference to the entry inside of the table.
-        /// The entry reference can be the Key name or Id.
+        /// The entry reference can be the <see cref="TableEntry.Key"/> or <see cref="TableEntry.KeyId"/>.
         /// </summary>
         /// Note: Changing this value triggers an update to any subscribers.
         /// See <seealso cref="SetReference(TableReference, TableEntryReference)"/> if you wish to change both the table and entry.
@@ -92,6 +92,12 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
+        /// Provide a locale that can be used instead of <see cref="LocalizationSettings.SelectedLocale"/>.
+        /// A <c>null</c> value will revert to using <see cref="LocalizationSettings.SelectedLocale"/>.
+        /// </summary>
+        public Locale LocaleOverride { get; set; }
+
+        /// <summary>
         /// Determines if <see cref="AsyncOperationHandle{TObject}.WaitForCompletion"/> should be used to force loading to be completed immediately.
         /// See [Synchronous Workflow](https://docs.unity3d.com/Packages/com.unity.addressables@latest?subfolder=/manual/SynchronousAddressables.html) for further details.
         /// </summary>
@@ -109,8 +115,8 @@ namespace UnityEngine.Localization
         /// <summary>
         /// Sets both the <see cref="TableReference"/> and <see cref="TableEntryReference"/> and triggers an update if there are any change subscribers.
         /// </summary>
-        /// <param name="table">Reference to the table name of Guid.</param>
-        /// <param name="entry">Reference to the entry Key name or Id.</param>
+        /// <param name="table">Reference to the <see cref="LocalizationTable.TableCollectionName"/> or <see cref="SharedTableData.TableCollectionNameGuid"/>.</param>
+        /// <param name="entry">Reference to the <see cref="TableEntry.Key"/> or <see cref="TableEntry.KeyId"/>.</param>
         /// <example>
         /// This example shows the different ways SetReference can be called.
         /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="localized-string-set-reference"/>

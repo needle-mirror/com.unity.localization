@@ -1,3 +1,5 @@
+#if PACKAGE_UGUI
+
 namespace Samples.LocalizedFontComponent
 {
     #region sample-code
@@ -22,3 +24,5 @@ namespace Samples.LocalizedFontComponent
     }
     #endregion
 }
+
+#endif

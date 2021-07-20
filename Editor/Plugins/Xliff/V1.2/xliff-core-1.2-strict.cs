@@ -1814,7 +1814,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF.V12
 
         private string reformatField;
 
-        private string spaceField;
+        private string spaceField = "preserve";
 
         private string datatypeField;
 

@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Localization.Tests
 {
     public class LocaleSystemLanguage
     {
+        [Preserve]
         static List<SystemLanguage> GetSystemLanguageWithoutUnknown()
         {
             var values = Enum.GetValues(typeof(SystemLanguage));
@@ -18,6 +20,7 @@ namespace UnityEngine.Localization.Tests
             return langList;
         }
 
+        [Preserve]
         [Test]
         [TestCaseSource(nameof(GetSystemLanguageWithoutUnknown))]
         public void SystemLanguageMapsToLocaleIdentifier(SystemLanguage lang)

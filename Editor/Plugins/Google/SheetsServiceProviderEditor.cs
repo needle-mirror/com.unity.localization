@@ -87,7 +87,9 @@ namespace UnityEditor.Localization.Plugins.Google
                     if (s_AuthorizeTask.IsCompleted)
                     {
                         if (s_AuthorizeTask.Status == TaskStatus.RanToCompletion)
-                            Debug.Log($"Authorized: {s_AuthorizeTask.Result.Token.IssuedUtc}");
+                            Debug.Log($"Authorized: {s_AuthorizeTask.Result.Token.IssuedUtc}", target);
+                        else if (s_AuthorizeTask.Exception != null)
+                            Debug.LogException(s_AuthorizeTask.Exception, target);
                         s_AuthorizeTask = null;
                         s_CancellationToken = null;
                     }

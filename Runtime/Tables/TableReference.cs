@@ -115,7 +115,7 @@ namespace UnityEngine.Localization.Tables
         /// <param name="tableCollectionName">The name of the table.</param>
         public static implicit operator TableReference(string tableCollectionName)
         {
-            return new TableReference() { TableCollectionName = tableCollectionName, ReferenceType = Type.Name };
+            return new TableReference { TableCollectionName = tableCollectionName, ReferenceType = string.IsNullOrWhiteSpace(tableCollectionName) ? Type.Empty : Type.Name };
         }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace UnityEngine.Localization.Tables
         /// <param name="tableCollectionNameGuid">The table collection name guid.</param>
         public static implicit operator TableReference(Guid tableCollectionNameGuid)
         {
-            return new TableReference() { TableCollectionNameGuid = tableCollectionNameGuid, ReferenceType = Type.Guid };
+            return new TableReference { TableCollectionNameGuid = tableCollectionNameGuid, ReferenceType = tableCollectionNameGuid == Guid.Empty ? Type.Empty : Type.Guid };
         }
 
         /// <summary>

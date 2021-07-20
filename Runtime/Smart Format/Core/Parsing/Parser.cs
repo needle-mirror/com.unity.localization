@@ -257,7 +257,13 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
 
                             // Finish the last text item:
                             if (i != lastI) current.Items.Add(FormatItemPool.GetLiteralText(Settings, current, lastI, i));
-                            lastI = i + 2;
+
+                            // Is this a unicode escape sequence?
+                            if (i + 1 < format.Length && format[i + 1] == 'u')
+                                lastI = i + 6; // \u0000 format
+                            else
+                                lastI = i + 2;
+
                             if (lastI > length) lastI = length;
 
                             // Next add the character literal INCLUDING the escape character, which LiteralText will expect

@@ -69,6 +69,20 @@ namespace UnityEditor.Localization
         }
 
         /// <summary>
+        /// Add a localized asset to the asset table that matches the <see cref="LocaleIdentifier"/>.
+        /// This function ensures the localization system adds the asset to the Addressables system and sets the asset up for use.
+        /// </summary>
+        /// <param name="localeIdentifier">The table to add the asset to, if a table with the id does not exist a new one will be created.</param>
+        /// <param name="entryReference">The table entry Key or Key Id.</param>
+        /// <param name="asset">The asset to add.</param>
+        /// <param name="createUndo">Should an undo operation be created?</param>
+        public void AddAssetToTable(LocaleIdentifier localeIdentifier, TableEntryReference entryReference, Object asset, bool createUndo = false)
+        {
+            var table = GetTable(localeIdentifier) ?? AddNewTable(localeIdentifier);
+            AddAssetToTable(table as AssetTable, entryReference, asset, createUndo);
+        }
+
+        /// <summary>
         /// Add a localized asset to the asset table.
         /// This function will ensure the localization system adds the asset to the Addressables system and sets the asset up for use.
         /// </summary>
@@ -370,26 +384,18 @@ namespace UnityEditor.Localization
             AddressableGroupRules.AddAssetToGroup(assetEntry.MainAsset, localesUsingAsset, settings, createUndo);
         }
 
-        static string FormatAssetTableCollectionName(LocaleIdentifier localeIdentifier) => string.Format(LocalizationEditorSettings.AssetGroupName, localeIdentifier.Code);
-
-        /// <summary>
-        /// Removes the entry from the <see cref="SharedTableData"/> and all tables that are part of this collection.
-        /// </summary>
-        /// <param name="id"></param>
+        ///<inheritdoc/>
         public override void RemoveEntry(TableEntryReference entryReference)
         {
-            if (entryReference.ReferenceType == TableEntryReference.Type.Name)
-            {
-                SharedData.RemoveKey(entryReference.Key);
-                foreach (var table in AssetTables)
-                    table.SharedData.RemoveKey(entryReference.Key);
-            }
-            else if (entryReference.ReferenceType == TableEntryReference.Type.Id)
-            {
-                SharedData.RemoveKey(entryReference.KeyId);
-                foreach (var table in AssetTables)
-                    table.SharedData.RemoveKey(entryReference.KeyId);
-            }
+            var entry = SharedData.GetEntryFromReference(entryReference);
+            if (entry == null)
+                return;
+
+            foreach (var table in AssetTables)
+                table.RemoveEntry(entry.Id);
+            SharedData.RemoveKey(entry.Key);
+
+            LocalizationEditorSettings.EditorEvents.RaiseTableEntryRemoved(this, entry);
         }
     }
 }

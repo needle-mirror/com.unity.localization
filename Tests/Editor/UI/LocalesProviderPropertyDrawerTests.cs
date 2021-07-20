@@ -24,15 +24,15 @@ namespace UnityEditor.Localization.Tests.UI
         {
             public List<Locale> TestLocales { get; set; } = new List<Locale>();
 
-            internal protected override ReadOnlyCollection<Locale> GetLocalesInternal() => TestLocales.AsReadOnly();
+            internal override ReadOnlyCollection<Locale> GetLocalesInternal() => TestLocales.AsReadOnly();
 
-            protected override void AddLocaleInternal(Locale locale, bool createUndo)
+            internal override void AddLocaleInternal(Locale locale, bool createUndo)
             {
                 TestLocales.Add(locale);
                 EditorEvents.RaiseLocaleAdded(locale);
             }
 
-            protected override void RemoveLocaleInternal(Locale locale, bool createUndo)
+            internal override void RemoveLocaleInternal(Locale locale, bool createUndo)
             {
                 TestLocales.Remove(locale);
                 EditorEvents.RaiseLocaleRemoved(locale);

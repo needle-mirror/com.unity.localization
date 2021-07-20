@@ -1,6 +1,7 @@
 * Guides
   * [Installation](Installation.md)
-  * [Quick start guide](QuickStartGuide.md)
+  * [Quick start guide: 2019.4+](QuickStartGuide.md)
+  * [Quick start guide: 2020.3+](QuickStartGuideWithVariants.md)
 * Reference
   * [Addressables Integration](Addressables.md)
   * [Component Localizers](ComponentLocalizers.md)
@@ -13,6 +14,7 @@
     * [XLIFF](XLIFF.md)
   * [Locale](Locale.md)
   * [Localization Settings](LocalizationSettings.md)
+  * [Localized Property Variants](LocalizedPropertyVariants.md)
   * [Metadata](Metadata.md)
     * [Platform Overrides](Metadata-Platform-Overrides.md)
   * Platforms

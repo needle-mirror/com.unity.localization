@@ -107,24 +107,18 @@ namespace UnityEditor.Localization
         /// <returns></returns>
         public static IEnumerable<Row<StringTableEntry>> GetRowEnumerator(params StringTable[] tables) => GetRowEnumerator<StringTable, StringTableEntry>(tables);
 
-        /// <summary>
-        /// Removes the entry from the <see cref="SharedTableData"/> and all tables that are part of this collection.
-        /// </summary>
-        /// <param name="id"></param>
+        ///<inheritdoc/>
         public override void RemoveEntry(TableEntryReference entryReference)
         {
-            if (entryReference.ReferenceType == TableEntryReference.Type.Name)
-            {
-                SharedData.RemoveKey(entryReference.Key);
-                foreach (var table in StringTables)
-                    table.SharedData.RemoveKey(entryReference.Key);
-            }
-            else if (entryReference.ReferenceType == TableEntryReference.Type.Id)
-            {
-                SharedData.RemoveKey(entryReference.KeyId);
-                foreach (var table in StringTables)
-                    table.SharedData.RemoveKey(entryReference.KeyId);
-            }
+            var entry = SharedData.GetEntryFromReference(entryReference);
+            if (entry == null)
+                return;
+
+            foreach (var table in StringTables)
+                table.RemoveEntry(entry.Id);
+            SharedData.RemoveKey(entry.Key);
+
+            LocalizationEditorSettings.EditorEvents.RaiseTableEntryRemoved(this, entry);
         }
     }
 }

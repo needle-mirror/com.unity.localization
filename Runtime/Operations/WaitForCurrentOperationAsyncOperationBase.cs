@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization
@@ -12,25 +13,38 @@ namespace UnityEngine.Localization
 
         public AsyncOperationHandle? Dependency { get; set; }
 
+        bool m_Waiting;
+
         protected override bool InvokeWaitForCompletion()
         {
-            if (!IsRunning)
+            Debug.Assert(!m_Waiting, "Calling WaitForCompletion on an operation that is already waiting.");
+
+            if (!IsRunning || m_Waiting)
                 return true;
 
-            // If we have dependencies then we need to wait for them.
-            if (!HasExecuted && Dependency.HasValue)
+            try
             {
-                Dependency.Value.WaitForCompletion();
-            }
+                m_Waiting = true;
 
-            if (!CurrentOperation.HasValue)
+                // If we have dependencies then we need to wait for them.
+                if (!HasExecuted && Dependency.HasValue)
+                {
+                    Dependency.Value.WaitForCompletion();
+                }
+
+                if (!CurrentOperation.HasValue)
+                {
+                    Complete(default, false, "Expected to have a current operation to wait on. Can not complete.");
+                    return true;
+                }
+
+                CurrentOperation.Value.WaitForCompletion();
+                return false;
+            }
+            finally
             {
-                Complete(default, false, "Expected to have a current operation to wait on. Can not complete.");
-                return true;
+                m_Waiting = false;
             }
-
-            CurrentOperation.Value.WaitForCompletion();
-            return false;
         }
 
         protected override void Destroy()

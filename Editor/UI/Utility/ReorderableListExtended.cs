@@ -77,7 +77,7 @@ namespace UnityEditor.Localization.UI
             EditorGUI.BeginDisabledGroup(disabled);
 
             var label = ManagedReferenceUtility.GetDisplayName(element.managedReferenceFullTypename);
-            rect.xMin += 8; // Prevent the foldout arrow(>) being drawn over the reorder icon(=) when showning LocalizationSettings in the inspector.
+            rect.xMin += 8; // Prevent the foldout arrow(>) being drawn over the reorder icon(=) when showing LocalizationSettings in the inspector.
             EditorGUI.PropertyField(rect, element, label, true);
             EditorGUI.EndDisabledGroup();
         }

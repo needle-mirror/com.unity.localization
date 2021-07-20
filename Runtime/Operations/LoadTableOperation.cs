@@ -13,6 +13,7 @@ namespace UnityEngine.Localization
     {
         LocalizedDatabase<TTable, TEntry> m_Database;
         TableReference m_TableReference;
+        AsyncOperationHandle<TTable>? m_LoadTableOperation;
         Locale m_SelectedLocale;
         string m_CollectionName;
 
@@ -90,19 +91,22 @@ namespace UnityEngine.Localization
         {
             if (operationHandle.Status != AsyncOperationStatus.Succeeded || operationHandle.Result.Count == 0)
             {
+                AddressablesInterface.Release(operationHandle);
                 Complete(null, true, $"Could not find a {m_SelectedLocale} table with the name '{m_CollectionName}`");
                 return;
             }
 
-            var loadTableOperation = AddressablesInterface.LoadTableFromLocation<TTable>(operationHandle.Result[0]);
-            if (loadTableOperation.IsDone)
+            m_LoadTableOperation = AddressablesInterface.LoadTableFromLocation<TTable>(operationHandle.Result[0]);
+            if (m_LoadTableOperation.Value.IsDone)
             {
-                TableLoaded(loadTableOperation);
+                TableLoaded(m_LoadTableOperation.Value);
+                AddressablesInterface.Release(operationHandle);
             }
             else
             {
-                CurrentOperation = loadTableOperation;
-                loadTableOperation.Completed += TableLoaded;
+                CurrentOperation = m_LoadTableOperation.Value;
+                m_LoadTableOperation.Value.Completed += TableLoaded;
+                m_LoadTableOperation.Value.Completed += op => AddressablesInterface.Release(operationHandle);
             }
         }
 
@@ -113,12 +117,20 @@ namespace UnityEngine.Localization
 
         public void RegisterTableOperation(AsyncOperationHandle<TTable> handle)
         {
-            m_Database.RegisterTableOperation(handle, m_SelectedLocale.Identifier, m_CollectionName);
+            if (handle.Status == AsyncOperationStatus.Succeeded)
+                m_Database.RegisterTableOperation(handle, m_SelectedLocale.Identifier, m_CollectionName);
         }
 
         protected override void Destroy()
         {
             base.Destroy();
+
+            if (m_LoadTableOperation.HasValue)
+            {
+                AddressablesInterface.Release(m_LoadTableOperation.Value);
+                m_LoadTableOperation = null;
+            }
+
             GenericPool<LoadTableOperation<TTable, TEntry>>.Release(this);
         }
     }

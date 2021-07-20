@@ -23,8 +23,13 @@ namespace UnityEditor.Localization.UI
 
             LocalizationEditorSettings.EditorEvents.LocaleAdded += LocaleAddedToProject;
             LocalizationEditorSettings.EditorEvents.LocaleRemoved += LocaleRemovedFromProject;
-            LocalizationSettings.SelectedLocaleChanged += OnLanguageChanged;
+
             EditorApplication.playModeStateChanged += PlayModeStateChanged;
+
+            if (!LocalizationSettings.HasSettings)
+                return;
+
+            LocalizationSettings.SelectedLocaleChanged += OnLanguageChanged;
 
             this.RegisterValueChangedCallback(evt => LocalizationSettings.SelectedLocale = evt.newValue);
 
@@ -77,7 +82,7 @@ namespace UnityEditor.Localization.UI
             s_Locales.Clear();
             s_Locales.Add(null);
             s_Locales.AddRange(LocalizationEditorSettings.GetLocales());
-            s_Locales.AddRange(LocalizationEditorSettings.GetPsuedoLocales());
+            s_Locales.AddRange(LocalizationEditorSettings.GetPseudoLocales());
             return s_Locales;
         }
 
@@ -95,6 +100,9 @@ namespace UnityEditor.Localization.UI
 
         void OnLanguageChanged(Locale locale)
         {
+            if (!GetChoices().Contains(locale))
+                return;
+
             SetValueWithoutNotify(locale);
         }
 

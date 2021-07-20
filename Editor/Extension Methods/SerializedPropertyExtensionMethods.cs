@@ -57,5 +57,48 @@ namespace UnityEditor.Localization
             property.InsertArrayElementAtIndex(index);
             return property.GetArrayElementAtIndex(index);
         }
+
+        public static void ApplyPropertyModification(this SerializedProperty property, PropertyModification modification)
+        {
+            if (property.propertyType == SerializedPropertyType.ObjectReference)
+            {
+                property.objectReferenceValue = modification.objectReference;
+                return;
+            }
+
+            switch (property.type)
+            {
+                case "ArraySize":
+                case "int":
+                case "byte":
+                case "sbyte":
+                case "short":
+                case "ushort":
+                case "Enum":
+                    property.intValue = int.Parse(modification.value);
+                    break;
+
+                case "long":
+                case "ulong":
+                    property.longValue = long.Parse(modification.value);
+                    break;
+
+                case "float":
+                    property.floatValue = float.Parse(modification.value);
+                    break;
+
+                case "double":
+                    property.doubleValue = double.Parse(modification.value);
+                    break;
+
+                case "string":
+                    property.stringValue = modification.value;
+                    break;
+
+                case "bool":
+                    property.boolValue = modification.value == "1";
+                    break;
+            }
+        }
     }
 }

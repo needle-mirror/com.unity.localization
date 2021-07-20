@@ -1,11 +1,12 @@
 using System;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
+using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization
 {
-    #if MODULE_AUDIO
+    #if MODULE_AUDIO || PACKAGE_DOCS_GENERATION
     /// <summary>
     /// Provides a specialized <see cref="LocalizedAsset{TObject}"/> which can be used to localize [AudioClip](https://docs.unity3d.com/ScriptReference/AudioClip.html) assets.
     /// </summary>
@@ -26,16 +27,41 @@ namespace UnityEngine.Localization
     public class LocalizedMaterial : LocalizedAsset<Material> {}
 
     /// <summary>
-    /// Provides a specialized <see cref="LocalizedAsset{TObject}"/> which can be used to localize [Sprites](https://docs.unity3d.com/ScriptReference/Sprite.html).
+    /// Provides a <see cref="LocalizedAsset{TObject}"/> which you can use to localize any [UnityEngine.Object](https://docs.unity3d.com/ScriptReference/Object.html).
+    /// </summary>
+    [Serializable]
+    public class LocalizedObject : LocalizedAsset<Object> {}
+
+    /// <summary>
+    /// Provides a <see cref="LocalizedAsset{TObject}"/> which you can use to localize [Sprites](https://docs.unity3d.com/ScriptReference/Sprite.html).
     /// </summary>
     [Serializable]
     public class LocalizedSprite : LocalizedAsset<Sprite> {}
 
     /// <summary>
-    /// Provides a specialized <see cref="LocalizedAsset{TObject}"/> which can be used to localize [Textures](https://docs.unity3d.com/ScriptReference/Texture.html) assets.
+    /// Provides a <see cref="LocalizedAsset{TObject}"/> which you can use to localize [Textures](https://docs.unity3d.com/ScriptReference/Texture.html) assets.
     /// </summary>
     [Serializable]
     public class LocalizedTexture : LocalizedAsset<Texture> {}
+
+    #if PACKAGE_TMP || PACKAGE_DOCS_GENERATION
+    /// <summary>
+    /// Provides a <see cref="LocalizedAsset{TObject}"/> which you can use to localize a TextMeshPro <see cref="TMPro.TMP_FontAsset"/>.
+    /// </summary>
+    [Serializable]
+    public class LocalizedTmpFont : LocalizedAsset<TMPro.TMP_FontAsset> {}
+    #endif
+
+    /// <summary>
+    /// Provides a <see cref="LocalizedAsset{TObject}"/> which you can use to localize a <see cref="Font"/>.
+    /// </summary>
+    [Serializable]
+    public class LocalizedFont : LocalizedAsset<Font> {}
+
+    public abstract class LocalizedAssetBase : LocalizedReference
+    {
+        public abstract AsyncOperationHandle<Object> LoadAssetAsObjectAsync();
+    }
 
     /// <summary>
     /// Provides a way to reference an <see cref="AssetTableEntry"/> inside of a specific <see cref="AssetTable"/> and request the localized asset.
@@ -47,7 +73,7 @@ namespace UnityEngine.Localization
     /// <code source="../../DocCodeSamples.Tests/LocalizedAssetSamples.cs" region="localized-prefab"/>
     /// </example>
     [Serializable]
-    public partial class LocalizedAsset<TObject> : LocalizedReference where TObject : Object
+    public partial class LocalizedAsset<TObject> : LocalizedAssetBase where TObject : Object
     {
         ChangeHandler m_ChangeHandler;
         AsyncOperationHandle<TObject>? m_CurrentLoadingOperation;
@@ -111,8 +137,11 @@ namespace UnityEngine.Localization
                 if (wasEmpty)
                 {
                     LocalizationSettings.ValidateSettingsExist();
-                    LocalizationSettings.SelectedLocaleChanged += HandleLocaleChange;
                     ForceUpdate();
+
+                    // We subscribe after the first update as its possible that a SelectedLocaleChanged may be fired
+                    // during ForceUpdate when using WaitForCompletion and we want to avoid this.
+                    LocalizationSettings.SelectedLocaleChanged += HandleLocaleChange;
                 }
                 else if (CurrentLoadingOperation.HasValue && CurrentLoadingOperation.Value.IsDone)
                 {
@@ -156,7 +185,46 @@ namespace UnityEngine.Localization
         public AsyncOperationHandle<TObject> LoadAssetAsync()
         {
             LocalizationSettings.ValidateSettingsExist("Can not Load Asset.");
-            return LocalizationSettings.AssetDatabase.GetLocalizedAssetAsync<TObject>(TableReference, TableEntryReference);
+            return LocalizationSettings.AssetDatabase.GetLocalizedAssetAsync<TObject>(TableReference, TableEntryReference, locale: LocaleOverride);
+        }
+
+        class ConvertToObjectOperation : WaitForCurrentOperationAsyncOperationBase<Object>
+        {
+            AsyncOperationHandle<TObject> m_Operation;
+
+            public void Init(AsyncOperationHandle<TObject> operation)
+            {
+                AddressablesInterface.ResourceManager.Acquire(operation);
+                m_Operation = operation;
+                CurrentOperation = operation;
+            }
+
+            protected override void Execute()
+            {
+                if (m_Operation.IsDone)
+                    OnCompleted(m_Operation);
+                else
+                    m_Operation.Completed += OnCompleted;
+            }
+
+            void OnCompleted(AsyncOperationHandle<TObject> op)
+            {
+                Complete(op.Result, op.Status == AsyncOperationStatus.Succeeded, null);
+            }
+
+            protected override void Destroy()
+            {
+                AddressablesInterface.Release(m_Operation);
+                GenericPool<ConvertToObjectOperation>.Release(this);
+            }
+        }
+
+        public override AsyncOperationHandle<Object> LoadAssetAsObjectAsync()
+        {
+            var wrappedOperation = LoadAssetAsync();
+            var operation = GenericPool<ConvertToObjectOperation>.Get();
+            operation.Init(wrappedOperation);
+            return AddressablesInterface.ResourceManager.StartOperation(operation, default);
         }
 
         /// <summary>
@@ -187,7 +255,7 @@ namespace UnityEngine.Localization
             m_CurrentTableEntry = TableEntryReference;
 
             // Dont update if we have no selected Locale
-            if (!LocalizationSettings.Instance.IsPlaying && LocalizationSettings.SelectedLocale == null)
+            if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode && LocaleOverride == null && LocalizationSettings.SelectedLocale == null)
                 return;
             #endif
 
@@ -195,7 +263,7 @@ namespace UnityEngine.Localization
             {
                 #if UNITY_EDITOR
                 // If we are empty and playing or previewing then we should force an update.
-                if (!LocalizationSettings.Instance.IsPlaying)
+                if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
                     m_ChangeHandler(null);
                 #endif
                 return;

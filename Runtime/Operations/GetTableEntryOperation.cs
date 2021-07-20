@@ -10,7 +10,7 @@ namespace UnityEngine.Localization
         where TTable : DetailedLocalizationTable<TEntry>
         where TEntry : TableEntry
     {
-        AsyncOperationHandle<TTable> m_LoadTableOperation;
+        AsyncOperationHandle<TTable>? m_LoadTableOperation;
         TableReference m_TableReference;
         TableEntryReference m_TableEntryReference;
         LocalizedDatabase<TTable, TEntry> m_Database;
@@ -22,7 +22,7 @@ namespace UnityEngine.Localization
         {
             m_Database = database;
             m_LoadTableOperation = loadTableOperation;
-            AddressablesInterface.Acquire(m_LoadTableOperation);
+            AddressablesInterface.Acquire(m_LoadTableOperation.Value);
             m_TableReference = tableReference;
             m_TableEntryReference = tableEntryReference;
             m_SelectedLocale = selectedLoale;
@@ -32,19 +32,22 @@ namespace UnityEngine.Localization
 
         protected override void Execute()
         {
+            var tableHandle = m_LoadTableOperation.Value;
+            m_LoadTableOperation = null; // Don't hold on to it because it may change due to entry override, fallback etc. The final result will be assigned here later.
+
             if (m_SelectedLocale == null)
             {
                 m_SelectedLocale = LocalizationSettings.SelectedLocaleAsync.Result;
                 if (m_SelectedLocale == null)
                 {
                     Complete(default, false, "SelectedLocale is null");
-                    AddressablesInterface.Release(m_LoadTableOperation);
+                    AddressablesInterface.SafeRelease(tableHandle);
                     return;
                 }
             }
 
             m_CurrentLocale = m_SelectedLocale;
-            ExtractEntryFromTable(m_LoadTableOperation);
+            ExtractEntryFromTable(tableHandle);
         }
 
         void ExtractEntryFromTable(AsyncOperationHandle<TTable> asyncOperation)
@@ -61,8 +64,8 @@ namespace UnityEngine.Localization
             if (HandleEntryOverride(asyncOperation, entry) || HandleFallback(asyncOperation, entry))
                 return;
 
+            m_LoadTableOperation = asyncOperation;
             Complete(new LocalizedDatabase<TTable, TEntry>.TableEntryResult(entry, asyncOperation.Result), true, null);
-            AddressablesInterface.Release(asyncOperation);
         }
 
         bool HandleEntryOverride(AsyncOperationHandle<TTable> asyncOperation, TEntry entry)
@@ -180,8 +183,16 @@ namespace UnityEngine.Localization
 
         protected override void Destroy()
         {
+            if (m_LoadTableOperation.HasValue)
+            {
+                AddressablesInterface.SafeRelease(m_LoadTableOperation.Value);
+                m_LoadTableOperation = null;
+            }
+
             base.Destroy();
             GenericPool<GetTableEntryOperation<TTable, TEntry>>.Release(this);
         }
+
+        public override string ToString() => $"{GetType().Name}, Current Locale: {m_CurrentLocale}, Selected Locale: {m_SelectedLocale}, Table: {m_TableReference}, Entry: {m_TableEntryReference}, Fallback: {m_UseFallback}";
     }
 }

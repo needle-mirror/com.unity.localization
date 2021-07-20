@@ -6,17 +6,18 @@ using UnityEngine.ResourceManagement.Util;
 
 namespace UnityEngine.Localization
 {
-    /// <summary>
-    /// In order to avoid users having to explicitly release operations we do this automatically a frame after the operation has completed.
-    /// This means that if someone does plan to keep hold of a reference then they will need to call Acquire on it and Release when they have finished.
-    /// </summary>
-    class OperationHandleDeferedRelease : ComponentSingleton<OperationHandleDeferedRelease>
+    class LocalizationBehaviour : ComponentSingleton<LocalizationBehaviour>
     {
         List<AsyncOperationHandle> m_CurrentReleaseHandles;
         int m_ReleaseFrame = -1;
 
         protected override string GetGameObjectName() => "Localization Resource Manager";
 
+        /// <summary>
+        /// To prevent you having to explicitly release operations, Unity does this automatically a frame after the operation is completed.
+        /// If you plan to keep hold of a reference, call <see cref="AsyncOperationHandle.Acquire"/>, and <see cref="AsyncOperationHandle.Release"/> when it's finished.
+        /// </summary>
+        /// <param name="handle"></param>
         public void ReleaseNextFrame(AsyncOperationHandle handle)
         {
             if (Time.frameCount != m_ReleaseFrame)
@@ -41,7 +42,7 @@ namespace UnityEngine.Localization
 
             foreach (var h in handles)
             {
-                AddressablesInterface.Release(h);
+                AddressablesInterface.SafeRelease(h);
             }
             ListPool<AsyncOperationHandle>.Release(handles);
         }

@@ -62,7 +62,8 @@ namespace UnityEditor.Localization.Plugins.CSV
             {
                 try
                 {
-                    reporter?.Start("Exporting CSV", string.Empty);
+                    if (reporter?.Started != true)
+                        reporter?.Start("Importing CSV", string.Empty);
                     reporter?.ReportProgress("Writing Headers", 0);
                     foreach (var cell in columnMappings)
                     {
@@ -139,7 +140,8 @@ namespace UnityEditor.Localization.Plugins.CSV
                     csvReader.Read();
                     csvReader.ReadHeader();
 
-                    reporter?.Start("Importing CSV", string.Empty);
+                    if (reporter?.Started != true)
+                        reporter?.Start("Exporting CSV", string.Empty);
                     reporter?.ReportProgress("Mapping Headers", 0);
                     foreach (var col in columnMappings)
                     {

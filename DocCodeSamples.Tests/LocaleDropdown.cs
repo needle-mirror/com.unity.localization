@@ -1,3 +1,7 @@
+#if PACKAGE_UGUI
+
+#region example-code
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -34,3 +38,7 @@ public class LocaleDropdown : MonoBehaviour
         LocalizationSettings.SelectedLocale = LocalizationSettings.AvailableLocales.Locales[index];
     }
 }
+
+#endregion
+
+#endif

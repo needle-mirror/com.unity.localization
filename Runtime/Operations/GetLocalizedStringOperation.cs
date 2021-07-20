@@ -51,7 +51,7 @@ namespace UnityEngine.Localization
         public void CompleteAndRelease(string result, bool success, string errorMsg)
         {
             Complete(result, success, errorMsg);
-            AddressablesInterface.Release(m_TableEntryOperation);
+            AddressablesInterface.SafeRelease(m_TableEntryOperation);
         }
 
         protected override void Destroy()
@@ -59,5 +59,7 @@ namespace UnityEngine.Localization
             base.Destroy();
             GenericPool<GetLocalizedStringOperation>.Release(this);
         }
+
+        public override string ToString() => $"{GetType().Name}, Locale: {m_SelectedLocale}, Table: {m_TableReference}, Entry: {m_TableEntryReference}";
     }
 }

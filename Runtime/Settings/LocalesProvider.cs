@@ -21,7 +21,7 @@ namespace UnityEngine.Localization.Settings
         {
             get
             {
-                if (LocalizationSettings.Instance.IsPlaying && m_LoadOperation == null)
+                if (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode && m_LoadOperation == null)
                     Debug.LogError("Locales PreloadOperation has not been initialized, can not return the available locales.");
                 return m_Locales;
             }
@@ -97,8 +97,11 @@ namespace UnityEngine.Localization.Settings
         /// <param name="locale"></param>
         public void AddLocale(Locale locale)
         {
-            bool isPsedudoLocale = locale is PseudoLocale;
-            if (!isPsedudoLocale)
+            if (locale == null)
+                return;
+
+            var isPseudoLocale = locale is PseudoLocale;
+            if (!isPseudoLocale)
             {
                 var foundLocale = GetLocale(locale.Identifier);
                 if (foundLocale != null && !(foundLocale is PseudoLocale))
@@ -119,7 +122,10 @@ namespace UnityEngine.Localization.Settings
         /// <returns>true if the locale was removed or false if the locale did not exist.</returns>
         public bool RemoveLocale(Locale locale)
         {
-            bool ret = Locales.Remove(locale);
+            if (locale == null)
+                return false;
+
+            var ret = Locales.Remove(locale);
             var settings = LocalizationSettings.GetInstanceDontCreateDefault();
             settings?.OnLocaleRemoved(locale);
             return ret;

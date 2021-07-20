@@ -43,20 +43,16 @@ namespace UnityEngine.Localization.Components
 
         protected virtual void OnDisable() => ClearChangeHandler();
 
+        void OnDestroy() => ClearChangeHandler();
+
         void OnValidate()
         {
             AssetReference.ForceUpdate();
         }
 
-        internal virtual void RegisterChangeHandler()
-        {
-            AssetReference.AssetChanged += UpdateAsset;
-        }
+        internal virtual void RegisterChangeHandler() => AssetReference.AssetChanged += UpdateAsset;
 
-        internal virtual void ClearChangeHandler()
-        {
-            AssetReference.AssetChanged -= UpdateAsset;
-        }
+        internal virtual void ClearChangeHandler() => AssetReference.AssetChanged -= UpdateAsset;
 
         /// <summary>
         /// Called when <see cref="AssetReference"/> has been loaded. This will occur when the game first starts after
@@ -96,7 +92,7 @@ namespace UnityEngine.Localization.Components
         protected override void UpdateAsset(TObject localizedAsset)
         {
             #if UNITY_EDITOR
-            if (!LocalizationSettings.Instance.IsPlaying)
+            if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
             {
                 if (AssetReference.IsEmpty)
                 {

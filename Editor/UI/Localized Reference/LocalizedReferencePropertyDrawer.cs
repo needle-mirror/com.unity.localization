@@ -25,7 +25,7 @@ namespace UnityEditor.Localization.UI
 
         protected static Func<ReadOnlyCollection<TCollection>> GetProjectTableCollections { get; set; }
 
-        public class Data
+        public class Data : PropertyDrawerExtendedData
         {
             public SerializedObject serializedObject;
             public SerializedTableReference tableReference;
@@ -34,6 +34,8 @@ namespace UnityEditor.Localization.UI
             public SerializedProperty waitForCompletion;
             public Type assetType;
             public GUIContent entryNameLabel;
+            public GUIContent warningMessage;
+            public float warningMessageHeight;
 
             GUIContent m_FieldLabel;
             SharedTableData.SharedTableEntry m_SelectedEntry;
@@ -78,16 +80,21 @@ namespace UnityEditor.Localization.UI
             {
                 get
                 {
-                    if (m_SelectedTableCollection == null)
+                    if (m_SelectedTableCollection == null && tableReference.Reference.ReferenceType != TableReference.Type.Empty)
                     {
                         var tableCollections = GetProjectTableCollections();
+                        warningMessage = null;
                         if (tableReference.Reference.ReferenceType == TableReference.Type.Name)
                         {
                             m_SelectedTableCollection = tableCollections.FirstOrDefault(t => t.TableCollectionName == tableReference.Reference);
+                            if (m_SelectedTableCollection == null)
+                                warningMessage = new GUIContent($"Could not find a Table Collection with the name: {tableReference.Reference.TableCollectionName}");
                         }
-                        else if (tableReference.Reference.ReferenceType == TableReference.Type.Guid)
+                        else
                         {
                             m_SelectedTableCollection = tableCollections.FirstOrDefault(t => t.SharedData.TableCollectionNameGuid == tableReference.Reference);
+                            if (m_SelectedTableCollection == null)
+                                warningMessage = new GUIContent($"Could not find a Table Collection with the Guid: {tableReference.Reference.TableCollectionNameGuid}");
                         }
                     }
                     return m_SelectedTableCollection;
@@ -97,6 +104,7 @@ namespace UnityEditor.Localization.UI
                     m_SelectedTableCollection = value;
                     m_SelectedTableIdx = -1;
                     SelectedTableEntry = null;
+                    warningMessage = null;
                     if (value != null)
                         tableReference.Reference = value.SharedData.TableCollectionNameGuid;
                     else
@@ -108,9 +116,25 @@ namespace UnityEditor.Localization.UI
             {
                 get
                 {
-                    if (m_SelectedEntry == null && SelectedTableCollection != null)
+                    if (m_SelectedEntry == null && SelectedTableCollection != null && tableEntryReference.Reference.ReferenceType != TableEntryReference.Type.Empty)
                     {
-                        m_SelectedEntry = m_SelectedTableCollection.SharedData.GetEntryFromReference(tableEntryReference.Reference);
+                        warningMessage = null;
+                        if (tableEntryReference.Reference.ReferenceType == TableEntryReference.Type.Name)
+                        {
+                            m_SelectedEntry = m_SelectedTableCollection.SharedData.GetEntry(tableEntryReference.Reference.Key);
+                            if (m_SelectedEntry == null)
+                            {
+                                warningMessage = new GUIContent($"The Table Collection `{SelectedTableCollection.TableCollectionName}` is Missing an entry with the Key: {tableEntryReference.Reference.Key}.");
+                            }
+                        }
+                        else
+                        {
+                            m_SelectedEntry = m_SelectedTableCollection.SharedData.GetEntry(tableEntryReference.Reference.KeyId);
+                            if (m_SelectedEntry == null)
+                            {
+                                warningMessage = new GUIContent($"The Table Collection `{SelectedTableCollection.TableCollectionName}` is Missing an entry with the Key Id: {tableEntryReference.Reference.KeyId}.");
+                            }
+                        }
                     }
                     return m_SelectedEntry;
                 }
@@ -149,7 +173,7 @@ namespace UnityEditor.Localization.UI
                 }
             }
 
-            public virtual void Reset()
+            public override void Reset()
             {
                 serializedObject = null;
                 tableReference = null;
@@ -207,6 +231,7 @@ namespace UnityEditor.Localization.UI
         {
             LocalizationEditorSettings.EditorEvents.CollectionAdded += EditorEvents_CollectionModified;
             LocalizationEditorSettings.EditorEvents.CollectionRemoved += EditorEvents_CollectionModified;
+            LocalizationEditorSettings.EditorEvents.TableEntryRemoved += EditorEvents_CollectionEntryRemoved;
             LocalizationEditorSettings.EditorEvents.CollectionModified += EditorEvents_CollectionModifiedWithSender;
             LocalizationEditorSettings.EditorEvents.LocaleAdded += EditorEvents_LocaleAddedOrRemoved;
             LocalizationEditorSettings.EditorEvents.LocaleRemoved += EditorEvents_LocaleAddedOrRemoved;
@@ -217,6 +242,7 @@ namespace UnityEditor.Localization.UI
         {
             LocalizationEditorSettings.EditorEvents.CollectionAdded -= EditorEvents_CollectionModified;
             LocalizationEditorSettings.EditorEvents.CollectionRemoved -= EditorEvents_CollectionModified;
+            LocalizationEditorSettings.EditorEvents.TableEntryRemoved -= EditorEvents_CollectionEntryRemoved;
             LocalizationEditorSettings.EditorEvents.CollectionModified -= EditorEvents_CollectionModifiedWithSender;
             LocalizationEditorSettings.EditorEvents.LocaleAdded -= EditorEvents_LocaleAddedOrRemoved;
             LocalizationEditorSettings.EditorEvents.LocaleRemoved -= EditorEvents_LocaleAddedOrRemoved;
@@ -229,6 +255,13 @@ namespace UnityEditor.Localization.UI
             {
                 prop.Reset();
             }
+        }
+
+        void EditorEvents_CollectionEntryRemoved(LocalizationTableCollection collection, SharedTableData.SharedTableEntry entry)
+        {
+            s_TableChoicesLabels = null;
+            s_TableChoices = null;
+            ClearPropertyDataCache();
         }
 
         void EditorEvents_CollectionModifiedWithSender(object sender, LocalizationTableCollection collection)
@@ -282,6 +315,15 @@ namespace UnityEditor.Localization.UI
                 });
 
                 PopupWindow.Show(dropDownPosition, new TreeViewPopupWindow(treeSelection) { Width = dropDownPosition.width });
+            }
+
+            // Missing table collection warning
+            if (data.warningMessage != null)
+            {
+                rowPosition.height = data.warningMessageHeight;
+                EditorGUI.HelpBox(rowPosition, data.warningMessage.text, MessageType.Warning);
+                rowPosition.MoveToNextLine();
+                rowPosition.height = EditorGUIUtility.singleLineHeight;
             }
 
             DrawTableDetails(position, rowPosition, data, property);
@@ -345,6 +387,11 @@ namespace UnityEditor.Localization.UI
             }
             rowPosition.MoveToNextLine();
 
+            EditorGUI.PropertyField(rowPosition, data.fallbackState, Styles.useFallback);
+            rowPosition.MoveToNextLine();
+            EditorGUI.PropertyField(rowPosition, data.waitForCompletion, Styles.waitForCompletion);
+            rowPosition.MoveToNextLine();
+
             if (data.SelectedTableEntry != null)
                 DrawTableEntryDetails(ref rowPosition, data, position);
             EditorGUI.indentLevel--;
@@ -379,21 +426,24 @@ namespace UnityEditor.Localization.UI
                     data.entryNameLabel = new GUIContent(Styles.entryName.text, EditorIcons.WarningIcon, $"Can not rename key to '{newName}', the name is already in use by Key Id {entry.Id}.");
                 }
             }
-
-            EditorGUI.PropertyField(rowPosition, data.fallbackState, Styles.useFallback);
-            rowPosition.MoveToNextLine();
-            EditorGUI.PropertyField(rowPosition, data.waitForCompletion, Styles.waitForCompletion);
-            rowPosition.MoveToNextLine();
         }
 
         public override float GetPropertyHeight(Data data, SerializedProperty property, GUIContent label)
         {
             float height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing; // Foldout field height
+
+            if (data.warningMessage != null)
+            {
+                data.warningMessageHeight = EditorStyles.helpBox.CalcHeight(data.warningMessage, EditorGUIUtility.currentViewWidth - EditorGUIUtility.labelWidth);
+                height += data.warningMessageHeight;
+            }
+
             if (property.isExpanded)
             {
                 height += EditorGUIUtility.singleLineHeight; // Selected table
                 height += EditorGUIUtility.singleLineHeight; // create table/add entry button
-                height += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * 3; // Add locale button, fallback & Wait For Completion
+                height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing; // Add locale button
+                height += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * 2; // Fallback & Wait For Completion
 
                 if (data.SelectedTableEntry != null)
                 {

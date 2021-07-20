@@ -19,7 +19,7 @@ namespace UnityEditor.Localization.UI
         {
             var code = property.FindPropertyRelative("m_Code");
 
-            var foldout = new Foldout { text = "Identifier" };
+            var foldout = new Foldout { text = property.displayName };
             foldout.BindProperty(property);
 
             var localeField = new ObjectField { objectType = typeof(Locale), value = LocalizationEditorSettings.GetLocale(code.stringValue) };

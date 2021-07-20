@@ -70,6 +70,6 @@ To force an operation to complete on the main thread, call [WaitForCompletion](h
 This example demonstrates how to create a way for the person playing a game to select the language (defined in the Localization system by Locale) they want to use in the game. 
 To add a UI dropdown menu to the Scene, go to **GameObject > UI > Dropdown**, and attach the following script:
 
-[!code-cs[locale-dropdown](../DocCodeSamples.Tests/LocaleDropdown.cs)]
+[!code-cs[locale-dropdown](../DocCodeSamples.Tests/LocaleDropdown.cs#example-code)]
 
 You can see a more advanced version of this script in the Localization package samples.

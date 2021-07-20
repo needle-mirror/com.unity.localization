@@ -1,6 +1,58 @@
 # Changelog
 All notable changes to this package will be documented in this file.
 
+## [1.0.0-pre.10] - 2021-07-20
+
+### Added
+
+- Added **Localized Property Variants** feature. This lets any component property be tracked for locale specific changes and provides an alternative workflow to the LocalizedStringEvent/LocalizedAssetEvent component approach. See the docs for further details. Note this feature requires **Unity 2020.3** and above.
+- Added `AssetTableEntry.SetAssetOverride`. This enables updating an **Asset Tables** localized assets in the player so entries can be updated, such as from an external source. (LOC-217)
+- Added `InitializeSynchronously` property to `LocalizationSettings`. This can be used to complete initialization immediately when it is started instead of asyncronously.
+- Added `Key` property to `TableEntry`.
+- Added `ProjectLocale` property to LocalizationSettings`. This is used by the **Localized Property Variants** to record the default values.
+- Added a warning to the Inspector when a table collection or entry is missing for `LocalizedString`, `LocalizedAsset`, `LocalizedStringTable` and `LocalizedAssetTable`. (LOC-176)
+- Added overloaded `AddAssetToTable` that takes a `LocaleIdentifier` to `AssetTableCollection`. This version also creates a new table if one does not exist.
+- Added Unicode escape sequence support to Smart Format when using `ConvertCharacterStringLiterals`. This lets you write unicode in strings in the form `\uXXXX`.
+
+### Changed
+
+- **WaitForCompletion** and **Enable Fallback** fields are now always shown in the `LocalizedString` and `LocalizedAsset` property drawers.
+- Added `LocalizedAssetBase` and `LoadAssetAsObjectAsync` to all `LocalizedAssets`. This enables loading Localized assets in a generic way.
+- Changed `AssetTable.GetAssetAsync` to use a `TableEntryReference` instead of a long.
+- Changed `SharedTableData.Addkey(string)` so that if the name already exists then a unique version is generated based on the provided name instead of returning null.
+- Google Sheets Authorization errors are now reported in the console when authorizing through the **Google Sheets Service Provider** editor.
+- Removed console warning in new project regarding missing `LocalizationSettings` when opening scene controls (LOC-194) and the project did not contain the `LocalizationSettings` asset. ([LOC-194](https://issuetracker.unity3d.com/issues/warning-when-opening-scene-controls-window-in-an-empty-project))
+- Small performance improvement to `SystemLocaleSelector`, when looking for a fallback Locale we do not check the same Locale twice.
+- Updated to Addressables `1.18.11`.
+
+### Deprecated
+
+- Deprecated some API with typos in `SheetsServiceProvider` (`SetOAuthCrendtials` and `AuthoizeOAuth`).
+
+### Fixed
+
+- **Google Sheets Service Provider** now supports authorizing multiple OAuth tokens. You will need to re-authorize when upgrading. (LOC-188)
+- **Pseudo Locale Editor** Methods and Preview fields now change expanded state if the label is clicked.
+- `LocaleIdentifier` property drawer now use the property display name instead of "Identifier".
+- Added  `xml:space="preserve"` to exported **XLIFF** translation units. (LOC-193). ([LOC-193](https://issuetracker.unity3d.com/issues/new-lines-in-xliff-are-deleted))
+- Fixed **Locale** not having the correct label applied when first added and the project contained no Addressable Asset Settings.
+- Fixed `LocalizedDatabase` so it correctly releases all references it holds to a table.
+- Fixed `NullReferenceException` being thrown when opening the Tables Window menu and the project contains no Localization Settings. ([LOC-200](https://issuetracker.unity3d.com/issues/nullreferenceexception-appears-when-opening-localization-tables-window-more-options-menu-and-there-are-no-localization-settings))
+- Fixed `NullReferenceException` being thrown when pushing to a **Google Sheet** and the **String Table Collection** contained a Key with no localized values. ([LOC-199](https://issuetracker.unity3d.com/issues/localization-nullreferenceexception-when-pushing-empty-string-to-google-sheets))
+- Fixed `NullReferenceException` when the Addressable settings contained a null group. (LOC-196)
+- Fixed `SelectedLocale is null` error being thrown when calling `GetLocalizedString` whilst exiting Play Mode. ([LOC-209](https://issuetracker.unity3d.com/issues/selectedlocale-is-null-error-is-thrown-when-accessing-a-localization-dot-localizedstring-within-update-and-then-exiting-play-mode))
+- Fixed a bug in `LocalizedStringPropertyDrawer` and `LocalizedAssetPropertyDrawer` that changed `LocalizedString` and `LocalizedAsset` values when reordering them in a list. (LOC-128)
+- Fixed Addressables issue that would throw the error `Exception: Reentering the Update method is not allowed` when calling `WaitForCompletion` inside of the `OnLocaleChanged` callback. The event is no longer called from inside of an Addressables update.
+- Fixed Analyze rules throwing an `InvalidCastException` when no issues were found and the Fix operation was performed. (LOC-201)
+- Fixed background tasks becoming unresponsive after importing/exporting CSV files.
+- Fixed compilation errors in DocCodeSamples.Tests when the UGUI package was not included in the project. (LOC-197)
+- Fixed duplication of existing Locales when importing a Table Collection. (LOC-175)
+- Fixed errors in **LocalizationSettings** editor when deleting Locales and Addressable asset settings from the project.
+- Fixed errors when opening **Device Simulator window**.
+- Fixed errors when reordering Table Entry Metadata when PlatformOverride is added as metadata. (LOC-!87)
+- Fixed LocalizedString not using WaitForCompletion when using the StringChanged event. (LOC-218)
+- Updated `LocalizationTableCollection.RemoveEntry` to remove entries from tables.
+
 ## [1.0.0-pre.9] - 2021-05-12
 
 ### Added

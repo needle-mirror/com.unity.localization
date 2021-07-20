@@ -1,5 +1,6 @@
 {
     "name": "Unity.Localization.Editor",
+    "rootNamespace": "",
     "references": [
         "Unity.Localization",
         "Unity.Addressables.Editor",
@@ -42,6 +43,11 @@
             "name": "com.unity.modules.audio",
             "expression": "1.0.0",
             "define": "MODULE_AUDIO"
+        },
+        {
+            "name": "Unity",
+            "expression": "2020.3",
+            "define": "ENABLE_PROPERTY_VARIANTS"
         }
     ],
     "noEngineReferences": false

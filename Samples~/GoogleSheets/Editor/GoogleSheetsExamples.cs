@@ -21,7 +21,7 @@ namespace UnityEditor.Localization.Samples.Google
             var sheetServiceProvider = ScriptableObject.CreateInstance<SheetsServiceProvider>();
 
             // OAuth is required when making changes. See the docs for info setting up OAuth credentials.
-            sheetServiceProvider.SetOAuthCrendtials("some-client-id", "some-client-secret");
+            sheetServiceProvider.SetOAuthCredentials("some-client-id", "some-client-secret");
             return sheetServiceProvider;
         }
 

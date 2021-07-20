@@ -45,7 +45,7 @@ namespace UnityEditor.Localization.Plugins.Google
     /// </summary>
     [CreateAssetMenu(fileName = "Google Sheets Service", menuName = "Localization/Google Sheets Service")]
     [HelpURL("https://developers.google.com/sheets/api/guides/authorizing#AboutAuthorization")]
-    public class SheetsServiceProvider : ScriptableObject, IGoogleSheetsService
+    public partial class SheetsServiceProvider : ScriptableObject, IGoogleSheetsService
     {
         [SerializeField]
         string m_ApiKey;
@@ -68,7 +68,7 @@ namespace UnityEditor.Localization.Plugins.Google
         SheetsService m_SheetsService;
 
         // The Google API access application we are requesting.
-        readonly static string[] k_Scopes = { SheetsService.Scope.Spreadsheets };
+        static readonly string[] k_Scopes = { SheetsService.Scope.Spreadsheets };
 
         /// <summary>
         /// Used to make sure the access and refresh tokens persist. Uses a FileDataStore by default with "Library/Google/{name}" as the path.
@@ -149,7 +149,7 @@ namespace UnityEditor.Localization.Plugins.Google
         /// Enable OAuth 2.0 authentication and extract the <see cref="ClientId"/> and <see cref="ClientSecret"/> from the supplied json.
         /// </summary>
         /// <param name="credentialsJson"></param>
-        public void SetOAuthCrendtials(string credentialsJson)
+        public void SetOAuthCredentials(string credentialsJson)
         {
             var secrets = LoadSecrets(credentialsJson);
             m_ClientId = secrets.ClientId;
@@ -162,7 +162,7 @@ namespace UnityEditor.Localization.Plugins.Google
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="clientSecret"></param>
-        public void SetOAuthCrendtials(string clientId, string clientSecret)
+        public void SetOAuthCredentials(string clientId, string clientSecret)
         {
             m_ClientId = clientId;
             m_ClientSecret = clientSecret;
@@ -176,8 +176,7 @@ namespace UnityEditor.Localization.Plugins.Google
 
             if (Authentication == AuthenticationType.OAuth)
                 return ConnectWithOAuth2();
-            else
-                return ConnectWithApiKey();
+            return ConnectWithApiKey();
         }
 
         /// <summary>
@@ -185,7 +184,6 @@ namespace UnityEditor.Localization.Plugins.Google
         /// This key is by Google to authenticate your application for accounting purposes.
         /// If you do need to access private user data, you must use OAuth 2.0.
         /// </summary>
-        /// <param name="apiKey"></param>
         SheetsService ConnectWithApiKey()
         {
             SheetsService sheetsService = new SheetsService(new BaseClientService.Initializer
@@ -202,7 +200,7 @@ namespace UnityEditor.Localization.Plugins.Google
         /// If this is not called then the first time <see cref="Service"/> is called it will be performed then.
         /// </summary>
         /// <returns></returns>
-        public UserCredential AuthoizeOAuth()
+        public UserCredential AuthorizeOAuth()
         {
             // Prevents Unity locking up if the user canceled the auth request.
             // Auto cancel after 60 secs
@@ -225,7 +223,7 @@ namespace UnityEditor.Localization.Plugins.Google
         /// If this is not called then the first time <see cref="Service"/> is called it will be performed then.
         /// </summary>
         /// <param name="cancellationToken">Token that can be used to cancel the task prematurely.</param>
-        /// <returns>The authotization Task that can be monitored.</returns>
+        /// <returns>The authorization Task that can be monitored.</returns>
         public Task<UserCredential> AuthorizeOAuthAsync(CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(ClientSecret))
@@ -234,22 +232,24 @@ namespace UnityEditor.Localization.Plugins.Google
             if (string.IsNullOrEmpty(ClientId))
                 throw new Exception($"{nameof(ClientId)} is empty");
 
-            // We create a separate area for each so that multiple providers dont clash.
+            // We create a separate area for each so that multiple providers don't clash.
             var dataStore = DataStore ?? new FileDataStore($"Library/Google/{name}", true);
 
             var secrets = new ClientSecrets { ClientId = m_ClientId, ClientSecret = m_ClientSecret };
-            var connectTask = GoogleWebAuthorizationBroker.AuthorizeAsync(secrets, k_Scopes, "user", cancellationToken, dataStore);
+
+            // We use the client Id for the user so that we can generate a unique token file and prevent conflicts when using multiple OAuth authentications. (LOC-188)
+            var user = m_ClientId;
+            var connectTask = GoogleWebAuthorizationBroker.AuthorizeAsync(secrets, k_Scopes, user, cancellationToken, dataStore);
             return connectTask;
         }
 
         /// <summary>
         /// When calling an API that will access private user data, O Auth 2.0 credentials must be used.
         /// </summary>
-        /// <param name="credentials"></param>
         SheetsService ConnectWithOAuth2()
         {
-            var userCredentials = AuthoizeOAuth();
-            SheetsService sheetsService = new SheetsService(new BaseClientService.Initializer
+            var userCredentials = AuthorizeOAuth();
+            var sheetsService = new SheetsService(new BaseClientService.Initializer
             {
                 HttpClientInitializer = userCredentials,
                 ApplicationName = ApplicationName,

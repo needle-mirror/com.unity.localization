@@ -3,7 +3,7 @@ using UnityEngine.Events;
 
 namespace UnityEngine.Localization.Events
 {
-    #if MODULE_AUDIO
+    #if MODULE_AUDIO || PACKAGE_DOCS_GENERATION
     /// <summary>
     /// [UnityEvent](https://docs.unity3d.com/ScriptReference/Events.UnityEvent.html) which can pass an [AudioClip](https://docs.unity3d.com/ScriptReference/AudioClip.html) as an argument.
     /// </summary>

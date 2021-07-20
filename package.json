@@ -1,24 +1,25 @@
 {
   "name": "com.unity.localization",
   "displayName": "Localization",
-  "version": "1.0.0-pre.9",
+  "version": "1.0.0-pre.10",
   "unity": "2019.4",
-  "description": "Use the Localization package to easily configure localization settings for your application.\n\nAdd support for multiple languages and regional variants, including:\n\n• String localization set different strings to display based on locale. Use the Smart Strings feature to add logic to automatically replace specific strings, such as placeholders and plurals\n• Asset localization - use a different asset (such as a texture, model, or audio file) based on a locale.\n• Pseudo-localization - test how your project will adapt to different localizations at an early stage, before adding your translations.\n• Import and Export localization data to XLIFF, CSV and Google sheets.\n\nAdd localization to your projects using the Localization package to help make your applications more accessible to a wider audience.",
+  "description": "Use the Localization package to easily configure localization settings for your application.\n\nAdd support for multiple languages and regional variants, including:\n\n• String localization: Set different strings to display based on locale. Use the Smart Strings feature to add logic to automatically replace specific strings, such as placeholders and plurals.\n• Asset localization: Use a different asset (such as a texture, model, or audio file) based on a locale.\n• Pseudo-localization: Test how your project will adapt to different localizations at an early stage, before adding your translations.\n• Import and export localization data to XLIFF, CSV and Google Sheets.\n\nAdd localization to your projects using the Localization package to help make your applications more accessible to a wider audience.",
   "keywords": [
     "localization",
     "locale",
     "language"
   ],
   "dependencies": {
-    "com.unity.addressables": "1.18.2"
+    "com.unity.addressables": "1.18.11",
+    "com.unity.nuget.newtonsoft-json": "2.0.0"
   },
   "upmCi": {
-    "footprint": "e40e4a5c6017244907e67566c7452f99a6332b5d"
+    "footprint": "56831453e679944184c8570e60cd763eeedd3998"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.localization.git",
     "type": "git",
-    "revision": "dbc66052e1a8c510064075cc0a99ba44b20a5401"
+    "revision": "46f4e6483306a923bfde33a3cb5add4912556fbe"
   },
   "samples": [
     {

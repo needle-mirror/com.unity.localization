@@ -64,7 +64,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF
             public ImportNotesBehavior ImportNotes { get; set; } = ImportNotesBehavior.Replace;
         }
 
-        static ImportOptions s_DefaultOptions = new ImportOptions();
+        static readonly ImportOptions k_DefaultOptions = new ImportOptions();
 
         /// <summary>
         /// Exports all <see cref="StringTable"/> in <paramref name="collections"/> as 1 or more XLIFF files where each file represents a single language.
@@ -311,7 +311,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF
                 reporter?.ReportProgress("Importing XLIFF into project", progress);
 
                 float progressStep = document.FileCount / (1.0f - progress);
-                var options = importOptions ?? s_DefaultOptions;
+                var options = importOptions ?? k_DefaultOptions;
                 for (int i = 0; i < document.FileCount; ++i)
                 {
                     var f = document.GetFile(i);
@@ -441,7 +441,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF
                     reporter?.ReportProgress("Importing XLIFF into project", progress);
 
                     float progressStep = document.FileCount / 1.0f * 0.7f;
-                    var options = importOptions ?? s_DefaultOptions;
+                    var options = importOptions ?? k_DefaultOptions;
                     for (int i = 0; i < document.FileCount; ++i)
                     {
                         var f = document.GetFile(i);
@@ -514,7 +514,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF
 
         static void ImportIntoTables(ITranslationUnitCollection unitCollection, StringTable source, StringTable target, ImportOptions importOptions = null)
         {
-            var options = importOptions ?? s_DefaultOptions;
+            var options = importOptions ?? k_DefaultOptions;
             var sharedTableData = target.SharedData;
 
             EditorUtility.SetDirty(sharedTableData);
@@ -659,9 +659,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF
             // Create a new entry
             if (keyId != SharedTableData.EmptyId)
                 return sharedTableData.AddKey(name, keyId);
-            if (!string.IsNullOrEmpty(name))
-                return sharedTableData.AddKey(name);
-            return sharedTableData.AddKey();
+            return sharedTableData.AddKey(name);
         }
 
         static int AddMetadataCommentsFromNotes(INoteCollection notes, IMetadataCollection metadata, NoteType requiredNoteType, ImportNotesBehavior importNotes)

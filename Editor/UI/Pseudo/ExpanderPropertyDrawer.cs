@@ -3,7 +3,7 @@ using UnityEngine.Localization.Pseudo;
 
 namespace UnityEditor.Localization.UI
 {
-    class ExpanderPropertyDrawerData
+    class ExpanderPropertyDrawerData : PropertyDrawerExtendedData
     {
         public SerializedProperty expansionRules;
         public SerializedProperty location;

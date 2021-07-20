@@ -153,7 +153,9 @@ namespace UnityEditor.Localization.UI
                 }
 
                 // Export the assets
-                AssetDatabase.StartAssetEditing(); // Batch the assets into a single asset operation
+
+                // Disabled StartAssetEditing and StopAssetEditing due to bug LOC-195.
+                // AssetDatabase.StartAssetEditing(); // Batch the assets into a single asset operation
                 var relativePath = PathHelper.MakePathRelative(path);
                 for (int i = 0; i < locales.Count; ++i)
                 {
@@ -163,7 +165,7 @@ namespace UnityEditor.Localization.UI
                     assetPath = AssetDatabase.GenerateUniqueAssetPath(assetPath);
                     AssetDatabase.CreateAsset(locale, assetPath);
                 }
-                AssetDatabase.StopAssetEditing();
+                // AssetDatabase.StopAssetEditing();
 
                 // Import the Locales now instead of waiting for them to be imported via the asset post processor.
                 // If we wait for them to be imported during the asset post processor then they will not be available

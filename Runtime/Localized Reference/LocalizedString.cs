@@ -90,8 +90,11 @@ namespace UnityEngine.Localization
                 if (wasEmpty)
                 {
                     LocalizationSettings.ValidateSettingsExist();
-                    LocalizationSettings.SelectedLocaleChanged += HandleLocaleChange;
                     ForceUpdate();
+
+                    // We subscribe after the first update as its possible that a SelectedLocaleChanged may be fired
+                    // during ForceUpdate when using WaitForCompletion and we want to avoid this.
+                    LocalizationSettings.SelectedLocaleChanged += HandleLocaleChange;
                 }
                 else if (CurrentLoadingOperation.HasValue && CurrentLoadingOperation.Value.IsDone)
                 {
@@ -170,14 +173,14 @@ namespace UnityEngine.Localization
             {
                 if (!WaitForCompletion)
                     return false;
-                m_CurrentLoadingOperation.Value.WaitForCompletion();                    
+                m_CurrentLoadingOperation.Value.WaitForCompletion();
             }
 
             // Clear any previous global variables.
             var entry = m_CurrentLoadingOperation.Value.Result.Entry;
             entry?.FormatCache?.GlobalVariableTriggers.Clear();
 
-            var translatedText = LocalizationSettings.StringDatabase.GenerateLocalizedString(m_CurrentLoadingOperation.Value.Result.Table, entry, TableReference, TableEntryReference, LocalizationSettings.SelectedLocale, Arguments);
+            var translatedText = LocalizationSettings.StringDatabase.GenerateLocalizedString(m_CurrentLoadingOperation.Value.Result.Table, entry, TableReference, TableEntryReference, LocaleOverride ?? LocalizationSettings.SelectedLocale, Arguments);
             UpdateGlobalVariableListeners(entry?.FormatCache?.GlobalVariableTriggers);
 
             m_CurrentStringChangedValue = translatedText;
@@ -208,7 +211,7 @@ namespace UnityEngine.Localization
         public AsyncOperationHandle<string> GetLocalizedStringAsync()
         {
             LocalizationSettings.ValidateSettingsExist();
-            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, Arguments, null, FallbackState);
+            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, Arguments, LocaleOverride, FallbackState);
         }
 
         /// <summary>
@@ -226,7 +229,7 @@ namespace UnityEngine.Localization
         public AsyncOperationHandle<string> GetLocalizedStringAsync(params object[] arguments)
         {
             LocalizationSettings.ValidateSettingsExist();
-            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, arguments, null, FallbackState);
+            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, arguments, LocaleOverride, FallbackState);
         }
 
         /// <summary>
@@ -246,7 +249,7 @@ namespace UnityEngine.Localization
         public AsyncOperationHandle<string> GetLocalizedStringAsync(IList<object> arguments)
         {
             LocalizationSettings.ValidateSettingsExist();
-            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, arguments, null, FallbackState);
+            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, arguments, LocaleOverride, FallbackState);
         }
 
         /// <summary>
@@ -323,7 +326,7 @@ namespace UnityEngine.Localization
             m_CurrentTableEntry = TableEntryReference;
 
             // Dont update if we have no selected Locale
-            if (!LocalizationSettings.Instance.IsPlaying && LocalizationSettings.SelectedLocale == null)
+            if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode && LocaleOverride == null && LocalizationSettings.SelectedLocale == null)
                 return;
             #endif
 
@@ -331,19 +334,28 @@ namespace UnityEngine.Localization
             {
                 #if UNITY_EDITOR
                 // If we are empty and playing or previewing then we should force an update.
-                if (!LocalizationSettings.Instance.IsPlaying)
+                if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
                     m_ChangeHandler(null);
                 #endif
                 return;
             }
 
-            CurrentLoadingOperation = LocalizationSettings.StringDatabase.GetTableEntryAsync(TableReference, TableEntryReference, null, FallbackState);
+            CurrentLoadingOperation = LocalizationSettings.StringDatabase.GetTableEntryAsync(TableReference, TableEntryReference, LocaleOverride, FallbackState);
 
             AddressablesInterface.Acquire(CurrentLoadingOperation.Value);
-            if (CurrentLoadingOperation.Value.IsDone)
-                AutomaticLoadingCompleted(CurrentLoadingOperation.Value);
-            else
-                CurrentLoadingOperation.Value.Completed += AutomaticLoadingCompleted;
+
+            if (!CurrentLoadingOperation.Value.IsDone)
+            {
+                if (!WaitForCompletion)
+                {
+                    CurrentLoadingOperation.Value.Completed += AutomaticLoadingCompleted;
+                    return;
+                }
+
+                CurrentLoadingOperation.Value.WaitForCompletion();
+            }
+
+            AutomaticLoadingCompleted(CurrentLoadingOperation.Value);
         }
 
         void AutomaticLoadingCompleted(AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult> loadOperation)
@@ -360,11 +372,14 @@ namespace UnityEngine.Localization
         {
             if (CurrentLoadingOperation.HasValue)
             {
-                // We should only call this if we are not done as its possible that the internal list is null if its not been used.
-                if (!CurrentLoadingOperation.Value.IsDone)
-                    CurrentLoadingOperation.Value.Completed -= AutomaticLoadingCompleted;
+                if (CurrentLoadingOperation.Value.IsValid())
+                {
+                    // We should only call this if we are not done as its possible that the internal list is null if its not been used.
+                    if (!CurrentLoadingOperation.Value.IsDone)
+                        CurrentLoadingOperation.Value.Completed -= AutomaticLoadingCompleted;
+                    AddressablesInterface.Release(CurrentLoadingOperation.Value);
+                }
 
-                AddressablesInterface.Release(m_CurrentLoadingOperation.Value);
                 CurrentLoadingOperation = null;
             }
         }

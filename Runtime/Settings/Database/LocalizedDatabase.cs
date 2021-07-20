@@ -100,13 +100,13 @@ namespace UnityEngine.Localization.Settings
                 #if UNITY_EDITOR
                 if (!LocalizationSettings.Instance.IsPlaying)
                 {
-                    return AddressablesInterface.Release;
+                    return AddressablesInterface.SafeRelease;
                 }
                 #endif
 
                 if (m_ReleaseNextFrame == null)
                 {
-                    m_ReleaseNextFrame = OperationHandleDeferedRelease.Instance.ReleaseNextFrame;
+                    m_ReleaseNextFrame = LocalizationBehaviour.Instance.ReleaseNextFrame;
                 }
                 return m_ReleaseNextFrame;
             }
@@ -123,7 +123,6 @@ namespace UnityEngine.Localization.Settings
         internal Dictionary<Guid, AsyncOperationHandle<SharedTableData>> SharedTableDataOperations
         {
             get;
-            private set;
         } = new Dictionary<Guid, AsyncOperationHandle<SharedTableData>>();
 
         /// <summary>
@@ -147,7 +146,7 @@ namespace UnityEngine.Localization.Settings
         internal TableReference GetDefaultTable()
         {
             if (m_DefaultTableReference.ReferenceType == TableReference.Type.Empty)
-                throw new Exception($"Trying to get the DefaultTable however the {GetType().Name} DefaulTable value has not been set. This can be configured in the Localization Settings.");
+                throw new Exception($"Trying to get the DefaultTable however the {GetType().Name} DefaultTable value has not been set. This can be configured in the Localization Settings.");
 
             return m_DefaultTableReference;
         }
@@ -244,19 +243,18 @@ namespace UnityEngine.Localization.Settings
 
             if (useSelectedLocalePlaceholder || tableReference.ReferenceType == TableReference.Type.Guid)
             {
-                // We need an extra handle for the placeholder.
-                if (useSelectedLocalePlaceholder)
-                    AddressablesInterface.Acquire(handle);
-
                 // Register the guid or placeholder operation for reuse.
-                AddressablesInterface.Acquire(handle);
-                TableOperations[(localeId, tableIdString)] = handle;
+                if (!TableOperations.ContainsKey((localeId, tableIdString)))
+                {
+                    AddressablesInterface.Acquire(handle);
+                    TableOperations[(localeId, tableIdString)] = handle;
 
-                // Register the table operation later when we have a Locale and/or the table name. (LOC-172)
-                if (handle.IsDone)
-                    operation.RegisterTableOperation(handle);
-                else
-                    handle.Completed += operation.RegisterTableOperation;
+                    // Register the table operation later when we have a Locale and/or the table name. (LOC-172)
+                    if (handle.IsDone)
+                        operation.RegisterTableOperation(handle);
+                    else
+                        handle.Completed += operation.RegisterTableOperation;
+                }
             }
             else
             {
@@ -340,9 +338,11 @@ namespace UnityEngine.Localization.Settings
         public void ReleaseTable(TableReference tableReference, Locale locale = null)
         {
             tableReference.Validate();
+            var usingSelectedLocale = locale == LocalizationSettings.SelectedLocaleAsync.Result;
             if (locale == null)
             {
                 locale = LocalizationSettings.SelectedLocaleAsync.Result;
+                usingSelectedLocale = true;
                 if (locale == null)
                     return;
             }
@@ -374,11 +374,11 @@ namespace UnityEngine.Localization.Settings
             {
                 foreach (var tableOperation in TableOperations)
                 {
-                    if (tableOperation.Value.Result == null || tableOperation.Value.Result.SharedData != sharedTableData)
+                    if (!tableOperation.Value.IsValid() || tableOperation.Value.Result == null || tableOperation.Value.Result.SharedData != sharedTableData)
                         continue;
 
                     // Check locale and placeholder
-                    if (tableOperation.Key.localeIdentifier == locale.Identifier || tableOperation.Key.localeIdentifier == k_SelectedLocaleId)
+                    if (tableOperation.Key.localeIdentifier == locale.Identifier || usingSelectedLocale && tableOperation.Key.localeIdentifier == k_SelectedLocaleId)
                     {
                         // We only want to do this once.
                         if (!removedContents)
@@ -387,7 +387,8 @@ namespace UnityEngine.Localization.Settings
                             removedContents = true;
                         }
 
-                        AddressablesInterface.Release(tableOperation.Value);
+                        AddressablesInterface.SafeRelease(tableOperation.Value);
+
                         itemsToRemove.Add(tableOperation.Key);
                     }
                     else
@@ -405,7 +406,7 @@ namespace UnityEngine.Localization.Settings
                 // If there's no other references to the shared table data then we can also remove that.
                 if (sharedTableDataUsers == 0 && SharedTableDataOperations.TryGetValue(sharedTableData.TableCollectionNameGuid, out var sharedTableDataOperationHandle))
                 {
-                    AddressablesInterface.Release(sharedTableDataOperationHandle);
+                    AddressablesInterface.SafeRelease(sharedTableDataOperationHandle);
                     SharedTableDataOperations.Remove(sharedTableData.TableCollectionNameGuid);
                 }
             }
@@ -488,6 +489,9 @@ namespace UnityEngine.Localization.Settings
             {
                 foreach (var to in TableOperations.Values)
                 {
+                    if (!to.IsValid())
+                        continue;
+
                     // We may have multiple references to the table so we keep track in order to only call release once.
                     if (to.Result != null && !releasedTables.Contains(to.Result))
                     {
@@ -500,7 +504,7 @@ namespace UnityEngine.Localization.Settings
 
             if (m_PreloadOperationHandle.HasValue)
             {
-                AddressablesInterface.Release(m_PreloadOperationHandle.Value);
+                AddressablesInterface.SafeRelease(m_PreloadOperationHandle.Value);
                 m_PreloadOperationHandle = null;
             }
 

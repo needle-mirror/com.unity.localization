@@ -4,7 +4,7 @@ using System;
 
 namespace UnityEngine.Localization
 {
-    public partial class LocalizedAsset<TObject> : LocalizedReference where TObject : Object
+    public partial class LocalizedAsset<TObject> : LocalizedAssetBase where TObject : Object
     {
         [Obsolete("RegisterChangeHandler is obsolete. Please use the AssetChanged event instead.")]
         public void RegisterChangeHandler(ChangeHandler handler)

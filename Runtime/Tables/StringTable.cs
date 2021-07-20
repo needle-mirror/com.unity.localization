@@ -6,6 +6,7 @@ using UnityEngine.Localization.Pseudo;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.SmartFormat;
 using UnityEngine.Localization.SmartFormat.Core.Formatting;
+using UnityEngine.Localization.SmartFormat.GlobalVariables;
 
 namespace UnityEngine.Localization.Tables
 {
@@ -18,7 +19,7 @@ namespace UnityEngine.Localization.Tables
 
         /// <summary>
         /// Used when <see cref="IsSmart"/> is true and <see cref="GetLocalizedString"/> is called.
-        /// Contains information about the format including any <see cref="IGlobalVariable"/> that were used.
+        /// Contains information about the format including any <see cref="IGlobalVariableValueChanged"/> that were used.
         /// </summary>
         public FormatCache FormatCache
         {
@@ -141,7 +142,7 @@ namespace UnityEngine.Localization.Tables
             if (IsSmart)
             {
                 #if UNITY_EDITOR
-                if (!LocalizationSettings.Instance.IsPlaying)
+                if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
                     m_FormatCache = null;
                 #endif
                 translatedText = LocalizationSettings.StringDatabase.SmartFormatter.FormatWithCache(ref m_FormatCache, Data.Localized, formatProvider, args);

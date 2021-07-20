@@ -41,7 +41,7 @@ namespace UnityEngine.Localization
         public static void RegisterProperty(Object target, string propertyPath)
         {
             #if UNITY_EDITOR
-            if (!LocalizationSettings.Instance.IsPlaying)
+            if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
                 LocalizationPropertyDriver.RegisterProperty(target, propertyPath);
             #endif
         }
@@ -56,7 +56,7 @@ namespace UnityEngine.Localization
         public static void UnregisterProperty(Object target, string propertyPath)
         {
             #if UNITY_EDITOR
-            if (!LocalizationSettings.Instance.IsPlaying)
+            if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
                 LocalizationPropertyDriver.RegisterProperty(target, propertyPath);
             #endif
         }

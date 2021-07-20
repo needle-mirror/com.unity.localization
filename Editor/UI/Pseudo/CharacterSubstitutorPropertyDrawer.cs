@@ -3,7 +3,7 @@ using UnityEngine.Localization.Pseudo;
 
 namespace UnityEditor.Localization.UI
 {
-    class CharacterSubstitutorPropertyDrawerData
+    class CharacterSubstitutorPropertyDrawerData : PropertyDrawerExtendedData
     {
         public SerializedProperty substitutionMethod;
         public SerializedProperty replacementsMap;

@@ -4,7 +4,7 @@ namespace UnityEditor.Localization.UI
 {
     class SerializedTableReference
     {
-        SerializedProperty tableName;
+        readonly SerializedProperty m_TableName;
         TableReference m_Reference;
 
         public TableReference Reference
@@ -13,14 +13,14 @@ namespace UnityEditor.Localization.UI
             set
             {
                 m_Reference = value;
-                tableName.stringValue = m_Reference.GetSerializedString();
+                m_TableName.stringValue = m_Reference.GetSerializedString();
             }
         }
 
         public SerializedTableReference(SerializedProperty property)
         {
-            tableName = property.FindPropertyRelative("m_TableCollectionName");
-            Reference = TableReference.TableReferenceFromString(tableName.stringValue);
+            m_TableName = property.FindPropertyRelative("m_TableCollectionName");
+            Reference = TableReference.TableReferenceFromString(m_TableName.stringValue);
         }
     }
 }

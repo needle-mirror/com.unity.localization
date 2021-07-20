@@ -9,6 +9,7 @@ using UnityEditor.Localization.UI;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
+using UnityEngine.Pool;
 
 namespace UnityEditor.Localization
 {
@@ -60,6 +61,10 @@ namespace UnityEditor.Localization
 
         protected internal abstract Type RequiredExtensionAttribute { get; }
 
+        /// <summary>
+        /// Removes the entry from the <see cref="SharedTableData"/> and all tables that are part of this collection.
+        /// </summary>
+        /// <param name="entryReference"></param>
         public abstract void RemoveEntry(TableEntryReference entryReference);
 
         protected internal abstract string DefaultGroupName { get; }
@@ -535,7 +540,7 @@ namespace UnityEditor.Localization
         /// <summary>
         /// Called when the asset is created or imported into a project(via OnPostprocessAllAssets).
         /// </summary>
-        internal protected virtual void ImportCollectionIntoProject()
+        protected internal virtual void ImportCollectionIntoProject()
         {
             RefreshAddressables();
 
@@ -551,15 +556,40 @@ namespace UnityEditor.Localization
 
             if (missingLocales.Count > 0)
             {
-                var defaultDirectory = Path.GetDirectoryName(AssetDatabase.GetAssetPath(this));
-                var relativePath = PathHelper.MakePathRelative(defaultDirectory);
+                // First check that the Locale does not exist in the project but is not marked as Addressable.
+                using (DictionaryPool<LocaleIdentifier, Locale>.Get(out var projectLocales))
+                {
+                    var allLocales = AssetDatabase.FindAssets("t:Locale");
+                    foreach (var loc in allLocales)
+                    {
+                        var loadedLocale = AssetDatabase.LoadAssetAtPath<Locale>(AssetDatabase.GUIDToAssetPath(loc));
+                        projectLocales[loadedLocale.Identifier] = loadedLocale;
+                    }
 
-                LocaleGeneratorWindow.ExportSelectedLocales(relativePath, missingLocales);
+                    for (int i = 0; i < missingLocales.Count; ++i)
+                    {
+                        if (projectLocales.TryGetValue(missingLocales[i], out var foundLocale))
+                        {
+                            missingLocales.RemoveAt(i);
+                            i--;
 
-                var sb = new StringBuilder();
-                sb.AppendLine($"The following missing Locales have been added to the project because they are used by the Collection {TableCollectionName}:");
-                missingLocales.ForEach(l => sb.AppendLine(l.ToString()));
-                Debug.Log(sb.ToString());
+                            LocalizationEditorSettings.AddLocale(foundLocale);
+                        }
+                    }
+                }
+
+                if (missingLocales.Count > 0)
+                {
+                    var defaultDirectory = Path.GetDirectoryName(AssetDatabase.GetAssetPath(this));
+                    var relativePath = PathHelper.MakePathRelative(defaultDirectory);
+
+                    LocaleGeneratorWindow.ExportSelectedLocales(relativePath, missingLocales);
+
+                    var sb = new StringBuilder();
+                    sb.AppendLine($"The following missing Locales have been added to the project because they are used by the Collection {TableCollectionName}:");
+                    missingLocales.ForEach(l => sb.AppendLine(l.ToString()));
+                    Debug.Log(sb.ToString());
+                }
             }
 
             var isInProject = TableType == typeof(StringTable) ? LocalizationEditorSettings.GetStringTableCollection(TableCollectionName) != null : LocalizationEditorSettings.GetAssetTableCollection(TableCollectionName) != null;
@@ -572,7 +602,7 @@ namespace UnityEditor.Localization
         /// <summary>
         /// Called to remove the asset from a project, such as when it is about to be deleted.
         /// </summary>
-        internal protected virtual void RemoveCollectionFromProject()
+        protected internal virtual void RemoveCollectionFromProject()
         {
             foreach (var tbl in m_Tables)
             {

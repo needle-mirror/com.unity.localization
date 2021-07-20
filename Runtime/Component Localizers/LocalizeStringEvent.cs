@@ -85,6 +85,8 @@ namespace UnityEngine.Localization.Components
         /// </summary>
         protected virtual void OnDisable() => ClearChangeHandler();
 
+        void OnDestroy() => ClearChangeHandler();
+
         /// <summary>
         /// Invokes the <see cref="OnUpdateString"/> event.
         /// </summary>
@@ -92,7 +94,7 @@ namespace UnityEngine.Localization.Components
         protected virtual void UpdateString(string value)
         {
             #if UNITY_EDITOR
-            if (!LocalizationSettings.Instance.IsPlaying)
+            if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
             {
                 if (StringReference.IsEmpty)
                 {

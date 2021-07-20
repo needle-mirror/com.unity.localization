@@ -19,8 +19,9 @@ namespace UnityEditor.Localization.UI
     class PackageLanguageMenu : PopupField<Locale>, IDeviceSimulatorExtension
     {
         static List<Locale> s_Locales = new List<Locale>();
+        const string k_Title = "Localization";
 
-        public string extensionTitle { get; }
+        public string extensionTitle { get { return k_Title; } }
 
         public PackageLanguageMenu() :
             base(GetChoices(), 0)

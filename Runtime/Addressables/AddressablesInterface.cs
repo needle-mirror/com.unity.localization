@@ -35,8 +35,14 @@ namespace UnityEngine.Localization
         }
 
         public static ResourceManager ResourceManager => Addressables.ResourceManager;
-        public static void Acquire(AsyncOperationHandle handle) => Instance.AquireInternal(handle);
+        public static void Acquire(AsyncOperationHandle handle) => Instance.AcquireInternal(handle);
         public static void Release(AsyncOperationHandle handle) => Instance.ReleaseInternal(handle);
+
+        public static void SafeRelease(AsyncOperationHandle handle)
+        {
+            if (handle.IsValid())
+                Instance.ReleaseInternal(handle);
+        } 
 
         public static AsyncOperationHandle<IList<IResourceLocation>> LoadResourceLocationsWithLabelsAsync(IEnumerable labels, Addressables.MergeMode mode, Type type = null) => Instance.LoadResourceLocationsWithLabelsAsyncInternal(labels, mode, type);
         public static AsyncOperationHandle<IList<IResourceLocation>> LoadTableLocationsAsync(string tableName, LocaleIdentifier id, Type type) => Instance.LoadTableLocationsAsyncInternal(tableName, id, type);
@@ -46,7 +52,7 @@ namespace UnityEngine.Localization
         public static AsyncOperationHandle<TObject> LoadTableFromLocation<TObject>(IResourceLocation location) where TObject : class => Instance.LoadTableFromLocationInternal<TObject>(location);
         public static AsyncOperationHandle<IList<TObject>> LoadAssetsWithLabel<TObject>(string label, Action<TObject> callback) where TObject : class => Instance.LoadAssetsWithLabelInternal(label, callback);
 
-        internal virtual void AquireInternal(AsyncOperationHandle handle) => ResourceManager.Acquire(handle);
+        internal virtual void AcquireInternal(AsyncOperationHandle handle) => ResourceManager.Acquire(handle);
         internal virtual void ReleaseInternal(AsyncOperationHandle handle) => Addressables.Release(handle);
         internal virtual AsyncOperationHandle<IList<IResourceLocation>> LoadResourceLocationsWithLabelsAsyncInternal(IEnumerable labels, Addressables.MergeMode mode, Type type = null) => Addressables.LoadResourceLocationsAsync(labels, mode, type);
         internal virtual AsyncOperationHandle<IList<IResourceLocation>> LoadTableLocationsAsyncInternal(string tableName, LocaleIdentifier id, Type type) => Addressables.LoadResourceLocationsAsync(AddressHelper.GetTableAddress(tableName, id), type);

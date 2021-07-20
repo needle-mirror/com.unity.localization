@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace UnityEditor.Localization.Plugins.CSV
 {
-    class CsvExtensionPropertyDrawerData
+    class CsvExtensionPropertyDrawerData : PropertyDrawerExtendedData
     {
         public SerializedProperty m_Columns;
         public SerializedProperty m_ConnectedFile;

@@ -1,4 +1,4 @@
-#if UNITY_ANDROID
+#if UNITY_ANDROID || PACKAGE_DOCS_GENERATION
 using System;
 using System.IO;
 using System.Text;

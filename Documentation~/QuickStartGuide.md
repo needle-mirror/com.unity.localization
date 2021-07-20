@@ -12,7 +12,7 @@ The Project's Localization Settings is an Asset. To create this Asset, go to **E
 
 Locales represent regions; they determine which language you are localizing your application to, and other localization decisions.
 
-To open the Locale Generator window, navigate to the Localization Settings (menu: Edit > Project Settings > Localization) and click the **Locale Generator** button.
+To open the Locale Generator window, navigate to the Localization Settings (menu: **Edit > Project Settings > Localization**) and click the **Locale Generator** button.
 
 ![Locale Generator button.](images/LocalizationSettings_LocaleGeneratorButton.png)
 
@@ -25,7 +25,7 @@ To select a Locale, tick the toggle box next to its name. Tick the checkbox next
 Use the Locale Selectors to determine which Locale your application uses by default if it is not English(en). To do this, add the Locale to the **Specific Locale Selector** field. Your application uses this Locale on start-up, and when no other Locale is selected.
 
 
-![The Locale selection UI Dropdown menu.](images/SpecificLocaleSelector.png)
+![The Locale selection UI Dropdown menu.](images/ProjectLocale.png)
 
 ## 4. Texture Localization: Create an Asset Table Collection
 There are many reasons you might need to localize an Asset. For example, you might want to play a different piece of voiceover audio or music, or change a texture that contains written text (such as a signpost). The localization system uses Asset Tables to support this.
@@ -34,9 +34,13 @@ This demonstrates changing an Asset's Texture to the flag of that Locale's count
 
 First, you need to create an Asset Table. To do this, open the **Localization Tables Window** (menu: **Window > Asset Management > Localization Tables**).
 
-In the Asset Tables window, select the New **Table Collection tab**. Select which Locales you want to generate tables for, give the collection a name and click the Create Asset Table Collection button and choose a directory to generate the assets.
+1. In the Asset Tables window, select the **New Table Collection** tab.
+2. Select which locales you want to generate tables for.
+3. In the Type dropdown, select **Asset Table Collection**.
+4. In the Name field, give the collection a name.
+5. Select Create and choose a directory to generate the assets.
 
-![Creating Texture2D Asset Tables.](images/TutorialTextureTableCreation.png)
+![Create an Asset Table](images/CreateAssetTable.png)
 
 Click **Edit Table Collection** and select the **My Assets** table.
 
@@ -44,7 +48,7 @@ A table contains a **Key** field and a value field for each Locale. Unity uses t
 
 Select the Texture you want Unity to display for each Locale, and then drag and drop it into the corresponding section of the table, like so:
 
-![Asset Table with one Texture entry.](images/AssetTables_EditTextureFlags.png)
+![Asset Table with one Texture entry.](images/AssetTable-Flags.png)
 
 ## 5. Texture Localization: Use the localized Asset
 There are multiple ways for Unity to access a localized Asset. This tutorial uses components provided by the localization system, so you do not need to write any scripts.
@@ -66,9 +70,7 @@ Run the Scene and use the Game View Locale selection dropdown to change the **Lo
 
 ![Changing the texture using the Game View Locale selection dropdown.](images/LocaleGameViewMenu.gif)
 
-The **Locale Game View Menu** can be used to quickly change the language in the editor. It can be enabled and disabled through **Edit/Preferences/Localization**.
-
-![Game View Locale Menu option](images/LocalizationPreferences.png)
+The **Locale Game View Menu** can be used to quickly change the language in the editor. It can be enabled and disabled through **Edit > Preferences > Localization**.
 
 ## 6. Audio Localization: Use the localized Asset
 To localize Audio Clips, we could follow the same process as localizing the Texture however it is also possible to create and edit the localized assets in the inspector as follows:
@@ -82,9 +84,17 @@ To localize Audio Clips, we could follow the same process as localizing the Text
 
 ![Audio clip localizing.](images/LocalizedAudioClipEditor.gif)
 
+![Audio clip localizing.](images/LocalizeAudioEditor.png)
+
 ## 7. String Localization: Create a String Table Collection
 
-To create a String Table, open the New **Table Collection tab**, provide a name and click **Create String Table Collection**. To add an entry to the table press the **Add New Entry** button and give it a name.
+First, you need to create a String Table. To do this, open the **Localization TablesWindow** (menu: **Window > Asset Management > Localization Tables**).
+
+1. In the Asset Tables window, select the **New Table Collection** tab.
+2. Select which locales you want to generate tables for.
+3. In the Type dropdown, select **String Table Collection**.
+4. In the Name field, give the collection a name.
+5. Select Create and choose a directory to generate the assets.
 
 ![Press the Add New Entry button to create a new String Table entry.](images/StringTables_EntryProperties.png)
 
@@ -92,6 +102,15 @@ Enable the **Smart** option to mark the entry as a [Smart String](SmartStrings.m
 In this example we will use the Smart String reflection and plural features to print out a variable from the following script:
 
 [!code-cs[apple-sample](../DocCodeSamples.Tests/Apples.cs)]
+
+Enter the following values:
+
+| **Locale** | **Translation** |
+| -----------| --------------- |
+| English    | {global.player-name} has {appleCount:plural:an apple\|{} apples}       |
+| French     | {global.player-name} a {appleCount:plural:une pomme\|{} pommes}         |
+| Spanish    | {global.player-name} tiene {appleCount:plural:una manzana\|{} manzanas} |
+| Japanese   | {global.player-name}は{appleCount}個のリンゴを持っています    
 
 ![Press the Add New Entry button to create a new String Table entry.](images/StringTable_Plurals.png)
 
@@ -109,7 +128,7 @@ Expand the **Format Arguments** field, change the size to 1 and drag the **Apple
 
 ## 9. Build Preview and configuration
 The Addressables player content must be built in order to use the localized assets in the player.
-This can be done through the Addressables window **Window/Asset Management/Addressable Assets/Groups** by clicking **Build/New Build/Default Build Script**.
+This can be done through the Addressables window **Window > Asset Management > Addressable Assets > Groups** by clicking **Build > New Build > Default Build Script**.
 The Addressables window can also be used to control how the assets will be packaged and hosted(such as local storage or via a remote web server).
 
 ![Use the Addressable system to preview and configure localization data.](images/AddressablesBuildOutput.png)

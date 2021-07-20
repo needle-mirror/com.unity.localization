@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.AddressableAssets.Build;
-using UnityEditor.AddressableAssets.Build.AnalyzeRules;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEngine.Localization;
@@ -18,26 +17,11 @@ namespace UnityEditor.Localization.Addressables
         static StringTableAnalyzeRule() => AnalyzeSystem.RegisterNewRule<StringTableAnalyzeRule>();
     }
 
-    class TableAnalyzeRule<TTable> : AnalyzeRule where TTable : LocalizationTable
+    class TableAnalyzeRule<TTable> : AnalyzeRuleBase where TTable : LocalizationTable
     {
-        protected class TableResult : AnalyzeResult
+        protected internal override void PerformAnalysis(AddressableAssetSettings settings)
         {
-            public Action FixAction { get; set; }
-        }
-
-        protected readonly List<AnalyzeResult> m_Results = new List<AnalyzeResult>();
-
-        public override bool CanFix => true;
-
-        public override List<AnalyzeResult> RefreshAnalysis(AddressableAssetSettings settings)
-        {
-            m_Results.Clear();
             Analyze(settings, AddressableGroupRules.Instance.StringTablesResolver);
-
-            if (m_Results.Count == 0)
-                m_Results.Add(new AnalyzeResult { resultName = "No issues found" });
-
-            return m_Results;
         }
 
         protected virtual void Analyze(AddressableAssetSettings settings, GroupResolver resolver)
@@ -65,7 +49,7 @@ namespace UnityEditor.Localization.Addressables
                     var collection = LocalizationEditorSettings.GetCollectionForSharedTableData(table.SharedData);
                     if (collection == null)
                     {
-                        m_Results.Add(new TableResult
+                        Results.Add(new AnalyzeResultWithFixAction
                         {
                             resultName = $"{table} - {path}:Loose Table.",
                             severity = MessageType.Info,
@@ -78,7 +62,7 @@ namespace UnityEditor.Localization.Addressables
 
                     if (entry == null)
                     {
-                        m_Results.Add(new TableResult
+                        Results.Add(new AnalyzeResultWithFixAction
                         {
                             resultName = $"{label}:Not Marked as Addressable",
                             severity = MessageType.Error,
@@ -97,7 +81,7 @@ namespace UnityEditor.Localization.Addressables
                     var groupName = resolver.GetExpectedGroupName(new[] { table.LocaleIdentifier }, table, settings);
                     if (entry.parentGroup.Name != groupName)
                     {
-                        m_Results.Add(new TableResult
+                        Results.Add(new AnalyzeResultWithFixAction
                         {
                             resultName = $"{label}:Incorrect Group:Expected `{groupName}` but was `{entry.parentGroup.Name}`",
                             severity = MessageType.Warning,
@@ -109,7 +93,7 @@ namespace UnityEditor.Localization.Addressables
                     var expectedLabel = AddressHelper.FormatAssetLabel(table.LocaleIdentifier);
                     if (!entry.labels.Contains(expectedLabel))
                     {
-                        m_Results.Add(new TableResult
+                        Results.Add(new AnalyzeResultWithFixAction
                         {
                             resultName = $"{label}:Missing Locale label.",
                             severity = MessageType.Warning,
@@ -121,7 +105,7 @@ namespace UnityEditor.Localization.Addressables
                     var expectedAddress = AddressHelper.GetTableAddress(table.TableCollectionName, table.LocaleIdentifier);
                     if (!entry.labels.Contains(expectedLabel))
                     {
-                        m_Results.Add(new TableResult
+                        Results.Add(new AnalyzeResultWithFixAction
                         {
                             resultName = $"{label}:Incorrect Address:Expected `{expectedAddress}` but was `{entry.address}`",
                             severity = MessageType.Error,
@@ -134,7 +118,7 @@ namespace UnityEditor.Localization.Addressables
                     var g = new Guid(sharedGuid);
                     if (table.SharedData.TableCollectionNameGuid != g)
                     {
-                        m_Results.Add(new TableResult
+                        Results.Add(new AnalyzeResultWithFixAction
                         {
                             resultName = $"{label}:Incorrect Shared Table Guid:Expected {g} but was {table.SharedData.TableCollectionNameGuid}",
                             severity = MessageType.Error,
@@ -149,7 +133,7 @@ namespace UnityEditor.Localization.Addressables
                     var sharedEntry = settings.FindAssetEntry(sharedGuid);
                     if (sharedEntry == null)
                     {
-                        m_Results.Add(new TableResult
+                        Results.Add(new AnalyzeResultWithFixAction
                         {
                             resultName = $"{label}:Shared Table Not Marked as Addressable",
                             severity = MessageType.Warning,
@@ -164,7 +148,7 @@ namespace UnityEditor.Localization.Addressables
                     var sharedGroupName = resolver.GetExpectedGroupName(null, table.SharedData, settings);
                     if (sharedEntry.parentGroup.Name != sharedGroupName)
                     {
-                        m_Results.Add(new TableResult
+                        Results.Add(new AnalyzeResultWithFixAction
                         {
                             resultName = $"{label}:Incorrect Shared Table Data Group:Expected `{sharedGroupName}` but was `{sharedEntry.parentGroup.Name}`",
                             severity = MessageType.Warning,
@@ -175,7 +159,7 @@ namespace UnityEditor.Localization.Addressables
                     var expectedSharedGroupName = resolver.GetExpectedGroupName(null, table.SharedData, settings);
                     if (sharedEntry.parentGroup.Name != expectedSharedGroupName)
                     {
-                        m_Results.Add(new TableResult
+                        Results.Add(new AnalyzeResultWithFixAction
                         {
                             resultName = $"{label}:Incorrect Group:Expected `{expectedSharedGroupName}` but was `{sharedEntry.parentGroup.Name}`",
                             severity = MessageType.Warning,
@@ -190,7 +174,7 @@ namespace UnityEditor.Localization.Addressables
                     {
                         if (g.Schemas.Count == 0 || g.Schemas.All(s => s == null))
                         {
-                            m_Results.Add(new TableResult
+                            Results.Add(new AnalyzeResultWithFixAction
                             {
                                 resultName = $"{g.Name}:Addressables Group Contains No Schemas",
                                 severity = MessageType.Error,
@@ -211,18 +195,5 @@ namespace UnityEditor.Localization.Addressables
         }
 
         protected virtual void CheckContents(TTable table, string label, AddressableAssetSettings settings, LocalizationTableCollection collection) {}
-
-        public override void ClearAnalysis()
-        {
-            m_Results.Clear();
-        }
-
-        public override void FixIssues(AddressableAssetSettings settings)
-        {
-            foreach (var analyzeResult in m_Results.Cast<TableResult>())
-            {
-                analyzeResult.FixAction?.Invoke();
-            }
-        }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using System.Linq;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
 
@@ -19,6 +20,17 @@ namespace UnityEditor.Localization
                     break;
                 }
             }
+
+            // We are invoking the AddLocale method separately before calling the collection.ImportCollectionIntoProject() as it was creating duplicate locales into the project.
+            // Because the locales were still not added into the cache for the LocalizationTableCollection to verify it and to only create locales that are missing.
+            // adding the locale functionality with the other asset import was causing the issue.
+            var locales = importedAssets.Where(assetPath => assetPath.EndsWith("asset") && typeof(Locale).IsAssignableFrom(AssetDatabase.GetMainAssetTypeAtPath(assetPath))).ToList();
+            locales.ForEach(assetPath =>
+            {
+                var locale = AssetDatabase.LoadAssetAtPath<Locale>(assetPath);
+                Debug.Assert(locale != null, "Failed to load Locale asset.");
+                LocalizationEditorSettings.AddLocale(locale, false);
+            });
 
             foreach (var assetPath in importedAssets)
             {
@@ -67,12 +79,6 @@ namespace UnityEditor.Localization
                                     LocalizationEditorSettings.EditorEvents.RaiseCollectionModified(null, collection);
                             }
                         }
-                    }
-                    else if (typeof(Locale).IsAssignableFrom(assetType))
-                    {
-                        var locale = AssetDatabase.LoadAssetAtPath<Locale>(assetPath);
-                        Debug.Assert(locale != null, "Failed to load Locale asset.");
-                        LocalizationEditorSettings.AddLocale(locale, false);
                     }
                 }
             }

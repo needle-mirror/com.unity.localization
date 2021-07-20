@@ -49,6 +49,9 @@ namespace UnityEditor.Localization.UI
 
         public void EditCollection(LocalizationTableCollection selectedCollection)
         {
+            if (LocalizationEditorSettings.ActiveLocalizationSettings == null)
+                return;
+
             int idx = m_TabPanels.FindIndex(p => p is EditAssetTables);
             TabSelected(idx);
 
@@ -121,6 +124,9 @@ namespace UnityEditor.Localization.UI
         public void AddItemsToMenu(GenericMenu menu)
         {
             menu.AddItem(new GUIContent("Import/XLIFF Directory"), false, Plugins.XLIFF.MenuItems.ImportXliffDirectory);
+
+            if (LocalizationEditorSettings.ActiveLocalizationSettings == null)
+                return;
 
             int idx = m_TabPanels.FindIndex(p => p is EditAssetTables);
 

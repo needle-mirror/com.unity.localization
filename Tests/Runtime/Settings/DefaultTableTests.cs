@@ -35,17 +35,17 @@ namespace UnityEngine.Localization.Tests
         }
 
         [Test]
-        public void CheckExceptionIsThrown_WhenCallingGetLocalizedStringAsync_WithDefaltTableReference_WhenIsEmptyOrNull()
+        public void CheckExceptionIsThrown_WhenCallingGetLocalizedStringAsync_WithDefaultTableReference_WhenIsEmptyOrNull()
         {
             var ex = Assert.Throws<System.Exception>(() => m_Settings.GetStringDatabase().GetLocalizedStringAsync("Test Entry 1"));
-            Assert.That(ex.Message, Is.EqualTo($"Trying to get the DefaultTable however the {m_TempStringDatabase.GetType().Name} DefaulTable value has not been set. This can be configured in the Localization Settings."));
+            Assert.That(ex.Message, Is.EqualTo($"Trying to get the DefaultTable however the {m_TempStringDatabase.GetType().Name} DefaultTable value has not been set. This can be configured in the Localization Settings."));
         }
 
         [Test]
-        public void CheckExceptionIsThrown_WhenCallingGetLocalizedAssetAsync_WithDefaltTableReference_WhenIsEmptyOrNull()
+        public void CheckExceptionIsThrown_WhenCallingGetLocalizedAssetAsync_WithDefaultTableReference_WhenIsEmptyOrNull()
         {
             var ex = Assert.Throws<System.Exception>(() => m_Settings.GetAssetDatabase().GetLocalizedAssetAsync<Texture>("Test Entry 1"));
-            Assert.That(ex.Message, Is.EqualTo($"Trying to get the DefaultTable however the {m_TempAssetDatabase.GetType().Name} DefaulTable value has not been set. This can be configured in the Localization Settings."));
+            Assert.That(ex.Message, Is.EqualTo($"Trying to get the DefaultTable however the {m_TempAssetDatabase.GetType().Name} DefaultTable value has not been set. This can be configured in the Localization Settings."));
         }
     }
 }

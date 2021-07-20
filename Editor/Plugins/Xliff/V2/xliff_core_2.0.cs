@@ -829,7 +829,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF.V20
 
         private bool trgDirFieldSpecified;
 
-        private string spaceField;
+        private string spaceField = "preserve";
 
         private string typeField;
 

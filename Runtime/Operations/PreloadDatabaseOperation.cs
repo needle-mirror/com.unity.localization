@@ -48,9 +48,6 @@ namespace UnityEngine.Localization
         /// <returns></returns>
         void BeginPreloading()
         {
-            m_Database.TableOperations.Clear();
-            m_Database.SharedTableDataOperations.Clear();
-
             var selectedLocale = LocalizationSettings.SelectedLocale;
             if (selectedLocale == null)
             {
@@ -159,8 +156,8 @@ namespace UnityEngine.Localization
 
         void FinishPreloading(AsyncOperationHandle op)
         {
-            AddressablesInterface.Release(m_LoadResourcesOperation);
-            AddressablesInterface.Release(m_LoadTablesOperation);
+            AddressablesInterface.SafeRelease(m_LoadResourcesOperation);
+            AddressablesInterface.SafeRelease(m_LoadTablesOperation);
 
             m_Progress = 1;
             Complete(m_Database, op.Status == AsyncOperationStatus.Succeeded, null);

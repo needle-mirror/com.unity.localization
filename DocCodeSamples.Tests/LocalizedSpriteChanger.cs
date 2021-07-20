@@ -1,3 +1,7 @@
+#if PACKAGE_UGUI
+
+#region example-code
+
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Components;
@@ -49,3 +53,7 @@ public class LocalizedSpriteChanger : MonoBehaviour
         localizeSpriteEvent.AssetReference = sprite;
     }
 }
+
+#endregion
+
+#endif

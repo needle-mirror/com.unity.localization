@@ -57,13 +57,13 @@ namespace UnityEditor.Localization.UI
 
         void UpdatePreviewText()
         {
-            var pseudolocale = target as PseudoLocale;
+            var pseudoLocale = target as PseudoLocale;
 
             // If we have a CharacterSubstitutor using LoopFromPrevious then we need to reset
             // its loop counter or it will keep changing when the editor updates.
-            pseudolocale.Reset();
+            pseudoLocale.Reset();
 
-            m_PseudoPreviewText = pseudolocale.GetPseudoString(PreviewText);
+            m_PseudoPreviewText = pseudoLocale.GetPseudoString(PreviewText);
 
             // Append details
             var originalText = new StringInfo(PreviewText);
@@ -88,13 +88,13 @@ namespace UnityEditor.Localization.UI
 
             EditorGUILayout.PropertyField(m_Metadata);
 
-            m_Methods.isExpanded = EditorGUILayout.Foldout(m_Methods.isExpanded, Styles.methods);
+            m_Methods.isExpanded = EditorGUILayout.Foldout(m_Methods.isExpanded, Styles.methods, true);
             if (m_Methods.isExpanded)
             {
                 m_MethodsList.DoLayoutList();
             }
 
-            PreviewExpanded = EditorGUILayout.Foldout(PreviewExpanded, Styles.preview);
+            PreviewExpanded = EditorGUILayout.Foldout(PreviewExpanded, Styles.preview, true);
             if (PreviewExpanded)
             {
                 GUILayout.BeginVertical(EditorStyles.helpBox);

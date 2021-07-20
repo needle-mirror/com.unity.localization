@@ -9,7 +9,7 @@ namespace UnityEditor.Localization.UI
     abstract class LocalizedTablePropertyDrawer<TCollection> : PropertyDrawerExtended<LocalizedTablePropertyDrawer<TCollection>.LocalizedTablePropertyDrawerPropertyData>
         where TCollection : LocalizationTableCollection
     {
-        public class LocalizedTablePropertyDrawerPropertyData
+        public class LocalizedTablePropertyDrawerPropertyData : PropertyDrawerExtendedData
         {
             GUIContent m_FieldLabel;
             TCollection m_SelectedTableCollection;
@@ -17,21 +17,31 @@ namespace UnityEditor.Localization.UI
             public SerializedObject serializedObject;
             public SerializedTableReference tableReference;
             public Type assetType;
+            public GUIContent warningMessage;
+            public float warningMessageHeight;
+
+            public bool CollectionSet = false;
+            public TCollection DeferredCollection;
 
             public TCollection SelectedTableCollection
             {
                 get
                 {
-                    if (m_SelectedTableCollection == null)
+                    if (m_SelectedTableCollection == null && tableReference.Reference.ReferenceType != TableReference.Type.Empty)
                     {
                         var tableCollections = GetProjectTableCollections();
+                        warningMessage = null;
                         if (tableReference.Reference.ReferenceType == TableReference.Type.Name)
                         {
                             m_SelectedTableCollection = tableCollections.FirstOrDefault(t => t.TableCollectionName == tableReference.Reference);
+                            if (m_SelectedTableCollection == null)
+                                warningMessage = new GUIContent($"Could not find a Table Collection with the name: {tableReference.Reference.TableCollectionName}");
                         }
-                        else if (tableReference.Reference.ReferenceType == TableReference.Type.Guid)
+                        else
                         {
                             m_SelectedTableCollection = tableCollections.FirstOrDefault(t => t.SharedData.TableCollectionNameGuid == tableReference.Reference);
+                            if (m_SelectedTableCollection == null)
+                                warningMessage = new GUIContent($"Could not find a Table Collection with the Guid: {tableReference.Reference.TableCollectionNameGuid}");
                         }
                     }
                     return m_SelectedTableCollection;
@@ -40,6 +50,7 @@ namespace UnityEditor.Localization.UI
                 {
                     m_SelectedTableCollection = value;
                     m_FieldLabel = null;
+                    warningMessage = null;
                     if (value != null)
                         tableReference.Reference = value.SharedData.TableCollectionNameGuid;
                     else
@@ -96,24 +107,49 @@ namespace UnityEditor.Localization.UI
             };
         }
 
-        public override float GetPropertyHeight(LocalizedTablePropertyDrawerPropertyData data, SerializedProperty property, GUIContent label) => EditorGUIUtility.singleLineHeight;
-
         public override void OnGUI(LocalizedTablePropertyDrawerPropertyData data, Rect position, SerializedProperty property, GUIContent label)
         {
+            position.height = EditorGUIUtility.singleLineHeight;
             var dropDownPosition = EditorGUI.PrefixLabel(position, label);
+
+            // We defer setting so we can set it during the IMGUI call. This way ApplyModifiedProperties will detect the change.
+            if (data.CollectionSet)
+            {
+                data.SelectedTableCollection = data.DeferredCollection;
+                data.DeferredCollection = null;
+                data.CollectionSet = false;
+            }
 
             if (EditorGUI.DropdownButton(dropDownPosition, data.FieldLabel, FocusType.Passive))
             {
                 var treeSelection = new TableTreeView(typeof(TCollection) == typeof(StringTableCollection) ? typeof(StringTable) : typeof(AssetTable), collection =>
                 {
-                    data.SelectedTableCollection = collection as TCollection;
-
-                    // Will be called outside of OnGUI so we need to call ApplyModifiedProperties.
-                    data.serializedObject.ApplyModifiedProperties();
+                    data.DeferredCollection = collection as TCollection;
+                    data.CollectionSet = true;
                 });
 
                 PopupWindow.Show(dropDownPosition, new TreeViewPopupWindow(treeSelection) { Width = dropDownPosition.width });
             }
+
+            // Missing table collection warning
+            if (data.warningMessage != null)
+            {
+                position.MoveToNextLine();
+                position.height = data.warningMessageHeight;
+                EditorGUI.HelpBox(position, data.warningMessage.text, MessageType.Warning);
+            }
+        }
+
+        public override float GetPropertyHeight(LocalizedTablePropertyDrawerPropertyData data, SerializedProperty property, GUIContent label)
+        {
+            float height = EditorGUIUtility.singleLineHeight;
+            if (data.warningMessage != null)
+            {
+                data.warningMessageHeight = EditorStyles.helpBox.CalcHeight(data.warningMessage, EditorGUIUtility.currentViewWidth - EditorGUIUtility.labelWidth);
+                height += data.warningMessageHeight;
+            }
+
+            return height;
         }
     }
 }

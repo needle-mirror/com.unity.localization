@@ -67,14 +67,6 @@ namespace UnityEditor.Localization.Tests
         }
 
         [Test]
-        public void AddKey_AddingDuplicateKey_ReturnsNull()
-        {
-            const string keyName = "Duplicate Key";
-            AddAndVerifyKeyIsAdded(keyName);
-            Assert.IsNull(m_SharedTableData.AddKey(keyName), "Expected the key to not be added a second time.");
-        }
-
-        [Test]
         public void AddKey_AllowsRemovedKeyToBeReAdded()
         {
             const string keyName = "Remove And Add Key";
@@ -160,7 +152,6 @@ namespace UnityEditor.Localization.Tests
         [TestCase("Test Name {0}", "Test {0} Name {1}")]
         [TestCase("#MY_NAME#", "#MY_OTHER_NAME#")]
         [TestCase("#[][]<><>#", "#[0][0]<1><2>#")]
-        [TestCase("", "not empty")]
         public void KeyHasTheSameIdAfterRename_UsingKeyToRename(string originalName, string newName)
         {
             AddAndVerifyKeyIsAdded(originalName);

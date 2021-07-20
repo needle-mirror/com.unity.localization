@@ -9,11 +9,22 @@ using UnityEngine.ResourceManagement;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using static UnityEngine.AddressableAssets.Addressables;
+using Object = UnityEngine.Object;
 
 namespace UnityEditor.Localization
 {
     class EditorAddressablesInterface : AddressablesInterface
     {
+        class InMemoryResourceLocation : ResourceLocationBase
+        {
+            public Object Asset { get; set; }
+
+            public InMemoryResourceLocation(string name, string id, string providerId, Type t, params IResourceLocation[] dependencies) :
+                base(name, id, providerId, t, dependencies)
+            {
+            }
+        }
+
         readonly ResourceManager m_ResourceManager = new ResourceManager();
 
         static TObject LoadAsset<TObject>(string guid) where TObject : class
@@ -29,7 +40,7 @@ namespace UnityEditor.Localization
 
         internal override AsyncOperationHandle<IList<IResourceLocation>> LoadResourceLocationsWithLabelsAsyncInternal(IEnumerable labels, MergeMode mode, Type type = null)
         {
-            if (LocalizationSettings.Instance.IsPlaying)
+            if (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
                 return base.LoadResourceLocationsWithLabelsAsyncInternal(labels, mode, type);
 
             throw new NotImplementedException("Should not be called outside of play mode");
@@ -37,7 +48,7 @@ namespace UnityEditor.Localization
 
         internal override AsyncOperationHandle<IList<IResourceLocation>> LoadTableLocationsAsyncInternal(string tableName, LocaleIdentifier id, Type type)
         {
-            if (LocalizationSettings.Instance.IsPlaying)
+            if (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
                 return base.LoadTableLocationsAsyncInternal(tableName, id, type);
 
             LocalizationTable table = null;
@@ -57,14 +68,21 @@ namespace UnityEditor.Localization
             }
 
             if (table != null)
-                locations.Add(new ResourceLocationBase(tableName, AssetDatabase.GetAssetPath(table), nameof(EditorAddressablesInterface), type));
+            {
+                var path = AssetDatabase.GetAssetPath(table);
+
+                // When running tests an asset may not have a path so we track it as in memory.
+                locations.Add(string.IsNullOrEmpty(path) ?
+                    new InMemoryResourceLocation(tableName, nameof(InMemoryResourceLocation), nameof(EditorAddressablesInterface), type) {Asset = table} :
+                    new ResourceLocationBase(tableName, path, nameof(EditorAddressablesInterface), type));
+            }
 
             return m_ResourceManager.CreateCompletedOperation<IList<IResourceLocation>>(locations, null);
         }
 
         internal override AsyncOperationHandle<IList<TObject>> LoadAssetsFromLocationsInternal<TObject>(IList<IResourceLocation> locations, Action<TObject> callback)
         {
-            if (LocalizationSettings.Instance.IsPlaying)
+            if (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
                 return base.LoadAssetsFromLocationsInternal(locations, callback);
 
             throw new NotImplementedException("Should not be called outside of play mode");
@@ -72,14 +90,14 @@ namespace UnityEditor.Localization
 
         internal override AsyncOperationHandle<TObject> LoadAssetFromGUIDInternal<TObject>(string guid)
         {
-            if (LocalizationSettings.Instance.IsPlaying)
+            if (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
                 return base.LoadAssetFromGUIDInternal<TObject>(guid);
             return m_ResourceManager.CreateCompletedOperation(LoadAsset<TObject>(guid), null);
         }
 
         internal override AsyncOperationHandle<TObject> LoadAssetFromNameInternal<TObject>(string name)
         {
-            if (LocalizationSettings.Instance.IsPlaying)
+            if (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
                 return base.LoadAssetFromNameInternal<TObject>(name);
 
             var settings = LocalizationEditorSettings.Instance.GetAddressableAssetSettings(false);
@@ -88,6 +106,9 @@ namespace UnityEditor.Localization
 
             foreach (var group in settings.groups)
             {
+                if (group == null)
+                    continue;
+
                 foreach (var entry in group.entries)
                 {
                     if (entry.address == name && !string.IsNullOrEmpty(entry.guid))
@@ -104,11 +125,15 @@ namespace UnityEditor.Localization
 
         internal override AsyncOperationHandle<TObject> LoadTableFromLocationInternal<TObject>(IResourceLocation location)
         {
-            if (LocalizationSettings.Instance.IsPlaying)
+            if (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
                 return base.LoadTableFromLocationInternal<TObject>(location);
 
             TObject table = null;
-            if (!string.IsNullOrEmpty(location.InternalId))
+            if (location is InMemoryResourceLocation memoryResourceLocation)
+            {
+                table = memoryResourceLocation.Asset as TObject;
+            }
+            else if (!string.IsNullOrEmpty(location.InternalId))
             {
                 table = AssetDatabase.LoadAssetAtPath(location.InternalId, typeof(TObject)) as TObject;
             }
@@ -118,7 +143,7 @@ namespace UnityEditor.Localization
 
         internal override AsyncOperationHandle<IList<TObject>> LoadAssetsWithLabelInternal<TObject>(string label, Action<TObject> callback)
         {
-            if (LocalizationSettings.Instance.IsPlaying)
+            if (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
                 return base.LoadAssetsWithLabelInternal(label, callback);
 
             IList<TObject> list = new List<TObject>();
@@ -128,6 +153,9 @@ namespace UnityEditor.Localization
             {
                 foreach (var group in settings.groups)
                 {
+                    if (group == null)
+                        continue;
+
                     foreach (var entry in group.entries)
                     {
                         if (entry.labels.Contains(label) && !string.IsNullOrEmpty(entry.guid))

@@ -1,4 +1,4 @@
-#if MODULE_AUDIO
+#if MODULE_AUDIO || PACKAGE_DOCS_GENERATION
 
 using UnityEngine.Localization.Events;
 

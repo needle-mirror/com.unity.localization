@@ -7,7 +7,7 @@ To access the Localization Settings navigate to **Edit > Project Settings > Loca
 
 If no settings Asset exists, Unity displays a prompt to create one.
 
-![Create a new Localization Settings prompt.](images/Create_Settings_Dialog.png)
+![Create a new Localization Settings prompt.](images/CreateLocalizationSettings.png)
 
 You can also create the settings Asset through the Assets menu. Navigate to **Assets > Create > Localization > Localization Settings.**
 

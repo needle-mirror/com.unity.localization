@@ -8,7 +8,16 @@ namespace UnityEngine.Localization.Bridge
     /// </summary>
     internal class DrivenPropertyManagerBridge
     {
-        public static void RegisterProperty(Object driver, Object target, string propertyPath) => DrivenPropertyManager.RegisterProperty(driver, target, propertyPath);
+        public static void RegisterProperty(Object driver, Object target, string propertyPath)
+        {
+            #if UNITY_2020_1_OR_NEWER
+            // Safer version that does not throw errors if a property is missing.
+            DrivenPropertyManager.TryRegisterProperty
+            #else
+            DrivenPropertyManager.RegisterProperty
+            #endif
+                (driver, target, propertyPath);
+        }
 
         // Same as RegisterProperty but produces an error if the property could not be found.
         //public static void TryRegisterProperty(Object driver, Object target, string propertyPath) => DrivenPropertyManager.TryRegisterProperty(driver, target, propertyPath);

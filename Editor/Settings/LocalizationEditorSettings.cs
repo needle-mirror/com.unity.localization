@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
-using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEditor.Localization.Addressables;
 using UnityEngine;
 using UnityEngine.Localization;
@@ -17,15 +16,12 @@ using Object = UnityEngine.Object;
 namespace UnityEditor.Localization
 {
     /// <summary>
-    /// Editor interface for modifying Localization settings and Localization based Addressables properties.
+    /// Provides methods for configuring Localization settings including tables and Locales.
     /// </summary>
     public class LocalizationEditorSettings
     {
-        static readonly char[] k_UnityInvalidFileNameChars = {'/', '?', '<', '>', '\\', ':', '|', '\"'};
+        static readonly char[] k_UnityInvalidFileNameChars = { '/', '?', '<', '>', '\\', ':', '|', '\"' };
         static readonly IEnumerable<char> k_InvalidFileNameChars = Path.GetInvalidFileNameChars().Concat(k_UnityInvalidFileNameChars);
-        internal const string LocaleGroupName = "Localization-Locales";
-        internal const string AssetGroupName = "Localization-Assets-{0}";
-        internal const string SharedAssetGroupName = "Localization-Assets-Shared";
 
         internal const string k_GameViewPref = "Localization-ShowLocaleMenuInGameView";
 
@@ -42,17 +38,11 @@ namespace UnityEditor.Localization
             set => s_Instance = value;
         }
 
-        internal LocalizationTableCollectionCache TableCollectionCache { get; set; } = new LocalizationTableCollectionCache();
+        internal virtual LocalizationTableCollectionCache TableCollectionCache { get; } = new LocalizationTableCollectionCache();
 
         /// <summary>
-        /// The LocalizationSettings used for this project.
+        /// The <see cref="LocalizationSettings"/> used for this project and available in the player and editor.
         /// </summary>
-        /// <remarks>
-        /// The activeLocalizationSettings will be available in any player builds
-        /// and the editor when playing.
-        /// During a build or entering play mode, the asset will be added to the preloaded assets list.
-        /// Note: This needs to be an asset.
-        /// </remarks>
         public static LocalizationSettings ActiveLocalizationSettings
         {
             get => Instance.ActiveLocalizationSettingsInternal;
@@ -69,11 +59,11 @@ namespace UnityEditor.Localization
         }
 
         /// <summary>
-        /// Localization modification events.
+        /// Localization modification events that can be used when building editor components.
         /// </summary>
         public static LocalizationEditorEvents EditorEvents { get; internal set; } = new LocalizationEditorEvents();
 
-        public LocalizationEditorSettings()
+        internal LocalizationEditorSettings()
         {
             EditorEvents.LocaleSortOrderChanged += (sender, locale) => SortLocales();
             Undo.undoRedoPerformed += UndoRedoPerformed;
@@ -85,41 +75,63 @@ namespace UnityEditor.Localization
         }
 
         /// <summary>
-        /// Add the Locale to the Addressables system, so that it can be used by the Localization system during runtime.
+        /// Add the Locale so that it can be used by the Localization system.
         /// </summary>
-        /// <param name="locale">The <see cref="Locale"/> to add to Addressables so that it can be used by the Localization system.</param>
+        /// <example>
+        /// This shows how to create a Locale and add it to the project.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="add-locale"/>
+        /// </example>
+        /// <param name="locale">The <see cref="Locale"/> to add to the project so it can be used by the Localization system.</param>
         /// <param name="createUndo">Used to indicate if an Undo operation should be created.</param>
         public static void AddLocale(Locale locale, bool createUndo = false) => Instance.AddLocaleInternal(locale, createUndo);
 
         /// <summary>
-        /// Removes the locale from the Addressables system.
+        /// Removes the locale from the Localization system.
         /// </summary>
-        /// <param name="locale">The <see cref="Locale"/> to remove from Addressables so that it is no longer used by the Localization system.</param>
-        /// /// <param name="createUndo">Used to indicate if an Undo operation should be created.</param>
+        /// <example>
+        /// This shows how to remove a Locale from the project.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="remove-locale"/>
+        /// </example>
+        /// <param name="locale">The <see cref="Locale"/> to remove so that it is no longer used by the Localization system.</param>
+        /// <param name="createUndo">Used to indicate if an Undo operation should be created.</param>
         public static void RemoveLocale(Locale locale, bool createUndo = false) => Instance.RemoveLocaleInternal(locale, createUndo);
 
         /// <summary>
-        /// Returns all locales that are part of the Addressables system.
+        /// Returns all <see cref="Locale"/> that are part of the Localization system and will be included in the player.
+        /// To Add Locales use <seealso cref="AddLocale"/> and <seealso cref="RemoveLocale"/> to remove them.
+        /// Note this does not include <see cref="PseudoLocale"/> which can be retrieved by using <seealso cref="GetPseudoLocales"/>.
         /// </summary>
-        /// <returns></returns>
+        /// <example>
+        /// This example prints the names of the Locales.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="get-locales"/>
+        /// </example>
+        /// <returns>A collection of all Locales in the project.</returns>
         public static ReadOnlyCollection<Locale> GetLocales() => Instance.GetLocalesInternal();
 
         /// <summary>
-        /// Returns all <see cref="PseudoLocale"/> that are part of the Addressables system.
+        /// Returns all <see cref="PseudoLocale"/> that are part of the Localization system and will be included in the player.
         /// </summary>
         /// <returns></returns>
-        public static ReadOnlyCollection<PseudoLocale> GetPsuedoLocales() => Instance.GetPseudoLocalesInternal();
+        public static ReadOnlyCollection<PseudoLocale> GetPseudoLocales() => Instance.GetPseudoLocalesInternal();
 
         /// <summary>
-        /// Returns the locale for the code if it exists in the project.
+        /// Returns the locale that matches the <see cref="LocaleIdentifier"/>"/> in the project.
         /// </summary>
-        /// <param name="code"></param>
-        /// <returns></returns>
-        public static Locale GetLocale(string code) => Instance.GetLocaleInternal(code);
+        /// <param name="localeId"></param>
+        /// <example>
+        /// This example shows how to find a <see cref="Locale"/> using a <see cref="SystemLanguage"/> or code.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="get-locale"/>
+        /// </example>
+        /// <returns>The found <see cref="Locale"/> or null if one could not be found.</returns>
+        public static Locale GetLocale(LocaleIdentifier localeId) => Instance.GetLocaleInternal(localeId.Code);
 
         /// <summary>
-        /// Returns all <see cref="StringTableCollection"/> assets in the project.
+        /// Returns all <see cref="StringTableCollection"/> that are in the project.
         /// </summary>
+        /// <example>
+        /// This example shows how to print out the contents of all the <see cref="StringTableCollection"/> in the project.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="get-string-tables"/>
+        /// </example>
         /// <returns></returns>
         public static ReadOnlyCollection<StringTableCollection> GetStringTableCollections() => Instance.TableCollectionCache.StringTableCollections.AsReadOnly();
 
@@ -127,12 +139,20 @@ namespace UnityEditor.Localization
         /// Returns a <see cref="StringTableCollection"/> with the matching <see cref="TableReference"/>.
         /// </summary>
         /// <param name="tableNameOrGuid"></param>
+        /// <example>
+        /// This example shows how to update a collection by adding support for a new Locale.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="get-string-table"/>
+        /// </example>
         /// <returns>Found collection or null if one could not be found.</returns>
         public static StringTableCollection GetStringTableCollection(TableReference tableNameOrGuid) => Instance.TableCollectionCache.FindStringTableCollection(tableNameOrGuid);
 
         /// <summary>
-        /// Returns all <see cref="AssetTableCollection"/> assets in the project.
+        /// Returns all <see cref="AssetTableCollection"/> assets that are in the project.
         /// </summary>
+        /// <example>
+        /// This example shows how to print out the contents of all the <see cref="AssetTableCollection"/> in the project.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="get-asset-tables"/>
+        /// </example>
         /// <returns></returns>
         public static ReadOnlyCollection<AssetTableCollection> GetAssetTableCollections() => Instance.TableCollectionCache.AssetTableCollections.AsReadOnly();
 
@@ -140,81 +160,141 @@ namespace UnityEditor.Localization
         /// Returns a <see cref="AssetTableCollection"/> with the matching <see cref="TableReference"/>.
         /// </summary>
         /// <param name="tableNameOrGuid"></param>
-        /// <returns></returns>
+        /// <example>
+        /// This example shows how to update a collection by adding a new localized asset.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="get-asset-table"/>
+        /// </example>
+        /// <returns>Found collection or null if one could not be found.</returns>
         public static AssetTableCollection GetAssetTableCollection(TableReference tableNameOrGuid) => Instance.TableCollectionCache.FindAssetTableCollection(tableNameOrGuid);
 
         /// <summary>
         /// Returns the <see cref="LocalizationTableCollection"/> that the table is part of or null if the table has no collection.
         /// </summary>
-        /// <param name="table"></param>
-        /// <returns></returns>
+        /// <param name="table">The table to find the collection for.</param>
+        /// <returns>The found collection or null if one could not be found.</returns>
         public static LocalizationTableCollection GetCollectionFromTable(LocalizationTable table) => Instance.TableCollectionCache.FindCollectionForTable(table);
 
         /// <summary>
         /// Returns the <see cref="LocalizationTableCollection"/> that the <see cref="SharedTableData"/> is part of or null if one could not be found.
         /// </summary>
-        /// <param name="sharedTableData"></param>
-        /// <returns></returns>
+        /// <param name="sharedTableData">The shared table data to match against a collection.</param>
+        /// <returns>The found collection or null if one could not be found.</returns>
         public static LocalizationTableCollection GetCollectionForSharedTableData(SharedTableData sharedTableData) => Instance.TableCollectionCache.FindCollectionForSharedTableData(sharedTableData);
 
         /// <summary>
         /// If a table does not belong to a <see cref="LocalizationTableCollection"/> then it is considered to be loose, it has no parent collection and will be ignored.
-        /// This returns all loose tables that use the same <see cref="SharedTableData"/>, they can then be converted into a <see cref="LocalizationTableCollection"/>.
+        /// This returns all loose tables that use the same <see cref="SharedTableData"/>, they could then be converted into a <see cref="LocalizationTableCollection"/> using <seealso cref="CreateCollectionFromLooseTables"/>.
         /// </summary>
         /// <param name="sharedTableData"></param>
         /// <param name="foundTables"></param>
         public static void FindLooseStringTablesUsingSharedTableData(SharedTableData sharedTableData, IList<LocalizationTable> foundTables) => Instance.TableCollectionCache.FindLooseTablesUsingSharedTableData(sharedTableData, foundTables);
 
         /// <summary>
-        /// Creates a <see cref="StringTableCollection"/> or <see cref="AssetTableCollection"/> from the loose tables.
+        /// Creates a <see cref="StringTableCollection"/> or <see cref="AssetTableCollection"/> from the provided loose tables.
         /// </summary>
         /// <param name="looseTables">Tables to create the collection from. All tables must be of the same type.</param>
-        /// <returns></returns>
+        /// <returns>The created <see cref="StringTableCollection"/> or <see cref="AssetTableCollection"/>.</returns>
         public static LocalizationTableCollection CreateCollectionFromLooseTables(IList<LocalizationTable> looseTables, string path) => Instance.CreateCollectionFromLooseTablesInternal(looseTables, path);
 
         /// <summary>
         /// Creates a <see cref="StringTableCollection"/> using the project Locales.
         /// </summary>
+        /// <example>
+        /// This example shows how to create a new <see cref="StringTableCollection"/> and add some English values.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="create-string-collection-1"/>
+        /// </example>
         /// <param name="tableName">The name of the new collection. Cannot be blank or whitespace, cannot contain invalid filename characters, and cannot contain "[]".</param>
         /// <param name="assetDirectory">The directory to save the generated assets, must be in the project Assets directory.</param>
-        /// <returns></returns>
+        /// <returns>The created <see cref="StringTableCollection"/> collection.</returns>
         public static StringTableCollection CreateStringTableCollection(string tableName, string assetDirectory) => CreateStringTableCollection(tableName, assetDirectory, GetLocales());
 
         /// <summary>
         /// Creates a <see cref="StringTableCollection"/> using the provided Locales.
         /// </summary>
+        /// <example>
+        /// This example shows how to create a new <see cref="StringTableCollection"/> which contains an English and Japanese <see cref="StringTable"/>.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="create-string-collection-2"/>
+        /// </example>
         /// <param name="tableName">The name of the new collection. Cannot be blank or whitespace, cannot contain invalid filename characters, and cannot contain "[]".</param>
         /// <param name="assetDirectory">The directory to save the generated assets, must be in the project Assets directory.</param>
         /// <param name="selectedLocales">The locales to generate the collection with. A <see cref="StringTable"/> will be created for each Locale.</param>
-        /// <returns></returns>
+        /// <returns>The created <see cref="StringTableCollection"/> collection.</returns>
         public static StringTableCollection CreateStringTableCollection(string tableName, string assetDirectory, IList<Locale> selectedLocales) => Instance.CreateCollection(typeof(StringTableCollection), tableName, assetDirectory, selectedLocales) as StringTableCollection;
 
         /// <summary>
         /// Creates a <see cref="AssetTableCollection"/> using the project Locales.
         /// </summary>
-        /// <param name="tableName">The name of the new collection. Cannot be blank or whitespace, cannot contain invalid filename characters, and cannot contain "[]".</param>
-        /// <param name="assetDirectory">The directory to save the generated assets, must be in the project Assets directory.</param>
-        /// <returns></returns>
+        /// <example>
+        /// This example shows how to update a collection by adding a new localized asset.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="get-asset-table"/>
+        /// </example>
+        /// <param name="tableName">The Table Collection Name to use.</param>
+        /// <param name="assetDirectory">The directory to store the generated assets.</param>
+        /// <returns>The created <see cref="AssetTableCollection"/> collection.</returns>
         public static AssetTableCollection CreateAssetTableCollection(string tableName, string assetDirectory) => CreateAssetTableCollection(tableName, assetDirectory, GetLocales());
 
         /// <summary>
         /// Creates a <see cref="AssetTableCollection"/> using the provided Locales.
         /// </summary>
         /// <param name="tableName">The name of the new collection. Cannot be blank or whitespace, cannot contain invalid filename characters, and cannot contain "[]".</param>
-        /// <param name="assetDirectory"></param>
+        /// <param name="assetDirectory">The directory to store the generated assets.</param>
         /// <param name="selectedLocales">The locales to generate the collection with. A <see cref="AssetTable"/> will be created for each Locale</param>
-        /// <returns></returns>
+        /// <returns>The created <see cref="AssetTableCollection"/> collection.</returns>
         public static AssetTableCollection CreateAssetTableCollection(string tableName, string assetDirectory, IList<Locale> selectedLocales) => Instance.CreateCollection(typeof(AssetTableCollection), tableName, assetDirectory, selectedLocales) as AssetTableCollection;
+
+        /// <summary>
+        /// Adds or Remove the preload flag for the selected table.
+        /// </summary>
+        /// <example>
+        /// This example shows how to set the preload flag for a single collection.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="set-preload-flag"/>
+        /// </example>
+        /// <param name="table">The table to mark as preload.</param>
+        /// <param name="preload"><c>true</c> ifd the table should be preloaded or <c>false</c> if it should be loaded on demand.</param>
+        /// <param name="createUndo">Should an Undo record be created?</param>
+        public static void SetPreloadTableFlag(LocalizationTable table, bool preload, bool createUndo = false)
+        {
+            Instance.SetPreloadTableInternal(table, preload, createUndo);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the table is marked for preloading.
+        /// </summary>
+        /// <example>
+        /// This example shows how to query if a table is marked as preload.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="get-preload-flag"/>
+        /// </example>
+        /// <param name="table">The table to query.</param>
+        /// <returns><c>true</c> if preloading is enable otherwise <c>false</c>.</returns>
+        public static bool GetPreloadTableFlag(LocalizationTable table)
+        {
+            // TODO: We could just use the instance id so we dont need to load the whole table
+            return Instance.GetPreloadTableFlagInternal(table);
+        }
+
+        /// <summary>
+        /// Returns the <see cref="AssetTableCollection"/> that contains a table entry with the closest match to the provided text.
+        /// Uses the Levenshtein distance method.
+        /// </summary>
+        /// <param name="keyName"></param>
+        /// <returns></returns>
+        public static (StringTableCollection collection, SharedTableData.SharedTableEntry entry, int matchDistance) FindSimilarKey(string keyName)
+        {
+            return Instance.FindSimilarKeyInternal(keyName);
+        }
 
         internal static void RefreshEditorPreview()
         {
             if (ActiveLocalizationSettings != null && ActiveLocalizationSettings.GetSelectedLocale() != null)
             {
+                LocalizationPropertyDriver.UnregisterProperties();
+                VariantsPropertyDriver.UnregisterProperties();
+
                 ActiveLocalizationSettings.SendLocaleChangedEvents(LocalizationSettings.SelectedLocale);
             }
         }
 
-        protected internal string GetUniqueTableCollectionName(Type collectionType, string name)
+        internal string GetUniqueTableCollectionName(Type collectionType, string name)
         {
             int suffix = 1;
             var nameToTest = name;
@@ -228,7 +308,7 @@ namespace UnityEditor.Localization
             }
         }
 
-        protected internal virtual LocalizationTableCollection CreateCollection(Type collectionType, string tableName, string assetDirectory, IList<Locale> selectedLocales)
+        internal virtual LocalizationTableCollection CreateCollection(Type collectionType, string tableName, string assetDirectory, IList<Locale> selectedLocales)
         {
             if (!typeof(LocalizationTableCollection).IsAssignableFrom(collectionType))
                 throw new ArgumentException($"{collectionType.Name} Must be derived from {nameof(LocalizationTableCollection)}", nameof(collectionType));
@@ -293,13 +373,7 @@ namespace UnityEditor.Localization
             return collection;
         }
 
-        /// <summary>
-        /// Creates a new <see cref="StringTableCollection"/> or <see cref="AssetTableCollection"/> from the provided list of tables that do not currently belong to a collection.
-        /// </summary>
-        /// <param name="looseTables"></param>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        protected virtual LocalizationTableCollection CreateCollectionFromLooseTablesInternal(IList<LocalizationTable> looseTables, string path)
+        internal virtual LocalizationTableCollection CreateCollectionFromLooseTablesInternal(IList<LocalizationTable> looseTables, string path)
         {
             if (looseTables == null || looseTables.Count == 0)
                 return null;
@@ -326,44 +400,7 @@ namespace UnityEditor.Localization
             return collection;
         }
 
-        /// <summary>
-        /// Adds/Removes the preload flag for the table.
-        /// </summary>
-        /// <param name="table"></param>
-        /// <param name="preload"></param>
-        /// <param name="createUndo"></param>
-        public static void SetPreloadTableFlag(LocalizationTable table, bool preload, bool createUndo = false)
-        {
-            Instance.SetPreloadTableInternal(table, preload, createUndo);
-        }
-
-        /// <summary>
-        /// Returns true if the table is marked for preloading.
-        /// </summary>
-        /// <param name="table"></param>
-        /// <returns></returns>
-        public static bool GetPreloadTableFlag(LocalizationTable table)
-        {
-            // TODO: We could just use the instance id so we dont need to load the whole table
-            return Instance.GetPreloadTableFlagInternal(table);
-        }
-
-        /// <summary>
-        /// Returns the <see cref="AssetTableCollection"/> that contains a table entry with the closest match to the provided text.
-        /// Uses the Levenshtein distance method.
-        /// </summary>
-        /// <typeparam name="TTable"></typeparam>
-        /// <param name="keyName"></param>
-        /// <returns></returns>
-        public static (StringTableCollection collection, SharedTableData.SharedTableEntry entry, int matchDistance) FindSimilarKey(string keyName)
-        {
-            return Instance.FindSimilarKeyInternal(keyName);
-        }
-
-        /// <summary>
-        /// <inheritdoc cref="ActiveLocalizationSettings"/>
-        /// </summary>
-        protected virtual LocalizationSettings ActiveLocalizationSettingsInternal
+        internal virtual LocalizationSettings ActiveLocalizationSettingsInternal
         {
             get
             {
@@ -427,12 +464,7 @@ namespace UnityEditor.Localization
             return settings.FindAssetEntry(guid);
         }
 
-        /// <summary>
-        /// Tries to find a unique address for the asset to be stored in Addressables.
-        /// </summary>
-        /// <param name="address"></param>
-        /// <returns></returns>
-        protected internal virtual string FindUniqueAssetAddress(string address)
+        internal virtual string FindUniqueAssetAddress(string address)
         {
             var aaSettings = GetAddressableAssetSettings(false);
             if (aaSettings == null)
@@ -464,12 +496,7 @@ namespace UnityEditor.Localization
             return validAddress;
         }
 
-        /// <summary>
-        /// <inheritdoc cref="AddLocale"/>
-        /// </summary>
-        /// <param name="locale"></param>
-        /// <param name="createUndo"></param>
-        protected virtual void AddLocaleInternal(Locale locale, bool createUndo)
+        internal virtual void AddLocaleInternal(Locale locale, bool createUndo)
         {
             if (locale == null)
                 throw new ArgumentNullException(nameof(locale));
@@ -488,26 +515,26 @@ namespace UnityEditor.Localization
 
                 // Clear the locales cache.
                 m_ProjectLocales = null;
-                if (!LocalizationSettings.Instance.IsPlaying)
+                if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
                     LocalizationSettings.Instance.ResetState();
 
                 if (!assetEntry.labels.Contains(LocalizationSettings.LocaleLabel))
                 {
                     if (createUndo)
-                        Undo.RecordObjects(new Object[] { aaSettings, assetEntry.parentGroup } , "Add locale");
+                        Undo.RecordObjects(new Object[] { aaSettings, assetEntry.parentGroup }, "Add locale");
                     assetEntry.SetLabel(LocalizationSettings.LocaleLabel, true, true);
                     EditorEvents.RaiseLocaleAdded(locale);
                 }
             }
         }
 
-        /// <summary>
-        /// <inheritdoc cref="RemoveLocale"/>
-        /// </summary>
-        /// <param name="locale"></param>
-        /// <param name="createUndo"></param>
-        protected virtual void RemoveLocaleInternal(Locale locale, bool createUndo)
+        internal virtual void RemoveLocaleInternal(Locale locale, bool createUndo)
         {
+            // Clear the locale cache
+            m_ProjectLocales = null;
+            if (!LocalizationSettings.Instance)
+                LocalizationSettings.Instance.ResetState();
+
             var aaSettings = GetAddressableAssetSettings(false);
             if (aaSettings == null)
                 return;
@@ -521,21 +548,12 @@ namespace UnityEditor.Localization
                 if (createUndo)
                     Undo.RecordObjects(new Object[] { aaSettings, localeAssetEntry.parentGroup }, "Remove locale");
 
-                // Clear the locale cache
-                m_ProjectLocales = null;
-                if (!LocalizationSettings.Instance)
-                    LocalizationSettings.Instance.ResetState();
-
                 aaSettings.RemoveAssetEntry(localeAssetEntry.guid);
                 EditorEvents.RaiseLocaleRemoved(locale);
             }
         }
 
-        /// <summary>
-        /// <inheritdoc cref="GetLocales"/>
-        /// </summary>
-        /// <returns></returns>
-        protected internal virtual ReadOnlyCollection<Locale> GetLocalesInternal()
+        internal virtual ReadOnlyCollection<Locale> GetLocalesInternal()
         {
             if (m_ProjectLocales != null)
                 return m_ProjectLocales;
@@ -567,7 +585,7 @@ namespace UnityEditor.Localization
             return m_ProjectLocales;
         }
 
-        protected internal virtual ReadOnlyCollection<PseudoLocale> GetPseudoLocalesInternal()
+        internal virtual ReadOnlyCollection<PseudoLocale> GetPseudoLocalesInternal()
         {
             if (m_ProjectPseudoLocales == null)
                 CollectProjectLocales();
@@ -610,12 +628,7 @@ namespace UnityEditor.Localization
             m_ProjectPseudoLocales = foundPseudoLocales.AsReadOnly();
         }
 
-        /// <summary>
-        /// <inheritdoc cref="GetLocale"/>
-        /// </summary>
-        /// <param name="code"></param>
-        /// <returns></returns>
-        protected virtual Locale GetLocaleInternal(string code) => GetLocalesInternal().FirstOrDefault(loc => loc.Identifier.Code == code);
+        internal virtual Locale GetLocaleInternal(string code) => GetLocalesInternal().FirstOrDefault(loc => loc.Identifier.Code == code);
 
         void SortLocales()
         {
@@ -634,15 +647,7 @@ namespace UnityEditor.Localization
             }
         }
 
-        /// <summary>
-        /// <inheritdoc cref=" SetPreloadTable"/>
-        /// </summary>
-        /// <param name="table"></param>
-        /// <param name="preload"></param>
-        /// <param name="createUndo"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="AddressableEntryNotFoundException"></exception>
-        protected virtual void SetPreloadTableInternal(LocalizationTable table, bool preload, bool createUndo = false)
+        internal virtual void SetPreloadTableInternal(LocalizationTable table, bool preload, bool createUndo = false)
         {
             if (table == null)
                 throw new ArgumentNullException(nameof(table), "Can not set preload flag on a null table");
@@ -661,14 +666,7 @@ namespace UnityEditor.Localization
             tableEntry.SetLabel(LocalizationSettings.PreloadLabel, preload, preload);
         }
 
-        /// <summary>
-        /// <inheritdoc cref=" GetPreloadTableFlag"/>
-        /// </summary>
-        /// <param name="table"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="AddressableEntryNotFoundException"></exception>
-        protected virtual bool GetPreloadTableFlagInternal(LocalizationTable table)
+        internal virtual bool GetPreloadTableFlagInternal(LocalizationTable table)
         {
             if (table == null)
                 throw new ArgumentNullException(nameof(table), "Can not get preload flag from a null table");
@@ -684,13 +682,7 @@ namespace UnityEditor.Localization
             return tableEntry.labels.Contains(LocalizationSettings.PreloadLabel);
         }
 
-        /// <summary>
-        ///  <inheritdoc cref=" FindSimilarKey"/>
-        /// </summary>
-        /// <param name="keyName"></param>
-        /// <typeparam name="TTable"></typeparam>
-        /// <returns></returns>
-        protected virtual (StringTableCollection collection, SharedTableData.SharedTableEntry entry, int matchDistance) FindSimilarKeyInternal(string keyName)
+        internal virtual (StringTableCollection collection, SharedTableData.SharedTableEntry entry, int matchDistance) FindSimilarKeyInternal(string keyName)
         {
             // Check if we can find a matching key to the key name
             var collections = GetStringTableCollections();
@@ -723,7 +715,6 @@ namespace UnityEditor.Localization
             AssetDatabase.CreateAsset(asset, path);
         }
 
-        // TODO: Remove me?
         internal virtual string GetAssetGuid(int instanceId)
         {
             Debug.Assert(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(instanceId, out string guid, out long _), "Failed to extract the asset Guid");

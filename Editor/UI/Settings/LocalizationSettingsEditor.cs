@@ -1,5 +1,4 @@
 using UnityEditor.Localization.UI.Toolkit;
-using UnityEditor.UIElements;
 using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Settings;
 using UnityEngine.UIElements;
@@ -11,15 +10,11 @@ namespace UnityEditor.Localization.UI
     {
         public override VisualElement CreateInspectorGUI()
         {
-            var root = new VisualElement();
-            root.Add(new PropertyField(serializedObject.FindProperty("m_AvailableLocales")));
+            var root = Resources.GetTemplate(nameof(LocalizationSettings));
 
             var startupSelectors = new ManagedReferenceReorderableList(serializedObject.FindProperty("m_StartupSelectors"), typeof(IStartupLocaleSelector));
             startupSelectors.HeaderTitle = "Locale Selectors";
-            root.Add(startupSelectors);
-
-            root.Add(new PropertyField(serializedObject.FindProperty("m_AssetDatabase")));
-            root.Add(new PropertyField(serializedObject.FindProperty("m_StringDatabase")));
+            root.Insert(1, startupSelectors);
 
             var metadata = new MetadataReorderableList(serializedObject.FindProperty("m_Metadata.m_Items"), new MetadataTypeAttribute(MetadataType.LocalizationSettings));
             metadata.HeaderTitle = "Metadata";

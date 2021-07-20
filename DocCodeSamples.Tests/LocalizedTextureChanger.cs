@@ -1,3 +1,5 @@
+#if PACKAGE_UGUI
+
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Components;
@@ -49,3 +51,5 @@ public class LocalizedTextureChanger : MonoBehaviour
         localizeTextureEvent.AssetReference = texture;
     }
 }
+
+#endif

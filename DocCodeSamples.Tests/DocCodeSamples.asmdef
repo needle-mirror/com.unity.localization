@@ -1,12 +1,14 @@
 {
     "name": "Unity.Localization.DocCodeSamples",
+    "rootNamespace": "",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Unity.Localization",
         "Unity.Localization.Editor",
         "Unity.ResourceManager",
-        "Unity.Addressables"
+        "Unity.Addressables",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [
         "Editor"
@@ -31,6 +33,16 @@
             "name": "com.unity.modules.audio",
             "expression": "1.0.0",
             "define": "MODULE_AUDIO"
+        },
+        {
+            "name": "com.unity.textmeshpro",
+            "expression": "1.0.0",
+            "define": "PACKAGE_TMP"
+        },
+        {
+            "name": "Unity",
+            "expression": "2020.3",
+            "define": "ENABLE_PROPERTY_VARIANTS"
         }
     ],
     "noEngineReferences": false

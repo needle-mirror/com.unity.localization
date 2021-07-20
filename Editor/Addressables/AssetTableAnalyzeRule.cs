@@ -37,7 +37,7 @@ namespace UnityEditor.Localization.Addressables
 
                         if (!assetDependency.Value.Contains(id))
                         {
-                            m_Results.Add(new TableResult
+                            Results.Add(new AnalyzeResultWithFixAction
                             {
                                 resultName = $"Assets:{path}:Unused Locale Label `{id}`",
                                 severity = MessageType.Warning,
@@ -55,7 +55,7 @@ namespace UnityEditor.Localization.Addressables
                     foreach (var localeIdentifier in assetDependency.Value)
                     {
                         var expectedLabel = AddressHelper.FormatAssetLabel(localeIdentifier.Code);
-                        m_Results.Add(new TableResult
+                        Results.Add(new AnalyzeResultWithFixAction
                         {
                             resultName = $"Assets:{path}:Missing Locale Label `{expectedLabel}`",
                             severity = MessageType.Error,
@@ -68,7 +68,7 @@ namespace UnityEditor.Localization.Addressables
                     if (entry.parentGroup.Name != expectedGroupName)
                     {
                         var copy = locales.ToArray(); // We need to copy as we reuse the list
-                        m_Results.Add(new TableResult
+                        Results.Add(new AnalyzeResultWithFixAction
                         {
                             resultName = $"Assets:{path}:Incorrect Group:Expected `{expectedGroupName}` but was `{entry.parentGroup.Name}`",
                             severity = MessageType.Warning,
@@ -94,7 +94,7 @@ namespace UnityEditor.Localization.Addressables
                     var asset = AssetDatabase.LoadAssetAtPath<Object>(path);
                     if (asset == null)
                     {
-                        m_Results.Add(new TableResult
+                        Results.Add(new AnalyzeResultWithFixAction
                         {
                             resultName = $"{label}:Asset Is Missing:{assetTableEntry.Guid} {path}",
                             severity = MessageType.Info,
@@ -102,7 +102,7 @@ namespace UnityEditor.Localization.Addressables
                     }
                     else
                     {
-                        m_Results.Add(new TableResult
+                        Results.Add(new AnalyzeResultWithFixAction
                         {
                             resultName = $"{label}:Asset Not Marked as Addressable:{path}",
                             severity = MessageType.Error,

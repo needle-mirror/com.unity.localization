@@ -21,6 +21,9 @@ namespace UnityEditor.Localization.UI
 
             // Find the asset type.
             Type baseType = fieldInfo.FieldType;
+            if (property.propertyType == SerializedPropertyType.ManagedReference)
+                baseType = ManagedReferenceUtility.GetType(property.managedReferenceFullTypename);
+
             Type assetType = null;
             while (baseType != null)
             {

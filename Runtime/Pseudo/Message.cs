@@ -90,7 +90,7 @@ namespace UnityEngine.Localization.Pseudo
     }
 
     /// <summary>
-    /// Represents a message fragment that can be modifed.
+    /// Represents a message fragment that can be modified.
     /// </summary>
     [DebuggerDisplay("Writable: {Text}")]
     public class WritableMessageFragment : MessageFragment
@@ -103,7 +103,7 @@ namespace UnityEngine.Localization.Pseudo
     }
 
     /// <summary>
-    /// Represents a message fragment that should be preserved and mot modifed.
+    /// Represents a message fragment that should be preserved and mot modified.
     /// </summary>
     [DebuggerDisplay("ReadOnly: {Text}")]
     public class ReadOnlyMessageFragment : MessageFragment
@@ -207,14 +207,14 @@ namespace UnityEngine.Localization.Pseudo
         /// Replaces the Fragments in <see cref="Fragments"/> and returns the previous fragment back to the ObjectPool so it can be reused.
         /// </summary>
         /// <param name="original">Fragment to replace.</param>
-        /// <param name="repacement">Replacement Fragment.</param>
-        public void ReplaceFragment(MessageFragment original, MessageFragment repacement)
+        /// <param name="replacement">Replacement Fragment.</param>
+        public void ReplaceFragment(MessageFragment original, MessageFragment replacement)
         {
             var index = Fragments.IndexOf(original);
             if (index == -1)
                 throw new Exception($"Can not replace Fragment {original.ToString()} that is not part of the message.");
 
-            Fragments[index] = repacement;
+            Fragments[index] = replacement;
             ReleaseFragment(original);
         }
 

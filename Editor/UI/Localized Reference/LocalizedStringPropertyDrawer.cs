@@ -20,6 +20,8 @@ namespace UnityEditor.Localization.UI
             object[] m_PreviewArguments;
 
             public ReorderableList previewArgumentsList;
+            public string expandedSessionKey;
+
             public bool previewExpanded;
 
             public object[] PreviewArguments
@@ -42,9 +44,30 @@ namespace UnityEditor.Localization.UI
 
             public class LocaleField
             {
+                bool m_Expanded;
+                readonly string m_ExpandedSessionKey;
+
                 public Locale Locale { get; set; }
-                public bool Expanded { get; set; }
                 public SmartFormatField SmartEditor { get; set; }
+
+                public bool Expanded
+                {
+                    get => m_Expanded;
+                    set
+                    {
+                        if (m_Expanded == value)
+                            return;
+
+                        m_Expanded = value;
+                        SessionState.SetBool(m_ExpandedSessionKey, value);
+                    }
+                }
+
+                public LocaleField(string expandedSessionKey)
+                {
+                    m_ExpandedSessionKey = expandedSessionKey;
+                    m_Expanded = SessionState.GetBool(m_ExpandedSessionKey, false);
+                }
             }
 
             public List<LocaleField> LocaleFields
@@ -59,7 +82,7 @@ namespace UnityEditor.Localization.UI
                         foreach (var locale in projectLocales)
                         {
                             var table = SelectedTableCollection.Tables.FirstOrDefault(tbl => tbl.asset?.LocaleIdentifier == locale.Identifier);
-                            m_SmartFormatFields.Add(new LocaleField { Locale = locale, Expanded = false, SmartEditor = CreateSmartFormatFieldForTable(table.asset) });
+                            m_SmartFormatFields.Add(new LocaleField(expandedSessionKey + locale) { Locale = locale, SmartEditor = CreateSmartFormatFieldForTable(table.asset) });
                         }
                     }
                     return m_SmartFormatFields;
@@ -113,10 +136,15 @@ namespace UnityEditor.Localization.UI
                     UpdateArguments(previewArgumentsList);
             }
 
+            public override void Reset()
+            {
+                base.Reset();
+                m_SmartFormatFields = null;
+            }
+
             public override void Init(SerializedProperty property)
             {
                 base.Init(property);
-
                 previewArgumentsList = new ReorderableList(new List<Object>(), typeof(Object));
                 previewArgumentsList.headerHeight = 1;
                 previewArgumentsList.drawElementCallback = DrawPreviewElement;
@@ -147,6 +175,7 @@ namespace UnityEditor.Localization.UI
             {
                 entryNameLabel = Styles.entryName,
                 PreviewArguments = new object[0],
+                expandedSessionKey = $"{property.serializedObject.targetObject.GetInstanceID()}-{property.propertyPath}"
             };
             return prop;
         }
@@ -211,13 +240,13 @@ namespace UnityEditor.Localization.UI
             if (ShowPreview)
             {
                 rowPosition.height = EditorGUIUtility.singleLineHeight;
-                stringPropertyData.previewExpanded = EditorGUI.BeginFoldoutHeaderGroup(rowPosition, stringPropertyData.previewExpanded, Styles.previewArguments);
-                rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
+                var prevArgs = EditorGUI.PrefixLabel(rowPosition, GUIContent.none);
+                stringPropertyData.previewExpanded = EditorGUI.BeginFoldoutHeaderGroup(prevArgs, stringPropertyData.previewExpanded, Styles.previewArguments);
+                prevArgs.MoveToNextLine();
                 if (stringPropertyData.previewExpanded)
                 {
-                    rowPosition.height = stringPropertyData.previewArgumentsList.GetHeight();
-                    var listPos = EditorGUI.PrefixLabel(rowPosition, GUIContent.none);
-                    stringPropertyData.previewArgumentsList.DoList(listPos);
+                    prevArgs.height = stringPropertyData.previewArgumentsList.GetHeight();
+                    stringPropertyData.previewArgumentsList.DoList(prevArgs);
                 }
                 EditorGUI.EndFoldoutHeaderGroup();
             }

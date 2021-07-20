@@ -21,6 +21,8 @@ namespace UnityEditor.Localization.Reporting
 
         public bool Active { get; private set; }
 
+        public bool Started { get { return m_Started; } }
+
         StringBuilder m_Summary = new StringBuilder();
         Stopwatch m_Timer;
         string m_Title;

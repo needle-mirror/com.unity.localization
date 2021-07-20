@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace UnityEditor.Localization.Plugins.Google
 {
-    class GoogleSheetsExtensionPropertyDrawerData
+    class GoogleSheetsExtensionPropertyDrawerData : PropertyDrawerExtendedData
     {
         public SerializedProperty m_Collection;
         public SerializedProperty m_SheetsServiceProvider;

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Localization.Metadata;
 using UnityEngine.Pool;
@@ -42,9 +43,15 @@ namespace UnityEngine.Localization.Settings
         [SerializeField]
         MetadataCollection m_Metadata = new MetadataCollection();
 
-        AsyncOperationHandle<LocalizationSettings>? m_InitializingOperationHandle;
+        [SerializeField]
+        LocaleIdentifier m_ProjectLocaleIdentifier = "en";
 
+        [SerializeField]
+        bool m_InitializeSynchronously;
+
+        AsyncOperationHandle<LocalizationSettings>? m_InitializingOperationHandle;
         AsyncOperationHandle<Locale>? m_SelectedLocaleAsync;
+        Locale m_ProjectLocale;
 
         static LocalizationSettings s_Instance;
 
@@ -155,6 +162,33 @@ namespace UnityEngine.Localization.Settings
             remove => Instance.OnSelectedLocaleChanged -= value;
         }
 
+        /// <summary>
+        /// When tracking property variants in a scene, any changes you make whilst in this Locale are saved into the source object instead of as a variant.
+        /// </summary>
+        public static Locale ProjectLocale
+        {
+            get
+            {
+                if (Instance.m_ProjectLocale == null || Instance.m_ProjectLocale.Identifier != Instance.m_ProjectLocaleIdentifier)
+                    Instance.m_ProjectLocale = AvailableLocales?.GetLocale(Instance.m_ProjectLocaleIdentifier);
+                return Instance.m_ProjectLocale;
+            }
+            set
+            {
+                Instance.m_ProjectLocale = value;
+                Instance.m_ProjectLocaleIdentifier = value != null ? value.Identifier : default;
+            }
+        }
+
+        /// <summary>
+        /// Forces the <see cref="InitializationOperation"/> to complete immediately when it is started.
+        /// </summary>
+        public static bool InitializeSynchronously
+        {
+            get => Instance.m_InitializeSynchronously;
+            set => Instance.m_InitializeSynchronously = value;
+        }
+
         void OnEnable()
         {
             if (s_Instance == null)
@@ -208,6 +242,8 @@ namespace UnityEngine.Localization.Settings
                 var operation = GenericPool<InitializationOperation>.Get();
                 operation.Init(this);
                 m_InitializingOperationHandle = AddressablesInterface.ResourceManager.StartOperation(operation, default);
+                if (m_InitializeSynchronously && IsPlaying)
+                    m_InitializingOperationHandle.Value.WaitForCompletion();
             }
 
             return m_InitializingOperationHandle.Value;
@@ -220,7 +256,7 @@ namespace UnityEngine.Localization.Settings
         internal bool? IsPlayingOverride { get; set; }
         #endif
 
-        internal bool IsPlaying
+        internal bool IsPlayingOrWillChangePlaymode
         {
             get
             {
@@ -231,6 +267,18 @@ namespace UnityEngine.Localization.Settings
                 #else
                 return true;
                 #endif
+            }
+        }
+
+        internal bool IsPlaying
+        {
+            get
+            {
+                #if UNITY_EDITOR
+                if (IsPlayingOverride.HasValue)
+                    return IsPlayingOverride.Value;
+                #endif
+                return Application.isPlaying;
             }
         }
 
@@ -295,6 +343,7 @@ namespace UnityEngine.Localization.Settings
             if (locale == null)
             {
                 LocalizationPropertyDriver.UnregisterProperties();
+                VariantsPropertyDriver.UnregisterProperties();
             }
             #endif
 
@@ -303,7 +352,7 @@ namespace UnityEngine.Localization.Settings
 
             if (m_InitializingOperationHandle.HasValue)
             {
-                AddressablesInterface.Release(m_InitializingOperationHandle.Value);
+                AddressablesInterface.SafeRelease(m_InitializingOperationHandle.Value);
                 m_InitializingOperationHandle = null;
             }
 
@@ -314,12 +363,18 @@ namespace UnityEngine.Localization.Settings
             }
             else
             {
-                initOp.Completed += (o) =>
-                {
-                    // Don't send the change event until preloading is completed.
-                    OnSelectedLocaleChanged?.Invoke(locale);
-                };
+                // We use a coroutine to call the OnSelectedLocaleChanged event, we do not want to use the initOp Completed event as this
+                // will create issues if a user was to call WaitForCompletion inside of the callback, it would fail with:
+                // "Exception: Reentering the Update method is not allowed.  This can happen when calling WaitForCompletion on
+                // an operation while inside of a callback".
+                LocalizationBehaviour.Instance.StartCoroutine(InitializeAndCallSelectedLocaleChangedCoroutine(locale));
             }
+        }
+
+        IEnumerator InitializeAndCallSelectedLocaleChangedCoroutine(Locale locale)
+        {
+            yield return m_InitializingOperationHandle.Value;
+            OnSelectedLocaleChanged?.Invoke(locale);
         }
 
         Locale SelectActiveLocale()
@@ -404,20 +459,20 @@ namespace UnityEngine.Localization.Settings
 
             #if UNITY_EDITOR
             // Running the player loop outside of play mode will force an update for many types, especially UGUI.
-            if (!IsPlaying)
+            if (!IsPlayingOrWillChangePlaymode)
             {
                 UnityEditor.EditorApplication.QueuePlayerLoopUpdate();
             }
             #endif
 
             // Ignore null locales in play mode
-            if (locale == null && IsPlaying)
+            if (locale == null && IsPlayingOrWillChangePlaymode)
                 return;
 
             if (!m_SelectedLocaleAsync.HasValue || !ReferenceEquals(m_SelectedLocaleAsync.Value.Result, locale))
             {
                 #if UNITY_EDITOR
-                if (!IsPlaying)
+                if (!IsPlayingOrWillChangePlaymode)
                 {
                     var code = locale == null ? string.Empty : locale.Identifier.Code;
                     UnityEditor.SessionState.SetString(ConfigEditorLocale, code);
@@ -462,7 +517,7 @@ namespace UnityEngine.Localization.Settings
             if (localeOp.IsDone)
                 return localeOp.Result;
             return localeOp.WaitForCompletion();
-        } 
+        }
 
         /// <summary>
         /// Indicates that the Locale is no longer available.

@@ -1,3 +1,5 @@
+#if PACKAGE_UGUI
+
 using UnityEditor;
 using UnityEditor.Localization;
 using UnityEngine;
@@ -201,3 +203,5 @@ public class LocalizedStringConstructor
         #endregion
     }
 }
+
+#endif

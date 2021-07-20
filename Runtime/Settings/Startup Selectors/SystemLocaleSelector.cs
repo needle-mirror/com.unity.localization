@@ -10,7 +10,7 @@ namespace UnityEngine.Localization.Settings
     public class SystemLocaleSelector : IStartupLocaleSelector
     {
         /// <summary>
-        /// Uses <see cref="Application.systemLanguage"/> to find a matching <see cref="Locale"/> from the available locales.
+        /// Uses <see cref="CultureInfo.CurrentUICulture"/> and <see cref="Application.systemLanguage"/> to find a matching <see cref="Locale"/> from the available locales.
         /// </summary>
         /// <param name="availableLocales"></param>
         /// <returns></returns>
@@ -22,6 +22,7 @@ namespace UnityEngine.Localization.Settings
             if (locale == null)
             {
                 // Attempt to use CultureInfo fallbacks to find the closest locale
+                cultureInfo = cultureInfo.Parent;
                 while (cultureInfo != CultureInfo.InvariantCulture && locale == null)
                 {
                     locale = availableLocales.GetLocale(cultureInfo);
@@ -32,7 +33,7 @@ namespace UnityEngine.Localization.Settings
                 #if !UNITY_EDITOR
                 if (locale != null)
                 {
-                    Debug.Log($"The Locale '{CultureInfo.CurrentUICulture}' is not available, however the parent locale '{locale.Identifier.CultureInfo}' is available.");
+                    Debug.Log($"The Locale '{GetSystemCulture()}' is not available, however the parent locale '{locale.Identifier.CultureInfo}' is available.");
                 }
                 #endif
             }

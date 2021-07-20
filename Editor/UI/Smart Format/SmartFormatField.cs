@@ -372,7 +372,6 @@ namespace UnityEditor.Localization.UI
 
             var smartFormatFieldWidth = rect.width - (ShowMetadataButton ? metaDataButtonWidth + 2 : 0);
             var smartFormatRect = new Rect(rect.x + (ShowMetadataButton ? metaDataButtonWidth + 2 : 0), rect.y, smartFormatFieldWidth, k_ToolbarHeight);
-            smartFormatRect = EditorGUI.PrefixLabel(smartFormatRect, GUIContent.none);
             var newIsSmart = GUI.Toggle(smartFormatRect, IsSmart, "Smart");
             if (EditorGUI.EndChangeCheck())
             {
@@ -385,12 +384,13 @@ namespace UnityEditor.Localization.UI
             if (IsSmart)
             {
                 var header = new Rect(rect.x, rect.y, rect.width, EditorStyles.toolbarButton.lineHeight);
-                header = EditorGUI.PrefixLabel(header, GUIContent.none);
                 var choices =  ShowPreviewTab ? k_ModesWithPreview : k_Modes;
                 m_Mode = (Mode)GUI.SelectionGrid(header, (int)m_Mode, choices, choices.Length, EditorStyles.miniButtonMid);
                 rect.yMin += header.height + EditorGUIUtility.standardVerticalSpacing;
             }
 
+            var indent = EditorGUI.indentLevel;
+            EditorGUI.indentLevel = 0;
             switch (m_Mode)
             {
                 case Mode.Edit:
@@ -412,6 +412,8 @@ namespace UnityEditor.Localization.UI
                     EditorGUI.LabelField(rect, PreviewText, m_TextAreaStyle);
                     break;
             }
+
+            EditorGUI.indentLevel = indent;
             return change;
         }
 

@@ -9,7 +9,7 @@ namespace UnityEditor.Localization.UI
     [CustomEditor(typeof(Locale))]
     class LocaleEditor : UnityEditor.Editor
     {
-        class Styles
+        static class Styles
         {
             public static readonly GUIContent code = new GUIContent("Locale Code");
             public static readonly GUIContent cultureNotFoundLabel = new GUIContent("Not Found");

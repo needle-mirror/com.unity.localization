@@ -31,8 +31,8 @@ namespace UnityEngine.Localization.Tests
 
         void CheckEntryWasRequested(string expectedTableCollectionName, string expectedEntryName)
         {
-            Assert.IsNotNull(m_FixtureAssetDatabase.LastTableReference, "Expected LocalizeString to call into LocalizedStringDatabase with a valid TableReference but it did not.");
-            Assert.IsNotNull(m_FixtureAssetDatabase.LastTableEntryReference, "Expected LocalizeString to call into LocalizedStringDatabase with a valid TableEntryReference but it did not.");
+            Assert.IsNotNull(m_FixtureAssetDatabase.LastTableReference, "Expected LocalizeAsset to call into LocalizedStringDatabase with a valid TableReference but it did not.");
+            Assert.IsNotNull(m_FixtureAssetDatabase.LastTableEntryReference, "Expected LocalizeAsset to call into LocalizedStringDatabase with a valid TableEntryReference but it did not.");
 
             Assert.AreEqual(expectedTableCollectionName, m_FixtureAssetDatabase.LastTableReference.Value.TableCollectionName, "Expected table collection name to match.");
             Assert.AreEqual(expectedEntryName, m_FixtureAssetDatabase.LastTableEntryReference.Value.Key, "Expected entry key name to match.");

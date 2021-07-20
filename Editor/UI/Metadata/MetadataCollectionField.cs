@@ -5,7 +5,7 @@ using UnityEngine.Localization.Metadata;
 
 namespace UnityEditor.Localization.UI
 {
-    class MetadataCollectionFieldPropertyData
+    class MetadataCollectionFieldPropertyData : PropertyDrawerExtendedData
     {
         public SerializedProperty m_ItemsProperty;
         public Type m_DeferredAdd;

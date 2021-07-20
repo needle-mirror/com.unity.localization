@@ -303,7 +303,7 @@ namespace UnityEditor.Localization.Plugins.Google
             }
             catch (Exception e)
             {
-                reporter?.Fail(e.Message);
+                reporter?.Fail(e.ToString());
                 throw;
             }
         }
@@ -348,7 +348,7 @@ namespace UnityEditor.Localization.Plugins.Google
             }
             catch (Exception e)
             {
-                reporter?.Fail(e.Message);
+                reporter?.Fail(e.ToString());
                 throw;
             }
         }
@@ -384,7 +384,7 @@ namespace UnityEditor.Localization.Plugins.Google
                 // Now process each sheet column so they can update their requests.
                 foreach (var colReq in columnSheetRequests)
                 {
-                    if (tableEntries[0].SharedEntry.Metadata.HasMetadata<ExcludeEntryFromExport>())
+                    if (tableEntries[0] != null && tableEntries[0].SharedEntry.Metadata.HasMetadata<ExcludeEntryFromExport>())
                         continue;
 
                     colReq.Column.PushCellData(keyEntry, tableEntries, out var value, out var note);

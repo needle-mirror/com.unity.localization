@@ -44,6 +44,27 @@ namespace UnityEngine.Localization.Tables
                 assetTable.Remove(KeyId);
             }
         }
+
+        /// <summary>
+        /// Provides support for overriding the localized asset for the Entry. Note this is only temporary and will not persist in the Editor or if the table is reloaded.
+        /// This allows for a table to be updated in the player.
+        /// </summary>
+        /// <typeparam name="T">The type to store the asset as locally.</typeparam>
+        /// <param name="asset">The asset reference to use instead of <see cref="Guid"/>.</param>
+        /// <example>
+        /// This example shows how you can update the AssetTable entry values when the Locale is changed.
+        /// <code source="../../DocCodeSamples.Tests/LocalizedAssetSamples.cs" region="override-asset-entry-1"/>
+        /// </example>
+        /// <example>
+        /// This example shows how you can update all AssetTable entries at the start and ensure that the tables are never unloaded so that the changes are persistent throughtout the lifetime of the player.
+        /// <code source="../../DocCodeSamples.Tests/LocalizedAssetSamples.cs" region="override-asset-entry-2"/>
+        /// </example>
+        public void SetAssetOverride<T>(T asset) where T : Object
+        {
+            if (AsyncOperation.HasValue)
+                AddressablesInterface.Release(AsyncOperation.Value);
+            AsyncOperation = AddressablesInterface.ResourceManager.CreateCompletedOperation(asset, null);
+        }
     }
 
     /// <summary>
@@ -109,16 +130,15 @@ namespace UnityEngine.Localization.Tables
         /// Returns the loading operation for the asset.
         /// Check isDone to see if the asset is available for immediate use, if not you can yield on the operation or add a callback subscriber.
         /// </summary>
-        /// <param name="key"></param>
+        /// <param name="entryReference"></param>
         /// <returns></returns>
-        public AsyncOperationHandle<TObject> GetAssetAsync<TObject>(long keyId) where TObject : Object
+        public AsyncOperationHandle<TObject> GetAssetAsync<TObject>(TableEntryReference entryReference) where TObject : Object
         {
-            var entry = GetEntry(keyId);
+            var entry = GetEntryFromReference(entryReference);
             if (entry == null)
             {
-                var keyName = SharedData.GetKey(keyId);
-
-                return ResourceManager.CreateCompletedOperation<TObject>(null, $"Could not find asset with key \"{keyName}({keyId})\"");
+                var keyName = entryReference.ResolveKeyName(SharedData);
+                return ResourceManager.CreateCompletedOperation<TObject>(null, $"Could not find asset with key \"{keyName}\"");
             }
             return GetAssetAsync<TObject>(entry);
         }
@@ -185,7 +205,7 @@ namespace UnityEngine.Localization.Tables
         {
             if (m_PreloadOperationHandle.HasValue)
             {
-                AddressablesInterface.Release(m_PreloadOperationHandle.Value);
+                AddressablesInterface.SafeRelease(m_PreloadOperationHandle.Value);
                 m_PreloadOperationHandle = null;
             }
 
@@ -193,7 +213,7 @@ namespace UnityEngine.Localization.Tables
             {
                 if (entry.AsyncOperation.HasValue)
                 {
-                    AddressablesInterface.Release(entry.AsyncOperation.Value);
+                    AddressablesInterface.SafeRelease(entry.AsyncOperation.Value);
                     entry.AsyncOperation = null;
                 }
             }
@@ -211,13 +231,13 @@ namespace UnityEngine.Localization.Tables
 
             if (m_PreloadOperationHandle.HasValue)
             {
-                AddressablesInterface.Release(m_PreloadOperationHandle.Value);
+                AddressablesInterface.SafeRelease(m_PreloadOperationHandle.Value);
                 m_PreloadOperationHandle = null;
             }
 
             if (entry.AsyncOperation.HasValue)
             {
-                AddressablesInterface.Release(entry.AsyncOperation.Value);
+                AddressablesInterface.SafeRelease(entry.AsyncOperation.Value);
                 entry.AsyncOperation = null;
             }
         }

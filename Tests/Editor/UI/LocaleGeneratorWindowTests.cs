@@ -16,7 +16,7 @@ namespace UnityEditor.Localization.Tests.UI
 
         class ProjectWithNoLocales : LocalizationEditorSettings
         {
-            protected internal override ReadOnlyCollection<Locale> GetLocalesInternal()
+            internal override ReadOnlyCollection<Locale> GetLocalesInternal()
             {
                 return new ReadOnlyCollection<Locale>(new Locale[0]);
             }

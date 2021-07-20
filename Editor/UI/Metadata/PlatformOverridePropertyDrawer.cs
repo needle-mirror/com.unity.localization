@@ -7,8 +7,14 @@ using UnityEngine.Pool;
 
 namespace UnityEditor.Localization.UI
 {
+    class PlatformOverridePropertyData : PropertyDrawerExtendedData
+    {
+        public SerializedProperty m_PlatformOverridesProperty;
+        public ReorderableList m_PlatformOverridesList;
+    }
+
     [CustomPropertyDrawer(typeof(PlatformOverride))]
-    class PlatformOverridePropertyDrawer : PropertyDrawer
+    class PlatformOverridePropertyDrawer : PropertyDrawerExtended<PlatformOverridePropertyData>
     {
         class Styles
         {
@@ -18,7 +24,6 @@ namespace UnityEditor.Localization.UI
             public static readonly GUIContent tableCollection = new GUIContent("Table Collection");
         }
 
-        ReorderableList m_PlatformOverridesList;
         LocalizationTableCollection m_Collection;
         Type m_TableType;
 
@@ -30,19 +35,35 @@ namespace UnityEditor.Localization.UI
             s_PlatformValues = Enum.GetValues(typeof(RuntimePlatform)) as int[];
         }
 
-        void Init(SerializedProperty property)
+        public override PlatformOverridePropertyData CreatePropertyData(SerializedProperty property)
         {
-            if (m_PlatformOverridesList == null)
+            var data = new PlatformOverridePropertyData
             {
-                m_PlatformOverridesList = new ReorderableList(property.serializedObject, property.FindPropertyRelative("m_PlatformOverrides"))
+                m_PlatformOverridesProperty = property.FindPropertyRelative("m_PlatformOverrides"),
+            };
+
+            data.m_PlatformOverridesList = new ReorderableList(property.serializedObject, data.m_PlatformOverridesProperty);
+            data.m_PlatformOverridesList.drawElementCallback = (rect, index, isActive, isFocused) => DrawListElement(rect, index, isActive, isFocused, data);
+            data.m_PlatformOverridesList.drawHeaderCallback = DrawListHeader;
+            data.m_PlatformOverridesList.onAddDropdownCallback = (rect, _) => DrawAddDropdown(rect, data);
+            data.m_PlatformOverridesList.elementHeightCallback = (index) => GetHeight(index, data);
+
+            return data;
+        }
+
+        void Init(PlatformOverridePropertyData data, SerializedProperty property)
+        {
+            if (data.m_PlatformOverridesList == null)
+            {
+                data.m_PlatformOverridesList = new ReorderableList(property.serializedObject, data.m_PlatformOverridesProperty)
                 {
-                    drawElementCallback = DrawListElement,
+                    drawElementCallback = (rect, index, isActive, isFocused) => DrawListElement(rect, index, isActive, isFocused, data),
                     drawHeaderCallback = DrawListHeader,
-                    onAddDropdownCallback = DrawAddDropdown,
-                    elementHeightCallback = GetHeight
+                    onAddDropdownCallback = (rect, _) => DrawAddDropdown(rect, data),
+                    elementHeightCallback = (index) => GetHeight(index, data)
                 };
 
-                var target = m_PlatformOverridesList.serializedProperty.serializedObject.targetObject;
+                var target = data.m_PlatformOverridesList.serializedProperty.serializedObject.targetObject;
                 SharedTableData sharedTableData = target as SharedTableData ?? (target as LocalizationTable)?.SharedData;
                 Debug.Assert(sharedTableData != null, "Shared Table Data is null. Platform Override can only be used on a Shared Table Entry.");
                 m_Collection = LocalizationEditorSettings.GetCollectionForSharedTableData(sharedTableData);
@@ -50,12 +71,12 @@ namespace UnityEditor.Localization.UI
             }
         }
 
-        void DrawListElement(Rect rect, int index, bool isActive, bool isFocused)
+        void DrawListElement(Rect rect, int index, bool isActive, bool isFocused, PlatformOverridePropertyData data)
         {
             rect.height = EditorGUIUtility.singleLineHeight;
 
             rect.xMin += 12; // Small indent so the foldout arrow does not cover the dragger.
-            var element = m_PlatformOverridesList.serializedProperty.GetArrayElementAtIndex(index);
+            var element = data.m_PlatformOverridesList.serializedProperty.GetArrayElementAtIndex(index);
             var platform = (RuntimePlatform)element.FindPropertyRelative("platform").intValue;
 
             EditorGUI.LabelField(rect, EditorGUIUtility.TrTempContent(platform.ToString()), EditorStyles.boldLabel);
@@ -200,13 +221,13 @@ namespace UnityEditor.Localization.UI
             EditorGUI.LabelField(rect, kPlatformOverrides);
         }
 
-        void DrawAddDropdown(Rect buttonRect, ReorderableList list)
+        void DrawAddDropdown(Rect buttonRect, PlatformOverridePropertyData data)
         {
             using (HashSetPool<int>.Get(out var hashSet))
             {
-                for (int i = 0; i < m_PlatformOverridesList.serializedProperty.arraySize; ++i)
+                for (int i = 0; i < data.m_PlatformOverridesList.serializedProperty.arraySize; ++i)
                 {
-                    hashSet.Add(m_PlatformOverridesList.serializedProperty.GetArrayElementAtIndex(i).FindPropertyRelative("platform").intValue);
+                    hashSet.Add(data.m_PlatformOverridesList.serializedProperty.GetArrayElementAtIndex(i).FindPropertyRelative("platform").intValue);
                 }
 
                 var menu = new GenericMenu();
@@ -215,16 +236,19 @@ namespace UnityEditor.Localization.UI
                     if (!hashSet.Contains(platform))
                     {
                         var label = EditorGUIUtility.TrTextContent(((RuntimePlatform)platform).ToString());
-                        menu.AddItem(label, false, AddPlatform, platform);
+                        menu.AddItem(label, false, () =>
+                        {
+                            AddPlatform(platform, data);
+                        });
                     }
                 }
                 menu.DropDown(buttonRect);
             }
         }
 
-        float GetHeight(int index)
+        float GetHeight(int index, PlatformOverridePropertyData data)
         {
-            var element = m_PlatformOverridesList.serializedProperty.GetArrayElementAtIndex(index);
+            var element = data.m_PlatformOverridesList.serializedProperty.GetArrayElementAtIndex(index);
             var overrideTypeProperty = element.FindPropertyRelative("entryOverrideType");
             var overrideType = (EntryOverrideType)overrideTypeProperty.intValue;
 
@@ -232,23 +256,26 @@ namespace UnityEditor.Localization.UI
             return overrideType == EntryOverrideType.None ? singleLine * 2 : singleLine * 3;
         }
 
-        void AddPlatform(object platform)
+        void AddPlatform(int platform, PlatformOverridePropertyData data)
         {
-            var item = m_PlatformOverridesList.serializedProperty.AddArrayElement();
+            var item = data.m_PlatformOverridesList.serializedProperty.AddArrayElement();
             item.FindPropertyRelative("platform").intValue = (int)platform;
-            m_PlatformOverridesList.serializedProperty.serializedObject.ApplyModifiedProperties();
+            data.m_PlatformOverridesList.serializedProperty.serializedObject.ApplyModifiedProperties();
         }
 
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        public override void OnGUI(PlatformOverridePropertyData data, Rect position, SerializedProperty property, GUIContent label)
         {
-            Init(property);
-            m_PlatformOverridesList.DoList(position);
+            Init(data, property);
+            data.m_PlatformOverridesList.DoList(position);
         }
 
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        public override float GetPropertyHeight(PlatformOverridePropertyData data, SerializedProperty property, GUIContent label)
         {
-            Init(property);
-            return m_PlatformOverridesList.GetHeight();
+            var height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+
+            Init(data, property);
+            height += data.m_PlatformOverridesList.GetHeight();
+            return height;
         }
     }
 }

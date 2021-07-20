@@ -192,7 +192,7 @@ namespace UnityEngine.Localization.Tables
         /// <summary>
         /// Returns the Entry for the key id, this contains all data for the key.
         /// </summary>
-        /// <param name="id">Id the key belongs to.</param>
+        /// <param name="tableEntryReference">Reference to the entry.</param>
         /// <returns>The found key entry or null if one can not be found.</returns>
         public SharedTableEntry GetEntryFromReference(TableEntryReference tableEntryReference)
         {
@@ -236,39 +236,32 @@ namespace UnityEngine.Localization.Tables
         public bool Contains(string key) => FindWithKey(key) != null;
 
         /// <summary>
-        /// Adds a new key to this SharedTableData if one does not already exists with the same value. Duplicates are not allowed.
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns>The new key or null if the key is already in use.</returns>
-        public SharedTableEntry AddKey(string key) => !Contains(key) ? AddKeyInternal(key) : null;
-
-        /// <summary>
-        /// Adds a new key to this SharedTableData if one does not already exists with the same name and id. Duplicates are not allowed.
+        /// Adds a new key to this SharedTableData if one does not already exists with the same id.
         /// </summary>
         /// <param name="key">The unique key name to assign to the entry.</param>
         /// <param name="id">The unique id to assign to the key.</param>
-        /// <returns>The new entry or null if an entry already exists with the key or id.</returns>
+        /// <returns>The new entry or null if an entry already exists with the same id.</returns>
         public SharedTableEntry AddKey(string key, long id)
         {
-            if (!Contains(id) && !Contains(id))
-                return AddKeyInternal(key, id);
-            return null;
+            return !Contains(id) ? AddKeyInternal(key, id) : null;
         }
 
         /// <summary>
-        /// Adds a new key to this SharedTableData with a default name.
+        /// Adds a new key to this SharedTableData with a default name. If the name already exists then a unique version is generated based on the provided name.
         /// </summary>
+        /// <param name="key">The name for the new Key.</param>
         /// <returns></returns>
-        public SharedTableEntry AddKey()
+        public SharedTableEntry AddKey(string key = null)
         {
-            var keyToTry = NewEntryKey;
+            var newKeyName = string.IsNullOrEmpty(key) ? NewEntryKey : key;
             SharedTableEntry entry = null;
             int counter = 1;
+            var keyToTry = newKeyName;
             while (entry == null)
             {
                 if (Contains(keyToTry))
                 {
-                    keyToTry = $"{NewEntryKey} {counter++}";
+                    keyToTry = $"{newKeyName} {counter++}";
                 }
                 else
                 {
@@ -531,7 +524,7 @@ namespace UnityEngine.Localization.Tables
                 // We have to defer as we can not use the asset database whilst inside of OnAfterDeserialize.
                 UnityEditor.EditorApplication.delayCall += () =>
                 {
-                    if (UnityEditor.AssetDatabase.TryGetGUIDAndLocalFileIdentifier(this, out string guid, out long _))
+                    if (this != null && UnityEditor.AssetDatabase.TryGetGUIDAndLocalFileIdentifier(this, out string guid, out long _))
                     {
                         m_TableCollectionNameGuid = Guid.Parse(guid);
                         UnityEditor.EditorUtility.SetDirty(this);

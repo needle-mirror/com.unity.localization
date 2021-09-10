@@ -9,6 +9,9 @@ using UnityEngine.Localization.SmartFormat.Utilities;
 
 namespace UnityEngine.Localization.SmartFormat.Extensions
 {
+    /// <summary>
+    /// Provides the ability to handle plural forms.
+    /// </summary>
     [Serializable]
     public class PluralLocalizationFormatter : FormatterBase, IFormatterLiteralExtractor
     {
@@ -17,6 +20,9 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
 
         PluralRules.PluralRuleDelegate m_DefaultPluralRule;
 
+        /// <summary>
+        /// The default language to use for plurals if one can not be found.
+        /// </summary>
         public string DefaultTwoLetterISOLanguageName
         {
             get => m_DefaultTwoLetterISOLanguageName;
@@ -27,13 +33,18 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             }
         }
 
+        /// <summary>
+        /// Creates a new instance of the formatter.
+        /// </summary>
         public PluralLocalizationFormatter()
         {
             Names = DefaultNames;
         }
 
+        /// <inheritdoc/>
         public override string[] DefaultNames => new[] { "plural", "p", "" };
 
+        /// <inheritdoc/>
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {
             var format = formattingInfo.Format;
@@ -80,6 +91,11 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             return true;
         }
 
+        /// <summary>
+        /// Returns the plural rule for the formatting info.
+        /// </summary>
+        /// <param name="formattingInfo"></param>
+        /// <returns></returns>
         protected virtual PluralRules.PluralRuleDelegate GetPluralRule(IFormattingInfo formattingInfo)
         {
             // See if the language was explicitly passed:
@@ -129,6 +145,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             return m_DefaultPluralRule ?? (m_DefaultPluralRule = PluralRules.GetPluralRule(DefaultTwoLetterISOLanguageName));
         }
 
+        /// <inheritdoc/>
         public void WriteAllLiterals(IFormattingInfo formattingInfo)
         {
             var format = formattingInfo.Format;
@@ -157,16 +174,29 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     {
         private readonly PluralRules.PluralRuleDelegate _pluralRule;
 
+        /// <summary>
+        /// Creates a new instance of the plural rule provider.
+        /// </summary>
+        /// <param name="pluralRule">The plural rule to use for this provider.</param>
         public CustomPluralRuleProvider(PluralRules.PluralRuleDelegate pluralRule)
         {
             _pluralRule = pluralRule;
         }
 
+        /// <summary>
+        /// Returns the formatter when <paramref name="formatType"/> is <see cref="CustomPluralRuleProvider"/>, otherwise returns <c>null</c>.
+        /// </summary>
+        /// <param name="formatType"></param>
+        /// <returns></returns>
         public object GetFormat(Type formatType)
         {
             return formatType == typeof(CustomPluralRuleProvider) ? this : null;
         }
 
+        /// <summary>
+        /// Returns the custom plural rule delegate.
+        /// </summary>
+        /// <returns></returns>
         public PluralRules.PluralRuleDelegate GetPluralRule()
         {
             return _pluralRule;

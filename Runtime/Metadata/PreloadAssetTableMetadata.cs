@@ -17,7 +17,7 @@ namespace UnityEngine.Localization.Metadata
         public enum PreloadBehaviour
         {
             /// <summary>
-            /// Override that will stop any preloading on this table including entries that have <see cref="PreloadAssetMetadata"/> metadata.
+            /// Override that will stop any preloading on this table including entries that have <see cref="PreloadAssetTableMetadata"/> metadata.
             /// </summary>
             NoPreload,
 
@@ -27,7 +27,7 @@ namespace UnityEngine.Localization.Metadata
             PreloadAll,
 
             /// <summary>
-            /// Preload only the assets that have <see cref="PreloadAssetMetadata"/> metadata.
+            /// Preload only the assets that have <see cref="PreloadAssetTableMetadata"/> metadata.
             /// </summary>
             //PreloadSelected,
         }

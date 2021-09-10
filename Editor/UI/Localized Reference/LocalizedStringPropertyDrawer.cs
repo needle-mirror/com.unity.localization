@@ -1,8 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
+using UnityEngine.Localization.SmartFormat.Extensions;
+using UnityEngine.Localization.SmartFormat.PersistentVariables;
 using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization.UI
@@ -10,37 +14,15 @@ namespace UnityEditor.Localization.UI
     [CustomPropertyDrawer(typeof(LocalizedString), true)]
     class LocalizedStringPropertyDrawer : LocalizedReferencePropertyDrawer<StringTableCollection>
     {
-        public bool ShowPreview { get; set; } = true;
-
         static GUIStyle s_FoldoutStyle;
 
         public class StringPropertyData : Data
         {
             List<LocaleField> m_SmartFormatFields;
-            object[] m_PreviewArguments;
 
-            public ReorderableList previewArgumentsList;
+            public LocalizedString localizedString;
+            public ReorderableListExtended variableArguments;
             public string expandedSessionKey;
-
-            public bool previewExpanded;
-
-            public object[] PreviewArguments
-            {
-                get => m_PreviewArguments;
-                set
-                {
-                    m_PreviewArguments = value;
-
-                    if (m_SmartFormatFields != null)
-                    {
-                        foreach (var field in m_SmartFormatFields)
-                        {
-                            if (field.SmartEditor != null)
-                                field.SmartEditor.Arguments = value;
-                        }
-                    }
-                }
-            }
 
             public class LocaleField
             {
@@ -105,7 +87,7 @@ namespace UnityEditor.Localization.UI
                     smartField.ShowMetadataButton = false;
                     smartField.ShowPreviewTab = true;
                     smartField.MinHeight = EditorGUIUtility.singleLineHeight;
-                    smartField.Arguments = PreviewArguments;
+                    smartField.LocalizedString = localizedString;
                     smartField.RefreshData();
                     return smartField;
                 }
@@ -121,21 +103,6 @@ namespace UnityEditor.Localization.UI
                 }
             }
 
-            public void UpdateArguments(ReorderableList _)
-            {
-                PreviewArguments = (previewArgumentsList.list as List<Object>).ToArray();
-                LocaleFields.ForEach(sf => sf.SmartEditor?.ResetCache());
-            }
-
-            void DrawPreviewElement(Rect rect, int index, bool isActive, bool isFocused)
-            {
-                var list = previewArgumentsList.list as List<Object>;
-                EditorGUI.BeginChangeCheck();
-                list[index] = EditorGUI.ObjectField(rect, list[index], typeof(Object), true);
-                if (EditorGUI.EndChangeCheck())
-                    UpdateArguments(previewArgumentsList);
-            }
-
             public override void Reset()
             {
                 base.Reset();
@@ -145,11 +112,6 @@ namespace UnityEditor.Localization.UI
             public override void Init(SerializedProperty property)
             {
                 base.Init(property);
-                previewArgumentsList = new ReorderableList(new List<Object>(), typeof(Object));
-                previewArgumentsList.headerHeight = 1;
-                previewArgumentsList.drawElementCallback = DrawPreviewElement;
-                previewArgumentsList.onChangedCallback = UpdateArguments;
-
                 serializedObject = property.serializedObject;
                 tableReference = new SerializedTableReference(property.FindPropertyRelative("m_TableReference"));
                 tableEntryReference = new SerializedTableEntryReference(property.FindPropertyRelative("m_TableEntryReference"));
@@ -174,10 +136,91 @@ namespace UnityEditor.Localization.UI
             var prop = new StringPropertyData()
             {
                 entryNameLabel = Styles.entryName,
-                PreviewArguments = new object[0],
-                expandedSessionKey = $"{property.serializedObject.targetObject.GetInstanceID()}-{property.propertyPath}"
+                expandedSessionKey = $"{property.serializedObject.targetObject.GetInstanceID()}-{property.propertyPath}",
+                localizedString = property.GetActualObjectForSerializedProperty<LocalizedString>(fieldInfo),
+                variableArguments = new ReorderableListExtended(property.serializedObject, property.FindPropertyRelative("m_LocalVariables"))
+                {
+                    Header = new GUIContent("Local Variables"),
+                    onAddDropdownCallback = ShowArgumentsAddMenu,
+                }
             };
+
+            prop.variableArguments.drawElementCallback = (r, i, a, f) => DrawArgumentElement(prop.variableArguments, r, i, a, f);
+            prop.variableArguments.elementHeightCallback = i => GetArgumentElementHeight(prop.variableArguments, i);
             return prop;
+        }
+
+        static bool HasPersistentVariablesSource() => LocalizationSettings.StringDatabase?.SmartFormatter?.GetSourceExtension<PersistentVariablesSource>() != null;
+
+        void ShowArgumentsAddMenu(Rect rect, ReorderableList list)
+        {
+            var menu = new GenericMenu();
+            TypeUtility.PopulateMenuWithCreateItems(menu, typeof(IVariable), type =>
+            {
+                var element = list.serializedProperty.AddArrayElement();
+
+                var variable = element.FindPropertyRelative("variable");
+                variable.managedReferenceValue = Activator.CreateInstance(type);
+
+                var name = element.FindPropertyRelative("name");
+                name.stringValue = list.serializedProperty.arraySize > 1 ? $"variable-{list.serializedProperty.arraySize - 1}" : "variable";
+
+                list.serializedProperty.serializedObject.ApplyModifiedProperties();
+            });
+
+            menu.ShowAsContext();
+        }
+
+        void DrawArgumentElement(ReorderableListExtended list, Rect rect, int idx, bool isActive, bool isFocused)
+        {
+            rect.yMin += EditorGUIUtility.standardVerticalSpacing;
+
+            var element = list.serializedProperty.GetArrayElementAtIndex(idx);
+            var name = element.FindPropertyRelative("name");
+            var variable = element.FindPropertyRelative("variable");
+            var label = variable.hasMultipleDifferentValues ? Styles.mixedValueContent : ManagedReferenceUtility.GetDisplayName(variable.managedReferenceFullTypename);
+
+            EditorGUI.BeginChangeCheck();
+            var nameRect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
+            EditorGUI.BeginProperty(nameRect, Styles.variableName, name);
+            var newName = EditorGUI.TextField(nameRect, Styles.variableName, name.stringValue);
+            EditorGUI.EndProperty();
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                name.stringValue = newName.ReplaceWhiteSpaces("-");
+            }
+
+            rect.yMin = nameRect.yMax + EditorGUIUtility.standardVerticalSpacing;
+            EditorGUI.PropertyField(rect, variable, label, true);
+        }
+
+        float GetArgumentElementHeight(ReorderableListExtended list, int idx)
+        {
+            var element = list.serializedProperty.GetArrayElementAtIndex(idx);
+            var variable = element.FindPropertyRelative("variable");
+            return EditorGUI.GetPropertyHeight(variable, GUIContent.none, true) + EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 3;
+        }
+
+        public override void OnGUI(Data data, Rect position, SerializedProperty property, GUIContent label)
+        {
+            base.OnGUI(data, position, property, label);
+
+            if (!property.isExpanded)
+                return;
+
+            var stringPropertyData = (StringPropertyData)data;
+            var height = stringPropertyData.variableArguments.GetHeight();
+
+            var listPosition = new Rect(position.x, position.yMax - height - EditorGUIUtility.standardVerticalSpacing, position.width, height);
+            stringPropertyData.variableArguments.DoList(listPosition);
+
+            if (stringPropertyData.variableArguments.count > 0 && LocalizationSettings.StringDatabase != null && !HasPersistentVariablesSource())
+            {
+                LocalizationSettings.StringDatabase.SmartFormatter.SourceExtensions.Insert(1, new PersistentVariablesSource(LocalizationSettings.StringDatabase.SmartFormatter));
+                EditorUtility.SetDirty(LocalizationSettings.Instance);
+                Debug.LogWarning("A PersistentVariablesSource is required to use Format Arguments. One has been added to the active LocalizationSettings.", property.serializedObject.targetObject);
+            }
         }
 
         protected override void DrawTableEntryDetails(ref Rect rowPosition, Data data, Rect position)
@@ -206,7 +249,7 @@ namespace UnityEditor.Localization.UI
                         stringPropertyData.LocaleFields[i] = field;
                         GUIUtility.ExitGUI();
                     }
-                    rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
+                    rowPosition.MoveToNextLine();
                     continue;
                 }
 
@@ -223,32 +266,17 @@ namespace UnityEditor.Localization.UI
 
                 // Preview label
                 EditorGUI.LabelField(labelPos, field.SmartEditor.Label);
-                rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
+                rowPosition.MoveToNextLine();
 
                 if (field.Expanded)
                 {
                     rowPosition.height = field.SmartEditor.Height;
                     field.SmartEditor.Draw(rowPosition);
-                    rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
+                    rowPosition.MoveToNextLine();
                 }
                 EditorGUI.EndFoldoutHeaderGroup();
                 stringPropertyData.LocaleFields[i] = field;
                 rowPosition.xMin = xMin;
-            }
-
-            // Preview tab
-            if (ShowPreview)
-            {
-                rowPosition.height = EditorGUIUtility.singleLineHeight;
-                var prevArgs = EditorGUI.PrefixLabel(rowPosition, GUIContent.none);
-                stringPropertyData.previewExpanded = EditorGUI.BeginFoldoutHeaderGroup(prevArgs, stringPropertyData.previewExpanded, Styles.previewArguments);
-                prevArgs.MoveToNextLine();
-                if (stringPropertyData.previewExpanded)
-                {
-                    prevArgs.height = stringPropertyData.previewArgumentsList.GetHeight();
-                    stringPropertyData.previewArgumentsList.DoList(prevArgs);
-                }
-                EditorGUI.EndFoldoutHeaderGroup();
             }
         }
 
@@ -256,33 +284,21 @@ namespace UnityEditor.Localization.UI
         {
             float height = base.GetPropertyHeight(data, property, label);
 
-            if (property.isExpanded && data.SelectedTableEntry != null)
+            if (property.isExpanded)
             {
                 var stringPropertyData = (StringPropertyData)data;
 
-                foreach (var field in stringPropertyData.LocaleFields)
+                height += stringPropertyData.variableArguments.GetHeight() + EditorGUIUtility.standardVerticalSpacing;
+
+                if (data.SelectedTableEntry != null)
                 {
-                    height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing; // Locale label/foldout
-                    if (field.Expanded)
+                    foreach (var field in stringPropertyData.LocaleFields)
                     {
-                        if (field.SmartEditor != null)
+                        height += EditorStyles.foldoutHeader.fixedHeight + EditorGUIUtility.standardVerticalSpacing; // Locale label/foldout
+                        if (field.Expanded && field.SmartEditor != null)
                         {
                             height += field.SmartEditor.Height + EditorGUIUtility.standardVerticalSpacing;
                         }
-                        else
-                        {
-                            height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing; // Locale label/foldout
-                        }
-                    }
-                }
-
-                // Preview field
-                if (ShowPreview)
-                {
-                    height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing; // Preview foldout
-                    if (stringPropertyData.previewExpanded)
-                    {
-                        height += stringPropertyData.previewArgumentsList.GetHeight() + EditorGUIUtility.standardVerticalSpacing; // Preview foldout
                     }
                 }
             }

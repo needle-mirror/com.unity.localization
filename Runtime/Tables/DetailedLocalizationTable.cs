@@ -262,6 +262,9 @@ namespace UnityEngine.Localization.Tables
         public override string ToString() => $"{KeyId} - {LocalizedValue}";
     };
 
+    /// <summary>
+    /// Options for how to handle missing entries when using <see cref="DetailedLocalizationTable{TEntry}.CheckForMissingSharedTableDataEntries(MissingEntryAction)"/>.
+    /// </summary>
     public enum MissingEntryAction
     {
         /// <summary>
@@ -280,6 +283,10 @@ namespace UnityEngine.Localization.Tables
         RemoveEntriesFromTable
     }
 
+    /// <summary>
+    /// Provides common functionality for both string and asset tables.
+    /// </summary>
+    /// <typeparam name="TEntry"></typeparam>
     public abstract class DetailedLocalizationTable<TEntry> : LocalizationTable, IDictionary<long, TEntry>, ISerializationCallbackReceiver where TEntry : TableEntry
     {
         Dictionary<long, TEntry> m_TableEntries = new Dictionary<long, TEntry>();

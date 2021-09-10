@@ -7,15 +7,22 @@ using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization
 {
+    /// <summary>
+    /// Provides methods for managing multiple <see cref="StringTable"/> in the Editor.
+    /// </summary>
     public class StringTableCollection : LocalizationTableCollection
     {
+        /// <inheritdoc/>
         protected internal override Type TableType => typeof(StringTable);
 
+        /// <inheritdoc/>
         protected internal override Type RequiredExtensionAttribute => typeof(StringTableCollectionExtensionAttribute);
+
+        /// <inheritdoc/>
         protected internal override string DefaultGroupName => "String Table";
 
         /// <summary>
-        /// A helper property which is the contents of <see cref="Tables"/> loaded and cast to <see cref="StringTable"/>.
+        /// A helper property which is the contents of <see cref="LocalizationTableCollection.Tables"/> loaded and cast to <see cref="StringTable"/>.
         /// </summary>
         public virtual ReadOnlyCollection<StringTable> StringTables => new ReadOnlyCollection<StringTable>(Tables.Select(t => t.asset as StringTable).ToList().AsReadOnly());
 
@@ -59,43 +66,7 @@ namespace UnityEditor.Localization
         /// </summary>
         /// <example>
         /// This example shows how a StringTableCollection could be exported as CSV.
-        /// <code>
-        /// [MenuItem("CONTEXT/StringTableCollection/Print CSV")]
-        /// public static void CreateCSV(MenuCommand command)
-        /// {
-        ///     var collection = command.context as StringTableCollection;
-        ///
-        ///     StringBuilder sb = new StringBuilder();
-        ///
-        ///     // Header
-        ///     sb.Append("Key,");
-        ///     foreach (var table in collection.StringTables)
-        ///     {
-        ///         sb.Append(table.LocaleIdentifier);
-        ///         sb.Append(",");
-        ///     }
-        ///     sb.Append("\n");
-        ///
-        ///     // Add each row
-        ///     foreach (var row in collection.GetRowEnumerator())
-        ///     {
-        ///         // Key column
-        ///         sb.Append(row.KeyEntry.Key);
-        ///         sb.Append(",");
-        ///
-        ///         foreach (var tableEntry in row.TableEntries)
-        ///         {
-        ///             // The table entry will be null if no entry exists for this key
-        ///             sb.Append(tableEntry == null ? string.Empty : tableEntry.Value);
-        ///             sb.Append(",");
-        ///         }
-        ///         sb.Append("\n");
-        ///     }
-        ///
-        ///     // Print the contents. You could save it to a file here.
-        ///     Debug.Log(sb.ToString());
-        /// }
-        /// </code>
+        /// <code source="../../DocCodeSamples.Tests/TableCollectionSamples.cs" region="row-enumerator"/>
         /// </example>
         /// <returns></returns>
         public IEnumerable<Row<StringTableEntry>> GetRowEnumerator() => GetRowEnumerator<StringTable, StringTableEntry>(StringTables);

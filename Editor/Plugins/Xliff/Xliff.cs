@@ -40,6 +40,9 @@ namespace UnityEditor.Localization.Plugins.XLIFF
             Merge,
         }
 
+        /// <summary>
+        /// Optional import options which can be used to configure the importing behavior.
+        /// </summary>
         public class ImportOptions
         {
             /// <summary>

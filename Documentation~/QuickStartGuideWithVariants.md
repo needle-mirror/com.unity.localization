@@ -2,7 +2,6 @@
 
 **Note: This guide requires Unity 2020.3 and above.**
 
-
 This page explains how to set up a simple project with localized assets and strings. This covers the following steps:
 
 1. [Create the Localization Settings.](#create-the-localization-settings)
@@ -12,7 +11,7 @@ This page explains how to set up a simple project with localized assets and stri
 5. [Localize strings](#localize-strings)
 6. [Preview and configure your build.](#preview-and-configure-your-build)
 
-## 1. Create the Localization Settings
+## Create the Localization Settings
 
 The Project's Localization Settings is an Asset. To create this Asset, go to **Edit > Project Settings > Localization** and click **Create**
 
@@ -28,21 +27,22 @@ To open the Locale Generator window, navigate to the Localization Settings (menu
 
 1. Select the checkbox next to the Locales you want to add.
 2. Select **Generate Locales**.
-3. Select where you want to save the Assets to. 
+3. Select where you want to save the Assets to.
 Unity creates an asset file for each locale you select.
-
 
 ![Locale Generator window.](images/Create_Locale_Window.png)
 
 ## Choose a default Locale
 
-Use the [Locale Selectors](LocalizationSettings.md#locale-selector) to determine which Locale your application uses by default if it is not English(en). To do this, 
+Use the [Locale Selectors](LocalizationSettings.md#locale-selector) to determine which Locale your application uses by default if it is not English(en). To do this,
+
 1. Select the **Specific Locale Selector** field.
 2. Select the Locale Id field’s object picker.
 3. Double-click the locale to set as default.
 
 Your application uses this locale on startup, and when no other locale is selected.
 You should also set the project locale to the default locale. To do this:
+
 1. Select the **Project Locale Identifier** field’s object picker.
 2. Double-click the locale to set as the project locale.
 
@@ -73,7 +73,7 @@ First, you need to create an Asset Table. To do this, open the **Localization Ta
 The Localization system allows you to work directly with scene components and will record any changes made directly to a component for the currently active Locale. To do this you will need to first set up the project. Open the **Localization Scene Controls** window (menu: **Window > Asset Management > Localization Scene Controls**).
 Set the **Asset Table** field to the table collection that was just created. Any asset changes made now are recorded into the selected Asset Table.
 
-The Localization system allows you to work directly with scene components. It records any changes you make directly to a component for the currently active locale. To do this you will need to first set up the project. Open the **Localization Scene Controls** window  (menu: **Window > Asset Management > Localization Scene Controls**).
+The Localization system allows you to work directly with scene components. It records any changes you make directly to a component for the currently active locale. To do this you will need to first set up the project. Open the **Localization Scene Controls** window (menu: **Window > Asset Management > Localization Scene Controls**).
 
 1. In the Asset Table field select your table collection.
 2. Any asset changes you make now are recorded into the selected Asset Table.
@@ -86,27 +86,27 @@ Unity can access a localized Asset in multiple ways. This example uses the Local
 2. In the Active Locale field, select English.
 3. Enable the **Track Changes** toggle.
 
-![Localization Scene Controls window Asset Table field.](images/SceneViewWindow-ActiveLocale.png)
+    ![Localization Scene Controls window Asset Table field.](images/SceneViewWindow-ActiveLocale.png)
 
 4. For each locale, change the **Source Image** to use the flag for that locale.
 
-![Localizing a Sprite.](images/LocalizeSpriteEditor.gif)
+    ![Localizing a Sprite.](images/LocalizeSpriteEditor.gif)
 
-5. Run the Scene and use the Game View Locale selection dropdown to change the **Locale**. If everything is configured correctly, the country flag changes to the assigned sprite in the asset table. 
+5. Run the Scene and use the Game View Locale selection dropdown to change the **Locale**. If everything is configured correctly, the country flag changes to the assigned sprite in the asset table.
 
-If the Game View menu does not appear,  enable it in the Preferences window (menu: **Edit > Preferences > Localization**)
+    If the Game View menu does not appear, enable it in the Preferences window (menu: **Edit > Preferences > Localization**)
 
-![Localizing a Sprite.](images/LocalizeSprite.gif)
+    ![Localizing a Sprite.](images/LocalizeSprite.gif)
 
-You can use the **Locale Game View Menu** to quickly change the language in the Editor. You can enable and disable this in **Edit > Preferences > Localization**.
+    You can use the **Locale Game View Menu** to quickly change the language in the Editor. You can enable and disable this in **Edit > Preferences > Localization**.
 
-When you edit the sprite, the image is automatically connected to a localization table entry. The **Game Object Localizer** component that is attached to the same GameObject as the image displays the localization table entry. In the Game Object Localizer component, you can edit the table entry and even connect to a different table entry.
+    When you edit the sprite, the image is automatically connected to a localization table entry. The **Game Object Localizer** component that is attached to the same GameObject as the image displays the localization table entry. In the Game Object Localizer component, you can edit the table entry and even connect to a different table entry.
 
-![Localization Scene Controls window Active Locale field.](images/GameObjectLocalizer-Sprite.png)
+    ![Localization Scene Controls window Active Locale field.](images/GameObjectLocalizer-Sprite.png)
 
-When you open the Asset Table Collection, the new entry and its associated assets are displayed. You can make changes in the table as well as directly to the Image component and GameObject Localizer. 
+    When you open the Asset Table Collection, the new entry and its associated assets are displayed. You can make changes in the table as well as directly to the Image component and GameObject Localizer.
 
-![Asset Table with one Sprite entry.](images/AssetTable-Flags.png)
+    ![Asset Table with one Sprite entry.](images/AssetTable-Flags.png)
 
 ### Localize audio
 
@@ -114,16 +114,16 @@ Not all Unity component types let you directly change the component. In these ca
 This example shows how to use component localizers to apply different audio files for different locales.
 
 1. Add an Audio Source GameObject (menu: **GameObject > Audio > Audio Source**).
-1. Right-click the Audio Source component and choose **Localize**.
+2. Right-click the Audio Source component and choose **Localize**.
 
-![Audio clip localizing.](images/LocalizedAudioClipEditor.gif)
+    ![Audio clip localizing.](images/LocalizedAudioClipEditor.gif)
 
 3. In the **Localize Audio Clip Event** component, expand the **Localized Asset Reference** field.
 4. In the Table Collection dropdown, select your asset table.
 5. Click **Add Table Entry** and change the **Entry Name** to `National Anthem`.
 6. Drag and drop the audio clips into the corresponding Locale fields.
 
-![Audio clip localizing.](images/LocalizeAudioEditor.png)
+    ![Audio clip localizing.](images/LocalizeAudioEditor.png)
 
 ## Localize strings
 
@@ -144,11 +144,11 @@ First, you need to create a string table. To do this, open the **Localization Ta
 2. Select which Locales you want to generate tables for, choose the **String Table Collection** from the Type dropdown and give the collection a name.
 3. Click the Create button and choose a directory to generate the assets.
 
-![Create a String Table Collection.](images/CreateStringTable.png)
+    ![Create a String Table Collection.](images/CreateStringTable.png)
 
 ### Localize static text
 
-The Localization system allows you to work directly with scene components and records any changes you make directly to a component for the currently active Locale. To do this you will need to first set up the project. Open the **Localization Scene Controls** window  (menu: **Window > Asset Management > Localization Scene Controls**).
+The Localization system allows you to work directly with scene components and records any changes you make directly to a component for the currently active Locale. To do this you will need to first set up the project. Open the **Localization Scene Controls** window (menu: **Window > Asset Management > Localization Scene Controls**).
 Set the **String Table** field to the table collection that was just created. Any string changes made now are recorded into the selected String Table.
 
 ![Localization Scene Controls window String Table field.](images/SceneViewWindow-StringTable.png)
@@ -160,7 +160,7 @@ Note: To use TextMeshPro, your project must have the [TextMeshPro](https://docs.
 2. In the **Active Locale** field, select **English**.
 3. Enable the **Track Changes** toggle.
 
-![Localization Scene Controls window Asset Table field.](images/SceneViewWindow-ActiveLocale.png)
+    ![Localization Scene Controls window Asset Table field.](images/SceneViewWindow-ActiveLocale.png)
 
 4. Change the **Text** to “Hello”.
 5. For each Locale, change the **Text** to the appropriate translation for that Locale. You may also need to change the Font and adjust the Rect Transform properties for each Locale. These changes will be specific to the Active Locale only.
@@ -180,7 +180,7 @@ Unity can generate dynamic text using smart string. This example shows how to us
 
 1. Open the String Table (menu: **Window > Asset Management > Localization Tables**).
 2. Select **Add New Entry** button and give the new Entry a name.
-3. Enable the **Smart** option to mark the entry as a [smart string](SmartStrings.md). This example uses the smart string reflection, global variables and plural features to print out a variable from the following script:
+3. Enable the **Smart** option to mark the entry as a [smart string](Smart/SmartStrings.md). This example uses the smart string reflection, global variables and plural features to print out a variable from the following script:
 
 [!code-cs[apple-sample](../DocCodeSamples.Tests/Apples.cs)]
 
@@ -188,10 +188,10 @@ Enter the following values:
 
 | **Locale** | **Translation** |
 | -----------| --------------- |
-| English    | {global.player-name} has {appleCount:plural:an apple\|{} apples}        |
-| French     | {global.player-name} a {appleCount:plural:une pomme\|{} pommes}         |
-| Spanish    | {global.player-name} tiene {appleCount:plural:una manzana\|{} manzanas} |
-| Japanese   | {global.player-name}は{appleCount}個のリンゴを持っています                |
+| English    | {global.player-name} has {apple-component.appleCount:plural:an apple\|{} apples}        |
+| French     | {global.player-name} a {apple-component.appleCount:plural:une pomme\|{} pommes}         |
+| Spanish    | {global.player-name} tiene {apple-component.appleCount:plural:una manzana\|{} manzanas} |
+| Japanese   | {global.player-name}は{apple-component.appleCount}個のリンゴを持っています                |
 
 ![Press the Add New Entry button to create a new String Table entry.](images/StringTable_Plurals.png)
 
@@ -203,28 +203,28 @@ To add a UI Text element to the Scene, go to **GameObject > UI > Text**.
 
 1. Right-click the Text component and select the **Localize** option. Unity adds a Localize String component and automatically configures it for the GameObject it is attached to. If the Text component contains a string value that is also in a String Table, then Unity automatically assigns this during the setup. If it does not, you can assign a value using the String Reference field dropdown. Assign the entry you previously created to the **String Reference**.
 2. Add the **Apples** component to the same GameObject as the Text.
-3. Expand the **Format Arguments** field, change the size to 1 and drag the **Apples** Component into the **Element 0** slot.
+3. Press the Add (+) button in the **Local Variables** field, select **Object Reference** and drag the **Apples** Component into the **Object Reference** slot. Name the variable **apple-component**.
 
 Note: if the Apples component is on a different GameObject then ensure that the component is dragged into the slot and not the GameObject reference. One way to do this is to open two inspectors and lock one of them to the Text; you can then drag the Component across from one inspector and into the other.
 
 ![Unity finds and pairs the table with the matching Key during setup.](images/LocalizeStringComponent.png)
 
 The Text and the 2nd Argument appleCount is now configured however we also need to configure the 1st argument {global.player-name}.
+
 1. Create a Global Variables Group Asset (Menu: **Assets/Create/Localization/Global Variables Group**)
 2. Select Add (+) in the Variables list and create a new String variable. Name it `player-name`.
 
-![Press the + button in the Variables list and create a new String variable. Name it player-name.](images/GlobalVariablesPlayerName.png)
-
+    ![Press the + button in the Variables list and create a new String variable. Name it player-name.](images/GlobalVariablesPlayerName.png)
 
 3. Open the Localization Settings (menu: **Edit > Project Settings > Localization**).
 4. Navigate to the Smart Format Sources list (**String Database/Smart Format/**) and select Add (+) to create a new Global Variables Source. Drag and drop the Global Variables Source to the second position in the Sources List, under the List Formatter item.
 5. Select Add (+) in the Global Variables Source to create a new item. Keep the default name “global”, this is the value used in the first part of the Smart String {**global**.player-name} and drag the Global Variables Source asset into the slot. The Global Variables source is now configured.
 
-![Configure the Global Variables Source.](images/GlobalVariables_Source.png)
+    ![Configure the Global Variables Source.](images/GlobalVariables_Source.png)
 
-Duplicate the Text GameObject and change the Apple count to a different value. Press Play and notice that the text is using the correct plural form for each.
+    Duplicate the Text GameObject and change the Apple count to a different value. Press Play and notice that the text is using the correct plural form for each.
 
-![Example text.](images/LocalizedString_Plurals.gif)
+    ![Example text.](images/LocalizedString_Plurals.gif)
 
 ## Preview and configure your build
 

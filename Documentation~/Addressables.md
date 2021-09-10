@@ -1,8 +1,8 @@
 # Addressables Integration
 
-The Localization package uses the [Addressables Assets system](https://docs.unity3d.com/Packages/com.unity.addressables@latest) to manage assets, including Locales, String Tables and Asset Tables. 
+The Localization package uses the [Addressables Assets system](https://docs.unity3d.com/Packages/com.unity.addressables@latest) to manage assets, including Locales, String Tables and Asset Tables.
 
-You can place Assets into different Addressable groups based on criteria such as asset type or the Locales that depend on it. 
+You can place Assets into different Addressable groups based on criteria such as asset type or the Locales that depend on it.
 
 ## Addressable Group Rules
 
@@ -59,7 +59,7 @@ The Localization system uses the **Table Address** when loading the table, so do
 
 By default, Assets that are part of Asset Tables are stored in a group for the Locale that depends on them, with the name **Localization-Assets-{LocaleName}**. If an asset is used by more than one Locale, it is placed into the **Localization-Assets-Shared** group.
 
-Assets are resolved at runtime via their Guid so it is safe to modify the Address. Assets contain a label for each Locale that depends on them in the form **Locale_{Code}**. The Labels are used to track asset usage in the Editor and are not used in the Player, however removing them may cause assets to be placed into incorrect groups. 
+Assets are resolved at runtime via their Guid so it is safe to modify the Address. Assets contain a label for each Locale that depends on them in the form **Locale_{Code}**. The Labels are used to track asset usage in the Editor and are not used in the Player, however removing them may cause assets to be placed into incorrect groups.
 
 ![English Assets Addressable group.](images/AssetEnglishGroup.png)
 
@@ -67,7 +67,7 @@ Assets are resolved at runtime via their Guid so it is safe to modify the Addres
 
 Prior to version **0.11.0**, localization assets were stored using different default group rules.The Legacy ruletset can be created In order to maintain this structure, such as when upgrading a project built using a version before 0.11.0 . Create a Legacy rule set by navigating to **Assets > Create > Localization > Addressable Group Rules(Legacy)**.
 
-# Addressable Analyzers
+## Addressable Analyzers
 
 To fix an Addressables issue, or upgrade a project when the Addressable Group rules have been modified, use Addressable AnalyzersFind the Addressable Analyzers in the Analyzer window (**Window > Asset Management > Addressables > Analyze**)
 

@@ -65,7 +65,7 @@ namespace UnityEngine.Localization.Pseudo
 
             /// <summary>
             /// The amount to increase the string length by as a ratio where 0 is no expansion and 1.0 is 100%(double length).
-            /// It varies per language but 0.3 is a good value when using English as the source language.</param>
+            /// It varies per language but 0.3 is a good value when using English as the source language.
             /// </summary>
             public float ExpansionAmount
             {

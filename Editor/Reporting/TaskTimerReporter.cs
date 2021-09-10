@@ -15,27 +15,30 @@ namespace UnityEditor.Localization.Reporting
         }
     }
 
+    /// <summary>
+    /// Base class responsible for recording the time between each <see cref="ReportProgress"/>.
+    /// </summary>
     public abstract class TaskTimerReporter : ITaskReporter
     {
-        public float CurrentProgress { get; private set; }
-
-        public bool Active { get; private set; }
-
-        public bool Started { get { return m_Started; } }
-
         StringBuilder m_Summary = new StringBuilder();
         Stopwatch m_Timer;
         string m_Title;
         string m_CurrentDescription;
         double m_TotalTimeInSeconds;
-        bool m_Started;
 
+        /// <inheritdoc/>
+        public float CurrentProgress { get; private set; }
+
+        /// <inheritdoc/>
+        public bool Started { get; private set; }
+
+        /// <inheritdoc/>
         public virtual void Start(string title, string description)
         {
-            if (m_Started)
+            if (Started)
                 return;
 
-            m_Started = true;
+            Started = true;
             m_Title = title;
             m_CurrentDescription = description;
             m_Summary.Clear();
@@ -43,9 +46,10 @@ namespace UnityEditor.Localization.Reporting
             m_TotalTimeInSeconds = 0;
         }
 
+        /// <inheritdoc/>
         public void ReportProgress(string description, float progress)
         {
-            if (!m_Started)
+            if (!Started)
             {
                 Start(description, description);
             }
@@ -57,12 +61,13 @@ namespace UnityEditor.Localization.Reporting
             m_Timer.Restart();
         }
 
+        /// <inheritdoc/>
         public void Completed(string message)
         {
-            if (!m_Started)
+            if (!Started)
                 return;
 
-            m_Started = false;
+            Started = false;
             CurrentProgress = 1;
             LogStep();
             m_Summary.AppendFormat("Total time: {0:0.##}s\n{1}", m_TotalTimeInSeconds, message);
@@ -70,12 +75,13 @@ namespace UnityEditor.Localization.Reporting
             PrintSummary(m_Summary.ToString(), false);
         }
 
+        /// <inheritdoc/>
         public void Fail(string message)
         {
-            if (!m_Started)
+            if (!Started)
                 return;
 
-            m_Started = false;
+            Started = false;
             LogStep();
             m_Summary.AppendFormat("Total time: {0:0.##}s", m_TotalTimeInSeconds);
             m_Summary.Insert(0, $"{m_Title}: Failed\n{message}\n");
@@ -89,8 +95,19 @@ namespace UnityEditor.Localization.Reporting
             m_Summary.AppendFormat("{0}: {1:0.##}s\n", m_CurrentDescription, secs);
         }
 
+        /// <summary>
+        /// Called after <see cref="ReportProgress"/> to print a summary of the progress.
+        /// </summary>
+        /// <param name="title"></param>
+        /// <param name="description"></param>
+        /// <param name="progress"></param>
         protected abstract void PrintStatus(string title, string description, float progress);
 
+        /// <summary>
+        /// Called after <see cref="Completed"/> or <see cref="Fail"/> to optionally print a summary of the whole task.
+        /// </summary>
+        /// <param name="summary"></param>
+        /// <param name="fail"></param>
         protected abstract void PrintSummary(string summary, bool fail);
     }
 }

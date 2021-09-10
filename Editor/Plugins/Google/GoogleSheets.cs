@@ -35,6 +35,9 @@ namespace UnityEditor.Localization.Plugins.Google
         /// </summary>
         public string SpreadSheetId { get; set;  }
 
+        /// <summary>
+        /// Is an API key being used or is it an OAuth?
+        /// </summary>
         internal protected virtual bool UsingApiKey => (SheetsService as SheetsServiceProvider)?.Authentication != AuthenticationType.OAuth;
 
         /// <summary>
@@ -66,7 +69,7 @@ namespace UnityEditor.Localization.Plugins.Google
         /// Creates a new Google Spreadsheet.
         /// </summary>
         /// <param name="spreadSheetTitle">The title of the Spreadsheet.</param>
-        /// <param name="sheetTtitle">The title of the sheet(tab) that is part of the Spreadsheet.</param>
+        /// <param name="sheetTitle">The title of the sheet(tab) that is part of the Spreadsheet.</param>
         /// <param name="newSheetProperties"></param>
         /// <param name="reporter">Optional reporter to display the progress and status of the task.</param>
         /// <returns>Returns the new Spreadsheet and sheet id.</returns>
@@ -119,7 +122,7 @@ namespace UnityEditor.Localization.Plugins.Google
         /// Creates a new sheet within the Spreadsheet with the id <see cref="SpreadSheetId"/>.
         /// </summary>
         /// <param name="title">The title for the new sheet</param>
-        /// <param name="newSheetProperties"></param>
+        /// <param name="newSheetProperties">The settings to apply to the new sheet.</param>
         /// <returns>The new sheet id.</returns>
         public int AddSheet(string title, NewSheetProperties newSheetProperties)
         {
@@ -269,6 +272,7 @@ namespace UnityEditor.Localization.Plugins.Google
         /// <param name="collection">The collection to extract the data from.</param>
         /// <param name="columnMapping">The column mappings control what data will be extracted for each column of the sheet. The list must contain 1 <see cref="KeyColumn"/>.</param>
         /// <param name="reporter">Optional reporter to display the progress and status of the task.</param>
+        /// <returns></returns>
         public async Task PushStringTableCollectionAsync(int sheetId, StringTableCollection collection, IList<SheetColumn> columnMapping, ITaskReporter reporter = null)
         {
             VerifyPushPullArguments(sheetId, collection, columnMapping, typeof(KeyColumn));
@@ -317,6 +321,23 @@ namespace UnityEditor.Localization.Plugins.Google
         /// <param name="collection">The collection to extract the data from.</param>
         /// <param name="columnMapping">The column mappings control what data will be extracted for each column of the sheet. The list must contain 1 <see cref="KeyColumn"/>.</param>
         /// <param name="reporter">Optional reporter to display the progress and status of the task.</param>
+        /// <example>
+        /// A <see cref="StringTableCollection"/> can exist over several Google Sheets, for example one per Locale.
+        /// This example shows to push one of those Locales.
+        /// <code source="../../../DocCodeSamples.Tests/GoogleSheetsSamples.cs" region="push-collection-english"/>
+        /// </example>
+        /// <example>
+        /// This example shows how to push all the locales in your project by using <see cref="ColumnMapping"/> to generate the column mapping data for you.
+        /// <code source="../../../DocCodeSamples.Tests/GoogleSheetsSamples.cs" region="push-project-locales"/>
+        /// </example>
+        /// <example>
+        /// This example shows how to use the data that was configured in the <see cref="GoogleSheetsExtension"/> to perform a push.
+        /// <code source="../../../DocCodeSamples.Tests/GoogleSheetsSamples.cs" region="push-with-extension"/>
+        /// </example>
+        /// <example>
+        /// This example shows how to push every <see cref="StringTableCollection"/> that contains a <see cref="GoogleSheetsExtension"/>.
+        /// <code source="../../../DocCodeSamples.Tests/GoogleSheetsSamples.cs" region="push-all-extensions"/>
+        /// </example>
         public void PushStringTableCollection(int sheetId, StringTableCollection collection, IList<SheetColumn> columnMapping, ITaskReporter reporter = null)
         {
             VerifyPushPullArguments(sheetId, collection, columnMapping, typeof(KeyColumn));
@@ -405,11 +426,28 @@ namespace UnityEditor.Localization.Plugins.Google
         /// </summary>
         /// <param name="sheetId">The sheet(Spreadsheet tab) to pull the data from.</param>
         /// <param name="collection">The collection to insert the data into.</param>
-        /// <param name="columnMapping">The column mappings control what data will be extracted for each column of the sheet. The list must contain 1 <see cref="IPullKeyColumn"/>.</param>
-        /// <param name="removeMissingEntries">After a pull has completed any keys that exist in the <paramref name="collection"/> but did not exist in the sheet are considered missing,
-        /// this may be because they have been deleted from the sheet. A value of true will remove these missing entries where false will preserve them.</param>
+        /// <param name="columnMapping">The column mappings control what data to extract for each column of the sheet. The list must contain one <see cref="IPullKeyColumn"/>.</param>
+        /// <param name="removeMissingEntries">After a pull has completed, any keys that exist in the <paramref name="collection"/> but did not exist in the sheet are considered missing,
+        /// this may be because they have been deleted from the sheet. A value of true will remove these missing entries; false will preserve them.</param>
         /// <param name="reporter">Optional reporter to display the progress and status of the task.</param>
         /// <param name="createUndo">Should an Undo be recorded so any changes can be reverted?</param>
+        /// <example>
+        /// A <see cref="StringTableCollection"/> can exist over several Google Sheets, for example one per Locale.
+        /// This example shows how to pull one of those Locales into a <see cref="StringTableCollection"/>.
+        /// <code source="../../../DocCodeSamples.Tests/GoogleSheetsSamples.cs" region="pull-collection-english"/>
+        /// </example>
+        /// <example>
+        /// This example shows how to pull all the locales in your project by using the <see cref="ColumnMapping"/> to generate the column mapping data for you.
+        /// <code source="../../../DocCodeSamples.Tests/GoogleSheetsSamples.cs" region="pull-project-locales"/>
+        /// </example>
+        /// <example>
+        /// This example shows how to use the data that was configured in a Google Sheets extension to perform a pull.
+        /// <code source="../../../DocCodeSamples.Tests/GoogleSheetsSamples.cs" region="pull-with-extension"/>
+        /// </example>
+        /// <example>
+        /// This example shows how to pull every <see cref="StringTableCollection"/> that contains a <see cref="GoogleSheetsExtension"/>.
+        /// <code source="../../../DocCodeSamples.Tests/GoogleSheetsSamples.cs" region="pull-all-extensions"/>
+        /// </example>
         public void PullIntoStringTableCollection(int sheetId, StringTableCollection collection, IList<SheetColumn> columnMapping, bool removeMissingEntries = false, ITaskReporter reporter = null, bool createUndo = false)
         {
             VerifyPushPullArguments(sheetId, collection, columnMapping, typeof(IPullKeyColumn));

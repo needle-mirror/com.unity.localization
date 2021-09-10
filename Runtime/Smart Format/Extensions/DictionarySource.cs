@@ -6,9 +6,18 @@ using UnityEngine.Localization.SmartFormat.Core.Extensions;
 
 namespace UnityEngine.Localization.SmartFormat.Extensions
 {
+    /// <summary>
+    /// Provides the ability to extract an object with a matching Key from an
+    /// [IDictionary](https://docs.microsoft.com/en-us/dotnet/api/system.collections.idictionary) or
+    /// [IDictionary&lt;string, object&gt;](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.idictionary-2).
+    /// </summary>
     [Serializable]
     public class DictionarySource : ISource
     {
+        /// <summary>
+        /// Creates a new instance of the formatter.
+        /// </summary>
+        /// <param name="formatter">The formatter that the source will be added to.</param>
         public DictionarySource(SmartFormatter formatter)
         {
             // Add some special info to the parser:
@@ -17,6 +26,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             formatter.Parser.AddOperators(".");
         }
 
+        /// <inheritdoc/>
         public bool TryEvaluateSelector(ISelectorInfo selectorInfo)
         {
             var current = selectorInfo.CurrentValue;

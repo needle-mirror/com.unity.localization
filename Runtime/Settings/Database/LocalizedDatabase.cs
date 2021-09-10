@@ -6,6 +6,9 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization.Settings
 {
+    /// <summary>
+    /// Options for the different fallback behaviours that are available.
+    /// </summary>
     public enum FallbackBehavior
     {
         /// <summary>
@@ -25,6 +28,9 @@ namespace UnityEngine.Localization.Settings
         UseFallback
     }
 
+    /// <summary>
+    /// Options for how to handle a missing translation.
+    /// </summary>
     [Flags]
     public enum MissingTranslationBehavior
     {
@@ -39,6 +45,11 @@ namespace UnityEngine.Localization.Settings
         PrintWarning = 2
     }
 
+    /// <summary>
+    /// Provides common functionality for both string and asset table fetching.
+    /// </summary>
+    /// <typeparam name="TTable"></typeparam>
+    /// <typeparam name="TEntry"></typeparam>
     [Serializable]
     public abstract class LocalizedDatabase<TTable, TEntry> : IPreloadRequired, IReset
         where TTable : DetailedLocalizationTable<TEntry>
@@ -50,7 +61,14 @@ namespace UnityEngine.Localization.Settings
         /// </summary>
         public struct TableEntryResult
         {
+            /// <summary>
+            /// The entry that was resolved or <c>null</c> if one could not be found.
+            /// </summary>
             public TEntry Entry { get; }
+
+            /// <summary>
+            /// The table the entry was extracted from. When <see cref="Entry"/> is <c>null</c>, this contains the last table that was tried.
+            /// </summary>
             public TTable Table { get; }
 
             internal TableEntryResult(TEntry entry, TTable table)
@@ -267,9 +285,9 @@ namespace UnityEngine.Localization.Settings
 
         /// <summary>
         /// Returns the named table.
-        /// Check [IsDone](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.IsDone) to see if the data is available,
-        /// if it is false then you can use the [Completed](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.Completed) event to get a callback when it is finished,
-        /// yield on the operation or call [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) to force the operation to complete.
+        /// Uses [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) to force the loading to complete synchronously.
+        /// Please note that [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on
+        /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
         /// </summary>
         /// <param name="tableReference">The table identifier. Can be either the name of the table or the table collection name Guid.</param>
         /// <param name="locale">The <see cref="Locale"/> to load the table from, use null to default to cref="LocalizationSettings.SelectedLocale"/>.</param>
@@ -323,7 +341,7 @@ namespace UnityEngine.Localization.Settings
         }
 
         /// <summary>
-        /// Releases all references to the table that matches the <paramref name="tableReference"/> and <param name="locale"></param>.
+        /// Releases all references to the table that matches the <paramref name="tableReference"/> and <paramref name="locale"></param>.
         /// This will also release any references to the <see cref="SharedTableData"/> providing there are no other references to it, such as different Locale versions of the table that have been loaded.
         /// A table is released by calling <see cref="AddressableAssets.Addressables.Release"/> on it which decrements the ref-count.
         /// When a given Asset's ref-count is zero, that Asset is ready to be unloaded.
@@ -457,6 +475,9 @@ namespace UnityEngine.Localization.Settings
 
         /// <summary>
         /// Returns the entry from the requested table. A table entry will contain the localized item and metadata.
+        /// Uses [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) to force the loading to complete synchronously.
+        /// Please note that [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on
+        /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
         /// </summary>
         /// <param name="tableReference">The table identifier. Can be either the name of the table or the table collection name Guid.</param>
         /// <param name="tableEntryReference">A reference to the entry in the table.</param>

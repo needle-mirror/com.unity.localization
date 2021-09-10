@@ -1,0 +1,5 @@
+{
+  "displayName": "Smart Strings - Persistent Variables",
+  "description": "These samples show how Persistent Variables can be used in Smart Strings and how custom variables can be created.",
+  "createSeparatePackage": false
+}

@@ -1,6 +1,6 @@
 # Table Keys Generation
 
-A Key provides a unique identifier for each entry in a String or Asset table. A key is made of two unique parts: the Key Name and the Key Id. 
+A Key provides a unique identifier for each entry in a String or Asset table. A key is made of two unique parts: the Key Name and the Key Id.
 
 ![Example String Table Collection using Distributed ID Generator keys.](images/StringTableKeysExample.png)
 

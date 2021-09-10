@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 
 namespace UnityEditor.Localization.UI
 {
@@ -15,10 +14,19 @@ namespace UnityEditor.Localization.UI
                 if (type.IsAbstract || type.IsGenericType)
                     continue;
 
+                if (Attribute.IsDefined(type, typeof(ObsoleteAttribute)))
+                    continue;
+
                 if (requiredAttribute != null && !Attribute.IsDefined(type, requiredAttribute))
                     continue;
 
-                menu.AddItem(new GUIContent(ObjectNames.NicifyVariableName(type.Name)), false, () =>
+                // Ignore Unity Objects, they can not use SerializeReference
+                if (typeof(UnityEngine.Object).IsAssignableFrom(type))
+                    continue;
+
+                var name = ManagedReferenceUtility.GetDisplayName(type);
+
+                menu.AddItem(name, false, () =>
                 {
                     selected(type);
                 });

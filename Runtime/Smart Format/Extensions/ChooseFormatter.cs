@@ -5,25 +5,37 @@ using UnityEngine.Localization.SmartFormat.Core.Parsing;
 
 namespace UnityEngine.Localization.SmartFormat.Extensions
 {
+    /// <summary>
+    /// Provides the ability to add logic to a Smart String by selecting an output using a provided set of choices.
+    /// </summary>
     [Serializable]
     public class ChooseFormatter : FormatterBase, IFormatterLiteralExtractor
     {
         [SerializeField]
         char m_SplitChar = '|';
 
+        /// <summary>
+        /// The character used to split the choices.
+        /// By default this is the pipe chartacter |.
+        /// </summary>
         public char SplitChar
         {
             get => m_SplitChar;
             set => m_SplitChar = value;
         }
 
+        /// <summary>
+        /// Creates a new instance of the formatter.
+        /// </summary>
         public ChooseFormatter()
         {
             Names = DefaultNames;
         }
 
+        /// <inheritdoc/>
         public override string[] DefaultNames => new[] {"choose", "c"};
 
+        /// <inheritdoc/>
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {
             if (formattingInfo.FormatterOptions == "") return false;
@@ -62,6 +74,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             return chosenFormat;
         }
 
+        /// <inheritdoc/>
         public void WriteAllLiterals(IFormattingInfo formattingInfo)
         {
             if (formattingInfo.FormatterOptions == "")

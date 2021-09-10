@@ -9,7 +9,7 @@ namespace UnityEngine.Localization.Tables
         long m_NextAvailableId = 1;
 
         /// <summary>
-        /// The next id value that will be provided by <see cref="GetNextKey(SharedTableData)"/>
+        /// The next id value that will be provided by <see cref="GetNextKey"/>
         /// </summary>
         public long NextAvailableId => m_NextAvailableId;
 
@@ -32,7 +32,6 @@ namespace UnityEngine.Localization.Tables
         /// <summary>
         /// Returns <see cref="NextAvailableId"/> and increments it by 1.
         /// </summary>
-        /// <param name="sharedTableData"></param>
         /// <returns></returns>
         public long GetNextKey() => m_NextAvailableId++;
     }

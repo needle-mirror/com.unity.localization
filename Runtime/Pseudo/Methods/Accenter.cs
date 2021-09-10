@@ -8,6 +8,9 @@ namespace UnityEngine.Localization.Pseudo
     [Serializable]
     public class Accenter : CharacterSubstitutor
     {
+        /// <summary>
+        /// Creates a new instance of the class.
+        /// </summary>
         public Accenter()
         {
             Method = SubstitutionMethod.Map;

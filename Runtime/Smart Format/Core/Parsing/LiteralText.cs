@@ -69,7 +69,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Parsing
                 case 'u':
                     if (!int.TryParse(source.Substring(2, source.Length - 2), NumberStyles.HexNumber, null, out var result))
                         throw new ArgumentException($"Failed to parse unicode escape sequence in literal: \"{source}\"");
-                    c = (char) result;
+                    c = (char)result;
                     break;
                 default:
                     throw new ArgumentException($"Unrecognized escape sequence in literal: \"{source}\"");

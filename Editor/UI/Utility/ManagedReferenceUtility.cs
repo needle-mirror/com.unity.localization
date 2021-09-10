@@ -35,7 +35,11 @@ namespace UnityEditor.Localization.UI
             var itemAttribute = type.GetCustomAttribute<DisplayNameAttribute>();
             if (itemAttribute != null && !string.IsNullOrEmpty(itemAttribute.Name))
             {
-                name = new GUIContent(itemAttribute.Name);
+                Texture icon = null;
+                if (!string.IsNullOrEmpty(itemAttribute.IconPath))
+                    icon = EditorGUIUtility.FindTexture(itemAttribute.IconPath);
+
+                name = new GUIContent(itemAttribute.Name, icon);
                 s_NameLookup[type] = name;
                 return name;
             }

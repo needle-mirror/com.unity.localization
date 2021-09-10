@@ -6,6 +6,9 @@ using UnityEditor.Localization.Plugins.XLIFF.Common;
 
 namespace UnityEditor.Localization.Plugins.XLIFF
 {
+    /// <summary>
+    /// The XLIFF standard version.
+    /// </summary>
     public enum XliffVersion
     {
         /// <summary>
@@ -19,8 +22,20 @@ namespace UnityEditor.Localization.Plugins.XLIFF
         V20
     }
 
+    /// <summary>
+    /// Provides the ability to interact with XLIFF files.
+    /// </summary>
+    /// <example>
+    /// This shows how to create an XLIFF document, populate it with values to translate, and then write it to file.
+    /// <code source="../../../DocCodeSamples.Tests/XliffSamples.cs" region="create-xliff"/>
+    /// </example>
     public static class XliffDocument
     {
+        /// <summary>
+        /// Creates a new XLIFF file with the requested version.
+        /// </summary>
+        /// <param name="version">The XLIFF version to target.</param>
+        /// <returns>The new XLIFF file.</returns>
         public static IXliffDocument Create(XliffVersion version)
         {
             IXliffDocument xdoc;
@@ -42,6 +57,11 @@ namespace UnityEditor.Localization.Plugins.XLIFF
             return xdoc;
         }
 
+        /// <summary>
+        /// Converts and XLIFF stream into a parsed document.
+        /// </summary>
+        /// <param name="stream">The XLIFF stream.</param>
+        /// <returns>The parsed XLIFF document.</returns>
         public static IXliffDocument Parse(Stream stream)
         {
             if (stream == null)

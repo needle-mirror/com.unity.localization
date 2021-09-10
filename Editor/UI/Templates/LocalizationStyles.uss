@@ -16,6 +16,7 @@
     background-color: var(--theme-box-background-color);
     border-color: rgba(26, 26, 26, 0.75);
     border-width: 1px;
+    flex-direction: row;
     min-width: 20px;
     padding-left: 14px;
     padding-top: 2px;
@@ -30,6 +31,11 @@
     border-bottom-right-radius: 0;
     border-top-width: 1px;
     border-bottom-width: 0;
+}
+
+.reorderable-list__header > .unity-image {
+    max-height: 16px;
+    max-width: 18px;
 }
 
 .reorderable-list__footer {

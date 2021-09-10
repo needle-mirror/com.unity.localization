@@ -15,12 +15,15 @@ namespace UnityEditor.Localization.UI
             public static readonly GUIContent addTable = new GUIContent("Create Table", "Create a new table for the selected locale.");
             public static readonly GUIContent addTableCollection = new GUIContent("Create Table Collection", "Create a new table collection for every Locale in the project");
             public static readonly GUIContent addTableEntry = new GUIContent("Add Table Entry", "Create a new table entry in the selected table collection.");
+            public static readonly GUIContent defaultArg = new GUIContent("Default Argument", "The Default Argument will be the argument passed in at index 0 and will be used when no index placeholder is used");
             public static readonly GUIContent entryName = new GUIContent("Entry Name", "The name or key of the selected table entry");
             public static readonly GUIContent useFallback = new GUIContent("Enable Fallback", "Determines if a Fallback should be used when no value could be found for the Locale");
             public static readonly GUIContent noTableSelected = new GUIContent($"None({typeof(TCollection).Name})");
+            public static readonly GUIContent mixedValueContent = EditorGUIUtility.TrTextContent("\u2014", "Mixed Values");
             public static readonly GUIContent previewArguments = new GUIContent("Preview Arguments", "Arguments to pass to the string formatter. These are for preview purposes only and are not stored.");
             public static readonly GUIContent selectedTable = new GUIContent("Table Collection");
-            public static readonly GUIContent waitForCompletion = new GUIContent("Wait For Completion", "Should the operation wait for the localization operation to complete before returning, blocking the main thread, or allow it to finish asyncronously?");
+            public static readonly GUIContent variableName = new GUIContent("Variable Name");
+            public static readonly GUIContent waitForCompletion = new GUIContent("Wait For Completion", "Should the operation wait for the localization operation to complete before returning, blocking the main thread, or allow it to finish asyncronously? Please note that this is not supported on WebGL.");
         }
 
         protected static Func<ReadOnlyCollection<TCollection>> GetProjectTableCollections { get; set; }
@@ -152,6 +155,12 @@ namespace UnityEditor.Localization.UI
                 {
                     if (m_FieldLabel == null)
                     {
+                        if (tableReference.HasMultipleDifferentValues || tableEntryReference.HasMultipleDifferentValues)
+                        {
+                            m_FieldLabel = Styles.mixedValueContent;
+                            return m_FieldLabel;
+                        }
+
                         var icon = EditorGUIUtility.ObjectContent(null, assetType);
                         if (SelectedTableCollection != null && SelectedTableEntry != null)
                         {
@@ -339,7 +348,9 @@ namespace UnityEditor.Localization.UI
             // Table selection
             var tableSelectionPos = data.SelectedTableIndex != 0 ? new Rect(rowPosition.x, rowPosition.y, rowPosition.width - k_OpenTableEditorButtonWidth, rowPosition.height) : rowPosition;
             EditorGUI.BeginChangeCheck();
+            EditorGUI.BeginProperty(tableSelectionPos, Styles.selectedTable, data.tableReference.TableNameProperty);
             var selectedTableIndex = EditorGUI.Popup(tableSelectionPos, Styles.selectedTable, data.SelectedTableIndex, ProjectTableLabels);
+            EditorGUI.EndProperty();
             if (EditorGUI.EndChangeCheck())
             {
                 data.SelectedTableIndex = selectedTableIndex;
@@ -348,7 +359,7 @@ namespace UnityEditor.Localization.UI
             if (data.SelectedTableIndex != 0)
             {
                 var openTableEditorPos = new Rect(tableSelectionPos.xMax, tableSelectionPos.y, k_OpenTableEditorButtonWidth, tableSelectionPos.height);
-                if (GUI.Button(openTableEditorPos, EditorIcons.StringTable))
+                if (GUI.Button(openTableEditorPos, EditorIcons.TableWindow))
                 {
                     LocalizationTablesWindow.ShowWindow(data.SelectedTableCollection);
                 }

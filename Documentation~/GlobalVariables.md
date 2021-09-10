@@ -33,10 +33,10 @@ The following example shows a single group with the name global.
 ![Example showing a single group with the name global.](images/GlobalVariables_Example.png)
 
 | **Smart String**                                                             | **Result**                                      |
-| ---------------------------------------------------------------------------- | ----------------------------------------------- | 
+|------------------------------------------------------------------------------|-------------------------------------------------|
 | My Floats value is `{global.my-float}`                                       | My Floats value is `1.23`                       |
 | `{global.my-string}` of using global variables.                              | `This is an example` of using global variables. |
-| The door is `{global.my-bool:Open\|Closed}`.                                  | The door is `Open`.                             |
+| The door is `{global.my-bool:Open\|Closed}`.                                 | The door is `Open`.                             |
 | This is an integer `{global.int-variable}` as Hex `{global.int-variable:X}`. | This is an integer `255` as Hex `FF`.           |
 | Values can be nested `{global.nested-group.player-name}`                     | Values can be nested `Player 1`                 |
 
@@ -46,25 +46,25 @@ Global Variables can trigger automatic updates to any **LocalizedStrings** that 
 To configure a Global Variable to automatically update **LocalizedStrings**, have the Global Variable implement the **IGlobalVariableValueChanged** interface. 
 The LocalizedString checks which Global Variables it references, and adds itself to the Value Changed events of those Global Variables. When a value is changed, the Value Changed events run and the **LocalizedStrings** are automatically refreshed to the new value.
 
-[!code-cs[value-change-example](../DocCodeSamples.Tests/GlobalVariablesSamples.cs#value-change-example)]
+[!code-cs[value-change-example](../DocCodeSamples.Tests/PersistentVariablesSamples.cs#value-change-example)]
 
 You can choose to stop the automatic updates of the LocalizedStrings when changing multiple Global Variables by updating within a **GlobalVariablesSource Update Scope**. Use this to prevent unnecessary updates. 
 
-[!code-cs[update-scope-example](../DocCodeSamples.Tests/GlobalVariablesSamples.cs#update-scope-example)]
+[!code-cs[update-scope-example](../DocCodeSamples.Tests/PersistentVariablesSamples.cs#update-scope-example)]
 
 ## Custom Global Variables
 
 A custom Global Variable must be Serializable and implement **IGlobalVariable**.
 The following example demonstrates how to use a Global Variable to return the current time.
 
-[!code-cs[date-time-example](../DocCodeSamples.Tests/GlobalVariablesSamples.cs#date-time-example)]
+[!code-cs[date-time-example](../DocCodeSamples.Tests/PersistentVariablesSamples.cs#date-time-example)]
 
 The **IGlobalVariableValueChanged** interface must be implemented in order to trigger updates to any LocalizedString that uses the Global Variable.
 
-[!code-cs[custom-value-changed-example](../DocCodeSamples.Tests/GlobalVariablesSamples.cs#custom-value-changed-example)]
+[!code-cs[custom-value-changed-example](../DocCodeSamples.Tests/PersistentVariablesSamples.cs#custom-value-changed-example)]
 
 ## Custom Global Variable Groups
 
 Use Custom Global Variable Groups to return custom Global Variables. The following example demonstrates this.
 
-[!code-cs[custom-group-example](../DocCodeSamples.Tests/GlobalVariablesSamples.cs#custom-group-example)]
+[!code-cs[custom-group-example](../DocCodeSamples.Tests/PersistentVariablesSamples.cs#custom-group-example)]

@@ -1,41 +1,44 @@
 using NUnit.Framework;
+using UnityEngine.Localization.SmartFormat.Core.Extensions;
 using UnityEngine.Localization.SmartFormat.Extensions;
-using UnityEngine.Localization.SmartFormat.GlobalVariables;
+using UnityEngine.Localization.SmartFormat.PersistentVariables;
 
 namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
 {
     public class GlobalVariablesSourceTests
     {
         SmartFormatter m_Formatter;
-        GlobalVariablesSource m_GlobalVariablesSource;
-        GlobalVariablesGroup m_Group1;
-        GlobalVariablesGroup m_Group2;
-        GlobalVariablesGroup m_NestedGroup1;
-        GlobalVariablesGroup m_NestedGroup2;
+        PersistentVariablesSource m_GlobalVariablesSource;
+        VariablesGroupAsset m_Group1;
+        VariablesGroupAsset m_Group2;
+        VariablesGroupAsset m_NestedGroup1;
+        VariablesGroupAsset m_NestedGroup2;
 
         [System.Serializable]
-        class CharacterDetails : IGlobalVariable
+        class CharacterDetails : IVariable
         {
             public string FirstName { get; set; }
             public string Surname { get; set; }
             public int Age { get; set; }
             public bool Alive { get; set; }
 
-            public object SourceValue => this;
+            public object GetSourceValue(ISelectorInfo _) => this;
         }
 
-        struct ReturnValue : IGlobalVariable
+        struct ReturnValue : IVariable
         {
             public object SourceValue { get; set; }
+
+            public object GetSourceValue(ISelectorInfo _) => SourceValue;
         }
 
-        class CharacterDetailsNoReflection : IVariableGroup, IGlobalVariable
+        class CharacterDetailsNoReflection : IVariableGroup, IVariable
         {
             public string Name { get; set; }
 
-            public object SourceValue => this;
+            public object GetSourceValue(ISelectorInfo _) => this;
 
-            public bool TryGetValue(string name, out IGlobalVariable value)
+            public bool TryGetValue(string name, out IVariable value)
             {
                 switch (name)
                 {
@@ -58,34 +61,34 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
         public void Setup()
         {
             m_Formatter = Smart.CreateDefaultSmartFormat();
-            m_GlobalVariablesSource = new GlobalVariablesSource(m_Formatter);
+            m_GlobalVariablesSource = new PersistentVariablesSource(m_Formatter);
             m_Formatter.AddExtensions(m_GlobalVariablesSource);
 
-            m_NestedGroup1 = ScriptableObject.CreateInstance<GlobalVariablesGroup>();
-            m_NestedGroup2 = ScriptableObject.CreateInstance<GlobalVariablesGroup>();
+            m_NestedGroup1 = ScriptableObject.CreateInstance<VariablesGroupAsset>();
+            m_NestedGroup2 = ScriptableObject.CreateInstance<VariablesGroupAsset>();
 
-            m_Group1 = ScriptableObject.CreateInstance<GlobalVariablesGroup>();
+            m_Group1 = ScriptableObject.CreateInstance<VariablesGroupAsset>();
             m_GlobalVariablesSource.Add("global", m_Group1);
-            m_Group1.Add("myInt", new IntGlobalVariable { Value = 123 });
-            m_Group1.Add("my-Int-var", new IntGlobalVariable());
-            m_Group1.Add("apple-count", new IntGlobalVariable { Value = 10 });
-            m_Group1.Add("myFloat", new FloatGlobalVariable { Value = 1.23f });
-            m_Group1.Add("some-float-value", new FloatGlobalVariable());
-            m_Group1.Add("time", new FloatGlobalVariable { Value = 1.234f });
-            m_Group1.Add("door-state", new BoolGlobalVariable { Value = true });
+            m_Group1.Add("myInt", new IntVariable { Value = 123 });
+            m_Group1.Add("my-Int-var", new IntVariable());
+            m_Group1.Add("apple-count", new IntVariable { Value = 10 });
+            m_Group1.Add("myFloat", new FloatVariable { Value = 1.23f });
+            m_Group1.Add("some-float-value", new FloatVariable());
+            m_Group1.Add("time", new FloatVariable { Value = 1.234f });
+            m_Group1.Add("door-state", new BoolVariable { Value = true });
             m_Group1.Add("max", new CharacterDetailsNoReflection());
 
-            m_Group2 = ScriptableObject.CreateInstance<GlobalVariablesGroup>();
+            m_Group2 = ScriptableObject.CreateInstance<VariablesGroupAsset>();
             m_GlobalVariablesSource.Add("npc", m_Group2);
             m_Group2.Add("emily", new CharacterDetails { FirstName = "Emily", Surname = "Kaldwin", Age = 20, Alive = true });
             m_Group2.Add("guy", new CharacterDetails { FirstName = "Guy", Surname = "Threepwood", Alive = false });
 
             // Nested groups
-            m_Group1.Add("nested", new NestedGlobalVariablesGroup { Value = m_NestedGroup1 });
-            m_NestedGroup1.Add("further-nested", new NestedGlobalVariablesGroup { Value = m_NestedGroup2 });
-            m_NestedGroup1.Add("nested-float", new FloatGlobalVariable { Value = 0.12345f });
-            m_NestedGroup2.Add("my-nested-int", new IntGlobalVariable { Value = 1111 });
-            m_NestedGroup2.Add("my-nested-string", new StringGlobalVariable { Value = "I am nested deep" });
+            m_Group1.Add("nested", new NestedVariablesGroup { Value = m_NestedGroup1 });
+            m_NestedGroup1.Add("further-nested", new NestedVariablesGroup { Value = m_NestedGroup2 });
+            m_NestedGroup1.Add("nested-float", new FloatVariable { Value = 0.12345f });
+            m_NestedGroup2.Add("my-nested-int", new IntVariable { Value = 1111 });
+            m_NestedGroup2.Add("my-nested-string", new StringVariable { Value = "I am nested deep" });
         }
 
         [TearDown]

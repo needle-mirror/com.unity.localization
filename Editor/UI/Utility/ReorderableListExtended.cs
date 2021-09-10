@@ -97,7 +97,7 @@ namespace UnityEditor.Localization.UI
         bool IsReadOnly(SerializedProperty prop)
         {
             bool isReadOnly = false;
-            if (!string.IsNullOrEmpty(prop.managedReferenceFullTypename))
+            if (prop.propertyType == SerializedPropertyType.ManagedReference && !string.IsNullOrEmpty(prop.managedReferenceFullTypename))
             {
                 var type = ManagedReferenceUtility.GetType(prop.managedReferenceFullTypename);
                 if (type != null)

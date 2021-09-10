@@ -1,7 +1,7 @@
 {
   "name": "com.unity.localization",
   "displayName": "Localization",
-  "version": "1.0.0-pre.10",
+  "version": "1.0.0",
   "unity": "2019.4",
   "description": "Use the Localization package to easily configure localization settings for your application.\n\nAdd support for multiple languages and regional variants, including:\n\n• String localization: Set different strings to display based on locale. Use the Smart Strings feature to add logic to automatically replace specific strings, such as placeholders and plurals.\n• Asset localization: Use a different asset (such as a texture, model, or audio file) based on a locale.\n• Pseudo-localization: Test how your project will adapt to different localizations at an early stage, before adding your translations.\n• Import and export localization data to XLIFF, CSV and Google Sheets.\n\nAdd localization to your projects using the Localization package to help make your applications more accessible to a wider audience.",
   "keywords": [
@@ -10,37 +10,22 @@
     "language"
   ],
   "dependencies": {
-    "com.unity.addressables": "1.18.11",
+    "com.unity.addressables": "1.19.4",
     "com.unity.nuget.newtonsoft-json": "2.0.0"
   },
   "upmCi": {
-    "footprint": "56831453e679944184c8570e60cd763eeedd3998"
+    "footprint": "97150cc5c35e2940f70628592d55c4ead0c9c856"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.localization.git",
     "type": "git",
-    "revision": "46f4e6483306a923bfde33a3cb5add4912556fbe"
+    "revision": "92e7d5fd4506225f3376dce0c8e5c7ba014d2114"
   },
   "samples": [
-    {
-      "displayName": "CSV",
-      "description": "These samples show how String Table Collections can be exported and imported from CSV files.",
-      "path": "Samples~/CSV"
-    },
     {
       "displayName": "Creating Locales",
       "description": "This sample shows how to Locales including custom ones through script.",
       "path": "Samples~/CreatingLocales"
-    },
-    {
-      "displayName": "Smart Strings - Global Variables",
-      "description": "These samples show how Global Variables can be used in Smart Strings and how custom variables can be created.",
-      "path": "Samples~/GlobalVariables"
-    },
-    {
-      "displayName": "Google Sheets",
-      "description": "These samples show how String Table Collections can be pushed and pulled from one or more Google Sheets with custom data.",
-      "path": "Samples~/GoogleSheets"
     },
     {
       "displayName": "Loading Strings",
@@ -56,6 +41,11 @@
       "displayName": "Language Selection Menu (UGUI)",
       "description": "This sample shows how to implement a simple language selection menu using a UGUI Dropdown.",
       "path": "Samples~/LocaleMenuUGUI"
+    },
+    {
+      "displayName": "Smart Strings - Persistent Variables",
+      "description": "These samples show how Persistent Variables can be used in Smart Strings and how custom variables can be created.",
+      "path": "Samples~/PersistentVariables"
     },
     {
       "displayName": "Preloading Screen",

@@ -4,8 +4,11 @@ namespace UnityEditor.Localization.UI
 {
     class SerializedTableReference
     {
-        readonly SerializedProperty m_TableName;
         TableReference m_Reference;
+
+        public SerializedProperty TableNameProperty { get; }
+
+        public bool HasMultipleDifferentValues => TableNameProperty.hasMultipleDifferentValues;
 
         public TableReference Reference
         {
@@ -13,14 +16,18 @@ namespace UnityEditor.Localization.UI
             set
             {
                 m_Reference = value;
-                m_TableName.stringValue = m_Reference.GetSerializedString();
+                TableNameProperty.stringValue = m_Reference.GetSerializedString();
             }
         }
 
         public SerializedTableReference(SerializedProperty property)
         {
-            m_TableName = property.FindPropertyRelative("m_TableCollectionName");
-            Reference = TableReference.TableReferenceFromString(m_TableName.stringValue);
+            TableNameProperty = property.FindPropertyRelative("m_TableCollectionName");
+
+            if (HasMultipleDifferentValues)
+                return;
+
+            Reference = TableReference.TableReferenceFromString(TableNameProperty.stringValue);
         }
     }
 }

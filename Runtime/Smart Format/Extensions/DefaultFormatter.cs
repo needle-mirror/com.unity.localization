@@ -14,6 +14,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             Names = DefaultNames;
         }
 
+        /// <inheritdoc/>
         public override string[] DefaultNames => new[] {"default", "d", ""};
 
         /// <summary>

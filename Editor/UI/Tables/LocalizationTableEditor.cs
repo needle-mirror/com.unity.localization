@@ -175,6 +175,7 @@ namespace UnityEditor.Localization.UI
                     {
                         Undo.RecordObject(m_TargetTable.SharedData, "Add Missing Entries");
                         CheckForEntriesMissingFromSharedTableData(MissingEntryAction.AddEntriesToSharedData);
+                        EditorUtility.SetDirty(m_TargetTable.SharedData);
                         GUIUtility.ExitGUI();
                     }
 
@@ -182,6 +183,7 @@ namespace UnityEditor.Localization.UI
                     {
                         Undo.RecordObject(m_TargetTable, "Remove Missing Entries");
                         CheckForEntriesMissingFromSharedTableData(MissingEntryAction.RemoveEntriesFromTable);
+                        EditorUtility.SetDirty(m_TargetTable);
                         GUIUtility.ExitGUI();
                     }
                     EditorGUILayout.EndHorizontal();

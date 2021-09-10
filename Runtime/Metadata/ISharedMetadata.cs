@@ -1,5 +1,8 @@
 namespace UnityEngine.Localization.Metadata
 {
+    /// <summary>
+    /// Interface for any <see cref="IMetadata"/> that applies to multiple entries in a table.
+    /// </summary>
     [HideInInspector]
     public interface ISharedMetadata : IMetadata
     {

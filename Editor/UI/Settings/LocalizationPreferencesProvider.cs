@@ -5,7 +5,7 @@ namespace UnityEditor.Localization.UI
 {
     class LocalizationPreferencesProvider : SettingsProvider
     {
-        static readonly GUIContent showGameViewToolbar = new GUIContent("Locale Game View Menu", "Show a menu in the GameView for changing the selected locale.");
+        static readonly GUIContent showGameViewToolbar = new GUIContent("Locale Game View Menu", "Shows a menu for changing the selected locale in the GameView during playmode.");
 
         public LocalizationPreferencesProvider()
             : base("Preferences/Localization", SettingsScope.User)

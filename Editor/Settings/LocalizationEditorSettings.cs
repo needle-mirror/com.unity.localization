@@ -193,6 +193,7 @@ namespace UnityEditor.Localization
         /// Creates a <see cref="StringTableCollection"/> or <see cref="AssetTableCollection"/> from the provided loose tables.
         /// </summary>
         /// <param name="looseTables">Tables to create the collection from. All tables must be of the same type.</param>
+        /// <param name="path">The path to save the new assets to.</param>
         /// <returns>The created <see cref="StringTableCollection"/> or <see cref="AssetTableCollection"/>.</returns>
         public static LocalizationTableCollection CreateCollectionFromLooseTables(IList<LocalizationTable> looseTables, string path) => Instance.CreateCollectionFromLooseTablesInternal(looseTables, path);
 

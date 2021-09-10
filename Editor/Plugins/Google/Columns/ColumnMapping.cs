@@ -5,10 +5,23 @@ using UnityEngine.Localization;
 
 namespace UnityEditor.Localization.Plugins.Google.Columns
 {
+    /// <summary>
+    /// Provides preconfigured columns mappings that can be used with <see cref="GoogleSheets"/>.
+    /// </summary>
     public static class ColumnMapping
     {
+        /// <summary>
+        /// Returns the next available column name. For example if <paramref name="columns"/> was using "A", "B", "D" then "C" would be returned.
+        /// </summary>
+        /// <param name="columns">The columns that are currently in use.</param>
+        /// <returns>The next available column name.</returns>
         public static string GetNextAvailableColumn(IList<SheetColumn> columns) => GetNextAvailableColumn(new HashSet<int>(columns.Select(c => c.ColumnIndex)));
 
+        /// <summary>
+        /// Returns the next available column name. For example if <paramref name="reservedColumns"/> was "A", "B", "D" then "C" would be returned.
+        /// </summary>
+        /// <param name="reservedColumns">The column names that are currently in use.</param>
+        /// <returns>The next available column name.</returns>
         public static string GetNextAvailableColumn(params string[] reservedColumns) => GetNextAvailableColumn(new HashSet<int>(reservedColumns.Select(SheetColumn.ColumnNameToIndex)));
 
         /// <summary>

@@ -7,23 +7,47 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
 {
     /// <summary>
     /// The fields that will be populated during <see cref="GoogleSheets.PushStringTableCollection"/>.
-    /// This is used to configure the send operation so that the data will be sent in the most efficient manner.
+    /// This is used to configure the send operation to send the data in the most efficient manner.
     /// This means that if you only wish to populate the value field of a sheet then using <see cref="PushFields.Value"/>
-    /// will result in only the data for that field being sent, even if the note values have been set.
+    /// will send only the data for that field, even if the note values have been set.
     /// </summary>
     [Flags]
     public enum PushFields
     {
+        /// <summary>
+        /// The value field of the cell.
+        /// </summary>
         Value = 1,
+
+        /// <summary>
+        /// The notes field of the cell.
+        /// </summary>
         Note = 2,
+
+        /// <summary>
+        /// Both the value and notes fields.
+        /// </summary>
         ValueAndNote = Value | Note
     }
 
+    /// <summary>
+    /// Represents a column that is responsible for determining which entry to map to the current row in the sheet.
+    /// This column will be resolved first on each row before any other columns.
+    /// </summary>
     public interface IPullKeyColumn
     {
+        /// <summary>
+        /// Provides the entry that the current row represents.
+        /// </summary>
+        /// <param name="cellValue">The value in the cell for the column.</param>
+        /// <param name="cellNote">The value in the notes field for the column.</param>
+        /// <returns>The entry for the current row or <c>null</c> if one could not be found.</returns>
         SharedTableData.SharedTableEntry PullKey(string cellValue, string cellNote);
     }
 
+    /// <summary>
+    /// Represents a single Google sheet column with its value and note field.
+    /// </summary>
     [Serializable]
     public abstract class SheetColumn
     {
@@ -39,6 +63,9 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
             set => m_Column = value;
         }
 
+        /// <summary>
+        /// Controls which cell fields to synchronize.
+        /// </summary>
         public abstract PushFields PushFields { get; }
 
         /// <summary>
@@ -50,13 +77,17 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
             set => Column = IndexToColumnName(value);
         }
 
+        /// <summary>
+        /// Called when starting a push to allow a column to initialize itself.
+        /// </summary>
+        /// <param name="collection">The collection to push to a Google Sheet.</param>
         public abstract void PushBegin(StringTableCollection collection);
 
         /// <summary>
         /// Sets the column title and optional note. These values are always set regardless of the value of <see cref="PushFields"/>.
         /// </summary>
         /// <param name="collection"></param>
-        /// <param name="header">The title to be used for the column header.</param>
+        /// <param name="header">The title to use for the column header.</param>
         /// <param name="headerNote">Optional note that can be added to the header.</param>
         public abstract void PushHeader(StringTableCollection collection, out string header, out string headerNote);
 
@@ -71,21 +102,34 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
         public abstract void PushCellData(SharedTableData.SharedTableEntry keyEntry, IList<StringTableEntry> tableEntries, out string value, out string note);
 
         /// <summary>
-        /// Called after all calls to <see cref="ExtractCellData"/> to provide an opurtunity to deinitialize, cleanup etc.
+        /// Called after all calls to <see cref="PushCellData"/> to provide an opurtunity to deinitialize, cleanup etc.
         /// </summary>
         public virtual void PushEnd() {}
 
+        /// <summary>
+        /// Called when starting a pull to allow a column to initialize itself.
+        /// </summary>
+        /// <param name="collection">The collection to update from the Google Sheet.</param>
         public abstract void PullBegin(StringTableCollection collection);
 
+        /// <summary>
+        /// Called to update the <see cref="StringTableCollection"/> using the provided cell data.
+        /// </summary>
+        /// <param name="keyEntry">The entry being updated for this cell.</param>
+        /// <param name="cellValue">The cell value or <c>null</c> if <see cref="PushFields"/> does not contain the flag <see cref="PushFields.Value"/>.</param>
+        /// <param name="cellNote">The cell note or <c>null</c> if <see cref="PushFields"/> does not contain the flag <see cref="PushFields.Note"/>.</param>
         public abstract void PullCellData(SharedTableData.SharedTableEntry keyEntry, string cellValue, string cellNote);
 
+        /// <summary>
+        /// Called after all calls to <see cref="PullCellData"/> to provide an opurtunity to deinitialize, cleanup etc.
+        /// </summary>
         public virtual void PullEnd() {}
 
         /// <summary>
         /// Converts a column id value into its name. Column ids start at 0.
         /// E.G 0 = 'A', 1 = 'B', 26 = 'AA', 27 = 'AB'
         /// </summary>
-        /// <param name="id">Id of the column starting at 0('A').</param>
+        /// <param name="index">Id of the column starting at 0('A').</param>
         /// <returns>The column name or null.</returns>
         public static string IndexToColumnName(int index)
         {

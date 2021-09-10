@@ -10,7 +10,7 @@ Create a new Platform Override by clicking the Add (+) button. This shows the av
 ## Entry Type Override
 
 The Platform Override provides 3 ways to override an entry in a Table Collection.
-You can use different  Override Types within the same Entry based on requirements.
+You can use different Override Types within the same Entry based on requirements.
 
 ### Entry mode
 
@@ -47,7 +47,7 @@ _The Platform Override Table._
 
 ## Custom Entry Overrides
 
-It is possible to create custom overrides that can be applied to a table entry or the shared table entry. 
+It is possible to create custom overrides that can be applied to a table entry or the shared table entry.
 For example you may want to change a localized value for a particular region or another criteria such as the date.
 The Entry Override is evaluated during the Get Table Entry phase:
 

@@ -166,7 +166,17 @@ namespace UnityEditor.Localization.UI
             return base.GetCustomRowHeight(row, item);
         }
 
-        protected virtual void UndoRedoPerformed() => RefreshCustomRowHeights();
+        protected virtual void UndoRedoPerformed()
+        {
+            RefreshCustomRowHeights();
+
+            if (TableCollection != null && Selected is TableEntrySelected entrySelected)
+            {
+                // If the selected entry was removed by an undo operation then deselect it.
+                if (!TableCollection.SharedData.Contains(entrySelected.KeyId))
+                    Selected = null;
+            }
+        }
 
         public virtual void Initialize()
         {
@@ -370,6 +380,9 @@ namespace UnityEditor.Localization.UI
 
             if (GUI.Button(removeKeyButtonRect, "-"))
             {
+                // Remove any selections (LOC-296)
+                Selected = null;
+
                 var objects = new Object[TableCollection.Tables.Count + 1];
                 for (int i = 0; i < TableCollection.Tables.Count; ++i)
                 {

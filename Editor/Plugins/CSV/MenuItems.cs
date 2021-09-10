@@ -75,12 +75,16 @@ namespace UnityEditor.Localization.Plugins.CSV
 
             EditorPrefs.SetString(kPrefFile, path);
 
-            using (var stream = new StreamWriter(path, false, Encoding.UTF8))
+            // Use FileShare.ReadWrite to avoid IOException: Sharing violation (LOC-348)
+            using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite))
             {
+                var stream = new StreamWriter(fs, Encoding.UTF8);
                 var reporter = TaskReporter.CreateDefaultReporter();
                 reporter.Start("Exporting " + path, string.Empty);
                 Csv.Export(stream, collection, cellMappings, reporter);
             }
+
+            EditorUtility.RevealInFinder(path);
         }
 
         [MenuItem("CONTEXT/StringTableCollection/Import/CSV")]
@@ -95,8 +99,10 @@ namespace UnityEditor.Localization.Plugins.CSV
 
             EditorPrefs.SetString(kPrefFile, path);
 
-            using (var stream = new StreamReader(path))
+            // Use FileShare.ReadWrite to avoid IOException: Sharing violation (LOC-348)
+            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
+                var stream = new StreamReader(fs);
                 var reporter = TaskReporter.CreateDefaultReporter();
                 reporter.Start("Importing " + path, string.Empty);
                 Csv.ImportInto(stream, collection, true, reporter);
@@ -123,8 +129,11 @@ namespace UnityEditor.Localization.Plugins.CSV
             }
 
             var cellMappings = new CsvColumns[] { new KeyIdColumns(), new LocaleColumns { LocaleIdentifier = table.LocaleIdentifier } };
-            using (var stream = new StreamReader(path))
+
+            // Use FileShare.ReadWrite to avoid IOException: Sharing violation (LOC-348)
+            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
+                var stream = new StreamReader(fs);
                 var reporter = TaskReporter.CreateDefaultReporter();
                 reporter.Start("Importing " + path, string.Empty);
                 Csv.ImportInto(stream, collection, cellMappings, true, reporter);

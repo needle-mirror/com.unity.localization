@@ -37,6 +37,10 @@ namespace UnityEngine.Localization.Metadata
         [SerializeField, HideInInspector]
         List<Item> m_Entries = new List<Item>();
 
+        /// <summary>
+        /// Dictionary that contains all the entries Key Ids that are using this, the
+        /// HashSet includes the country codes of the tables that are using the metadata.
+        /// </summary>
         public Dictionary<long, HashSet<string>> EntriesLookup { get; set; } = new Dictionary<long, HashSet<string>>();
 
         /// <summary>

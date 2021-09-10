@@ -11,22 +11,24 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     /// If the source value is an array (or supports ICollection),
     /// then each item will be custom formatted.
     /// Syntax:
-    /// #1: "format|spacer"
-    /// #2: "format|spacer|last spacer"
-    /// #3: "format|spacer|last spacer|two spacer"
-    /// The format will be used for each item in the collection, the spacer will be between all items, and the last spacer
-    /// will replace the spacer for the last item only.
-    /// Example:
-    /// CustomFormat("{Dates:D|; |; and }", {#1/1/2000#, #12/31/2999#, #9/9/9999#}) = "January 1, 2000; December 31, 2999;
-    /// and September 9, 9999"
-    /// In this example, format = "D", spacer = "; ", and last spacer = "; and "
-    /// Advanced:
-    /// Composite Formatting is allowed in the format by using nested braces.
-    /// If a nested item is detected, Composite formatting will be used.
-    /// Example:
-    /// CustomFormat("{Sizes:{Width}x{Height}|, }", {new Size(4,3), new Size(16,9)}) = "4x3, 16x9"
-    /// In this example, format = "{Width}x{Height}".  Notice the nested braces.
+    /// <list type="number">
+    /// <item><term>"format|spacer"</term></item>
+    /// <item><term>"format|spacer|last spacer"</term></item>
+    /// <item><term>"format|spacer|last spacer|two spacer"</term></item>
+    /// </list>
     /// </summary>
+    /// <example>
+    /// The format will be used for each item in the collection, the spacer will be between all items, and the last spacer
+    /// will replace the spacer for the last item only. In this example, format = "D", spacer = "; ", and last spacer = "; and ".<br/>
+    /// Format: <c>{Dates:D|; |; and }</c><br/>
+    /// Arguments: <c>{#1/1/2000#, #12/31/2999#, #9/9/9999#}</c><br/>
+    /// Result: "January 1, 2000; December 31, 2999"<br/><br/>
+    /// Composite Formatting is allowed in the format by using nested braces. If a nested item is detected, Composite formatting will
+    /// be used. In this example, format = "{Width}x{Height}". Notice the nested braces.<br/>
+    /// Format: <c>{Sizes:{Width}x{Height}|, }</c><br/>
+    /// Arguments: <c>{new Size(4,3), new Size(16,9)}</c><br/>
+    /// Result: "4x3, 16x9"<br/>
+    /// </example>
     [Serializable]
     public class ListFormatter : FormatterBase, ISource, IFormatterLiteralExtractor
     {
@@ -40,6 +42,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             Names = DefaultNames;
         }
 
+        /// <inheritdoc/>
         public override string[] DefaultNames => new[] {"list", "l", ""};
 
         /// <summary>
@@ -116,6 +119,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             //set { _collectionIndex.Value = value; }
         } = -1;
 
+        /// <inheritdoc/>
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {
             var format = formattingInfo.Format;
@@ -206,6 +210,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             return true;
         }
 
+        /// <inheritdoc/>
         public void WriteAllLiterals(IFormattingInfo formattingInfo)
         {
             var format = formattingInfo.Format;

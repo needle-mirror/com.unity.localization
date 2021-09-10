@@ -19,7 +19,7 @@ namespace UnityEditor.Localization.UI
 
         static void BeginProperty(Rect rect, SerializedProperty property)
         {
-            if (EditorApplication.isPlayingOrWillChangePlaymode || LocalizationSettings.SelectedLocale == null)
+            if (EditorApplication.isPlayingOrWillChangePlaymode || LocalizationSettings.SelectedLocaleAsync.IsDone && LocalizationSettings.SelectedLocaleAsync.Result == null)
                 return;
 
             if (DrivenPropertyManagerInternalBridge.IsDriving(LocalizationPropertyDriver.instance, property.serializedObject.targetObject, property.propertyPath))
@@ -28,6 +28,7 @@ namespace UnityEditor.Localization.UI
                 GUI.enabled = false;
                 GUI.backgroundColor = PrefColorBridge.DrivenProperty;
             }
+            #if ENABLE_PROPERTY_VARIANTS
             else if (DrivenPropertyManagerInternalBridge.IsDriving(VariantsPropertyDriver.instance, property.serializedObject.targetObject, property.propertyPath))
             {
                 if (property.serializedObject.targetObject is Component component)
@@ -39,13 +40,14 @@ namespace UnityEditor.Localization.UI
                     const float iconSize = 18;
                     rect.xMin -= iconSize;
                     rect.size = new Vector2(iconSize, iconSize);
-                    GUI.Label(rect, EditorIcons.LocalizationSettings.image, GUI.skin.label);
+                    GUI.Label(rect, EditorIcons.GameObjectLocalizer, GUI.skin.label);
                     GUI.backgroundColor = trackedProperty.HasVariant(LocalizationSettings.SelectedLocale.Identifier) ? PrefColorBridge.VariantWithOverrideProperty : PrefColorBridge.VariantProperty;
 
                     if (LocalizationSettings.SelectedLocale is PseudoLocale)
                         GUI.enabled = false;
                 }
             }
+            #endif
         }
     }
 }

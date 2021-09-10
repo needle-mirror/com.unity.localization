@@ -13,34 +13,69 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     [Serializable]
     public class TemplateFormatter : FormatterBase
     {
-        IDictionary<string, Format> m_Templates;
+        [Serializable]
+        class Template
+        {
+            public string name;
+            public string text;
+            public Format Format { get; set; }
+        }
+
+        [SerializeField]
+        List<Template> m_Templates = new List<Template>();
+
+        IDictionary<string, Format> m_TemplatesDict;
+
+        [NonSerialized]
         SmartFormatter m_Formatter;
 
         IDictionary<string, Format> Templates
         {
             get
             {
-                if (m_Templates == null)
+                if (m_TemplatesDict == null)
                 {
                     var stringComparer = Formatter.Settings.GetCaseSensitivityComparer();
-                    m_Templates = new Dictionary<string, Format>(stringComparer);
+                    m_TemplatesDict = new Dictionary<string, Format>(stringComparer);
+
+                    foreach(var t in m_Templates)
+                    {
+                        if (!string.IsNullOrEmpty(t.name))
+                        {
+                            try
+                            {
+                                m_TemplatesDict[t.name] = Formatter.Parser.ParseFormat(t.text, Formatter.GetNotEmptyFormatterExtensionNames());
+                            }
+                            catch(Exception e)
+                            {
+                                Debug.LogException(e);
+                            }
+                        }
+                    }
                 }
 
-                return m_Templates;
+                return m_TemplatesDict;
             }
         }
 
+        /// <summary>
+        /// The <see cref="SmartFormatter"/> that the formatter is part of.
+        /// </summary>
         public SmartFormatter Formatter
         {
             get => m_Formatter ?? LocalizationSettings.StringDatabase.SmartFormatter;
             set => m_Formatter = value;
         }
 
+        /// <summary>
+        /// Creates a new instance of the formatter.
+        /// </summary>
         public TemplateFormatter()
         {
             Names = DefaultNames;
         }
 
+        /// <inheritdoc/>
         public override string[] DefaultNames => new[] { "template", "t" };
 
         /// <summary>
@@ -89,6 +124,12 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         public bool Remove(string templateName)
         {
             return Templates.Remove(templateName);
+        }
+
+        public override void OnAfterDeserialize()
+        {
+            base.OnAfterDeserialize();
+            m_TemplatesDict = null;
         }
 
         /// <summary>

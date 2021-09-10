@@ -101,6 +101,12 @@ namespace UnityEditor.Localization.UI.Toolkit
             set => this.Q<Label>("header-label").text = value;
         }
 
+        public Texture HeaderIcon
+        {
+            get => this.Q<Image>("header-icon").image;
+            set => this.Q<Image>("header-icon").image = value;
+        }
+
         public string HeaderTooltip
         {
             get => this.Q<Label>("header-label").tooltip;

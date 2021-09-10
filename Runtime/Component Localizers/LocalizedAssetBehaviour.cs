@@ -73,8 +73,8 @@ namespace UnityEngine.Localization.Components
     /// <code source="../../DocCodeSamples.Tests/LocalizedFontEventComponent.cs" region="sample-code"/>
     /// </example>
     /// <typeparam name="TObject">The type of Asset to be Localized. Must inherit from [UnityEngine.Object](https://docs.unity3d.com/ScriptReference/Object.html)</typeparam>
-    /// <typeparam name="TReference">The **Serializable** LocalizedAsset class. This will be used for the <see cref="AssetReference"/> property.</typeparam>
-    /// <typeparam name="TEvent">The **Serializable** [UnityEvent](https://docs.unity3d.com/ScriptReference/Events.UnityEvent.html) that should be called when the asset is loaded.</typeparam>
+    /// <typeparam name="TReference">The Serializable LocalizedAsset class. This will be used for the <see cref="LocalizedAssetBehaviour{TObject, TReference}.AssetReference"/> property.</typeparam>
+    /// <typeparam name="TEvent">The Serializable [UnityEvent](https://docs.unity3d.com/ScriptReference/Events.UnityEvent.html) that should be called when the asset is loaded.</typeparam>
     public class LocalizedAssetEvent<TObject, TReference, TEvent> : LocalizedAssetBehaviour<TObject, TReference>
         where TObject : Object
         where TReference : LocalizedAsset<TObject>, new()
@@ -83,12 +83,16 @@ namespace UnityEngine.Localization.Components
         [SerializeField]
         TEvent m_UpdateAsset = new TEvent();
 
+        /// <summary>
+        /// Unity Event that is invoked when the localized asset is updated.
+        /// </summary>
         public TEvent OnUpdateAsset
         {
             get => m_UpdateAsset;
             set => m_UpdateAsset = value;
         }
 
+        /// <inheritdoc/>
         protected override void UpdateAsset(TObject localizedAsset)
         {
             #if UNITY_EDITOR

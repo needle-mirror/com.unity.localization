@@ -11,6 +11,7 @@ namespace UnityEngine.Localization.Components
     {
         GameObject m_Current;
 
+        /// <inheritdoc/>
         protected override void UpdateAsset(GameObject localizedAsset)
         {
             if (m_Current != null)

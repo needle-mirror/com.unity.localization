@@ -42,7 +42,7 @@ namespace UnityEngine.Localization
         {
             if (handle.IsValid())
                 Instance.ReleaseInternal(handle);
-        } 
+        }
 
         public static AsyncOperationHandle<IList<IResourceLocation>> LoadResourceLocationsWithLabelsAsync(IEnumerable labels, Addressables.MergeMode mode, Type type = null) => Instance.LoadResourceLocationsWithLabelsAsyncInternal(labels, mode, type);
         public static AsyncOperationHandle<IList<IResourceLocation>> LoadTableLocationsAsync(string tableName, LocaleIdentifier id, Type type) => Instance.LoadTableLocationsAsyncInternal(tableName, id, type);

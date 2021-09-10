@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Localization;
@@ -177,15 +178,22 @@ namespace UnityEditor.Localization.UI
                     for (int i = 0; i < m_MissingTables.Count; ++i)
                     {
                         EditorGUILayout.BeginHorizontal();
-                        if (GUILayout.Button(m_MissingTables[i].name, EditorStyles.label))
+                        var tableName = AddressHelper.GetTableAddress(m_Collection.SharedData.TableCollectionName, m_MissingTables[i].Identifier);
+                        var assetGUID = AssetDatabase.FindAssets(tableName, null);
+                        var path = assetGUID.Length > 0 ? AssetDatabase.GUIDToAssetPath(assetGUID[0]) : null;
+                        var isExist = path != null;
+                        using (new EditorGUI.DisabledScope(isExist))
                         {
-                            EditorGUIUtility.PingObject(m_MissingTables[i]);
-                        }
+                            if (GUILayout.Button(m_MissingTables[i].name, EditorStyles.label))
+                            {
+                                EditorGUIUtility.PingObject(m_MissingTables[i]);
+                            }
 
-                        if (GUILayout.Button(Styles.createTable, GUILayout.Width(60)))
-                        {
-                            m_Collection.AddNewTable(m_MissingTables[i].Identifier);
-                            GUIUtility.ExitGUI();
+                            if (GUILayout.Button(Styles.createTable, GUILayout.Width(60)))
+                            {
+                                m_Collection.AddNewTable(m_MissingTables[i].Identifier);
+                                GUIUtility.ExitGUI();
+                            }
                         }
                         EditorGUILayout.EndHorizontal();
                     }

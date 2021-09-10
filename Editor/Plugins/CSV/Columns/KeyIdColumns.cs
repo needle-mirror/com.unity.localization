@@ -10,9 +10,9 @@ namespace UnityEditor.Localization.Plugins.CSV.Columns
     /// <summary>
     /// Represents 3 possible columns in CSV data:
     /// <list type="number">
-    /// <item>Key - The unique name of the entry. This value is always included when exporting.</item>
-    /// <item>Id - The Id value for the entry. This field is optional however strongly recomended if you expect to change the Key names.</item>
-    /// <item>Shared Comments - <see cref="Comment"/> taken from <see cref="SharedTableData"/> for each entry. This field is optional.</item>
+    /// <item><term>Key. </term><description>The unique name of the entry. This value is always included when exporting.</description></item>
+    /// <item><term>Id. </term><description>The Id value for the entry. This field is optional however strongly recomended if you expect to change the Key names.</description></item>
+    /// <item><term>Shared Comments. </term><description><see cref="Comment"/> taken from <see cref="SharedTableData"/> for each entry. This field is optional.</description></item>
     /// </list>
     /// When importing from CSV all columns are treated as optional however there must be at least 1 Key or Id field.
     /// When adding new values to be imported from the CSV the Id field can be left blank or given the value 0, a new Id will be assigned during import.
@@ -88,6 +88,7 @@ namespace UnityEditor.Localization.Plugins.CSV.Columns
             set => m_CommentFieldName = value;
         }
 
+        /// <inheritdoc/>
         public override void ReadBegin(StringTableCollection collection, CsvReader csvReader)
         {
             m_SharedTableData = collection.SharedData;
@@ -103,13 +104,16 @@ namespace UnityEditor.Localization.Plugins.CSV.Columns
             m_CommentFieldIndex = csvReader.GetFieldIndex(SharedCommentFieldName, isTryGet: true);
         }
 
+        /// <inheritdoc/>
         public override void ReadEnd(StringTableCollection collection)
         {
             m_SharedTableData = null;
         }
 
+        /// <inheritdoc/>
         public override void ReadRow(SharedTableData.SharedTableEntry keyEntry, CsvReader reader) {}
 
+        /// <inheritdoc/>
         public override void WriteBegin(StringTableCollection collection, CsvWriter csvWriter)
         {
             csvWriter.WriteField("Key");
@@ -121,6 +125,7 @@ namespace UnityEditor.Localization.Plugins.CSV.Columns
                 csvWriter.WriteField("Shared Comment");
         }
 
+        /// <inheritdoc/>
         public override void WriteRow(SharedTableData.SharedTableEntry keyEntry, IList<StringTableEntry> tableEntries, CsvWriter writer)
         {
             writer.WriteField(keyEntry.Key, true);
@@ -135,6 +140,7 @@ namespace UnityEditor.Localization.Plugins.CSV.Columns
             }
         }
 
+        /// <inheritdoc/>
         public SharedTableData.SharedTableEntry ReadKey(CsvReader reader)
         {
             SharedTableData.SharedTableEntry key;

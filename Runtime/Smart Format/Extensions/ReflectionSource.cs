@@ -6,6 +6,9 @@ using UnityEngine.Localization.SmartFormat.Core.Extensions;
 
 namespace UnityEngine.Localization.SmartFormat.Extensions
 {
+    /// <summary>
+    /// Provides the ability to select objects using reflection.
+    /// </summary>
     [Serializable]
     public class ReflectionSource : ISource
     {
@@ -23,6 +26,10 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             }
         }
 
+        /// <summary>
+        /// Creates a new instance of the source.
+        /// </summary>
+        /// <param name="formatter"></param>
         public ReflectionSource(SmartFormatter formatter)
         {
             // Add some special info to the parser:
@@ -31,6 +38,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             formatter.Parser.AddOperators(".");
         }
 
+        /// <inheritdoc/>
         public bool TryEvaluateSelector(ISelectorInfo selectorInfo)
         {
             const BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public;

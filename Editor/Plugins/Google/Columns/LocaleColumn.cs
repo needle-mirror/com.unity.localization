@@ -7,6 +7,9 @@ using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization.Plugins.Google.Columns
 {
+    /// <summary>
+    /// Represents a Google Sheet column that is synchronized to a localized value for a chosen <see cref="Locale"/>.
+    /// </summary>
     [Serializable]
     public class LocaleColumn : SheetColumn
     {
@@ -20,6 +23,7 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
 
         StringTable m_PullTable;
 
+        /// <inheritdoc/>
         public override PushFields PushFields => m_IncludeComments ? PushFields.ValueAndNote : PushFields.Value;
 
         /// <summary>
@@ -40,6 +44,7 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
             set => m_IncludeComments = value;
         }
 
+        /// <inheritdoc/>
         public override void PushBegin(StringTableCollection collection)
         {
             var tables = collection.StringTables;
@@ -54,12 +59,14 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
             m_CollectionTableIndex = -1;
         }
 
+        /// <inheritdoc/>
         public override void PushHeader(StringTableCollection collection, out string header, out string headerNote)
         {
             header = LocaleIdentifier.ToString();
             headerNote = null;
         }
 
+        /// <inheritdoc/>
         public override void PushCellData(SharedTableData.SharedTableEntry keyEntry, IList<StringTableEntry> tableEntries, out string value, out string note)
         {
             if (m_CollectionTableIndex != -1 && tableEntries[m_CollectionTableIndex] != null)
@@ -84,6 +91,7 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
             }
         }
 
+        /// <inheritdoc/>
         public override void PullBegin(StringTableCollection collection)
         {
             var tables = collection.StringTables;
@@ -98,6 +106,7 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
             m_PullTable = null;
         }
 
+        /// <inheritdoc/>
         public override void PullCellData(SharedTableData.SharedTableEntry keyEntry, string cellValue, string cellNote)
         {
             if (m_PullTable == null)

@@ -4,7 +4,7 @@ Component Localizers are [MonoBehaviours](https://docs.unity3d.com/ScriptReferen
 
 ## LocalizeStringEvent
 
-The LocalizeStringEvent Component Localizer localizes strings and provides additional arguments when using [Smart Strings](SmartStrings.md) or [String.Format](https://docs.microsoft.com/dotnet/api/system.string.format). In the Inspector, **Format Arguments** must be [UnityEngine.Objects](https://docs.unity3d.com/ScriptReference/Object.html); however, it is possible to pass any type through as an argument via script. You can also use the LocalizeStringEvent editor to edit tables and Localized strings, and preview them after formatting.
+The LocalizeStringEvent Component Localizer localizes strings and provides additional arguments when using [Smart Strings](Smart/SmartStrings.md) or [String.Format](https://docs.microsoft.com/dotnet/api/system.string.format). In the Inspector, **Format Arguments** must be [UnityEngine.Objects](https://docs.unity3d.com/ScriptReference/Object.html); however, it is possible to pass any type through as an argument via script. You can also use the LocalizeStringEvent editor to edit tables and Localized strings, and preview them after formatting.
 
 ![Localize String Editor.](images/LocalizedString_Editor.gif)
 

@@ -26,5 +26,17 @@ namespace UnityEditor.Localization
             var right = new Rect(left.xMax + padding, rect.y, rightWidth, rect.height);
             return (left, right);
         }
+
+        public static (Rect left, Rect center, Rect right) SplitIntoThreeParts(this Rect rect, float leftAmount = 0.33f, float padding = 2)
+        {
+            var width = rect.width - padding;
+            float leftWidth = width * leftAmount;
+            float centerWidth = width - (2 * leftWidth);
+            float rightWidth = width - (centerWidth + leftWidth);
+            var left = new Rect(rect.x, rect.y, leftWidth, rect.height);
+            var center = new Rect(left.xMax + padding, rect.y, centerWidth, rect.height);
+            var right = new Rect(center.xMax + padding, rect.y, rightWidth, rect.height);
+            return (left, center, right);
+        }
     }
 }

@@ -9,6 +9,8 @@ namespace UnityEngine.Localization
     /// Provides a way to access a <see cref="LocalizationTable"/> at runtime.
     /// See <seealso cref="LocalizedStringTable"/> and <seealso cref="LocalizedAssetTable"/> for implementations.
     /// </summary>
+    /// <typeparam name="TTable">The type of Table.</typeparam>
+    /// <typeparam name="TEntry">The type of entry that is part of the table.</typeparam>
     [Serializable]
     public abstract class LocalizedTable<TTable, TEntry>
         #if UNITY_EDITOR
@@ -28,6 +30,9 @@ namespace UnityEngine.Localization
         protected TableReference m_CurrentTable;
         #endif
 
+        /// <summary>
+        /// The database to request the table from.
+        /// </summary>
         protected abstract LocalizedDatabase<TTable, TEntry> Database { get; }
 
         /// <summary>
@@ -119,7 +124,10 @@ namespace UnityEngine.Localization
                 m_ChangeHandler -= value;
 
                 if (m_ChangeHandler == null)
+                {
+                    LocalizationSettings.SelectedLocaleChanged -= HandleLocaleChange;
                     ClearLoadingOperation();
+                }
             }
         }
 
@@ -137,10 +145,16 @@ namespace UnityEngine.Localization
 
         /// <summary>
         /// Provides the table with the <see cref="TableReference"/>.
+        /// Uses [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) to force the loading to complete synchronously.
+        /// Please note that [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on
+        /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
         /// </summary>
         /// <returns></returns>
         public TTable GetTable() => GetTableAsync().WaitForCompletion();
 
+        /// <summary>
+        /// Force an update as if the <see cref="LocalizationSettings.SelectedLocale"/> had changed.
+        /// </summary>
         protected void ForceUpdate()
         {
             if (m_ChangeHandler != null)

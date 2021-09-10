@@ -1,10 +1,12 @@
 #if PACKAGE_UGUI
 
+using System.Collections;
 using UnityEditor;
 using UnityEditor.Localization;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
+using UnityEngine.Localization.SmartFormat.PersistentVariables;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
 
@@ -141,6 +143,25 @@ public class LocalizedStringConstructor
     public LocalizedString usingTableGuidAndEntryId = new LocalizedString(new System.Guid("6e79ded14bc9e0a4d9bf2b8aac246bfe"), 323453434);
 
     public LocalizedString usingTableGuidAndEntryName = new LocalizedString(new System.Guid("6e79ded14bc9e0a4d9bf2b8aac246bfe"), "Start Game");
+
+    public LocalizedString withLocalVariables = new LocalizedString("My String Table", "My Game Text")
+    {
+        // These variables will be visible in the inspector Local Variables field.
+        { "some-text", new StringVariable { Value = "Hello World" } },
+        { "score", new IntVariable { Value = 100 } },
+        { "player-health", new FloatVariable { Value = 0.5f } },
+        { "object-reference", new ObjectVariable()}, // Set via the inspector
+    };
+
+    public LocalizedString withNestedTranslation = new LocalizedString("My String Table", "My Game Text")
+    {
+        { "some-text", new StringVariable { Value = "Hello World" } },
+        { "nested", new LocalizedString("My String Table", "My Nested Text")
+          {
+              { "score", new IntVariable { Value = 100 } },
+          }}
+    };
+
     #endregion
 
     #region localized-string-constructor-editor
@@ -202,6 +223,59 @@ public class LocalizedStringConstructor
         localizedString.SetReference(new System.Guid("6e79ded14bc9e0a4d9bf2b8aac246bfe"), 3432444324);
         #endregion
     }
+
+    void AddAndGetVariable()
+    {
+        #region add-get-variable
+
+        var localizedString = new LocalizedString("My Table", "My Entry");
+
+        // An example of a Smart String using the variable would be: "You have {player-money:C}.".
+        // :C will apply the current Locale currency and number formatting.
+        localizedString.Add("player-money", new FloatVariable { Value = 100.45f });
+
+        // Get a variable from the localized string
+        var variable = localizedString["player-money"] as FloatVariable;
+        Debug.Log("The value is " + variable);
+
+        #endregion
+    }
 }
+
+#region health-counter
+
+public class HealthCounterExample : MonoBehaviour
+{
+    public Text uiText;
+    public float delay = 5;
+
+    // Some example English strings could be:
+    // "{player-name} has {player-health} health"
+    // "{player-name} {player-health:cond:<100?has {} remaing health|is at full health}"
+    public LocalizedString myLocalizedString = new LocalizedString("My Table", "My Entry")
+    {
+        { "player-name", new StringVariable { Value = "Player 1" } },
+        { "player-health", new IntVariable { Value = 100 } }
+    };
+
+    IEnumerator Start()
+    {
+        // Register to get an update when the string is changed.
+        // This will be called every time the playerHealth variable is modified.
+        myLocalizedString.StringChanged += val => uiText.text = val;
+
+        var playerHealth = myLocalizedString["player-health"] as IntVariable;
+        var wait = new WaitForSeconds(delay);
+
+        while (playerHealth.Value > 0)
+        {
+            yield return wait;
+
+            // Changing the value triggers the LocalizedString to update itself.
+            playerHealth.Value -= Random.Range(1, 10);
+        }
+    }
+}
+#endregion
 
 #endif

@@ -1,6 +1,6 @@
 # XLIFF
 
-XML Localisation Interchange File Format (XLIFF) is a standardized way to store localization data. It is supported by many different Computer Aided Translation (CAT) tools, which allows for a smoother translation pipeline when working with translators. 
+XML Localisation Interchange File Format (XLIFF) is a standardized way to store localization data. It is supported by many different Computer Aided Translation (CAT) tools, which allows for a smoother translation pipeline when working with translators.
 
 You can export String Table Collections from Unity to one or more XLIFF files, modify them with external CAT tools, and finally re-import them back into Unity with the updated translations.
 
@@ -33,7 +33,7 @@ The following image demonstrates data in a String Table Collection generated fro
 
 The following demonstrates the output for the 2 supported XLIFF versions:
 
-**Version 1.2**
+#### **Version 1.2**
 
 ```XML
 <?xml version="1.0"?>
@@ -64,7 +64,7 @@ The following demonstrates the output for the 2 supported XLIFF versions:
 </xliff>
 ```
 
-**Version 2.0**
+#### **Version 2.0**
 
 ```XML
 <?xml version="1.0"?>
@@ -110,8 +110,8 @@ By default, this selects all tables in the window for export.
 
 | **Property** | **Description** |
 | ---------| --------------- |
-| **Selected Tables** | Use the **Selected Tables** list to configure which String Tables the Localization system should export to XLIFF. 
-| **Source Language** | Set the **Source Language** to the language you want to set for the XLIFF Translation Unit Source field.<br><br>This does not need to be the original language of the project. For example, a game might be developed in Japanese, but the translator for the Russian localisation might require the source language to be English. If an English translation is available, you can set the **Source Language** to English for the Russian language translation XLIFF file. 
+| **Selected Tables** | Use the **Selected Tables** list to configure which String Tables the Localization system should export to XLIFF.
+| **Source Language** | Set the **Source Language** to the language you want to set for the XLIFF Translation Unit Source field.<br><br>This does not need to be the original language of the project. For example, a game might be developed in Japanese, but the translator for the Russian localization might require the source language to be English. If an English translation is available, you can set the **Source Language** to English for the Russian language translation XLIFF file.
 | **Name** | Set the **Name** to the base file name you want to use for all generated XLIFF files. The Localization system appends this name with the target language code (for example, the name _XliffImportTests_ would become _XliffImportTests-ru_ when exporting Russian).
 | **XLIFF Version** | Set the **XLIFF Version** to the XLIFF version that you want to use to generate your XLIFF files. Usually, you should determine this by the software you are importing the generated XLIFF files to. 1.2 is the most commonly supported XLIFF version.
 | **Export Selected** | Select the **Export Selected** button when you are ready to export all of the selected tables. Unity prompts you to select a directory to save the generated XLIFF files.
@@ -134,7 +134,7 @@ When Unity imports the XLIFF documents, it also searches for existing String Tab
 
 ![Importing an XLIFF document.](images/XLIFF_ImportFlow.svg)
 
-Unity checks whether the XLIFF file ID matches the String Table ID. If it does, Unity checks whether that String Table is part of a String Table Collection, and if it is, it imports the XLIFF file to that String Table Collection. 
+Unity checks whether the XLIFF file ID matches the String Table ID. If it does, Unity checks whether that String Table is part of a String Table Collection, and if it is, it imports the XLIFF file to that String Table Collection.
 
 If it is not part of a String Table Collection, or if the file ID does not match a String Table GUID, Unity checks whether the file contains a group. If it does not, Unity creates a new String Table Collection. If it does contain a Group, Unity checks whether the Group ID matches a Shared Table Data GUID, and checks whether a String Table Collection exists with the same name as the Group ID or Group name. If it does, Unity imports the XLIFF file to that String Table Collection; if it does not, Unity creates a new String Table Collection.
 
@@ -156,61 +156,8 @@ Unity uses an interface-based layer to provide a simplified API for XLIFF versio
 
 The following example reads an XLIFF document:
 
-```CSharp
-using System.IO;
-using UnityEditor.Localization.Plugins.XLIFF;
-using V12 = UnityEditor.Localization.Plugins.XLIFF.V12;
-using V20 = UnityEditor.Localization.Plugins.XLIFF.V20;
-
-public class XliffExample
-{
-    public void LoadXliffFile(string file)
-    {
-        var document = XliffDocument.Parse(new FileStream(file, FileMode.Open, FileAccess.Read));
-        if (document.Version == "1.2")
-        {
-            var v12 = document as V12.xliff;
-            // Unity now has access to a 1.2 XLIFF document and can use 1.2 features.
-            // The V12 namespace contains all the 1.2-specific nodes.
-        }
-        else
-        {
-            var v20 = document as V20.xliff;
-            // Unity now has access to a 2.0 XLIFF document and can use 2.0 features.
-            // The V20 namespace contains all the 2.0-specific nodes.
-        }
-    }
-}
-```
+[!code-cs[load-xliff](../DocCodeSamples.Tests/XliffSamples.cs#load-xliff)]
 
 The following example exports and imports an XLIFF file:
 
-```CSharp
-using UnityEditor.Localization;
-using UnityEditor.Localization.Plugins.XLIFF;
-using UnityEngine.Localization;
-using UnityEngine.Localization.Tables;
-
-public class XliffExample
-{
-    public void ExportTable(StringTable source, StringTable target, string dir)
-    {
-        Xliff.Export(source, dir, XliffVersion.V20, new[] { target });
-    }
-
-    public void ExportCollection(StringTableCollection collection, LocaleIdentifier sourceLanguage, string dir)
-    {
-        Xliff.Export(sourceLanguage, dir, "My XLIFF Export", XliffVersion.V12, new[] { collection });
-    }
-
-    public void ImportIntoStringTable(StringTable table, string file)
-    {
-        Xliff.ImportFileIntoTable(file, table);
-    }
-
-    public void ImportIntoCollection(StringTableCollection collection, string file)
-    {
-        Xliff.ImportFileIntoCollection(collection, file);
-    }
-}
-```
+[!code-cs[export-xliff](../DocCodeSamples.Tests/XliffSamples.cs#export-xliff)]

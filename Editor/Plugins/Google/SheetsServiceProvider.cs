@@ -15,6 +15,9 @@ namespace UnityEditor.Localization.Plugins.Google
     /// </summary>
     public enum AuthenticationType
     {
+        /// <summary>
+        /// No authentication has been specified.
+        /// </summary>
         None,
 
         /// <summary>
@@ -40,9 +43,14 @@ namespace UnityEditor.Localization.Plugins.Google
     }
 
     /// <summary>
-    /// Configuration for connecting to a Google Sheet.
-    /// Includes the Authorization properties and general sheet properties such as default sheet styles etc.
+    /// The Sheets service provider performs the authentication to Google and keeps track of the authentication tokens
+    /// so that you do not need to authenticate each time.
+    /// The Sheets service provider also includes general sheet properties, such as default sheet styles, that are used when creating a new sheet.
     /// </summary>
+    /// <example>
+    /// Unity recommends to have a <see cref="SheetsServiceProvider"/> asset pre-configured for use, however this example does create a new one.
+    /// <code source="../../../DocCodeSamples.Tests/GoogleSheetsSamples.cs" region="sheets-service-provider"/>
+    /// </example>
     [CreateAssetMenu(fileName = "Google Sheets Service", menuName = "Localization/Google Sheets Service")]
     [HelpURL("https://developers.google.com/sheets/api/guides/authorizing#AboutAuthorization")]
     public partial class SheetsServiceProvider : ScriptableObject, IGoogleSheetsService
@@ -129,7 +137,7 @@ namespace UnityEditor.Localization.Plugins.Google
             set => m_NewSheetProperties = value;
         }
 
-        public void OnEnable()
+        internal void OnEnable()
         {
             if (string.IsNullOrEmpty(ApplicationName))
                 ApplicationName = PlayerSettings.productName;

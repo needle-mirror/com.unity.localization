@@ -22,11 +22,12 @@ namespace UnityEditor.Localization.Plugins.CSV
         {
             public static readonly GUIContent addDefaultColumns = new GUIContent("Add Default Columns");
             public static readonly GUIContent addDefaultColumnsWithComments = new GUIContent("Add Default Columns(With Comments)");
-            public static readonly GUIContent header = new GUIContent("Comma Separated Values (CSV)");
+            public static readonly GUIContent header = new GUIContent("Comma Separated Values (CSV)", EditorIcons.Csv);
             public static readonly GUIContent save = new GUIContent("Save");
             public static readonly GUIContent open = new GUIContent("Open");
             public static readonly GUIContent import = new GUIContent("Import");
             public static readonly GUIContent export = new GUIContent("Export");
+            public static readonly GUIContent show = new GUIContent("Show Folder");
         }
 
         public override CsvExtensionPropertyDrawerData CreatePropertyData(SerializedProperty property)
@@ -62,18 +63,26 @@ namespace UnityEditor.Localization.Plugins.CSV
 
         static void Export(string path, StringTableCollection collection, IList<CsvColumns> columns)
         {
-            using (var stream = new StreamWriter(path, false, Encoding.UTF8))
+            var ac = File.GetAttributes(path);
+
+            // Use FileShare.ReadWrite to avoid IOException: Sharing violation (LOC-348)
+            using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite))
             {
+                var stream = new StreamWriter(fs, Encoding.UTF8);
                 var reporter = TaskReporter.CreateDefaultReporter();
                 reporter.Start("Exporting " + path, string.Empty);
                 Csv.Export(stream, collection, columns, reporter);
             }
+
+            EditorUtility.RevealInFinder(path);
         }
 
         static void Import(string path, StringTableCollection collection, IList<CsvColumns> columns)
         {
-            using (var stream = new StreamReader(path))
+            // Use FileShare.ReadWrite to avoid IOException: Sharing violation (LOC-348)
+            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
+                var stream = new StreamReader(fs);
                 var reporter = TaskReporter.CreateDefaultReporter();
                 reporter.Start("Importing " + path, string.Empty);
                 Csv.ImportInto(stream, collection, columns, true, reporter);
@@ -144,13 +153,18 @@ namespace UnityEditor.Localization.Plugins.CSV
                 }
                 position.MoveToNextLine();
 
-                var syncButtonsRect = position.SplitHorizontal();
+                var syncButtonsRect = position.SplitIntoThreeParts();
 
                 if (GUI.Button(syncButtonsRect.left, Styles.export))
                 {
                     var target = property.GetActualObjectForSerializedProperty<CsvExtension>(fieldInfo);
                     var collection = target.TargetCollection as StringTableCollection;
                     Export(data.m_ConnectedFile.stringValue, collection, target.Columns);
+                }
+
+                if (GUI.Button(syncButtonsRect.center, Styles.show))
+                {
+                    EditorUtility.RevealInFinder(data.m_ConnectedFile.stringValue);
                 }
 
                 using (new EditorGUI.DisabledScope(!File.Exists(data.m_ConnectedFile.stringValue)))

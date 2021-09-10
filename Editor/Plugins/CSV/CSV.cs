@@ -25,14 +25,8 @@ namespace UnityEditor.Localization.Plugins.CSV
         /// <param name="collection">The collection to export to CSV.</param>
         /// <param name="reporter">An optional reporter that can be used to provide feedback during export.</param>
         /// <example>
-        /// This example shows how to export a <see cref="StringTableCollection"/> to a csv file.
-        /// <code>
-        /// using (var stream = new StreamWriter("my CSV file.csv", false, Encoding.UTF8))
-        /// {
-        ///     var stringTableCollection = LocalizationEditorSettings.GetStringTableCollection("My Strings");
-        ///     Export(stream, stringTableCollection);
-        /// }
-        /// </code>
+        /// This example shows how to export a <see cref="StringTableCollection"/> to a CSV file.
+        /// <code source="../../../DocCodeSamples.Tests/CsvSamples.cs" region="export-file"/>
         /// </example>
         public static void Export(TextWriter writer, StringTableCollection collection, ITaskReporter reporter = null)
         {
@@ -45,11 +39,19 @@ namespace UnityEditor.Localization.Plugins.CSV
         /// </summary>
         /// <param name="writer">The target that will be populated with CSV data.</param>
         /// <param name="collection">The collection to export to CSV.</param>
-        /// <param name="cellMappings">Controls what will be exported.
+        /// <param name="columnMappings">Controls what will be exported.
         /// The <seealso cref="KeyIdColumns"/> can be used to export the Key, Id and shared comments whilst <seealso cref="LocaleColumns"/> can be
         /// used to export the values and comments for a specific <see cref="UnityEngine.Localization.Locale"/></param>.
         /// <seealso cref="ColumnMapping.CreateDefaultMapping(bool)"/> can be used to generate the default columns for the project.
         /// <param name="reporter">An optional reporter that can be used to provide feedback during export.</param>
+        /// <example>
+        /// This example shows how to configure the data you wish to export in CSV through column mappings.
+        /// <code source="../../../DocCodeSamples.Tests/CsvSamples.cs" region="export-mappings"/>
+        /// </example>
+        /// <example>
+        /// This example shows how to export every <see cref="StringTableCollection"/> that contains a <see cref="CsvExtension"/>.
+        /// <code source="../../../DocCodeSamples.Tests/CsvSamples.cs" region="bulk-export"/>
+        /// </example>
         public static void Export(TextWriter writer, StringTableCollection collection, IList<CsvColumns> columnMappings, ITaskReporter reporter = null)
         {
             if (writer == null)
@@ -106,6 +108,10 @@ namespace UnityEditor.Localization.Plugins.CSV
         /// <param name="collection">The target collection to be updated using the CSV data.</param>
         /// <param name="createUndo">Should an Undo operation be created so the changes can be undone?</param>
         /// <param name="reporter">An optional reporter that can be used to provide feedback during import.</param>
+        /// <example>
+        /// This example show how to import a collection with default settings.
+        /// <code source="../../../DocCodeSamples.Tests/CsvSamples.cs" region="import-file"/>
+        /// </example>
         public static void ImportInto(TextReader reader, StringTableCollection collection, bool createUndo = false, ITaskReporter reporter = null)
         {
             ImportInto(reader, collection, ColumnMapping.CreateDefaultMapping(), createUndo, reporter);
@@ -119,6 +125,14 @@ namespace UnityEditor.Localization.Plugins.CSV
         /// <param name="columnMappings"></param>
         /// <param name="createUndo"></param>
         /// <param name="reporter"></param>
+        /// <example>
+        /// This example shows how to configure the data you wish to import in CSV through column mappings.
+        /// <code source="../../../DocCodeSamples.Tests/CsvSamples.cs" region="import-mappings"/>
+        /// </example>
+        /// <example>
+        /// This example shows how to import every <see cref="StringTableCollection"/> that contains a <see cref="CsvExtension"/>.
+        /// <code source="../../../DocCodeSamples.Tests/CsvSamples.cs" region="bulk-import"/>
+        /// </example>
         public static void ImportInto(TextReader reader, StringTableCollection collection, IList<CsvColumns> columnMappings, bool createUndo = false, ITaskReporter reporter = null)
         {
             if (reader == null)

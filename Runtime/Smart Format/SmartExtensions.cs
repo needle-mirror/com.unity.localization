@@ -5,6 +5,9 @@ using UnityEngine.Localization.SmartFormat.Core.Output;
 
 namespace UnityEngine.Localization.SmartFormat
 {
+    /// <summary>
+    /// Extensions to support smart format common use cases.
+    /// </summary>
     public static class SmartExtensions
     {
         /// <summary> Appends a formatted string, using the same semantics as Smart.Format. </summary>

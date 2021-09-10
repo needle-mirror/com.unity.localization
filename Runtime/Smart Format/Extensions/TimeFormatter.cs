@@ -6,6 +6,10 @@ using UnityEngine.Localization.SmartFormat.Utilities;
 
 namespace UnityEngine.Localization.SmartFormat.Extensions
 {
+    /// <summary>
+    /// Provides the ability to format a [DateTime](https://docs.microsoft.com/en-us/dotnet/api/system.datetime)
+    /// or [TimeSpan](https://docs.microsoft.com/en-us/dotnet/api/system.timespan) object.
+    /// </summary>
     [Serializable]
     public class TimeFormatter : FormatterBase
     {
@@ -14,11 +18,15 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
 
         private string m_DefaultTwoLetterIsoLanguageName = "en";
 
+        /// <summary>
+        /// Creates a new instance of the formatter.
+        /// </summary>
         public TimeFormatter()
         {
             Names = DefaultNames;
         }
 
+        /// <inheritdoc/>
         public override string[] DefaultNames => new[] {"timespan", "time", "t", ""};
 
         /// <summary>
@@ -44,6 +52,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             }
         }
 
+        /// <inheritdoc/>
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {
             var format = formattingInfo.Format;

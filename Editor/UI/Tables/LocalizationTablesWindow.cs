@@ -5,6 +5,9 @@ using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.UI
 {
+    /// <summary>
+    /// Window used to edit localization tables.
+    /// </summary>
     public class LocalizationTablesWindow : EditorWindow, IHasCustomMenu
     {
         const string k_EditorPrefValueKey = "Localization-LocalizationTablesWindow-Selected-Tab";
@@ -20,22 +23,32 @@ namespace UnityEditor.Localization.UI
             set => EditorPrefs.SetInt(k_EditorPrefValueKey, value);
         }
 
+        /// <summary>
+        /// Opens the window in the Editor.
+        /// </summary>
         [MenuItem("Window/Asset Management/Localization Tables")]
         public static void ShowWindow()
         {
             var window = GetWindow<LocalizationTablesWindow>(false, k_WindowTitle, true);
-            window.titleContent = new GUIContent("Localization Tables", EditorIcons.LocalizationSettings.image);
+            window.titleContent = new GUIContent("Localization Tables", EditorIcons.TableWindow);
             window.Show();
         }
 
+        /// <summary>
+        /// Opens the window in the Editor and selects <paramref name="selectedcollection"/> for editing.
+        /// </summary>
+        /// <param name="selectedcollection"></param>
         public static void ShowWindow(LocalizationTableCollection selectedcollection)
         {
             var window = GetWindow<LocalizationTablesWindow>(false, k_WindowTitle, true);
-            window.titleContent = new GUIContent("Localization Tables", EditorIcons.LocalizationSettings.image);
+            window.titleContent = new GUIContent("Localization Tables", EditorIcons.TableWindow);
             window.Show();
             window.EditCollection(selectedcollection);
         }
 
+        /// <summary>
+        /// Opens the window in the Editor with the table creator tab active.
+        /// </summary>
         public static void ShowTableCreator()
         {
             var window = GetWindow<LocalizationTablesWindow>(false, k_WindowTitle, true);
@@ -47,6 +60,10 @@ namespace UnityEditor.Localization.UI
             }
         }
 
+        /// <summary>
+        /// Selects the collection for editing.
+        /// </summary>
+        /// <param name="selectedCollection"></param>
         public void EditCollection(LocalizationTableCollection selectedCollection)
         {
             if (LocalizationEditorSettings.ActiveLocalizationSettings == null)
@@ -121,6 +138,10 @@ namespace UnityEditor.Localization.UI
             SelectedTab = idx;
         }
 
+        /// <summary>
+        /// Adds menu items to the table context window.
+        /// </summary>
+        /// <param name="menu"></param>
         public void AddItemsToMenu(GenericMenu menu)
         {
             menu.AddItem(new GUIContent("Import/XLIFF Directory"), false, Plugins.XLIFF.MenuItems.ImportXliffDirectory);

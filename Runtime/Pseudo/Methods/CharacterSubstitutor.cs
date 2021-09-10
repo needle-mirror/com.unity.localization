@@ -31,7 +31,7 @@ namespace UnityEngine.Localization.Pseudo
             List,
 
             /// <summary>
-            /// Uses <see cref="Replacements"/> to replace each character, when it is present in the dictionary.
+            /// Uses <see cref="ReplacementMap"/> to replace each character, when it is present in the dictionary.
             /// </summary>
             Map
         }
@@ -44,7 +44,7 @@ namespace UnityEngine.Localization.Pseudo
         }
 
         /// <summary>
-        ///
+        /// The method to use when selecting a character from <see cref="ReplacementList"/>.
         /// </summary>
         public enum ListSelectionMethod
         {
@@ -90,10 +90,13 @@ namespace UnityEngine.Localization.Pseudo
         }
 
         /// <summary>
-        /// Dictionary of characters that will be replaced when using <see cref="Method.ReplacementMap"/>. Any value that is not present will be preserved.
+        /// Dictionary of characters that will be replaced when using <see cref="SubstitutionMethod.Map"/>. Any value that is not present will be preserved.
         /// </summary>
         public Dictionary<char, char> ReplacementMap { get; private set; } = new Dictionary<char, char>();
 
+        /// <summary>
+        /// The method to use when selecting a character from <see cref="ReplacementList"/>.
+        /// </summary>
         public ListSelectionMethod ListMode
         {
             get => m_ListMode;
@@ -101,7 +104,7 @@ namespace UnityEngine.Localization.Pseudo
         }
 
         /// <summary>
-        /// The characters to use when using <see cref="Method.SingleCharacter"/> mode.
+        /// The characters to use when using <see cref="SubstitutionMethod.List"/> mode.
         /// </summary>
         public List<char> ReplacementList => m_ReplacementList;
 
@@ -205,7 +208,6 @@ namespace UnityEngine.Localization.Pseudo
         /// If a replacement character can not be found then the original is kept.
         /// </summary>
         /// <param name="message"></param>
-        /// <returns></returns>
         public void Transform(Message message)
         {
             foreach (var fragment in message.Fragments)

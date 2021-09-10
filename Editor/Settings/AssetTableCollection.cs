@@ -18,8 +18,10 @@ namespace UnityEditor.Localization
     /// </summary>
     public class AssetTableCollection : LocalizationTableCollection
     {
+        /// <inheritdoc/>
         protected internal override Type TableType => typeof(AssetTable);
 
+        /// <inheritdoc/>
         protected internal override Type RequiredExtensionAttribute => typeof(AssetTableCollectionExtensionAttribute);
 
         const string k_AssetTypeSetByScript = "set-by-script";
@@ -29,7 +31,9 @@ namespace UnityEditor.Localization
         /// </summary>
         public virtual ReadOnlyCollection<AssetTable> AssetTables => new ReadOnlyCollection<AssetTable>(Tables.Select(t => t.asset as AssetTable).ToList().AsReadOnly());
 
+        /// <inheritdoc/>
         protected internal override string DefaultGroupName => "Asset Table";
+
         /// <summary>
         /// Returns an enumerator that can be used to step through each key and its localized values, such as in a foreach loop.
         /// Internally <see cref="SharedTableData"/> and <see cref="AssetTable"/>'s are separate assets with their own internal list of values.
@@ -41,6 +45,7 @@ namespace UnityEditor.Localization
         /// <returns></returns>
         public IEnumerable<Row<AssetTableEntry>> GetRowEnumerator() => GetRowEnumerator<AssetTable, AssetTableEntry>(AssetTables);
 
+        /// <inheritdoc/>
         protected override void RemoveTableFromAddressables(LocalizationTable table, bool createUndo)
         {
             if (table is AssetTable assetTable)

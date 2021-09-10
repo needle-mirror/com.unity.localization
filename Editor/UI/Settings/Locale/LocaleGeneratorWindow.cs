@@ -45,7 +45,7 @@ namespace UnityEditor.Localization.UI
         public static void ShowWindow()
         {
             var window = (LocaleGeneratorWindow)GetWindow(typeof(LocaleGeneratorWindow));
-            window.titleContent = new GUIContent("Locale Generator", EditorIcons.LocalizationSettings.image);
+            window.titleContent = new GUIContent("Locale Generator", EditorIcons.Locale);
             window.minSize = new Vector2(500, 500);
             window.ShowUtility();
         }

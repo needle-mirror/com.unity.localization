@@ -7,7 +7,7 @@ namespace UnityEngine.Localization.Platform.Android
     /// Contains all values that can be localized in the Android Application.
     /// These values can be displayed when the App is not running, such as the application name that is displayed on the home screen.
     /// </summary>
-    [DisplayName("Android App Info")]
+    [DisplayName("Android App Info", "Packages/com.unity.localization/Editor/Icons/Android/Android.png")]
     [Metadata(AllowedTypes = MetadataType.LocalizationSettings, AllowMultiple = false, MenuItem = "Android/App Info")]
     [Serializable]
     public class AppInfo : IMetadata

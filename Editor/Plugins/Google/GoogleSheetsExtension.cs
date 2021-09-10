@@ -6,8 +6,24 @@ using UnityEditor.Localization.Plugins.Google.Columns;
 namespace UnityEditor.Localization.Plugins.Google
 {
     /// <summary>
-    /// <see cref="StringTableCollection"/> that provides an editor interface to <see cref="GoogleSheets"/>.
+    /// Provides an editor interface to <see cref="GoogleSheets"/>.
     /// </summary>
+    /// <example>
+    /// This example uses the data that was configured in the <see cref="GoogleSheetsExtension"/> to perform a Push.
+    /// <code source="../../../DocCodeSamples.Tests/GoogleSheetsSamples.cs" region="push-with-extension"/>
+    /// </example>
+    /// <example>
+    /// This example shows how to use the data that was configured in a Google Sheets extension to perform a pull.
+    /// <code source="../../../DocCodeSamples.Tests/GoogleSheetsSamples.cs" region="pull-with-extension"/>
+    /// </example>
+    /// <example>
+    /// This example shows how to push every <see cref="StringTableCollection"/> that contains a <see cref="GoogleSheetsExtension"/>.
+    /// <code source="../../../DocCodeSamples.Tests/GoogleSheetsSamples.cs" region="push-all-extensions"/>
+    /// </example>
+    /// <example>
+    /// This example shows how to pull every <see cref="StringTableCollection"/> that contains a <see cref="GoogleSheetsExtension"/>.
+    /// <code source="../../../DocCodeSamples.Tests/GoogleSheetsSamples.cs" region="pull-all-extensions"/>
+    /// </example>
     [Serializable]
     [StringTableCollectionExtension]
     public class GoogleSheetsExtension : CollectionExtension

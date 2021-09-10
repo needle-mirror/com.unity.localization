@@ -103,7 +103,7 @@ namespace UnityEngine.Localization.Metadata
     /// This example shows how a Translation Status Metadata could be created.
     /// This will only appear in the Metadata menu for String Table Entries.
     /// ![](../manual/images/scripting/TranslationStatusMetadata.png)
-    /// <code source="../../DocCodeSamples.Tests/MetadataSamples.cs"/>
+    /// <code source="../../DocCodeSamples.Tests/MetadataSamples.cs" region="translation-status"/>
     /// </example>
     [AttributeUsage(AttributeTargets.Class)]
     public class MetadataAttribute : Attribute

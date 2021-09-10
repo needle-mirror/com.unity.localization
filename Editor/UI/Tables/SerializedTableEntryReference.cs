@@ -8,6 +8,8 @@ namespace UnityEditor.Localization.UI
         public SerializedProperty keyId;
         TableEntryReference m_Reference;
 
+        public bool HasMultipleDifferentValues => key.hasMultipleDifferentValues || keyId.hasMultipleDifferentValues;
+
         public TableEntryReference Reference
         {
             get => m_Reference;
@@ -23,6 +25,9 @@ namespace UnityEditor.Localization.UI
         {
             key = property.FindPropertyRelative("m_Key");
             keyId = property.FindPropertyRelative("m_KeyId");
+
+            if (HasMultipleDifferentValues)
+                return;
 
             var id = keyId.longValue;
             if (id != SharedTableData.EmptyId)

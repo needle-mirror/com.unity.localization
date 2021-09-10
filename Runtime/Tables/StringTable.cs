@@ -36,7 +36,12 @@ namespace UnityEngine.Localization.Tables
             set
             {
                 Data.Localized = value;
-                FormatCache = null;
+
+                if (m_FormatCache != null)
+                {
+                    FormatCachePool.Release(m_FormatCache);
+                    m_FormatCache = null;
+                }
             }
         }
 
@@ -55,7 +60,11 @@ namespace UnityEngine.Localization.Tables
             {
                 if (value)
                 {
-                    FormatCache = null;
+                    if (m_FormatCache != null)
+                    {
+                        FormatCachePool.Release(m_FormatCache);
+                        m_FormatCache = null;
+                    }
                     AddTagMetadata<SmartFormatTag>();
                 }
                 else
@@ -84,6 +93,16 @@ namespace UnityEngine.Localization.Tables
             {
                 stringTable.Remove(KeyId);
             }
+        }
+
+        internal FormatCache GetOrCreateFormatCache()
+        {
+            if (m_FormatCache == null && !string.IsNullOrEmpty(Data.Localized))
+            {
+                m_FormatCache = FormatCachePool.Get(LocalizationSettings.StringDatabase.SmartFormatter.Parser.ParseFormat(Data.Localized, LocalizationSettings.StringDatabase.SmartFormatter.GetNotEmptyFormatterExtensionNames()));
+                m_FormatCache.Table = Table;
+            }
+            return m_FormatCache;
         }
 
         /// <summary>
@@ -143,8 +162,17 @@ namespace UnityEngine.Localization.Tables
             {
                 #if UNITY_EDITOR
                 if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
+                {
+                    var localVariables = m_FormatCache?.LocalVariables;
                     m_FormatCache = null;
+                    m_FormatCache = GetOrCreateFormatCache();
+                    m_FormatCache.LocalVariables = localVariables;
+                }
                 #endif
+
+                if (m_FormatCache == null)
+                    m_FormatCache = GetOrCreateFormatCache();
+
                 translatedText = LocalizationSettings.StringDatabase.SmartFormatter.FormatWithCache(ref m_FormatCache, Data.Localized, formatProvider, args);
             }
             else if (!string.IsNullOrEmpty(Data.Localized))

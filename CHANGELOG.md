@@ -1,6 +1,48 @@
 # Changelog
 All notable changes to this package will be documented in this file.
 
+## [1.0.0] - 2021-09-10
+
+### Added
+
+- `LocalizedString` can now be used as a local and global variable. When accessed in a *Smart String* this gives access to the translated value and can also be used for accessing metadata. See the **Persistent Variables** sample for an example of handling gender using this method. (LOC-257)
+- Added **Local Variables** support to `LocalizedString`. This works in a similar manner to **GlobalVariables** however the variables can only be accessed via the `LocalizedString` they are attached to.
+- Added 'Show Folder' button to CSV Extention to displlay the folder where the CSV file was last saved.
+- Added support for defining templates through `TemplateFormatter` editor.
+
+### Changed
+
+- ` LocalizedString` **FallbackState** and **WaitForCompletion** fields are now always visible in the inspector.
+- `IVariable` interface has been changed from using a property for the source value to a method in order to provide additional information. Please see upgrade guide for further details. (LOC-257)
+- After exporting CSV and XLIFF the output directory will now be opened.
+- Disabled **WaitForCompletion** support on [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
+- Setting the `LocalizedString.LocaleOverride` will now force an update.
+- Types marked with `ObsoleteAttribute` will no longer be shown in dropdown menus.
+- Updated icons with new styles. (LOC-248)
+- Updated to Addressables `1.19.4`.
+
+### Deprecated
+
+- `GlobalVariables` namespace has been renamed to `PersistentVariables` and associated scripts have also been renamed. Script upgrade API will automatically upgrade relevant scripts.
+- `LocalizedStringEvent` arguments have been deprecated. A warning will appear in the inspector to say so if they are being used and will offer to upgrade by transferring them into the String Reference Local Variables field.
+
+### Fixed
+
+- Added multi edit support for `LocalizedString`, `LocalizedAsset`, and `LocalizedStringEvent`. ([LOC-295](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-295))
+- Changes are now saved when fixing missing entries in a table. (LOC-205)
+- CSV files that are imported and exported through the Editor will now use `FileShare.ReadWrite` to avoid sharing violations with other software that may have the files open. ([LOC-348](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-348))
+- Custom Locale Window will now show a Save File Panel instead of Save Folder Panel. (LOC 293)
+- Fixed **Localization Settings** editor String Database/Smart Format, Sources and Formatters not being correctly nested under the **Smart Format** foldout.
+- Fixed `NullReferenceException` occuring in `ScenePropertyTracker` when `currentValue` was null. (LOC-359)
+- Fixed `Selected locale is null` error occurring when entering playmode and using `WaitForCompletion` or calling `GetSelectedLocale`. ([LOC-305](https://issuetracker.unity3d.com/issues/waitforcompletion-selected-locale-is-null))
+- Fixed a compilation error regarding `GameObjectLocalizer` when using Unity 2020.2.
+- Fixed Android build failure when the application name contains an escape character . ([LOC-292](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-292))
+- Fixed build failures when building for Android with Android App info metadata for certain Locale codes. ([LOC-361](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-361))
+- Fixed error regarding unknown Style in 2019.4 when opening Localization Settings editor. ([LOC-304](https://issuetracker.unity3d.com/issues/2019-dot-4-element-style-has-no-registered-factory-method))
+- Fixed error where StringTable gets overwritten when removing and re-adding it back to the String Table Collection. (LOC-168)
+- Fixed errors in Table Editor when a selected entry was removed. (LOC-296). ([LOC-296](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-296))
+- Fixed errors while changing SelectedLocale after adding and removing a method to LocalizedStringTable.TableChanged event. (LOC-320)
+
 ## [1.0.0-pre.10] - 2021-07-20
 
 ### Added

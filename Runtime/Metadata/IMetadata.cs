@@ -14,27 +14,11 @@ namespace UnityEngine.Localization.Metadata
     /// </summary>
     /// <example>
     /// This example shows how Metadata can be created to attach additional region data to a Locale.
-    /// <code>
-    /// [Metadata(AllowedTypes = MetadataType.Locale)] // Hint to the editor to only show this type for a Locale
-    /// [Serializable]
-    /// public class RegionInfo : IMetadata
-    /// {
-    ///     public int population;
-    ///     public string capitalCity;
-    ///     public string description;
-    /// }
-    /// </code>
+    /// <code source="../../DocCodeSamples.Tests/MetadataSamples.cs" region="translation-status"/>
     /// </example>
     /// <example>
     /// This example shows how Metadata can be created to attach an icon to a Locale.
-    /// <code>
-    /// [Metadata(AllowedTypes = MetadataType.Locale)] // Hint to the editor to only show this type for a Locale
-    /// [Serializable]
-    /// public class LocaleIcon : IMetadata
-    /// {
-    ///     public Texture icon;
-    /// }
-    /// </code>
+    /// <code source="../../DocCodeSamples.Tests/MetadataSamples.cs" region="locale-icon"/>
     /// </example>
     #pragma warning disable CA1040 // CA1040: Avoid empty interfaces
     public interface IMetadata {}

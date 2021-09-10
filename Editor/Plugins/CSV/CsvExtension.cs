@@ -5,6 +5,9 @@ using UnityEngine;
 
 namespace UnityEditor.Localization.Plugins.CSV
 {
+    /// <summary>
+    /// Provides an editor interface and configuration to a Comma Separated Values (CSV) file.
+    /// </summary>
     [Serializable]
     [StringTableCollectionExtension]
     public class CsvExtension : CollectionExtension
@@ -15,8 +18,14 @@ namespace UnityEditor.Localization.Plugins.CSV
         [SerializeField]
         string m_ConnectedFile;
 
+        /// <summary>
+        /// Configuation for which mapping CSV columns to their respective localization data.
+        /// </summary>
         public List<CsvColumns> Columns => m_ColumnsList;
 
+        /// <summary>
+        /// Path to the CSV file that will be used by default.
+        /// </summary>
         public string File
         {
             get => m_ConnectedFile;

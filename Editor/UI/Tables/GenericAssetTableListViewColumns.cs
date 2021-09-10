@@ -17,7 +17,7 @@ namespace UnityEditor.Localization.UI
 
         static readonly GUIContent k_MissingTableMenuItem = new GUIContent("Missing Tables");
 
-        static readonly GUIContent k_MetadataIcon = new GUIContent(AssetDatabase.LoadAssetAtPath<Texture>("Packages/com.unity.localization/Editor/Icons/Localization_AssetTable.png"), "Edit Table Metadata");
+        static readonly GUIContent k_MetadataIcon = new GUIContent(EditorIcons.Metadata, "Edit Table Metadata");
 
         LocalizationTableCollection TableCollection { get; set; }
 

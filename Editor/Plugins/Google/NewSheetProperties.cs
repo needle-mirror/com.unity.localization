@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace UnityEditor.Localization.Plugins.Google
 {
+    /// <summary>
+    /// Contains settings for any newly created Google Sheet.
+    /// </summary>
     [Serializable]
     public class NewSheetProperties
     {

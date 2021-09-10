@@ -7,6 +7,9 @@ using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.UI
 {
+    /// <summary>
+    /// Field to use to select a <see cref="Locale"/> from the project.
+    /// </summary>
     public class ProjectLocalePopupField : PopupField<Locale>
     {
         static List<Locale> s_Locales = new List<Locale>();
@@ -15,6 +18,9 @@ namespace UnityEditor.Localization.UI
 
         public new class UxmlTraits : PopupField<Locale>.UxmlTraits {}
 
+        /// <summary>
+        /// Creates a new instance of the field.
+        /// </summary>
         public ProjectLocalePopupField() :
             base(GetChoices(), 0, LocaleLabel, LocaleLabel)
         {

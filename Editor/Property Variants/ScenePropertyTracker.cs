@@ -55,7 +55,7 @@ namespace UnityEditor.Localization.PropertyVariants
             }
         }
 
-        static UndoPropertyModification[] PostProcessModifications(UndoPropertyModification[] modifications)
+        internal static UndoPropertyModification[] PostProcessModifications(UndoPropertyModification[] modifications)
         {
             if (ProcessingUndoData)
                 return modifications;
@@ -63,7 +63,7 @@ namespace UnityEditor.Localization.PropertyVariants
             // If we detect a change to a LocalizedTable then we force a refresh to the editor preview.
             foreach (var mod in modifications)
             {
-                if (mod.currentValue.target is LocalizationTable)
+                if (mod.currentValue?.target is LocalizationTable)
                 {
                     EditorApplication.delayCall += LocalizationEditorSettings.RefreshEditorPreview;
                     break;
@@ -86,7 +86,6 @@ namespace UnityEditor.Localization.PropertyVariants
             // We ignore Create undo events as they sometimes occur when UGUI swaps the Transform for a RectTransform.
             // When a new object is created the Undo groupName will sometimes bleed over into the next event and wont be updated until after PostProcessModifications,
             // to handle this we compare the current name against the name at the time of the event.
-            undoGroup = Undo.GetCurrentGroup();
             if ((groupName.StartsWith("Create") && Undo.GetCurrentGroupName().StartsWith("Create")) || LocalizationSettings.SelectedLocale == null)
                 return;
 
@@ -102,7 +101,11 @@ namespace UnityEditor.Localization.PropertyVariants
                 foreach (var mod in modifications)
                 {
                     // Ignore anything to do with GameObjectLocalizer.
-                    if (mod.currentValue.target == null || mod.currentValue.target is GameObjectLocalizer)
+                    if (mod.currentValue?.target == null || mod.currentValue.target is GameObjectLocalizer)
+                        continue;
+
+                    // Ignore anything with no previous value. (LOC-359)
+                    if (mod.previousValue == null)
                         continue;
 
                     // Ignore values that have not actually changed. Some editors will change values even though the value is the same.

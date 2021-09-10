@@ -31,7 +31,7 @@ namespace UnityEngine.Localization
             else
             {
                 // Queue up to the next release call
-                m_CurrentReleaseHandles.Add(handle);
+                m_CurrentReleaseHandles?.Add(handle);
             }
         }
 

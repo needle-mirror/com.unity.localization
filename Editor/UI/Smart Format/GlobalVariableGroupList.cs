@@ -24,12 +24,10 @@ namespace UnityEditor.Localization.UI
 
         static void CreateManagedItem(ReorderableList list, int index, VisualElement root)
         {
-            const float leftMargin = 14; // Space for foldout arrow
-            root.style.flexDirection = FlexDirection.Row;
-
             var element = list.ListProperty.GetArrayElementAtIndex(index);
 
-            var nameField = new TextField { multiline = false, style = { width = 150, alignItems = Align.FlexStart } };
+            var nameField = new TextField("Variable Name");
+            nameField.labelElement.style.minWidth = 120;
             nameField.RegisterValueChangedCallback(evt =>
             {
                 // Variable must not contain any spaces or the smart format parser will not be able to correctly parse them as selectors
@@ -40,17 +38,10 @@ namespace UnityEditor.Localization.UI
 
             var variable = element.FindPropertyRelative("variable");
             var label = ManagedReferenceUtility.GetDisplayName(variable.managedReferenceFullTypename);
-            if (!variable.hasVisibleChildren)
-            {
-                root.Add(new Label(label.text) { style = { paddingLeft = leftMargin } });
-            }
-            else
-            {
-                var propEditor = new PropertyField(variable, label.text) { style = { flexGrow = 1 } };
-                propEditor.BindProperty(list.ListProperty.serializedObject);
-                propEditor.style.paddingLeft = leftMargin;
-                root.Add(propEditor);
-            }
+
+            var propEditor = new PropertyField(variable, label.text);
+            propEditor.BindProperty(list.ListProperty.serializedObject);
+            root.Add(propEditor);
         }
 
         static void RemoveItem(ReorderableList list, int index)

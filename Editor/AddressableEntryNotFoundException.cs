@@ -8,6 +8,10 @@ namespace UnityEditor.Localization
     /// </summary>
     public class AddressableEntryNotFoundException : Exception
     {
+        /// <summary>
+        /// Creates a new instance of the exception.
+        /// </summary>
+        /// <param name="target"></param>
         public AddressableEntryNotFoundException(UnityEngine.Object target) :
             base($"{target.name} could not find an Addressable asset.")
         {

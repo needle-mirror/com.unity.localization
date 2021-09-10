@@ -17,7 +17,7 @@ namespace UnityEditor.Localization.UI
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = Resources.GetTemplate(nameof(SmartFormatter));
-            root.Q("root-foldout");
+            root = root.Q<Foldout>();
             root.Bind(property.serializedObject);
 
             var sources = new ManagedReferenceReorderableList(property.FindPropertyRelative("m_Sources"), typeof(ISource));
@@ -52,30 +52,25 @@ namespace UnityEditor.Localization.UI
             Debug.Assert(smartFormatterInstance != null, $"Failed to extract {nameof(SmartFormatter)} instance.");
 
             var menu = new GenericMenu();
-
-            var foundTypes = TypeCache.GetTypesDerivedFrom(managedList.AddType);
-            for (int i = 0; i < foundTypes.Count; ++i)
+            TypeUtility.PopulateMenuWithCreateItems(menu, managedList.AddType, type =>
             {
-                var type = foundTypes[i];
-                menu.AddItem(new GUIContent(ObjectNames.NicifyVariableName(type.Name)), false, () =>
-                {
-                    // We only support 2 types of constructor. A default and one that takes a SmartFormatter.
-                    var hasDefaultConstructor = type.GetConstructors().Any(c => c.GetParameters().Length == 0);
-                    var hasSmartFormatterConstructor = type.GetConstructors().Any(c => c.GetParameters().Length == 1 && c.GetParameters()[0].ParameterType == typeof(SmartFormatter));
+                // We only support 2 types of constructor. A default and one that takes a SmartFormatter.
+                var hasDefaultConstructor = type.GetConstructors().Any(c => c.GetParameters().Length == 0);
+                var hasSmartFormatterConstructor = type.GetConstructors().Any(c => c.GetParameters().Length == 1 && c.GetParameters()[0].ParameterType == typeof(SmartFormatter));
 
-                    if (hasSmartFormatterConstructor || hasDefaultConstructor)
-                    {
-                        var elementProp = list.ListProperty.InsertArrayElement(index);
-                        elementProp.managedReferenceValue = hasDefaultConstructor ? Activator.CreateInstance(type) : Activator.CreateInstance(type, smartFormatterInstance);
-                        list.ListProperty.serializedObject.ApplyModifiedProperties();
-                        list.RefreshList();
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Can not create an instance of {type}, it does not have a default constructor or a constructor that takes a SmartFormatter parameter.");
-                    }
-                });
-            }
+                if (hasSmartFormatterConstructor || hasDefaultConstructor)
+                {
+                    var elementProp = list.ListProperty.InsertArrayElement(index);
+                    elementProp.managedReferenceValue = hasDefaultConstructor ? Activator.CreateInstance(type) : Activator.CreateInstance(type, smartFormatterInstance);
+                    list.ListProperty.serializedObject.ApplyModifiedProperties();
+                    list.RefreshList();
+                }
+                else
+                {
+                    Debug.LogWarning($"Can not create an instance of {type}, it does not have a default constructor or a constructor that takes a SmartFormatter parameter.");
+                }
+            });
+
             menu.ShowAsContext();
         }
     }

@@ -62,6 +62,11 @@ namespace UnityEngine.Localization.Settings
         public event Action<Locale> OnSelectedLocaleChanged;
 
         /// <summary>
+        /// Returns <c>true</c> if <seealso cref="OnSelectedLocaleChanged"/> has any subscribers.
+        /// </summary>
+        internal bool HasSelectedLocaleChangedSubscribers => OnSelectedLocaleChanged != null;
+
+        /// <summary>
         /// Indicates if there is a LocalizationSettings present. If one is not found then it will attempt to find one however
         /// unlike <see cref="Instance"/> it will not create a default, if one can not be found.
         /// </summary>
@@ -79,7 +84,25 @@ namespace UnityEngine.Localization.Settings
         /// <summary>
         /// The localization system may not be immediately ready. Loading Locales, preloading assets etc.
         /// This operation can be used to check when the system is ready. You can yield on this in a coroutine to wait.
+        /// If <see cref="InitializeSynchronously"/> is <c>true</c> then this operation will complete synchronously the first time it is called.
+        /// Uses [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) to force the loading to complete synchronously.
+        /// Please note that [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on
+        /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl) and <see cref="InitializeSynchronously"/>
+        /// will be ignored when running on WebGL.
         /// </summary>
+        /// <example>
+        /// This shows how to use a coroutine to wait for the Initialization Operation to complete.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationSettingsSamples.cs" region="asynchronous"/>
+        /// </example>
+        /// <example>
+        /// This shows how to use the <see cref="AsyncOperationHandle{TObject}.Completed"/> event to get a callback when the Initialization Operation is complete.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationSettingsSamples.cs" region="asynchronous-event"/>
+        /// </example>
+        /// <example>
+        /// This shows how to force the Initialization Operation to complete synchronously using [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion).
+        /// Note [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on WebGL.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationSettingsSamples.cs" region="synchronous"/>
+        /// </example>
         public static AsyncOperationHandle<LocalizationSettings> InitializationOperation => Instance.GetInitializationOperation();
 
         /// <summary>
@@ -182,6 +205,10 @@ namespace UnityEngine.Localization.Settings
 
         /// <summary>
         /// Forces the <see cref="InitializationOperation"/> to complete immediately when it is started.
+        /// Uses [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) to force the loading to complete synchronously.
+        /// Please note that [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on
+        /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl) and <see cref="InitializeSynchronously"/>
+        /// will be ignored when running on WebGL.
         /// </summary>
         public static bool InitializeSynchronously
         {
@@ -242,8 +269,10 @@ namespace UnityEngine.Localization.Settings
                 var operation = GenericPool<InitializationOperation>.Get();
                 operation.Init(this);
                 m_InitializingOperationHandle = AddressablesInterface.ResourceManager.StartOperation(operation, default);
-                if (m_InitializeSynchronously && IsPlaying)
+                #if !UNITY_WEBGL // WebGL does not support WaitForCompletion
+                if (!m_InitializingOperationHandle.Value.IsDone && m_InitializeSynchronously && IsPlaying)
                     m_InitializingOperationHandle.Value.WaitForCompletion();
+                #endif
             }
 
             return m_InitializingOperationHandle.Value;
@@ -263,7 +292,7 @@ namespace UnityEngine.Localization.Settings
                 #if UNITY_EDITOR
                 if (IsPlayingOverride.HasValue)
                     return IsPlayingOverride.Value;
-                return UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode;
+                return UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode || IsPlaying;
                 #else
                 return true;
                 #endif
@@ -392,7 +421,7 @@ namespace UnityEngine.Localization.Settings
             }
 
             #if UNITY_EDITOR
-            if (!IsPlaying)
+            if (!IsPlayingOrWillChangePlaymode)
             {
                 var code = UnityEditor.SessionState.GetString(ConfigEditorLocale, string.Empty);
                 return m_AvailableLocales.GetLocale(code);
@@ -533,6 +562,7 @@ namespace UnityEngine.Localization.Settings
             }
         }
 
+        /// <inheritdoc/>
         public void ResetState()
         {
             m_SelectedLocaleAsync = null;

@@ -91,7 +91,7 @@ namespace UnityEditor.Localization.UI
 
         internal void CreateCustomLocale(string localeName, string localeIdentifier)
         {
-            var path = EditorUtility.SaveFolderPanel("Save the locale to folder", "Assets/", "");
+            var path = EditorUtility.SaveFilePanel("Save the locale to folder", "Assets/", $"{localeName} ({localeIdentifier}).asset", "asset");
             if (!string.IsNullOrEmpty(path))
                 ExportCustomLocales(localeName, localeIdentifier, path);
         }
@@ -108,8 +108,7 @@ namespace UnityEditor.Localization.UI
         void CreateAsset(string path, Locale locale)
         {
             var relativePath = PathHelper.MakePathRelative(path);
-            var assetPath = Path.Combine(relativePath, $"{locale.name} ({locale.Identifier.Code}).asset");
-            assetPath = AssetDatabase.GenerateUniqueAssetPath(assetPath);
+            var assetPath = AssetDatabase.GenerateUniqueAssetPath(relativePath);
             AssetDatabase.CreateAsset(locale, assetPath);
         }
 

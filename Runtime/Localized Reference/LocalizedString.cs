@@ -1,9 +1,14 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using UnityEngine.Localization.Settings;
+using UnityEngine.Localization.SmartFormat.Core.Extensions;
 using UnityEngine.Localization.SmartFormat.Extensions;
-using UnityEngine.Localization.SmartFormat.GlobalVariables;
+using UnityEngine.Localization.SmartFormat.PersistentVariables;
 using UnityEngine.Localization.Tables;
+using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization
@@ -12,31 +17,44 @@ namespace UnityEngine.Localization
     /// Provides a way to reference a <see cref="StringTableEntry"/> inside of a specific <see cref="StringTable"/> and request the localized string.
     /// </summary>
     [Serializable]
-    public partial class LocalizedString : LocalizedReference
+    public partial class LocalizedString : LocalizedReference, IVariableGroup, IDictionary<string, IVariable>, IVariableValueChanged
     {
+        [SerializeField]
+        List<VariableNameValuePair> m_LocalVariables = new List<VariableNameValuePair>();
+
         ChangeHandler m_ChangeHandler;
-        AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult>? m_CurrentLoadingOperation;
         string m_CurrentStringChangedValue;
-        List<IGlobalVariableValueChanged> m_LastUsedGlobalVariables = new List<IGlobalVariableValueChanged>();
-        Action<IGlobalVariable> m_OnGlobalVariableChanged;
-        IList<object> m_SmartArguments;
-        bool m_WaitingForGlobalVariablesEndUpdate;
+
+        // Kept in sync with m_Variables so that users can make changes via the inspector without issues(duplicate/empty names etc).
+        readonly Dictionary<string, VariableNameValuePair> m_VariableLookup = new Dictionary<string, VariableNameValuePair>();
+
+        readonly List<IVariableValueChanged> m_UsedVariables = new List<IVariableValueChanged>();
+        Action<IVariable> m_OnVariableChanged;
+        bool m_WaitingForVariablesEndUpdate;
+
+        /// <inheritdoc/>
+        public event Action<IVariable> ValueChanged;
+
+        // Used to send temportary arguments including local variables and script variables
+        [DefaultMember("Item")]
+        class TempArgumentList : List<object>
+        {
+            public static TempArgumentList Get() => GenericPool<TempArgumentList>.Get();
+
+            public void Release()
+            {
+                Clear();
+                GenericPool<TempArgumentList>.Release(this);
+            }
+
+            public void Release(AsyncOperationHandle _) => Release();
+        };
 
         /// <summary>
         /// Arguments that will be passed through to Smart Format. These arguments are not serialized and will need to be set at runtime.
+        /// See <seealso cref="Add(string, IVariable)"/> to add persistent serialized arguments.
         /// </summary>
-        public IList<object> Arguments
-        {
-            get => m_SmartArguments;
-            set
-            {
-                if (m_SmartArguments == value)
-                    return;
-
-                m_SmartArguments = value;
-                RefreshString();
-            }
-        }
+        public IList<object> Arguments { get; set; }
 
         /// <summary>
         /// The current loading operation for the string when using <see cref="StringChanged"/> or null if one is not available.
@@ -46,8 +64,8 @@ namespace UnityEngine.Localization
         /// </summary>
         public AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult>? CurrentLoadingOperation
         {
-            get => m_CurrentLoadingOperation;
-            internal set => m_CurrentLoadingOperation = value;
+            get;
+            internal set;
         }
 
         /// <summary>
@@ -58,21 +76,19 @@ namespace UnityEngine.Localization
 
         /// <summary>
         /// Provides a callback that will be invoked when the translated string has changed.
-        /// </summary>
-        /// <remarks>
         /// The following events will trigger an update:
-        /// - The first time the action is added to the event.
-        /// - The <seealso cref="LocalizationSettings.SelectedLocale"/> changing.
-        /// - The <see cref="Arguments"/> changing.
-        /// - If the string is currently using a <see cref="IGlobalVariable"/> which supports <see cref="IGlobalVariableValueChanged"/> and it's value has changed.
-        /// - When <see cref="RefreshString"/> is called.
-        /// - The <see cref="TableReference"/> or <see cref="TableEntryReference"/> changing.
-        ///
+        /// <list type="bullet">
+        /// <item>The first time the action is added to the event.</item>
+        /// <item>The <seealso cref="LocalizationSettings.SelectedLocale"/> changing.</item>
+        /// <item>If the string is currently using a <see cref="IVariable"/> which supports <see cref="IVariableValueChanged"/> and it's value has changed.</item>
+        /// <item>When <see cref="RefreshString"/> is called.</item>
+        /// <item>The <see cref="TableReference"/> or <see cref="TableEntryReference"/> changing.</item>
+        /// </list>
         /// When the first <see cref="ChangeHandler"/> is added, a loading operation (see <see cref="CurrentLoadingOperation"/>) automatically starts.
         /// When the loading operation is completed, the localized string value is sent to the subscriber.
         /// If you add additional subscribers after loading has completed, they are also sent the latest localized string value.
         /// This ensures that a subscriber will always have the correct localized value regardless of when it was added.
-        /// </remarks>
+        /// </summary>
         /// <example>
         /// This example shows how the <see cref="StringChanged"/> event can be used to trigger updates to a string.
         /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="localized-string-events"/>
@@ -166,22 +182,34 @@ namespace UnityEngine.Localization
         /// </example>
         public bool RefreshString()
         {
-            if (m_ChangeHandler == null || m_CurrentLoadingOperation == null)
+            if (m_ChangeHandler == null || CurrentLoadingOperation == null)
                 return false;
 
-            if (!m_CurrentLoadingOperation.Value.IsDone)
+            if (!CurrentLoadingOperation.Value.IsDone)
             {
-                if (!WaitForCompletion)
-                    return false;
-                m_CurrentLoadingOperation.Value.WaitForCompletion();
+                #if !UNITY_WEBGL
+                if (WaitForCompletion)
+                    CurrentLoadingOperation.Value.WaitForCompletion();
+                else
+                #endif
+                return false;
             }
 
-            // Clear any previous global variables.
-            var entry = m_CurrentLoadingOperation.Value.Result.Entry;
-            entry?.FormatCache?.GlobalVariableTriggers.Clear();
+            var entry = CurrentLoadingOperation.Value.Result.Entry;
+            var formatCache = entry?.GetOrCreateFormatCache();
+            if (formatCache != null)
+            {
+                formatCache.LocalVariables = this;
+                formatCache.VariableTriggers.Clear();
+            }
 
-            var translatedText = LocalizationSettings.StringDatabase.GenerateLocalizedString(m_CurrentLoadingOperation.Value.Result.Table, entry, TableReference, TableEntryReference, LocaleOverride ?? LocalizationSettings.SelectedLocale, Arguments);
-            UpdateGlobalVariableListeners(entry?.FormatCache?.GlobalVariableTriggers);
+            var translatedText = LocalizationSettings.StringDatabase.GenerateLocalizedString(CurrentLoadingOperation.Value.Result.Table, entry, TableReference, TableEntryReference, LocalizationSettings.SelectedLocale, Arguments);
+
+            if (formatCache != null)
+            {
+                formatCache.LocalVariables = null;
+                UpdateVariableListeners(entry?.FormatCache?.VariableTriggers);
+            }
 
             m_CurrentStringChangedValue = translatedText;
             m_ChangeHandler(m_CurrentStringChangedValue);
@@ -189,7 +217,7 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and the
+        /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and
         /// the translated string that matches <see cref="TableEntryReference"/>.
         /// </summary>
         /// <remarks>
@@ -208,49 +236,35 @@ namespace UnityEngine.Localization
         /// This example shows how <see cref="GetLocalizedStringAsync"/> can be forced to complete immediately using <see cref="AsyncOperationHandle.WaitForCompletion"/>.
         /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="get-localized-string-synchronous"/>
         /// </example>
-        public AsyncOperationHandle<string> GetLocalizedStringAsync()
-        {
-            LocalizationSettings.ValidateSettingsExist();
-            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, Arguments, LocaleOverride, FallbackState);
-        }
+        public AsyncOperationHandle<string> GetLocalizedStringAsync() => GetLocalizedStringAsync(Arguments);
 
         /// <summary>
-        /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and the
+        /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and
         /// the translated string that matches <see cref="TableEntryReference"/>.
+        /// Uses [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) to force the loading to complete synchronously.
+        /// Please note that [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on
+        /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
         /// </summary>
         public string GetLocalizedString() => GetLocalizedStringAsync().WaitForCompletion();
 
         /// <summary>
-        /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and the
+        /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and
         /// the translated string that matches <see cref="TableEntryReference"/>.
         /// </summary>
         /// <param name="arguments">The arguments to pass into the Smart String formatter or <c>String.Format</c>.</param>
         /// <returns>Returns the loading operation for the request.</returns>
-        public AsyncOperationHandle<string> GetLocalizedStringAsync(params object[] arguments)
-        {
-            LocalizationSettings.ValidateSettingsExist();
-            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, arguments, LocaleOverride, FallbackState);
-        }
+        public AsyncOperationHandle<string> GetLocalizedStringAsync(params object[] arguments) => GetLocalizedStringAsync((IList<object>)arguments);
 
         /// <summary>
-        /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and the
+        /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and
         /// the translated string that matches <see cref="TableEntryReference"/>.
+        /// Uses [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) to force the loading to complete synchronously.
+        /// Please note that [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on
+        /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
         /// </summary>
         /// <param name="arguments">The arguments to pass into the Smart String formatter or <c>String.Format</c>.</param>
         /// <returns></returns>
-        public string GetLocalizedString(params object[] arguments) => GetLocalizedStringAsync(arguments).WaitForCompletion();
-
-        /// <summary>
-        /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and the
-        /// the translated string that matches <see cref="TableEntryReference"/>.
-        /// </summary>
-        /// <param name="arguments">The arguments to pass into the Smart String formatter or <c>String.Format</c>.</param>
-        /// <returns>Returns the loading operation for the request.</returns>
-        public AsyncOperationHandle<string> GetLocalizedStringAsync(IList<object> arguments)
-        {
-            LocalizationSettings.ValidateSettingsExist();
-            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, arguments, LocaleOverride, FallbackState);
-        }
+        public string GetLocalizedString(params object[] arguments) => GetLocalizedStringAsync((IList<object>)arguments).WaitForCompletion();
 
         /// <summary>
         /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and
@@ -260,47 +274,360 @@ namespace UnityEngine.Localization
         /// <returns></returns>
         public string GetLocalizedString(IList<object> arguments) => GetLocalizedStringAsync(arguments).WaitForCompletion();
 
+        /// <summary>
+        /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and
+        /// the translated string that matches <see cref="TableEntryReference"/>.
+        /// </summary>
+        /// <param name="arguments">The arguments to pass into the Smart String formatter or <c>String.Format</c>.</param>
+        /// <returns>Returns the loading operation for the request.</returns>
+        public AsyncOperationHandle<string> GetLocalizedStringAsync(IList<object> arguments)
+        {
+            LocalizationSettings.ValidateSettingsExist();
+            return LocalizationSettings.StringDatabase.GetLocalizedStringAsync(TableReference, TableEntryReference, arguments, LocaleOverride, FallbackState, m_LocalVariables.Count > 0 ? this : null);
+        }
+
+        /// <summary>
+        /// Returns the number of local variables inside this localized string.
+        /// </summary>
+        public int Count => m_VariableLookup.Count;
+
+        /// <summary>
+        /// Returns a collection containing all the unique local variable names.
+        /// </summary>
+        public ICollection<string> Keys => m_VariableLookup.Keys;
+
+        /// <summary>
+        /// Returns all the local variables for this localized string.
+        /// </summary>
+        public ICollection<IVariable> Values => m_VariableLookup.Values.Select(s => s.variable).ToList();
+
+        /// <summary>
+        /// Implemented as part of the IDictionary interface but not actually used. Will always return <c>false</c>.
+        /// </summary>
+        public bool IsReadOnly => false;
+
+        /// <summary>
+        /// Gets or sets the <see cref="IVariable"/> with the specified name.
+        /// </summary>
+        /// <param name="name">The name of the variable.</param>
+        /// <returns>The found variable.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown if a variable with the specified name does not exist.</exception>
+        /// <example>
+        /// This example shows how to get and add a local variable.
+        /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="add-get-variable"/>
+        /// </example>
+        public IVariable this[string name]
+        {
+            get => m_VariableLookup[name].variable;
+            set => Add(name, value);
+        }
+
+        /// <summary>
+        /// Gets the <see cref="IVariable"/> with the specified name.
+        /// </summary>
+        /// <param name="name">The name of the variable.</param>
+        /// <param name="value">The variable that was found or <c>default</c>.</param>
+        /// <returns><c>true</c> if a variable was found and <c>false</c> if one could not.</returns>
+        public bool TryGetValue(string name, out IVariable value)
+        {
+            if (m_VariableLookup.TryGetValue(name, out var v))
+            {
+                value = v.variable;
+                return true;
+            }
+
+            value = default;
+            return false;
+        }
+
+        /// <summary>
+        /// Adds a new Local Variable to use during formatting.
+        /// </summary>
+        /// <param name="name">The name of the variable, must be unique. Note the name should not contain any whitespace, if any is found then it will be replaced with with '-'.</param>
+        /// <param name="variable">The variable to use when formatting. See also <seealso cref="BoolVariable"/>, <seealso cref="FloatVariable"/>, <seealso cref="IntVariable"/>, <seealso cref="StringVariable"/>, <seealso cref="ObjectVariable"/>.</param>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null or empty.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when variable is null.</exception>
+        /// <example>
+        /// This example shows how to get and add a local variable.
+        /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="add-get-variable"/>
+        /// </example>
+        public void Add(string name, IVariable variable)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException(nameof(name), "Name must not be null or empty.");
+            if (variable == null)
+                throw new ArgumentNullException(nameof(variable));
+
+            name = name.ReplaceWhiteSpaces("-");
+            var v = new VariableNameValuePair { name = name, variable = variable };
+            m_VariableLookup.Add(name, v);
+            m_LocalVariables.Add(v);
+        }
+
+        /// <summary>
+        /// <inheritdoc cref="Add(string, IVariable)"/>
+        /// </summary>
+        /// <param name="item">The local variable name and value to add.</param>
+        public void Add(KeyValuePair<string, IVariable> item) => Add(item.Key, item.Value);
+
+        /// <summary>
+        /// Removes a local variable with the specified name.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns><c>true</c> if a variable with the specified name was removed, <c>false</c> if one was not.</returns>
+        public bool Remove(string name)
+        {
+            if (m_VariableLookup.TryGetValue(name, out var v))
+            {
+                m_LocalVariables.Remove(v);
+                m_VariableLookup.Remove(name);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Removes a local variable with the specified key.
+        /// </summary>
+        /// <param name="item">The item to be removed, only the Key field will be considered.</param>
+        /// <returns><c>true</c> if a variable with the specified name was removed, <c>false</c> if one was not.</returns>
+        public bool Remove(KeyValuePair<string, IVariable> item) => Remove(item.Key);
+
+        /// <summary>
+        /// Returns <c>true</c> if a local variable with the specified name exists.
+        /// </summary>
+        /// <param name="name">The variable name to check for.</param>
+        /// <returns><c>true</c> if a matching variable could be found or <c>false</c> if one could not.</returns>
+        public bool ContainsKey(string name) => m_VariableLookup.ContainsKey(name);
+
+        /// <summary>
+        /// <inheritdoc cref="ContainsKey(string)"/>
+        /// </summary>
+        /// <param name="item">The item to check for. Both the Key and Value must match.</param>
+        /// <returns><c>true</c> if a matching variable could be found or <c>false</c> if one could not.</returns>
+        public bool Contains(KeyValuePair<string, IVariable> item) => TryGetValue(item.Key, out var v) && v == item.Value;
+
+        /// <summary>
+        /// Copies the local variables into an array starting at <paramref name="arrayIndex"/>.
+        /// </summary>
+        /// <param name="array">The array to copy the local variables into.</param>
+        /// <param name="arrayIndex">The index to start copying the items into.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the array is null.</exception>
+        public void CopyTo(KeyValuePair<string, IVariable>[] array, int arrayIndex)
+        {
+            if (array == null)
+                throw new ArgumentNullException(nameof(array));
+
+            foreach (var entry in m_VariableLookup)
+            {
+                array[arrayIndex++] = new KeyValuePair<string, IVariable>(entry.Key, entry.Value.variable);
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc cref="GetEnumerator"/>
+        /// </summary>
+        /// <returns>The enumerator that can be used to iterate through all the local variables.</returns>
+        IEnumerator<KeyValuePair<string, IVariable>> IEnumerable<KeyValuePair<string, IVariable>>.GetEnumerator()
+        {
+            foreach (var v in m_VariableLookup)
+            {
+                yield return new KeyValuePair<string, IVariable>(v.Key, v.Value.variable);
+            }
+        }
+
+        /// <summary>
+        /// Returns an enumerator for all local variables in this localized string.
+        /// </summary>
+        /// <returns>The enumerator that can be used to iterate through all the local variables.</returns>
+        public IEnumerator GetEnumerator()
+        {
+            foreach (var v in m_VariableLookup)
+            {
+                yield return new KeyValuePair<string, IVariable>(v.Key, v.Value.variable);
+            }
+        }
+
+        /// <summary>
+        /// Removes all local variables.
+        /// </summary>
+        public void Clear()
+        {
+            m_VariableLookup.Clear();
+            m_LocalVariables.Clear();
+        }
+
+        /// <summary>
+        /// Allows for accessing metadata in a smart string.
+        /// </summary>
+        struct StringTableEntryVariable : IVariableGroup
+        {
+            readonly string m_Localized;
+            readonly StringTableEntry m_StringTableEntry;
+
+            public StringTableEntryVariable(string localized, StringTableEntry entry)
+            {
+                m_Localized = localized;
+                m_StringTableEntry = entry;
+            }
+
+            public bool TryGetValue(string key, out IVariable value)
+            {
+                foreach (var md in m_StringTableEntry.MetadataEntries)
+                {
+                    if (md is IMetadataVariable v && v.VariableName == key)
+                    {
+                        value = v;
+                        return true;
+                    }
+                }
+
+                value = null;
+                return false;
+            }
+
+            /// <summary>
+            /// Returns the localized string by default.
+            /// </summary>
+            /// <returns>The localized string.</returns>
+            public override string ToString() => m_Localized;
+        }
+
+        /// <summary>
+        /// Provides access to both the current local variables and those from the parent.
+        /// </summary>
+        struct ChainedLocalVariablesGroup : IVariableGroup
+        {
+            public IVariableGroup ParentGroup { get; set; }
+            public IVariableGroup Group { get; set; }
+
+            public ChainedLocalVariablesGroup(IVariableGroup group, IVariableGroup parent)
+            {
+                Group = group;
+                ParentGroup = parent;
+            }
+
+            public bool TryGetValue(string key, out IVariable value)
+            {
+                if (Group.TryGetValue(key, out value))
+                    return true;
+
+                if (ParentGroup.TryGetValue(key, out value))
+                    return true;
+
+                value = null;
+                return false;
+            }
+        }
+
+        /// <inheritdoc/>
+        public object GetSourceValue(ISelectorInfo selector)
+        {
+            if (IsEmpty)
+                return string.Empty;
+
+            // Determine what Locale we should use.
+            var locale = LocaleOverride;
+            if (locale == null && selector.FormatDetails.FormatCache != null)
+                locale = LocalizationSettings.AvailableLocales.GetLocale(selector.FormatDetails.FormatCache.Table.LocaleIdentifier);
+            if (locale == null && LocalizationSettings.SelectedLocaleAsync.IsDone)
+                locale = LocalizationSettings.SelectedLocaleAsync.Result;
+            if (locale == null)
+                return "<No Available Locale>";
+
+            var operation = LocalizationSettings.StringDatabase.GetTableEntryAsync(TableReference, TableEntryReference, locale, FallbackState);
+            if (!operation.IsDone)
+            {
+                operation.Completed += CompletedSourceValue;
+                return string.Empty;
+            }
+
+            var entry = operation.Result.Entry;
+            if (entry == null)
+                return "<Missing Entry>";
+
+            // If the entry is not smart then we do not need to forward as much information to the child.
+            if (!entry.IsSmart)
+            {
+                var result = LocalizationSettings.StringDatabase.GenerateLocalizedString(operation.Result.Table, entry, TableReference, TableEntryReference, locale, Arguments);
+                return new StringTableEntryVariable(result, entry);
+            }
+
+            var formatCache = entry?.GetOrCreateFormatCache();
+            if (formatCache != null)
+            {
+                if (m_VariableLookup.Count > 0)
+                {
+                    // Use the child and parent local variables.
+                    formatCache.LocalVariables = new ChainedLocalVariablesGroup(this, selector.FormatDetails.FormatCache.LocalVariables);
+                }
+                else
+                {
+                    // Just use the parents local variables.
+                    formatCache.LocalVariables = selector.FormatDetails.FormatCache.LocalVariables;
+                }
+            }
+
+            using (ListPool<object>.Get(out var args))
+            {
+                if (selector.CurrentValue != null)
+                    args.Add(selector.CurrentValue);
+                if (Arguments != null)
+                    args.AddRange(Arguments);
+
+                var result = LocalizationSettings.StringDatabase.GenerateLocalizedString(operation.Result.Table, entry, TableReference, TableEntryReference, locale, args);
+                if (formatCache != null)
+                    formatCache.LocalVariables = null;
+                return new StringTableEntryVariable(result, entry);
+            }
+        }
+
+        void CompletedSourceValue(AsyncOperationHandle<LocalizedDatabase<StringTable, StringTableEntry>.TableEntryResult> _) => ValueChanged?.Invoke(this);
+
+        /// <inheritdoc/>
         protected internal override void ForceUpdate()
         {
             if (m_ChangeHandler != null)
             {
                 HandleLocaleChange(null);
             }
+
+            ValueChanged?.Invoke(this);
         }
 
-        void UpdateGlobalVariableListeners(List<IGlobalVariableValueChanged> variables)
+        void UpdateVariableListeners(List<IVariableValueChanged> variables)
         {
-            if (m_OnGlobalVariableChanged == null)
-                m_OnGlobalVariableChanged = OnGlobalVariableChanged;
+            if (m_OnVariableChanged == null)
+                m_OnVariableChanged = OnVariableChanged;
 
             // Unsubscribe from any old ones
-            foreach (var gv in m_LastUsedGlobalVariables)
+            foreach (var gv in m_UsedVariables)
             {
-                gv.ValueChanged -= m_OnGlobalVariableChanged;
+                gv.ValueChanged -= m_OnVariableChanged;
             }
 
-            m_LastUsedGlobalVariables.Clear();
+            m_UsedVariables.Clear();
             if (variables == null)
                 return;
 
             foreach (var gv in variables)
             {
-                m_LastUsedGlobalVariables.Add(gv);
-                gv.ValueChanged += m_OnGlobalVariableChanged;
+                m_UsedVariables.Add(gv);
+                gv.ValueChanged += m_OnVariableChanged;
             }
         }
 
-        void OnGlobalVariableChanged(IGlobalVariable globalVariable)
+        void OnVariableChanged(IVariable globalVariable)
         {
-            if (m_WaitingForGlobalVariablesEndUpdate)
+            if (m_WaitingForVariablesEndUpdate)
                 return;
 
-            if (GlobalVariablesSource.IsUpdating)
+            if (PersistentVariablesSource.IsUpdating)
             {
                 // Its possible that multiple global variables will be changed, we don't want to force the
                 // string to be updated for each change so we defer and do a single update during EndUpdate.
-                m_WaitingForGlobalVariablesEndUpdate = true;
-                GlobalVariablesSource.EndUpdate += OnGlobalVariablesSourceUpdateCompleted;
+                m_WaitingForVariablesEndUpdate = true;
+                PersistentVariablesSource.EndUpdate += OnVariablesSourceUpdateCompleted;
             }
             else
             {
@@ -308,10 +635,10 @@ namespace UnityEngine.Localization
             }
         }
 
-        void OnGlobalVariablesSourceUpdateCompleted()
+        void OnVariablesSourceUpdateCompleted()
         {
-            GlobalVariablesSource.EndUpdate -= OnGlobalVariablesSourceUpdateCompleted;
-            m_WaitingForGlobalVariablesEndUpdate = false;
+            PersistentVariablesSource.EndUpdate -= OnVariablesSourceUpdateCompleted;
+            m_WaitingForVariablesEndUpdate = false;
             RefreshString();
         }
 
@@ -346,13 +673,17 @@ namespace UnityEngine.Localization
 
             if (!CurrentLoadingOperation.Value.IsDone)
             {
-                if (!WaitForCompletion)
+                #if !UNITY_WEBGL
+                if (WaitForCompletion)
+                {
+                    CurrentLoadingOperation.Value.WaitForCompletion();
+                }
+                else
+                #endif
                 {
                     CurrentLoadingOperation.Value.Completed += AutomaticLoadingCompleted;
                     return;
                 }
-
-                CurrentLoadingOperation.Value.WaitForCompletion();
             }
 
             AutomaticLoadingCompleted(CurrentLoadingOperation.Value);
@@ -384,9 +715,18 @@ namespace UnityEngine.Localization
             }
         }
 
-        protected override void Reset()
+        protected override void Reset() => ClearLoadingOperation();
+
+        public override void OnAfterDeserialize()
         {
-            ClearLoadingOperation();
+            m_VariableLookup.Clear();
+            foreach (var v in m_LocalVariables)
+            {
+                if (!string.IsNullOrEmpty(v.name))
+                {
+                    m_VariableLookup[v.name] = v;
+                }
+            }
         }
     }
 }

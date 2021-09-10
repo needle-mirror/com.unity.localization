@@ -11,6 +11,7 @@ using Debug = UnityEngine.Debug;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace UnityEditor.Localization.Platform.Android
 {
@@ -70,7 +71,9 @@ namespace UnityEditor.Localization.Platform.Android
             var project = new GradleProjectSettings();
             foreach (var locale in LocalizationEditorSettings.GetLocales())
             {
-                var localeIdentifier = locale.Identifier.Code.Replace("-", "-r");
+                var localeIdentifier = locale.Identifier.Code;
+                var IsSpecialLocaleIdentifier = localeIdentifier.Contains("Hans") || localeIdentifier.Contains("Hant") || localeIdentifier.Contains("Latn") || localeIdentifier.Contains("Cyrl") || localeIdentifier.Contains("Arab") || localeIdentifier.Contains("valencia");
+                localeIdentifier = localeIdentifier.Contains("-") ? IsSpecialLocaleIdentifier ? localeIdentifier.Replace("-", "+") : localeIdentifier.Replace("-", "-r") : localeIdentifier;
                 GenerateLocalizedXmlFile("App Name", Path.Combine(Directory.CreateDirectory(Path.Combine(project.GetResFolderPath(projectDirectory), "values-b+" + localeIdentifier)).FullName, k_InfoFile), locale, appInfo);
 
                 //Generate icons
@@ -254,8 +257,12 @@ namespace UnityEditor.Localization.Platform.Android
                 Debug.LogWarning($"{valueName}: Could not find a localized value for {locale} from {localizedString}");
                 return;
             }
+
+            // We are adding a back slash when the entry value contains an single quote, to prevent android build failures and show the display name with apostrophe ex: " J'adore ";
+            // (?<!\\) - Negative Lookbehind to ignore any that already start with \\
+            // (?<replace>') - match colon and place it into the replace variable
+            var localizedValue = Regex.Replace(entry.LocalizedValue, @"(?<!\\)(?<replace>')", @"\'");
             Debug.Assert(!entry.IsSmart, $"Localized App Values ({valueName}) do not support Smart Strings - {localizedString}");
-            Debug.Assert(!entry.LocalizedValue.Contains("'"), $"Localized App Value ({valueName}) does not support Single Quote. \nEntry contains invalid character: {localizedString}\n{entry.LocalizedValue}");
 
             using (var stream = new StreamWriter(filePath, false, Encoding.UTF8))
             {
@@ -270,7 +277,7 @@ namespace UnityEditor.Localization.Platform.Android
                     $"-->" +
                     "\n" +
                     $@"<resources>
-                       <string name=""app_name""> {entry.LocalizedValue} </string>
+                       <string name=""app_name""> {localizedValue} </string>
                        </resources>");
             }
         }

@@ -4,9 +4,13 @@ using UnityEngine.Localization.Tables;
 
 namespace UnityEngine.Localization
 {
+    /// <summary>
+    /// Provides a way to access an <see cref="AssetTable"/> at runtime.
+    /// </summary>
     [Serializable]
     public class LocalizedAssetTable : LocalizedTable<AssetTable, AssetTableEntry>
     {
+        /// <inheritdoc/>
         protected override LocalizedDatabase<AssetTable, AssetTableEntry> Database => LocalizationSettings.AssetDatabase;
 
         /// <summary>

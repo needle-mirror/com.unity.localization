@@ -9,10 +9,7 @@ namespace UnityEngine.Localization
     /// Provides a way to reference a table entry inside of a specific <see cref="LocalizationTable"/>.
     /// </summary>
     [Serializable]
-    public abstract class LocalizedReference
-        #if UNITY_EDITOR
-        : ISerializationCallbackReceiver
-        #endif
+    public abstract class LocalizedReference : ISerializationCallbackReceiver
     {
         [SerializeField]
         TableReference m_TableReference;
@@ -24,7 +21,9 @@ namespace UnityEngine.Localization
         FallbackBehavior m_FallbackState = FallbackBehavior.UseProjectSettings;
 
         [SerializeField]
-        bool m_WaitForCompletion = true;
+        bool m_WaitForCompletion = false;
+
+        Locale m_LocaleOverride;
 
         #if UNITY_EDITOR
         // This is so we can detect when a change is made via the inspector.
@@ -95,11 +94,24 @@ namespace UnityEngine.Localization
         /// Provide a locale that can be used instead of <see cref="LocalizationSettings.SelectedLocale"/>.
         /// A <c>null</c> value will revert to using <see cref="LocalizationSettings.SelectedLocale"/>.
         /// </summary>
-        public Locale LocaleOverride { get; set; }
+        public Locale LocaleOverride
+        {
+            get => m_LocaleOverride;
+            set
+            {
+                if (m_LocaleOverride == value)
+                    return;
+
+                m_LocaleOverride = value;
+                ForceUpdate();
+            }
+        }
 
         /// <summary>
-        /// Determines if <see cref="AsyncOperationHandle{TObject}.WaitForCompletion"/> should be used to force loading to be completed immediately.
+        /// Determines if [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) should be used to force loading to be completed immediately.
         /// See [Synchronous Workflow](https://docs.unity3d.com/Packages/com.unity.addressables@latest?subfolder=/manual/SynchronousAddressables.html) for further details.
+        /// Please note that [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on
+        /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
         /// </summary>
         public virtual bool WaitForCompletion
         {
@@ -155,6 +167,20 @@ namespace UnityEngine.Localization
         /// </summary>
         protected abstract void Reset();
 
+        public virtual void OnBeforeSerialize()
+        {
+            #if UNITY_EDITOR
+            UpdateIfChangedThroughSerialization();
+            #endif
+        }
+
+        public virtual void OnAfterDeserialize()
+        {
+            #if UNITY_EDITOR
+            UpdateIfChangedThroughSerialization();
+            #endif
+        }
+
         #if UNITY_EDITOR
         void ChangedThroughSerialization()
         {
@@ -162,8 +188,6 @@ namespace UnityEngine.Localization
             ForceUpdate();
         }
 
-        public void OnBeforeSerialize() => UpdateIfChangedThroughSerialization();
-        public void OnAfterDeserialize() => UpdateIfChangedThroughSerialization();
         void UpdateIfChangedThroughSerialization()
         {
             if (!m_CurrentTable.Equals(TableReference) || !m_CurrentTableEntry.Equals(TableEntryReference))

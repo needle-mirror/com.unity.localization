@@ -75,6 +75,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF
 
             var selectedTables = SelectedTables.SelectedTableIndexes.ToDictionary(k => k.Key as StringTableCollection, v => v.Value);
             Xliff.ExportSelected(sourceLocale.Identifier, dir, ExportName, version.value, selectedTables, TaskReporter.CreateDefaultReporter());
+            EditorUtility.OpenWithDefaultApp(dir);
         }
     }
 }

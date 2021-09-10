@@ -16,6 +16,7 @@ namespace UnityEngine.Localization
     [Serializable]
     public class LocalizedStringTable : LocalizedTable<StringTable, StringTableEntry>
     {
+        /// <inheritdoc/>
         protected override LocalizedDatabase<StringTable, StringTableEntry> Database => LocalizationSettings.StringDatabase;
 
         /// <summary>

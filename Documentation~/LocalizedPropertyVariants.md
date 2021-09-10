@@ -2,9 +2,10 @@
 
 **Note: This feature requires Unity 2020.3 and above.**
 
-The Localized Property Variants system provides a more natural way to work with multiple Locales in a scene. You can change component properties directly in the Inspector or Scene View. Any changes are recorded as Variants for the currently active Locale. 
+The Localized Property Variants system provides a more natural way to work with multiple Locales in a scene. You can change component properties directly in the Inspector or Scene View. Any changes are recorded as Variants for the currently active Locale.
 These Variants are then applied automatically when you switch Locale in the Editor and the Player.
 Some typical uses of Localized Properties are:
+
 - Configuring Text to have a different translated value, font and position in a UI for each Locale.
 - Making small alterations to components for selected Locales, such as when the text for a particular Locale does not fit.
 - Changing audio/textures/sprites for particular Locales.
@@ -33,7 +34,7 @@ You can configure the Property Variant System using the Localization Scene Contr
 | **Property**      | **Description** |
 | ----------------- | --------------- |
 | **Active Locale** | The [Locale](Locale.md) that is currently being previewed and edited in the Scene. When you change a component in the scene the change is associated with the Active Locale and is either stored locally in the Component, stored as a variant in the GameObject Localizer component or stored in a String or Asset Table.
-| **Track Changes** | Used in conjunction with the Active Locale to determine where a property change should be stored. 
+| **Track Changes** | Used in conjunction with the Active Locale to determine where a property change should be stored.
 | **String Table**  | The [String Table](StringTables.md) collection that is used when new String Property Variants are created. If the value is not set then the values are stored locally instead of inside a String Table. Note: Unity recommends not to store strings locally if you will need to translate them.
 | **Asset Table**   | The [Asset Table](AssetTables.md) collection that is used when a new Asset property variant is created. If the value is not set then the asset reference is stored locally instead of inside an Asset Table.
 
@@ -53,7 +54,7 @@ Unity stores property variant data in one of the following places:
 
 _Example of a Local Variant for the position of a GameObject._
 
-- **String Table / Asset Table** - The value is stored in a String or Asset Table Collection. You can view and edit the variant values from the GameObject Localize, the relevant String Table Collection and the source component. Note: When a new value is first created, its Entry Name takes the form `<Scene Name>/<Game Object Hierarchy>`.You can change the name value. 
+- **String Table / Asset Table** - The value is stored in a String or Asset Table Collection. You can view and edit the variant values from the GameObject Localize, the relevant String Table Collection and the source component. Note: When a new value is first created, its Entry Name takes the form `<Scene Name>/<Game Object Hierarchy>`.You can change the name value.
 
 ![Example of a String Table Variant.](images/GameObjectLocalizer_StringTableExample.png)
 
@@ -65,17 +66,18 @@ The following diagram shows how the Property Variant System determines how to re
 
 ## GameObject Localizer
 
-The GameObject Localizer component stores and applies all **Localized Property Variants** configurations for the [GameObject](https://docs.unity3d.com/Manual/GameObjects.html) it is attached to. This component is added automatically when a GameObject contains properties that are being tracked. 
+The GameObject Localizer component stores and applies all **Localized Property Variants** configurations for the [GameObject](https://docs.unity3d.com/Manual/GameObjects.html) it is attached to. This component is added automatically when a GameObject contains properties that are being tracked.
 
 ![The GameObject Localizer component.](images/GameObjectLocalizer_Example.png)
 
-The Inspector displays the Tracked Components and Localized Properties. You can edit property values directly in the GameObject Localizer Inspector. Properties are tracked using their [serialized property path](https://docs.unity3d.com/ScriptReference/SerializedProperty-propertyPath.html). 
+The Inspector displays the Tracked Components and Localized Properties. You can edit property values directly in the GameObject Localizer Inspector. Properties are tracked using their [serialized property path](https://docs.unity3d.com/ScriptReference/SerializedProperty-propertyPath.html).
 
 ### Applying variants
 
 Each Tracked Object applies its property variants when requested to do so by the GameObject Localizer. By default this uses the [JsonSerializerTrackedObject](xref:UnityEngine.Localization.PropertyVariants.TrackedObjects.JsonSerializerTrackedObject) class for Monobehaviour components and custom scripts derived from [TrackedObject](xref:UnityEngine.Localization.PropertyVariants.TrackedObjects.TrackedObject) for Unity components.
 
 JSON Serialization has 2 possible modes called **Update Type**, to apply the values to a Tracked Object:
+
 - **Partial** mode creates an empty JSON file and then patches the properties into it and applies it to the Tracked Object. The JSON only contains the new values.
 - **Full** mode first serializes the component into JSON, then patches the new values into the JSON and applies the JSON back to the object. This approach has more of a performance impact but is required when handling any type of **List** or **Array** and fields that cancontain a **serializedVersion** such as [Rect](https://docs.unity3d.com/ScriptReference/Rect.html).
 

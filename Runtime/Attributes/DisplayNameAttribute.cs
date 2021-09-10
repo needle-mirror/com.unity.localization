@@ -7,7 +7,7 @@ namespace UnityEngine.Localization
     /// </summary>
     /// <example>
     /// This example shows how Metadata can be given a custom name.
-    /// <code source="../DocCodeSamples.Tests/DisplayNameAttributeSample.cs"/>
+    /// <code source="../../DocCodeSamples.Tests/DisplayNameAttributeSample.cs"/>
     /// </example>
     [AttributeUsage(AttributeTargets.All, AllowMultiple = false)]
     public class DisplayNameAttribute : Attribute
@@ -18,8 +18,19 @@ namespace UnityEngine.Localization
         public string Name { get; set; }
 
         /// <summary>
-        /// Specify a custom name to be used when displayed in the Editor.
+        /// Path to a Texture file to display as an icon.
         /// </summary>
-        public DisplayNameAttribute(string name) => Name = name;
+        public string IconPath { get; set; }
+
+        /// <summary>
+        /// Specify a custom name to display in the Editor.
+        /// </summary>
+        /// <param name="name">The name to display.</param>
+        /// <param name="iconPath">Optional icon to display when possible.</param>
+        public DisplayNameAttribute(string name, string iconPath = null)
+        {
+            Name = name;
+            IconPath = iconPath;
+        }
     }
 }

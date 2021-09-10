@@ -16,8 +16,10 @@ namespace UnityEngine.Localization.SmartFormat
             {
                 FormatItemPool.ReleaseFormat(fc.Format);
                 fc.Format = null;
+                fc.Table = null;
                 fc.CachedObjects.Clear();
-                fc.GlobalVariableTriggers.Clear();
+                fc.VariableTriggers.Clear();
+                fc.LocalVariables = null;
             });
 
         public static FormatCache Get(Format format)

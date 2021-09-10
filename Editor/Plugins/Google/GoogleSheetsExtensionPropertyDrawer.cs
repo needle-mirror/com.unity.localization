@@ -38,7 +38,7 @@ namespace UnityEditor.Localization.Plugins.Google
             public static readonly GUIContent addSheet = new GUIContent("Add Sheet");
             public static readonly GUIContent createNewSpredsheet = new GUIContent("Create New Spreadsheet");
             public static readonly GUIContent extractColumns = new GUIContent("Extract Columns From Sheet");
-            public static readonly GUIContent header = new GUIContent("Google Sheets");
+            public static readonly GUIContent header = new GUIContent("Google Sheets", EditorIcons.GoogleSheets);
             public static readonly GUIContent newSheetName = new GUIContent("Sheet Name");
             public static readonly GUIContent noSheetsFound = new GUIContent("No Sheets Could Be Found");
             public static readonly GUIContent mappedColumns = new GUIContent("Mapped Columns");

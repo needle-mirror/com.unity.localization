@@ -40,7 +40,7 @@ namespace UnityEditor.Localization.UI
             var template = Resources.GetTemplateAsset(nameof(SceneControlsWindow));
             template.CloneTree(m_ActiveSettingsRoot);
 
-            #if ENABLE_PROPERTY_VARIANTS || PACKAGE_DOCS_GENERATION
+            #if ENABLE_PROPERTY_VARIANTS
 
             LocalizationProjectSettings.instance.hideFlags = HideFlags.None;
             var serializedObject = new SerializedObject(LocalizationProjectSettings.instance);
@@ -78,7 +78,7 @@ namespace UnityEditor.Localization.UI
                 EditorApplication.QueuePlayerLoopUpdate(); // Force the scene to update
             });
             #endif
-			
+
             Undo.postprocessModifications += PostprocessModifications;
             Undo.undoRedoPerformed += LocalizationEditorSettings.RefreshEditorPreview;
         }

@@ -13,9 +13,21 @@ namespace UnityEngine.Localization.Pseudo
     /// </summary>
     public abstract class MessageFragment
     {
+        /// <summary>
+        /// The original string being parsed.
+        /// </summary>
         protected string m_OriginalString;
+
+        /// <summary>
+        /// The start index for this fragment from <see cref="m_OriginalString"/>.
+        /// </summary>
         protected int m_StartIndex;
+
+        /// <summary>
+        /// The end index for this fragment from <see cref="m_OriginalString"/>.
+        /// </summary>
         protected int m_EndIndex;
+
         string m_CachedToString;
 
         /// <summary>
@@ -79,6 +91,11 @@ namespace UnityEngine.Localization.Pseudo
                 builder.Append(m_OriginalString, m_StartIndex, m_EndIndex - m_StartIndex);
         }
 
+        /// <summary>
+        /// Returns the char at the specified index.
+        /// </summary>
+        /// <param name="index">The index of the char to return from <see cref="m_OriginalString"/>.</param>
+        /// <returns></returns>
         public char this[int index]
         {
             get
@@ -95,6 +112,9 @@ namespace UnityEngine.Localization.Pseudo
     [DebuggerDisplay("Writable: {Text}")]
     public class WritableMessageFragment : MessageFragment
     {
+        /// <summary>
+        /// The text contained in this fragment.
+        /// </summary>
         public string Text
         {
             get => ToString();
@@ -108,6 +128,9 @@ namespace UnityEngine.Localization.Pseudo
     [DebuggerDisplay("ReadOnly: {Text}")]
     public class ReadOnlyMessageFragment : MessageFragment
     {
+        /// <summary>
+        /// The text contained in this fragment.
+        /// </summary>
         public string Text => ToString();
     }
 

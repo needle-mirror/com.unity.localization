@@ -121,7 +121,12 @@ namespace UnityEngine.Localization.Components
         internal virtual void RegisterChangeHandler()
         {
             if (m_FormatArguments.Count > 0)
+            {
                 StringReference.Arguments = m_FormatArguments.ToArray();
+
+                if (Application.isPlaying)
+                    Debug.LogWarningFormat("LocalizeStringEvent({0}) is using the deprecated Format Arguments field which will be removed in the future. Consider upgrading to use String Reference Local Variables instead.", name, this);
+            }
             StringReference.StringChanged += UpdateString;
         }
 

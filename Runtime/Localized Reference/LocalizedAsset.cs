@@ -58,8 +58,15 @@ namespace UnityEngine.Localization
     [Serializable]
     public class LocalizedFont : LocalizedAsset<Font> {}
 
+    /// <summary>
+    /// Base class for all localized assets.
+    /// </summary>
     public abstract class LocalizedAssetBase : LocalizedReference
     {
+        /// <summary>
+        /// Returns the localized asset as a [UnityEngine.Object](https://docs.unity3d.com/ScriptReference/Object.html).
+        /// </summary>
+        /// <returns></returns>
         public abstract AsyncOperationHandle<Object> LoadAssetAsObjectAsync();
     }
 
@@ -76,7 +83,6 @@ namespace UnityEngine.Localization
     public partial class LocalizedAsset<TObject> : LocalizedAssetBase where TObject : Object
     {
         ChangeHandler m_ChangeHandler;
-        AsyncOperationHandle<TObject>? m_CurrentLoadingOperation;
 
         /// <summary>
         /// Delegate used by <see cref="AssetChanged"/>.
@@ -84,6 +90,7 @@ namespace UnityEngine.Localization
         /// <param name="value">The localized asset.</param>
         public delegate void ChangeHandler(TObject value);
 
+        /// <inheritdoc/>
         public override bool WaitForCompletion
         {
             set
@@ -92,8 +99,10 @@ namespace UnityEngine.Localization
                     return;
 
                 base.WaitForCompletion = value;
-                if (value && m_CurrentLoadingOperation.HasValue && !m_CurrentLoadingOperation.Value.IsDone)
-                    m_CurrentLoadingOperation.Value.WaitForCompletion();
+                #if !UNITY_WEBGL // WebGL does not support WaitForCompletion
+                if (value && CurrentLoadingOperation.HasValue && !CurrentLoadingOperation.Value.IsDone)
+                    CurrentLoadingOperation.Value.WaitForCompletion();
+                #endif
             }
         }
 
@@ -102,8 +111,8 @@ namespace UnityEngine.Localization
         /// </summary>
         public AsyncOperationHandle<TObject>? CurrentLoadingOperation
         {
-            get => m_CurrentLoadingOperation;
-            internal set => m_CurrentLoadingOperation = value;
+            get;
+            internal set;
         }
 
         /// <summary>
@@ -146,7 +155,7 @@ namespace UnityEngine.Localization
                 else if (CurrentLoadingOperation.HasValue && CurrentLoadingOperation.Value.IsDone)
                 {
                     // Call the event with the latest value.
-                    value(m_CurrentLoadingOperation.Value.Result);
+                    value(CurrentLoadingOperation.Value.Result);
                 }
             }
             remove
@@ -219,6 +228,7 @@ namespace UnityEngine.Localization
             }
         }
 
+        /// <inheritdoc/>
         public override AsyncOperationHandle<Object> LoadAssetAsObjectAsync()
         {
             var wrappedOperation = LoadAssetAsync();
@@ -230,6 +240,9 @@ namespace UnityEngine.Localization
         /// <summary>
         /// Provides a localized asset from a <see cref="AssetTable"/> with the <see cref="TableReference"/> and the
         /// the asset that matches <see cref="TableEntryReference"/>.
+        /// Uses [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) to force the loading to complete synchronously.
+        /// Please note that [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on
+        /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
         /// </summary>
         /// <returns>Returns the localized asset.</returns>
         public TObject LoadAsset()
@@ -237,6 +250,7 @@ namespace UnityEngine.Localization
             return LoadAssetAsync().WaitForCompletion();
         }
 
+        /// <inheritdoc/>
         protected internal override void ForceUpdate()
         {
             if (m_ChangeHandler != null)
@@ -269,26 +283,32 @@ namespace UnityEngine.Localization
                 return;
             }
 
-            m_CurrentLoadingOperation = LoadAssetAsync();
+            CurrentLoadingOperation = LoadAssetAsync();
+            AddressablesInterface.Acquire(CurrentLoadingOperation.Value);
 
-            if (!m_CurrentLoadingOperation.Value.IsDone)
+            if (!CurrentLoadingOperation.Value.IsDone)
             {
-                if (!WaitForCompletion)
+                #if !UNITY_WEBGL
+                if (WaitForCompletion)
                 {
-                    m_CurrentLoadingOperation.Value.Completed += AutomaticLoadingCompleted;
+                    CurrentLoadingOperation.Value.WaitForCompletion();
+                }
+                else
+                #endif
+                {
+                    CurrentLoadingOperation.Value.Completed += AutomaticLoadingCompleted;
                     return;
                 }
-                m_CurrentLoadingOperation.Value.WaitForCompletion();
             }
 
-            AutomaticLoadingCompleted(m_CurrentLoadingOperation.Value);
+            AutomaticLoadingCompleted(CurrentLoadingOperation.Value);
         }
 
         void AutomaticLoadingCompleted(AsyncOperationHandle<TObject> loadOperation)
         {
             if (loadOperation.Status != AsyncOperationStatus.Succeeded)
             {
-                m_CurrentLoadingOperation = null;
+                CurrentLoadingOperation = null;
                 return;
             }
 
@@ -297,15 +317,20 @@ namespace UnityEngine.Localization
 
         internal void ClearLoadingOperation()
         {
-            if (m_CurrentLoadingOperation.HasValue)
+            if (CurrentLoadingOperation.HasValue)
             {
-                // We should only call this if we are not done as its possible that the internal list is null if its not been used.
-                if (!m_CurrentLoadingOperation.Value.IsDone)
-                    m_CurrentLoadingOperation.Value.Completed -= AutomaticLoadingCompleted;
-                m_CurrentLoadingOperation = null;
+                if (CurrentLoadingOperation.Value.IsValid())
+                {
+                    // We should only call this if we are not done as its possible that the internal list is null if its not been used.
+                    if (!CurrentLoadingOperation.Value.IsDone)
+                        CurrentLoadingOperation.Value.Completed -= AutomaticLoadingCompleted;
+                    AddressablesInterface.Release(CurrentLoadingOperation.Value);
+                }
+                CurrentLoadingOperation = null;
             }
         }
 
+        /// <inheritdoc/>
         protected override void Reset()
         {
             ClearLoadingOperation();

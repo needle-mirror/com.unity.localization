@@ -3,6 +3,10 @@ using UnityEngine.Pool;
 
 namespace UnityEngine.Localization.Pseudo
 {
+    /// <summary>
+    /// Provides a pseudo-localization method to preserve certain parts of a string and prevent them from being modified, such as Rich Text tags.
+    /// The method works by identifying text that is contained between an opening and closing tag and marking it as a <see cref="ReadOnlyMessageFragment"/>.
+    /// </summary>
     [Serializable]
     public class PreserveTags : IPseudoLocalizationMethod
     {
@@ -12,18 +16,25 @@ namespace UnityEngine.Localization.Pseudo
         [SerializeField]
         char m_Closing = '>';
 
+        /// <summary>
+        /// The opening tag used to identify when to preserve text.
+        /// </summary>
         public char Opening
         {
             get => m_Opening;
             set => m_Opening = value;
         }
 
+        /// <summary>
+        /// The closing tag used to identify when to preserve text.
+        /// </summary>
         public char Closing
         {
             get => m_Closing;
             set => m_Closing = value;
         }
 
+        /// <inheritdoc/>
         public void Transform(Message message)
         {
             using (ListPool<MessageFragment>.Get(out var messageFragments))

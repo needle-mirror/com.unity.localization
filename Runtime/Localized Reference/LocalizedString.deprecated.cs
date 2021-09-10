@@ -6,13 +6,13 @@ namespace UnityEngine.Localization
 {
     public partial class LocalizedString : LocalizedReference
     {
-        [Obsolete("RegisterChangeHandler is obsolete. Please use the StringChanged event instead.")]
+        [Obsolete("RegisterChangeHandler is obsolete. Please use the StringChanged event instead.", true)]
         public void RegisterChangeHandler(ChangeHandler handler)
         {
             throw new NotSupportedException("RegisterChangeHandler is obsolete. Please use the StringChanged event instead.");
         }
 
-        [Obsolete("ClearChangeHandler is now obsolete. You should unsubscribe from the StringChanged event instead.")]
+        [Obsolete("ClearChangeHandler is now obsolete. You should unsubscribe from the StringChanged event instead.", true)]
         public void ClearChangeHandler()
         {
             throw new NotSupportedException("ClearChangeHandler is now obsolete. You should use the StringChanged event instead.");

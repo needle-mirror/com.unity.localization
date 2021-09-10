@@ -76,6 +76,7 @@ namespace UnityEngine.Localization
 
             // Check the table exists
             var tableResourceOp = AddressablesInterface.LoadTableLocationsAsync(m_CollectionName, m_SelectedLocale.Identifier, typeof(TTable));
+            AddressablesInterface.Acquire(tableResourceOp);
             if (tableResourceOp.IsDone)
             {
                 LoadTableResource(tableResourceOp);

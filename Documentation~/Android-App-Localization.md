@@ -2,10 +2,9 @@
 
 ## App Name
 
-The Localization package supports localizing app names with the Android **strings.xml** file. When you build the Android player, the package applies the Localization values to the Gradle project during the post-build step. 
+The Localization package supports localizing app names with the Android **strings.xml** file. When you build the Android player, the package applies the Localization values to the Gradle project during the post-build step.
 
-The Gradle project is populated with folders named respective to the project locales, and a  **strings.xml** file is added for each Locale. For more information, refer to [Android localization documentation](https://developer.android.com/guide/topics/resources/localization).
-
+The Gradle project is populated with folders named respective to the project locales, and a **strings.xml** file is added for each Locale. For more information, refer to [Android localization documentation](https://developer.android.com/guide/topics/resources/localization).
 
 To configure the App localization, add **Android/App Info Metadata** to the Localization Settings **Metadata**.
 
@@ -24,7 +23,7 @@ The localization package supports the localization of app icons in Android appli
 
 The Gradle project is populated with folders named respective to the project locales, and the images are copied depending on the type of icon selected for each Locale. The Localization package currently supports the Adaptive Icon, Round Icon, and Legacy Icon for the Android platform.
 
-To configure the App Icon localization, add any one or more of the icon metadata to the Localization Settings **Metadata**. 
+To configure the App Icon localization, add any one or more of the icon metadata to the Localization Settings **Metadata**.
 
 ### Adaptive Icon
 

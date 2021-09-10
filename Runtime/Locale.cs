@@ -270,6 +270,10 @@ namespace UnityEngine.Localization
             set => m_LocaleName = value;
         }
 
+        /// <summary>
+        /// Returns the fallback locale or <c>null</c> if one does not exist or it could not be found.
+        /// </summary>
+        /// <returns>The fallback locale or <c>null</c>.</returns>
         public virtual Locale GetFallback()
         {
             var fallBack = Metadata?.GetMetadata<FallbackLocale>()?.Locale;
@@ -291,7 +295,7 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// When <c>true</c>, <see cref="CustomFormatterIdentifier"/> will be used for any culture sensitive formatting instead of <see cref="Identifier"/>.
+        /// When <c>true</c>, <see cref="CustomFormatterCode"/> will be used for any culture sensitive formatting instead of <see cref="Identifier"/>.
         /// </summary>
         public bool UseCustomFormatter
         {

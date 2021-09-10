@@ -2,7 +2,7 @@
 
 This documentation describes the most common ways to interact with the Localization System via C# scripts.
 
-You can download additional scripting examples from the package manager window, in the Localization package’s **Samples** section. 
+You can download additional scripting examples from the package manager window, in the Localization package’s **Samples** section.
 
 ## LocalizedString
 
@@ -18,7 +18,7 @@ The `LocalizedString` provides a `StringChanged` event. The script calls the eve
 
 ## Dynamic Strings
 
-Sometimes you might need to update a localized string, such as when using [Smart Strings](SmartStrings.md) or `String.Format` with arguments that have since changed. Calling `GetLocalizedString` with the arguments always updates the string. When you use the `StringChanged` event, you can use the `RefreshString` function to request an update, and the `Arguments` property to configure the arguments that format the string.
+Sometimes you might need to update a localized string, such as when using [Smart Strings](Smart/SmartStrings.md) or `String.Format` with arguments that have since changed. Calling `GetLocalizedString` with the arguments always updates the string. When you use the `StringChanged` event, you can use the `RefreshString` function to request an update, and the `Arguments` property to configure the arguments that format the string.
 
 [!code-cs[localized-string-smart](../DocCodeSamples.Tests/LocalizedStringSamples.cs#localized-string-smart)]
 
@@ -42,13 +42,13 @@ In this example, you can now add `LocalizedFont` to a script, and `LocalizedStri
 
 The following Unity assets are already supported:
 
-| **Type**   | **Class**       |
-| ---------- | --------------- |
-| AudioClip         | `LocalizedAudioClip`
-| GameObject/Prefab | `LocalizedGameObject`
-| Material          | `LocalizedMaterial`
-| Sprite            | `LocalizedSprite`
-| Texture           | `LocalizedTexture`
+| **Type**          | **Class**             |
+|-------------------|-----------------------|
+| AudioClip         | `LocalizedAudioClip`  |
+| GameObject/Prefab | `LocalizedGameObject` |
+| Material          | `LocalizedMaterial`   |
+| Sprite            | `LocalizedSprite`     |
+| Texture           | `LocalizedTexture`    |
 
 ### TableReference
 
@@ -56,7 +56,7 @@ Use the `TableReference` struct to reference an Asset Table or String Table. To 
 
 ### TableEntryReference
 
-Use the `TableEntryReference` struct to reference an entry in an Asset Table or String Table. To reference a table, you can use either the table entry's name or its unique Key ID, an unsigned long integer. It is usually safer to use the Key ID, because you might decide to change the table entry name in future, which would require you to manually update your references, but the Key ID always stays the same. 
+Use the `TableEntryReference` struct to reference an entry in an Asset Table or String Table. To reference a table, you can use either the table entry's name or its unique Key ID, an unsigned long integer. It is usually safer to use the Key ID, because you might decide to change the table entry name in future, which would require you to manually update your references, but the Key ID always stays the same.
 
 ## Using AsyncOperationHandle
 
@@ -67,7 +67,7 @@ To force an operation to complete on the main thread, call [WaitForCompletion](h
 
 ## Make a basic Locale selection menu
 
-This example demonstrates how to create a way for the person playing a game to select the language (defined in the Localization system by Locale) they want to use in the game. 
+This example demonstrates how to create a way for the person playing a game to select the language (defined in the Localization system by Locale) they want to use in the game.
 To add a UI dropdown menu to the Scene, go to **GameObject > UI > Dropdown**, and attach the following script:
 
 [!code-cs[locale-dropdown](../DocCodeSamples.Tests/LocaleDropdown.cs#example-code)]

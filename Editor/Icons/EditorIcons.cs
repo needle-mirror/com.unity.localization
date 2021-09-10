@@ -1,25 +1,28 @@
-using System.IO;
 using UnityEngine;
 
 namespace UnityEditor.Localization
 {
     class EditorIcons
     {
-        const string k_IconRoot = "Packages/com.unity.localization/Editor/Icons";
-
-        public static GUIContent LocalizationSettings { get; private set; }
-        public static GUIContent AssetTable { get; private set; }
-        public static GUIContent StringTable { get; private set; }
-
+        public static Texture Csv { get; private set; }
+        public static Texture GameObjectLocalizer { get; private set; }
+        public static Texture GoogleSheets { get; private set; }
+        public static Texture Locale { get; private set; }
+        public static Texture Metadata { get; private set; }
+        public static Texture TableWindow { get; private set; }
         public static Texture WarningIcon { get; private set; }
 
         static EditorIcons()
         {
-            LocalizationSettings = new GUIContent(AssetDatabase.LoadAssetAtPath<Texture>(Path.Combine(k_IconRoot, "Localization Icon.png")));
-            AssetTable = new GUIContent(AssetDatabase.LoadAssetAtPath<Texture>(Path.Combine(k_IconRoot, "Localization_AssetTable.png")));
-            StringTable = new GUIContent(AssetDatabase.LoadAssetAtPath<Texture>(Path.Combine(k_IconRoot, "Localization_StringTable.png")));
-
+            Csv = GetTexture("CSV Extension/CSVExtension.png");
+            GameObjectLocalizer = GetTexture("Game Object Localizer/GameObjectLocalizer.png");
+            GoogleSheets = GetTexture("Google Sheets Provider/GoogleSheetsProvider.png");
+            Locale = GetTexture("Locale/Locale.png");
+            Metadata = GetTexture("Metadata/Metadata.png");
+            TableWindow = GetTexture("Localization Tables Window/LocalizationTablesWindow.png");
             WarningIcon = EditorGUIUtility.IconContent("console.warnicon").image;
         }
+
+        static Texture GetTexture(string path) => EditorGUIUtility.FindTexture("Packages/com.unity.localization/Editor/Icons/" + path);
     }
 }

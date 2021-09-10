@@ -1,8 +1,10 @@
 
 # Localization Settings
+
 The Localization Settings Inspector window is the access point for all things localization-based. It provides an interface to accessing the Project Locales and Asset Tables for the Project.
 
 ## Accessing the Settings
+
 To access the Localization Settings navigate to **Edit > Project Settings > Localization.**
 
 If no settings Asset exists, Unity displays a prompt to create one.
@@ -14,10 +16,12 @@ You can also create the settings Asset through the Assets menu. Navigate to **As
 ![Default Localization Settings.](images/Default_LocalizationSettings_Inspector.png)
 
 ## Available Locales
+
 **Available Locales** contains the list of [locales](Locale.md) that the Project supports when built.
 By default, this uses the Addressable system to fetch Locales. However, you can also create a class that implements *ILocalesProvider* to completely customize this.
 
 ### Locale Generator window
+
 To create a Locale, click the **Locale Generator** button in the Available Locales editor.
 
 ![Locale Generator window.](images/Create_Locale_Window.png)
@@ -32,21 +36,63 @@ Locale assets can be removed or added to Addressables by clicking the **Remove S
 ![Unity generates Locales as Asset files in the Project.](images/ProjectView_Generated_Locales.png)
 
 ## Locale Selector
+
 The Locale Selector determines which Locale Unity should use when the application first starts or an active Locale is not selected. For example, you might want to use a default Locale, or attempt to use the Locale that the player is using on their device.
 
-By default, there are 4 Locale Selectors to choose from however, you can create custom selectors by implementing the *IStartupLocaleSelector*  interface.
+By default, there are 4 Locale Selectors to choose from however, you can create custom selectors by implementing the *IStartupLocaleSelector* interface.
 
 The Localization Settings will query each selector in the list, starting at the top(index 0). If a selector returns null, then it queries the next, until it finds a valid Locale or it reaches the end of the list. This allows you to create fallback behaviors when Unity is selecting which Locale to use.
 
 ## Asset Database
+
 The Asset Database is responsible for retrieving the various Asset Tables and subsequent Assets, this involves querying and loading through the Addressable Assets system.
 The **Default Table** field can be used to set a default Asset Table name, this can then be used when loading assets and not providing an explicit table name.
 
 ## String Database
+
 The String Database is responsible for retrieving the various String Tables and subsequent localized strings.
 
 The **Default Table** field can be used to set a default String Table name, this can then be used when loading strings and not providing an explicit table name.
 
 The **No Translation Found Format** field can be used to configure the string that should be returned for non-localized values.
 
-The **Smart Format** section can be used to configure the behavior when parsing and formatting [Smart Strings](SmartStrings.md)
+## Smart Format Settings
+
+The **Smart Format** section can be used to configure the behavior when parsing and formatting [Smart Strings](Smart/SmartStrings.md)
+
+You can configure Smart String settings in the Localization tab of the Project Settings (Edit > Project Settings).
+
+![Project settings window showing Localization settings for Smart Format.](images/SmartFormatSettings.png)
+
+### Settings
+
+The Settings section contains general settings to configure how to parse and format smart strings
+
+| **Field** | **Description** |
+| --------- | --------------- |
+| **Format Error Action<br>Parse Error Action** | The error actions determine how Unity reacts when it encounters any errors during parsing(interpreting the string tokens) and formatting(converting parsed tokens into string values).<br><br>The following options are available:<ul><li>**ThrowError**: Throws an exception. This is the default value and recommended for debugging, so that formatting errors can be easily found.</li><li>**OutputErrorInResult**: Includes the error message in formatted string.</li><li>**Ignore**: Ignores errors and tries to output the data anyway.</li><li>**MaintainTokens**: Leaves invalid tokens unmodified in the text.</li></ul>To trace any formatting or parsing errors, subscribe to the corresponding events:<br>`Smart.Default.OnFormattingFailure`<br>`Smart.Default.Parser.OnParsingFailure`<br>These events fire for all errors and error action values. This lets you decide in your code how to deal with errors. |
+| **Case Sensitivity** | Determines whether placeholders are case-sensitive or not. |
+| **Convert Character String Literals** | Literal text is text that is not a placeholder and is not replaced. When enabled literal text is treated as a C# string and [escape sequences](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/strings/#string-escape-sequences) are converted, for example **\n** would become a new line and **\t** would be converted into a tab.
+
+### Parser
+
+The parser is responsible for converting a Smart String into a set of format items that can be interpreted by the Sources and Formatters and in some cases further parsed when handling nested format items.
+
+| **Field** | **Description** |
+| --------- | --------------- |
+| **Opening Brace<br>Closing Brace** | The Opening and Closing braces are used to indicate the start and end of a Format Item. By default the same braces as String.Format are used { }.<br><br>For example:<br>`Some text {0}` |
+| **Alphanumeric Selectors** | When enabled Unity allows selectors to contain alphabetical selectors in the range a-z and A-Z.<br>For example:<br>`Some text {FormatItem}` |
+| **Allowed Selector Chars** | Contains a list of additional characters that a selector can contain to support additional selector syntaxes such as math. |
+| **Operators** | Contains a list of characters that come between selectors. This can be "." for dot-notation, [ ] for arrays or even math symbols. |
+| **Alternative Escaping** | Smart Strings are a replacement for strings. Therefore, curly braces are escaped the string.Format way. So if the desired output is {literal}, double the open and closing curly braces to be {{literal}} instead. This string.Format compatibility, however, causes problems when using SmartFormat's extended formatting capabilities, for example the following would not work: {0:{Persons:{Name}\|, }}.<br><br>The reason is the double curly braces at the end of the format string, which the parser will escape, leading to a missing closing brace exception.<br><br>This issue is solved by using an alternative escape character instead. When enabled and you wish to treat a double curly brace as literal it should be preceded by a backwards slash (\\). So the following would be treated as literal: "\\{literal\\}". |
+| **Alternative Escape Char** | The character to use in conjunction with an opening or closing brace to indicate that it should be treated as a literal character and not a selector bracket. |
+
+### Sources
+
+The sources to consider when evaluating [Selectors](Smart/SmartStrings.md#selector).
+
+Sources are evaluated starting with the first item at the top of the list and working downwards. The order of the sources can result in different strings.
+
+### Formatters
+
+The [formatters](Smart/SmartStrings.md#formatters) available.

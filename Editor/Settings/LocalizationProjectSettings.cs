@@ -21,7 +21,6 @@ namespace UnityEditor.Localization
         /// </summary>
         public static LocalizedStringTable NewStringTable
         {
-
             get => instance.m_StringTable;
             set
             {

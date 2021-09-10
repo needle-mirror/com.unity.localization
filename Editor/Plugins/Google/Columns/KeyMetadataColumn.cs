@@ -7,12 +7,13 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
 {
     /// <summary>
     /// Implementation of <see cref="SheetColumn"/> that can be used to sync <see cref="IMetadata"/> that is part of <see cref="SharedTableData"/>.
-    /// For a version that supports Table Metadata see <seealso cref="LocaleMetadataColumn"/>.
+    /// For a version that supports Table Metadata see <seealso cref="LocaleMetadataColumn{TMetadata}"/>.
     /// </summary>
     /// <typeparam name="TMetadata"></typeparam>
     [Serializable]
     public abstract class KeyMetadataColumn<TMetadata> : SheetColumn where TMetadata : IMetadata
     {
+        /// <inheritdoc/>
         public override void PushBegin(StringTableCollection collection) {}
 
         /// <summary>
@@ -24,6 +25,7 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
         /// <param name="note">The value that should appear in the Google Spreadsheet column as a note. Return null to not include a note.</param>
         public abstract void PushMetadata(TMetadata metadata, out string value, out string note);
 
+        /// <inheritdoc/>
         public override void PullBegin(StringTableCollection collection) {}
 
         /// <summary>

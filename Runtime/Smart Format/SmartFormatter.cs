@@ -143,7 +143,7 @@ namespace UnityEngine.Localization.SmartFormat
         }
 
         /// <summary>
-        /// Replaces one or more format items in as specified string with the string representation of a specific object.
+        /// Replaces one or more format items in a specified string with the string representation of a specific object.
         /// </summary>
         /// <param name="format">A composite format string.</param>
         /// <param name="args">The object to format.</param>
@@ -153,6 +153,12 @@ namespace UnityEngine.Localization.SmartFormat
             return Format(null, args, format);
         }
 
+        /// <summary>
+        /// Replaces one or more format items in a specified string with the string representation of a specific object.
+        /// </summary>
+        /// <param name="args">The list of objects to format.</param>
+        /// <param name="format">A composite format string.</param>
+        /// <returns>Returns the formatted input with items replaced with their string representation.</returns>
         public string Format(IList<object> args, string format)
         {
             return Format(null, args, format);
@@ -227,6 +233,15 @@ namespace UnityEngine.Localization.SmartFormat
             return FormatWithCache(ref cache, format, null, args);
         }
 
+        /// <summary>
+        /// Replaces one or more format items in a specified string with the string representation of a specific object,
+        /// using the <see cref="FormatCache"/>.
+        /// </summary>
+        /// <param name="cache"></param>
+        /// <param name="format"></param>
+        /// <param name="formatProvider"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
         public string FormatWithCache(ref FormatCache cache, string format, IFormatProvider formatProvider, IList<object> args)
         {
             args = args ?? k_Empty;

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 #if !UNITY_2021_2_OR_NEWER
 using UnityEditor.Localization.Bridge;
@@ -6,9 +5,9 @@ using UnityEditor.Localization.Bridge;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.SmartFormat;
-using UnityEngine.Localization.SmartFormat.Core.Formatting;
 using UnityEngine.Localization.SmartFormat.Core.Parsing;
 using UnityEngine.Localization.SmartFormat.Core.Settings;
+using UnityEngine.Localization.SmartFormat.PersistentVariables;
 using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization.UI
@@ -128,6 +127,8 @@ namespace UnityEditor.Localization.UI
             }
         }
 
+        public LocalizedString LocalizedString { get; set; }
+
         /// <summary>
         /// Show the metadata edit button
         /// </summary>
@@ -179,9 +180,27 @@ namespace UnityEditor.Localization.UI
                     m_SmartFormatter.Settings.ParseErrorAction = ErrorAction.OutputErrorInResult;
                     m_SmartFormatter.Settings.FormatErrorAction = ErrorAction.OutputErrorInResult;
 
-                    FormatCache formatCache = null;
                     var locale = LocalizationEditorSettings.GetLocale(Table.LocaleIdentifier.Code);
-                    m_PreviewText = m_SmartFormatter?.FormatWithCache(ref formatCache, RawText, locale?.Formatter, Arguments);
+
+                    foreach (var v in m_VariableChangedEvents)
+                    {
+                        v.ValueChanged -= VariableValueChanged;
+                    }
+                    m_VariableChangedEvents.Clear();
+
+                    var formatCache = FormatCachePool.Get(m_SmartFormatter.Parser.ParseFormat(RawText, m_SmartFormatter.GetNotEmptyFormatterExtensionNames()));
+                    formatCache.LocalVariables = LocalizedString;
+                    formatCache.Table = Table;
+
+                    m_PreviewText = m_SmartFormatter?.FormatWithCache(ref formatCache, RawText, locale?.Formatter, LocalizedString?.Arguments);
+                    m_VariableChangedEvents.AddRange(formatCache.VariableTriggers);
+
+                    foreach (var v in m_VariableChangedEvents)
+                    {
+                        v.ValueChanged += VariableValueChanged;
+                    }
+
+                    FormatCachePool.Release(formatCache);
 
                     m_SmartFormatter.Settings.ParseErrorAction = oldParseAction;
                     m_SmartFormatter.Settings.FormatErrorAction = oldFormatArgumentAction;
@@ -192,24 +211,15 @@ namespace UnityEditor.Localization.UI
             }
         }
 
-        /// <summary>
-        /// Optional arguments that will be passed through when using SmartFormat.
-        /// </summary>
-        public object[] Arguments
-        {
-            get => m_Arguments;
-            set
-            {
-                m_Arguments = value;
-                ResetCache();
-            }
-        }
+        void VariableValueChanged(IVariable obj) => m_PreviewText = null;
+
+        string SessionKey => $"{Table.TableCollectionName}-{Table.LocaleIdentifier.Code}-{KeyId}";
 
         public bool Selected { get; set; }
 
         static readonly string[] k_Modes = {"Edit", "Debug"};
         static readonly string[] k_ModesWithPreview = {"Edit", "Debug", "Preview"};
-        static readonly GUIContent k_MetadataIcon = new GUIContent(AssetDatabase.LoadAssetAtPath<Texture>("Packages/com.unity.localization/Editor/Icons/Localization_AssetTable.png"), "Edit Table Entry Metadata");
+        static readonly GUIContent k_MetadataIcon = new GUIContent(EditorIcons.Metadata, "Edit Table Entry Metadata");
 
         const float k_ToolbarHeight = 20;
 
@@ -220,7 +230,6 @@ namespace UnityEditor.Localization.UI
             Preview
         }
 
-        object[] m_Arguments;
         Mode m_Mode = Mode.Edit;
         string m_DebugText = null;
         string m_PreviewText = null;
@@ -233,6 +242,7 @@ namespace UnityEditor.Localization.UI
 
         SmartFormatter m_SmartFormatter;
         Format m_Format;
+        List<IVariableValueChanged> m_VariableChangedEvents = new List<IVariableValueChanged>();
 
         Dictionary<string, FormatItem> m_FormatItemLookup = new Dictionary<string, FormatItem>();
 
@@ -287,6 +297,10 @@ namespace UnityEditor.Localization.UI
                 m_IsSmart = false;
                 RawText = string.Empty;
             }
+
+            // Extract the previous state.
+            m_Mode = (Mode)SessionState.GetInt(SessionKey, (int)Mode.Edit);
+
             CalcHeight();
         }
 
@@ -316,7 +330,7 @@ namespace UnityEditor.Localization.UI
         #if UNITY_2021_2_OR_NEWER
         void EditorGUI_HyperLinkClicked(EditorWindow wnd, HyperLinkClickedEventArgs args)
         #else
-        void EditorGUI_HyperLinkClicked(object sender, EventArgs e)
+        void EditorGUI_HyperLinkClicked(object sender, System.EventArgs e)
         #endif
         {
             #if UNITY_2021_2_OR_NEWER
@@ -385,7 +399,14 @@ namespace UnityEditor.Localization.UI
             {
                 var header = new Rect(rect.x, rect.y, rect.width, EditorStyles.toolbarButton.lineHeight);
                 var choices =  ShowPreviewTab ? k_ModesWithPreview : k_Modes;
+                EditorGUI.BeginChangeCheck();
                 m_Mode = (Mode)GUI.SelectionGrid(header, (int)m_Mode, choices, choices.Length, EditorStyles.miniButtonMid);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    // Store the state in case the field is reset when a change occurs.
+                    // We dont want to keep going back to the Edit tab when someone is changing local variable properties etc.
+                    SessionState.SetInt(SessionKey, (int)m_Mode);
+                }
                 rect.yMin += header.height + EditorGUIUtility.standardVerticalSpacing;
             }
 

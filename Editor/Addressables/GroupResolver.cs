@@ -187,11 +187,26 @@ namespace UnityEditor.Localization.Addressables
             return expectedGroupName;
         }
 
+        /// <summary>
+        /// Returns the name that the Shared group is expected to have.
+        /// </summary>
+        /// <param name="locales"></param>
+        /// <param name="asset"></param>
+        /// <param name="aaSettings"></param>
+        /// <returns></returns>
         protected virtual string GetExpectedSharedGroupName(IList<LocaleIdentifier> locales, Object asset, AddressableAssetSettings aaSettings)
         {
             return SharedGroup != null ? SharedGroup.Name : SharedGroupName;
         }
 
+        /// <summary>
+        /// Returns the Addressable group for the asset.
+        /// </summary>
+        /// <param name="locales">The locales that depend on the asset.</param>
+        /// <param name="asset">The asset that is to be added to an Addressable group.</param>
+        /// <param name="aaSettings">The Addressable asset settings.</param>
+        /// <param name="createUndo">Should an Undo record be created if changes are made?</param>
+        /// <returns></returns>
         protected virtual AddressableAssetGroup GetGroup(IList<LocaleIdentifier> locales, Object asset, AddressableAssetSettings aaSettings, bool createUndo)
         {
             var groupName = GetExpectedGroupName(locales, asset, aaSettings);

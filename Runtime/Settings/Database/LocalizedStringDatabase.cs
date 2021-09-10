@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.Localization.Pseudo;
 using UnityEngine.Localization.SmartFormat;
+using UnityEngine.Localization.SmartFormat.PersistentVariables;
 using UnityEngine.Localization.Tables;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -97,11 +98,14 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings, params object[] arguments)
         {
-            return GetLocalizedStringAsync(GetDefaultTable(), tableEntryReference, arguments, locale, fallbackBehavior);
+            return GetLocalizedStringAsync(GetDefaultTable(), tableEntryReference, arguments, locale, fallbackBehavior, null);
         }
 
         /// <summary>
         /// Attempts to retrieve a string from the requested table.
+        /// Uses [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) to force the loading to complete synchronously.
+        /// Please note that [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on
+        /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
         /// </summary>
         /// <param name="tableEntryReference">A reference to the entry in the <see cref="StringTable"/></param>
         /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
@@ -110,7 +114,7 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public string GetLocalizedString(TableEntryReference tableEntryReference, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings, params object[] arguments)
         {
-            return GetLocalizedStringAsync(GetDefaultTable(), tableEntryReference, locale, fallbackBehavior, arguments).WaitForCompletion();
+            return GetLocalizedStringAsync(GetDefaultTable(), tableEntryReference, arguments, locale, fallbackBehavior, null).WaitForCompletion();
         }
 
         /// <summary>
@@ -128,11 +132,14 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference, IList<object> arguments, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings)
         {
-            return GetLocalizedStringAsync(GetDefaultTable(), tableEntryReference, arguments, locale, fallbackBehavior);
+            return GetLocalizedStringAsync(GetDefaultTable(), tableEntryReference, arguments, locale, fallbackBehavior, null);
         }
 
         /// <summary>
         /// Attempts to retrieve a string from the requested table.
+        /// Uses [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) to force the loading to complete synchronously.
+        /// Please note that [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on
+        /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
         /// </summary>
         /// <param name="tableEntryReference">A reference to the entry in the <see cref="StringTable"/></param>
         /// <param name="arguments">Arguments passed to SmartFormat or String.Format.</param>
@@ -141,7 +148,7 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public string GetLocalizedString(TableEntryReference tableEntryReference, IList<object> arguments, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings)
         {
-            return GetLocalizedStringAsync(GetDefaultTable(), tableEntryReference, locale, fallbackBehavior, arguments).WaitForCompletion();
+            return GetLocalizedStringAsync(GetDefaultTable(), tableEntryReference, locale, fallbackBehavior, arguments, null).WaitForCompletion();
         }
 
         /// <summary>
@@ -161,11 +168,14 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public virtual AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings, params object[] arguments)
         {
-            return GetLocalizedStringAsync(tableReference, tableEntryReference, arguments, locale, fallbackBehavior);
+            return GetLocalizedStringAsync(tableReference, tableEntryReference, arguments, locale, fallbackBehavior, null);
         }
 
         /// Attempts to retrieve a string from the requested table.
         /// The string will first be formatted with <see cref="SmartFormat"/> if <see cref="StringTableEntry.IsSmart"/> is enabled otherwise it will use String.Format.
+        /// Uses [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) to force the loading to complete synchronously.
+        /// Please note that [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on
+        /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
         /// </summary>
         /// <param name="tableReference">A reference to the table to check for the string.</param>
         /// <param name="tableEntryReference">A reference to the entry in the <see cref="StringTable"/></param>
@@ -175,7 +185,7 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public virtual string GetLocalizedString(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings, params object[] arguments)
         {
-            return GetLocalizedStringAsync(tableReference, tableEntryReference, arguments, locale, fallbackBehavior).WaitForCompletion();
+            return GetLocalizedStringAsync(tableReference, tableEntryReference, arguments, locale, fallbackBehavior, null).WaitForCompletion();
         }
 
         /// <summary>
@@ -192,14 +202,15 @@ namespace UnityEngine.Localization.Settings
         /// <param name="arguments">Arguments passed to SmartFormat or String.Format.</param>
         /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
         /// <param name="fallbackBehavior">A Enum which determines if a Fallback should be used when no value could be found for the Locale.</param>
+        /// <param name="localVariables">Optional <see cref="IVariableGroup"/> which can be used to add additional named variables.</param>
         /// <returns></returns>
-        public virtual AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference, IList<object> arguments, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings)
+        public virtual AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference, IList<object> arguments, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings, IVariableGroup localVariables = null)
         {
             var tableEntryOperation = GetTableEntryAsync(tableReference, tableEntryReference, locale, fallbackBehavior);
 
             var operation = GenericPool<GetLocalizedStringOperation>.Get();
             operation.Dependency = tableEntryOperation;
-            operation.Init(tableEntryOperation, locale, this, tableReference, tableEntryReference, arguments);
+            operation.Init(tableEntryOperation, locale, this, tableReference, tableEntryReference, arguments, localVariables);
             var handle = AddressablesInterface.ResourceManager.StartOperation(operation, tableEntryOperation);
 
             // We don't want to force users to have to manage the reference counting so by default we will release the operation for reuse once completed in the next frame
@@ -212,6 +223,9 @@ namespace UnityEngine.Localization.Settings
         /// <summary>
         /// Attempts to retrieve a string from the requested table.
         /// The string will first be formatted with <see cref="SmartFormat"/> if <see cref="StringTableEntry.IsSmart"/> is enabled otherwise it will use String.Format.
+        /// Uses [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) to force the loading to complete synchronously.
+        /// Please note that [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on
+        /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
         /// </summary>
         /// <param name="tableReference">A reference to the table to check for the string.</param>
         /// <param name="tableEntryReference">A reference to the entry in the <see cref="StringTable"/></param>

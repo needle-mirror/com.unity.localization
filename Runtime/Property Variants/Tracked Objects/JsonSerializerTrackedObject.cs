@@ -130,10 +130,12 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                         {
                             jsonProperty.Value = stringOp.Result;
                         }
+                        #if !UNITY_WEBGL // WebGL does not support WaitForCompletion
                         else if (localizedStringProperty.LocalizedString.WaitForCompletion)
                         {
                             jsonProperty.Value = stringOp.WaitForCompletion();
                         }
+                        #endif
                         else
                         {
                             stringOp.Completed += res =>
@@ -165,11 +167,13 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                             var result = assetOp.Result;
                             jsonProperty.Value = result != null ? result.GetInstanceID() : 0;
                         }
+                        #if !UNITY_WEBGL // WebGL does not support WaitForCompletion
                         else if (localizedAssetProperty.LocalizedObject.WaitForCompletion)
                         {
                             var result = assetOp.WaitForCompletion();
                             jsonProperty.Value = result != null ? result.GetInstanceID() : 0;
                         }
+                        #endif
                         else
                         {
                             assetOp.Completed += res =>

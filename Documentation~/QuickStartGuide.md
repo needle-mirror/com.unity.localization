@@ -24,10 +24,10 @@ To select a Locale, tick the toggle box next to its name. Tick the checkbox next
 
 Use the Locale Selectors to determine which Locale your application uses by default if it is not English(en). To do this, add the Locale to the **Specific Locale Selector** field. Your application uses this Locale on start-up, and when no other Locale is selected.
 
-
 ![The Locale selection UI Dropdown menu.](images/ProjectLocale.png)
 
 ## 4. Texture Localization: Create an Asset Table Collection
+
 There are many reasons you might need to localize an Asset. For example, you might want to play a different piece of voiceover audio or music, or change a texture that contains written text (such as a signpost). The localization system uses Asset Tables to support this.
 
 This demonstrates changing an Asset's Texture to the flag of that Locale's country.
@@ -51,6 +51,7 @@ Select the Texture you want Unity to display for each Locale, and then drag and 
 ![Asset Table with one Texture entry.](images/AssetTable-Flags.png)
 
 ## 5. Texture Localization: Use the localized Asset
+
 There are multiple ways for Unity to access a localized Asset. This tutorial uses components provided by the localization system, so you do not need to write any scripts.
 
 Add a UI **Raw Image** component to the Scene, you will need the **Unity UI** package installed in the project to use a **Raw Image**.
@@ -73,6 +74,7 @@ Run the Scene and use the Game View Locale selection dropdown to change the **Lo
 The **Locale Game View Menu** can be used to quickly change the language in the editor. It can be enabled and disabled through **Edit > Preferences > Localization**.
 
 ## 6. Audio Localization: Use the localized Asset
+
 To localize Audio Clips, we could follow the same process as localizing the Texture however it is also possible to create and edit the localized assets in the inspector as follows:
 
 1. Add a Audio Source GameObject (menu: GameObject > Audio > Audio Source).
@@ -98,7 +100,7 @@ First, you need to create a String Table. To do this, open the **Localization Ta
 
 ![Press the Add New Entry button to create a new String Table entry.](images/StringTables_EntryProperties.png)
 
-Enable the **Smart** option to mark the entry as a [Smart String](SmartStrings.md).
+Enable the **Smart** option to mark the entry as a [Smart String](Smart/SmartStrings.md).
 In this example we will use the Smart String reflection and plural features to print out a variable from the following script:
 
 [!code-cs[apple-sample](../DocCodeSamples.Tests/Apples.cs)]
@@ -107,10 +109,10 @@ Enter the following values:
 
 | **Locale** | **Translation** |
 | -----------| --------------- |
-| English    | {global.player-name} has {appleCount:plural:an apple\|{} apples}       |
-| French     | {global.player-name} a {appleCount:plural:une pomme\|{} pommes}         |
-| Spanish    | {global.player-name} tiene {appleCount:plural:una manzana\|{} manzanas} |
-| Japanese   | {global.player-name}は{appleCount}個のリンゴを持っています    
+| English    | {global.player-name} has {apple-component.appleCount:plural:an apple\|{} apples} |
+| French     | {global.player-name} a {apple-component.appleCount:plural:une pomme\|{} pommes} |
+| Spanish    | {global.player-name} tiene {apple-component.appleCount:plural:una manzana\|{} manzanas} |
+| Japanese   | {global.player-name}は{apple-component.appleCount}個のリンゴを持っています |
 
 ![Press the Add New Entry button to create a new String Table entry.](images/StringTable_Plurals.png)
 
@@ -120,13 +122,14 @@ To add a UI Text element to the Scene, go to **GameObject > UI > Text**.
 
 Right-click the Text component and select the **Localize** option. Unity adds a **Localize String** component and automatically configures it for the GameObject it is attached to. If the Text component contains a string value that is also in a String Table, then Unity automatically assigns this during the setup. If it does not, you can assign a value using the **String Reference** field pop-up.
 
-Expand the **Format Arguments** field, change the size to 1 and drag the **Apples** Component into the **Element 0** slot.
+Press the Add (+) button in the **Local Variables** field, select **Object Reference** and drag the **Apples** Component into the **Object Reference** slot. Name the variable **apple-component**
 
 ![Unity finds and pairs the table with the matching Key during setup.](images/LocalizeStringComponent.png)
 
 ![Example text.](images/LocalizedString_Plurals.gif)
 
 ## 9. Build Preview and configuration
+
 The Addressables player content must be built in order to use the localized assets in the player.
 This can be done through the Addressables window **Window > Asset Management > Addressable Assets > Groups** by clicking **Build > New Build > Default Build Script**.
 The Addressables window can also be used to control how the assets will be packaged and hosted(such as local storage or via a remote web server).

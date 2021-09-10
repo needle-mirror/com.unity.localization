@@ -10,10 +10,11 @@ namespace UnityEditor.Localization.UI
     {
         LocalizationTable m_Table;
         Locale m_Locale;
-        long m_KeyId;
         VisualElement m_Editor;
         MetadataTypeAttribute m_SharedMetadataType;
         MetadataTypeAttribute m_MetadataType;
+
+        public long KeyId { get; private set; }
 
         public bool Selected { get; set; }
 
@@ -21,7 +22,7 @@ namespace UnityEditor.Localization.UI
         {
             m_Table = table;
             m_Locale = locale;
-            m_KeyId = id;
+            KeyId = id;
 
             m_SharedMetadataType = new MetadataTypeAttribute(supportedType);
 
@@ -38,8 +39,8 @@ namespace UnityEditor.Localization.UI
                 var metadataLabel = new GUIContent("Metadata");
 
                 // Shared data
-                var sharedIndex = m_Table.SharedData.Entries.FindIndex(e => e.Id == m_KeyId);
-                Debug.Assert(sharedIndex != -1, $"Could not find index of key {m_KeyId}");
+                var sharedIndex = m_Table.SharedData.Entries.FindIndex(e => e.Id == KeyId);
+                Debug.Assert(sharedIndex != -1, $"Could not find index of key {KeyId}");
                 var sharedSerializedObject = new SerializedObject(m_Table.SharedData);
                 var sharedSerializedEditor = new MetadataCollectionField(){ Type = m_SharedMetadataType };
                 var sharedEntryProperty = sharedSerializedObject.FindProperty($"m_Entries.Array.data[{sharedIndex}].m_Metadata");
@@ -56,17 +57,17 @@ namespace UnityEditor.Localization.UI
                 m_Editor.Add(sharedEditor);
 
                 // Table data
-                var tableIndex = m_Table.TableData.FindIndex(d => d.Id == m_KeyId);
+                var tableIndex = m_Table.TableData.FindIndex(d => d.Id == KeyId);
                 var tableSerializedObject = new SerializedObject(m_Table);
                 if (tableIndex == -1)
                 {
                     EditorUtility.SetDirty(m_Table);
-                    m_Table.CreateEmpty(m_KeyId);
+                    m_Table.CreateEmpty(KeyId);
                     tableSerializedObject.Update();
 
-                    tableIndex = m_Table.TableData.FindIndex(d => d.Id == m_KeyId);
+                    tableIndex = m_Table.TableData.FindIndex(d => d.Id == KeyId);
                     if (tableIndex == -1)
-                        throw new System.Exception($"Failed to create or find a new entry for {m_KeyId} in the table");
+                        throw new System.Exception($"Failed to create or find a new entry for {KeyId} in the table");
                 }
 
                 var tableEntryProperty = tableSerializedObject.FindProperty($"m_TableData.Array.data[{tableIndex}].m_Metadata");

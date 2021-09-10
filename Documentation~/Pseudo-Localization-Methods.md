@@ -24,10 +24,10 @@ The **Preserve Tags** method prevents any subsequent methods from modifying text
 
 ![Preserve Tags Inspector View](images/PseudoLocalization_PreserveTags.png)
 
-| **Property**               | **Description** |
-| -------------------------- | --------------- |
-| **Opening**                | The opening character that indicates the start of the tag.
-| **Closing**                | The closing character that indicates the end of the tag.
+| **Property** | **Description**                                            |
+|--------------|------------------------------------------------------------|
+| **Opening**  | The opening character that indicates the start of the tag. |
+| **Closing**  | The closing character that indicates the end of the tag.   |
 
 ## Character Substitutor
 
@@ -80,7 +80,7 @@ string PickupItemText(int amount, string itemName)
 }
 ```
 
-The pseudo-localized string for this would appear as `[You picked up] 1 [apple]`. This string might not translate to languages which use different sentence structures. A better way to construct the string would be to use a [Smart String](SmartStrings.md).
+The pseudo-localized string for this would appear as `[You picked up] 1 [apple]`. This string might not translate to languages which use different sentence structures. A better way to construct the string would be to use a [Smart String](Smart/SmartStrings.md).
 
 ## Expander
 
@@ -91,7 +91,7 @@ In some languages (including English), shorter strings often grow more than long
 
 | **Property**               | **Description** |
 | -------------------------- | --------------- |
-| **String Length / Expansion**(table) | Use the table to define how many additional characters to add to a string, based on the string’s length. The **String Length** value defines the number of characters in the string, as a range. The **Expansion** value is a multiplier to determine how many extra characters to add. For example, if **String Length** is 0-10, and the **Expansion** for this range is 2, then the Method multiples any character with a string length of 0-10 by 2 (so a string of 7 characters becomes 14 characters).<br><br>By default, the Expander uses the following values:<ul><li>**0 - 10:** 2</li><li>**10 - 20:** 1</li><li>**20 - 30:** 0.8</li><li>**30 - 50:** 0.6</li><li>**50 - 70:** 0.7</li><li>**70+ :**0.3</li></ul><br>To add a new range to the table, click the plus (+) button next to the table header. The range for the new line automatically starts at the end of the range from the previous line.<br><br>If you’re not sure how much you should expand by, see _Guideline expansion values_, below.
+| **String Length / Expansion**(table) | Use the table to define how many additional characters to add to a string, based on the string’s length. The **String Length** value defines the number of characters in the string, as a range. The **Expansion** value is a multiplier to determine how many extra characters to add. For example, if **String Length** is 0-10, and the **Expansion** for this range is 2, then the Method multiples any character with a string length of 0-10 by 2 and adds it to the string (so a string of 7 characters will add an additional 14 characters to become 21 characters in total).<br><br>By default, the Expander uses the following values:<ul><li>**0 - 10:** 2</li><li>**10 - 20:** 1</li><li>**20 - 30:** 0.8</li><li>**30 - 50:** 0.6</li><li>**50 - 70:** 0.7</li><li>**70+ :**0.3</li></ul><br>To add a new range to the table, click the plus (+) button next to the table header. The range for the new line automatically starts at the end of the range from the previous line.<br><br>If you’re not sure how much you should expand by, see _Guideline expansion values_, below.
 | **Location** | Define where to insert the extra characters: at the **Start** or **End** of the string, or **Both**. if you select **Both**, the Pseudo-Localization system applies half to the start and half to the end of the string, with an additional one on the end for odd-number values. This is set to **End** by default.
 | **Minimum String Length** | You can use this value to adjust the minimum string length after pseudo-localization. At runtime, the Pseudo-Localization system calculates the string length based on both this and the **String Length** value, and uses whichever is bigger.
 | **Padding Characters** | The **Padding Characters** list lists all characters that the Expander can use to add characters to a string. Use **Size** to define the number of characters available, and use the **Element** text fields to manually enter which characters you want to use. By default, **Size** is set to 93, and the Expander uses all upper and lower case letters, and symbols on a standard American keyboard.
@@ -133,7 +133,7 @@ The **Mirror** method reverses the input string to simulate right-to-left langua
 
 To create a new Pseudo-Localization Method, implement the **IPseudoLocalizationMethod** interface. Unity adds custom Methods to the Pseudo-Locale Assets’ list of available Methods.
 
-# Apply a Pseudo-Locale Asset
+## Apply a Pseudo-Locale Asset
 
 When you enter Play mode, Unity displays a dropdown in the top-right corner of the Game view, which allows you to select a Pseudo-Locale Asset. When you select a Pseudo-Locale Asset, Unity replaces text with the pseudo-localized values defined by that Pseudo-Locale Asset.
 

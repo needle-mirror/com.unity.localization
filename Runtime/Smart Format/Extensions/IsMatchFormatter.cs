@@ -16,13 +16,18 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     [Serializable]
     public class IsMatchFormatter : FormatterBase, IFormatterLiteralExtractor
     {
+        /// <summary>
+        /// Creates a new instance of the formatter.
+        /// </summary>
         public IsMatchFormatter()
         {
             Names = DefaultNames;
         }
 
+        /// <inheritdoc/>
         public override string[] DefaultNames => new[] {"ismatch"};
 
+        /// <inheritdoc/>
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {
             var expression = formattingInfo.FormatterOptions;
@@ -44,6 +49,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             return true;
         }
 
+        /// <inheritdoc/>
         public void WriteAllLiterals(IFormattingInfo formattingInfo)
         {
             var formats = formattingInfo.Format.Split('|');
@@ -58,6 +64,9 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             formattingInfo.Write(formats[1], formattingInfo.CurrentValue);
         }
 
+        /// <summary>
+        /// The options that are provided when evaluating the expression.
+        /// </summary>
         public RegexOptions RegexOptions { get; set; }
     }
 }

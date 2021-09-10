@@ -2,6 +2,9 @@ using System.Collections.Generic;
 
 namespace UnityEngine.Localization.Pseudo
 {
+    /// <summary>
+    /// Provides access to typical character sets for various [SystemLanguages](https://docs.unity3d.com/ScriptReference/SystemLanguage.html).
+    /// </summary>
     public static class TypicalCharacterSets
     {
         internal static Dictionary<SystemLanguage, char[]> s_TypicalCharacterSets = new Dictionary<SystemLanguage, char[]>

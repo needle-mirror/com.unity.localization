@@ -76,6 +76,12 @@ namespace UnityEngine.Localization.Tables
 
         ResourceManager ResourceManager => AddressablesInterface.ResourceManager;
 
+        /// <summary>
+        /// Handle to the preload operation for this table.
+        /// Calling this will start the asset tables preloading operation, it will preload all assets referenced
+        /// unless the Metadata <see cref="PreloadAssetTableMetadata"/> is found and has the
+        /// <see cref="PreloadAssetTableMetadata.PreloadBehaviour.NoPreload"/> behavior.
+        /// </summary>
         public virtual AsyncOperationHandle PreloadOperation
         {
             get

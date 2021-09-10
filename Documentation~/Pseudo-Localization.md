@@ -28,7 +28,7 @@ The following image displays the same menu, but with the text translated into Sp
 ![Spanish UI](images/PseudoLocalizationExample_Spanish.png)
 
 The final menu item does indeed grow in size as indicated by the pseudo-localization, and requires manual adjustment to fit it into the UI.
-A solution in this case might be to change Exit Game to Quit,  which is likely to require less space when translated to other languages.
+A solution in this case might be to change Exit Game to Quit, which is likely to require less space when translated to other languages.
 
 ## Further Reading
 
@@ -37,7 +37,7 @@ A solution in this case might be to change Exit Game to Quit,  which is likely t
 - [Minimizing Human Error in Localization](https://www.slideshare.net/AdolfoGomezUrda/minimizing-human-error-in-localization-58860416?next_slideshow=1)
 - [Pseudolocalization to Catch i18n Errors Early](https://opensource.googleblog.com/2011/06/pseudolocalization-to-catch-i18n-errors.html)
 
-# Pseudo-Locale Assets
+## Pseudo-Locale Assets
 
 A Pseudo-Locale Asset pulls a value from a [String Table](StringTables.md) and applies pseudo-localization to it on demand. To use Pseudo-Localization, you need to do the following:
 
@@ -64,4 +64,3 @@ To create a new Pseudo-Locale Asset, go to **Assets > Create > Localization > Ps
 
 To apply a Pseudo-Locale, the Selected Locale should be changed to the new Pseudo-Locale asset. This can be done in the Editor through the **Locale Game View Menu** or through Script by changing the [LocalizationSettings.SelectedLocale](xref:UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocale).
 The package **Samples**, which can be found in the Package Manager, contain examples of changing the Locale and example Locale Selection menus.
-

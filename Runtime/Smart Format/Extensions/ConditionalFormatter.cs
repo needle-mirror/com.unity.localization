@@ -7,9 +7,16 @@ using UnityEngine.Localization.SmartFormat.Net.Utilities;
 
 namespace UnityEngine.Localization.SmartFormat.Extensions
 {
+    /// <summary>
+    /// Provides conditional formatting on any placeholder that contains a "|" (pipe character) after the ":".
+    /// For example: <c>{0:cond:>10?Greater Than 10|=10?Equals to 10|Less than 10}</c>
+    /// </summary>
     [Serializable]
     public class ConditionalFormatter : FormatterBase, IFormatterLiteralExtractor
     {
+        /// <summary>
+        /// Creates a new instance of the formatter.
+        /// </summary>
         public ConditionalFormatter()
         {
             Names = DefaultNames;
@@ -20,8 +27,10 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             //   Description:      and/or    comparator     value
             RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled);
 
+        /// <inheritdoc/>
         public override string[] DefaultNames => new[] {"conditional", "cond", ""};
 
+        /// <inheritdoc/>
         public override bool TryEvaluateFormat(IFormattingInfo formattingInfo)
         {
             var format = formattingInfo.Format;

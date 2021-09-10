@@ -70,6 +70,7 @@ namespace UnityEditor.Localization.Plugins.CSV.Columns
             set => m_IncludeComments = value;
         }
 
+        /// <inheritdoc/>
         public override void WriteBegin(StringTableCollection collection, CsvWriter csvWriter)
         {
             var tables = collection.StringTables;
@@ -91,6 +92,7 @@ namespace UnityEditor.Localization.Plugins.CSV.Columns
             }
         }
 
+        /// <inheritdoc/>
         public override void ReadBegin(StringTableCollection collection, CsvReader csvReader)
         {
             m_ImportTable = collection.GetTable(LocaleIdentifier) as StringTable;
@@ -106,11 +108,13 @@ namespace UnityEditor.Localization.Plugins.CSV.Columns
             }
         }
 
+        /// <inheritdoc/>
         public override void ReadEnd(StringTableCollection collection)
         {
             m_ImportTable = null;
         }
 
+        /// <inheritdoc/>
         public override void ReadRow(SharedTableData.SharedTableEntry keyEntry, CsvReader reader)
         {
             if (m_ImportTable == null)
@@ -166,6 +170,7 @@ namespace UnityEditor.Localization.Plugins.CSV.Columns
             }
         }
 
+        /// <inheritdoc/>
         public override void WriteRow(SharedTableData.SharedTableEntry keyEntry, IList<StringTableEntry> tableEntries, CsvWriter writer)
         {
             if (m_CollectionTableIndex != -1 && tableEntries[m_CollectionTableIndex] != null)
@@ -187,6 +192,11 @@ namespace UnityEditor.Localization.Plugins.CSV.Columns
             }
         }
 
+        /// <summary>
+        /// Sets the field names to their default values.
+        /// The default values are <see cref="LocaleIdentifier.ToString"/> for <see cref="FieldName"/>
+        /// and <see cref="FieldName"/> + " Comments" for <see cref="CommentFieldName"/>.
+        /// </summary>
         public void SetDefaultFieldNames()
         {
             if (!string.IsNullOrEmpty(LocaleIdentifier.Code))

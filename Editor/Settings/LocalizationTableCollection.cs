@@ -57,8 +57,14 @@ namespace UnityEditor.Localization
         ReadOnlyCollection<LazyLoadReference<LocalizationTable>> m_ReadOnlyTables;
         ReadOnlyCollection<CollectionExtension> m_ReadOnlyExtensions;
 
+        /// <summary>
+        /// The type of table stored in the collection.
+        /// </summary>
         protected internal abstract Type TableType { get; }
 
+        /// <summary>
+        /// The required attribute for an extension to be added to this collection through the Editor.
+        /// </summary>
         protected internal abstract Type RequiredExtensionAttribute { get; }
 
         /// <summary>
@@ -67,6 +73,9 @@ namespace UnityEditor.Localization
         /// <param name="entryReference"></param>
         public abstract void RemoveEntry(TableEntryReference entryReference);
 
+        /// <summary>
+        /// The default value to use for <see cref="Group"/>.
+        /// </summary>
         protected internal abstract string DefaultGroupName { get; }
         internal (bool valid, string error) IsValid
         {
@@ -80,7 +89,7 @@ namespace UnityEditor.Localization
 
         /// <summary>
         /// All tables that are part of this collection.
-        /// Tables are stored as LazyLoadReferences so that they are only loaded when required and not when the collection is loaded.
+        /// Tables are stored as LazyLoadReferences so that they only load when required and not when the collection loads.
         /// </summary>
         public ReadOnlyCollection<LazyLoadReference<LocalizationTable>> Tables
         {
@@ -96,7 +105,7 @@ namespace UnityEditor.Localization
         }
 
         /// <summary>
-        /// Extensions attached to the collection. Extensions can be used for attaching additional data or functionality to a collection.
+        /// Extensions attached to the collection. Extensions can be used to attach additional data or functionality to a collection.
         /// </summary>
         public ReadOnlyCollection<CollectionExtension> Extensions
         {
@@ -114,7 +123,7 @@ namespace UnityEditor.Localization
         public string TableCollectionName { get => SharedData.TableCollectionName; set => SharedData.TableCollectionName = value; }
 
         /// <summary>
-        /// Reference that can be used to refer to this table collection.
+        /// Reference to use to refer to this table collection.
         /// </summary>
         public TableReference TableCollectionNameReference => SharedData.TableCollectionNameGuid;
 
@@ -242,6 +251,7 @@ namespace UnityEditor.Localization
         /// Creates a table in the collection.
         /// </summary>
         /// <param name="localeIdentifier"></param>
+        /// <returns>>The newly created table.</returns>
         public virtual LocalizationTable AddNewTable(LocaleIdentifier localeIdentifier)
         {
             var defaultDirectory = Path.GetDirectoryName(AssetDatabase.GetAssetPath(this));
@@ -256,16 +266,23 @@ namespace UnityEditor.Localization
         /// </summary>
         /// <param name="localeIdentifier"></param>
         /// <param name="path"></param>
+        /// <returns>>The newly created table.</returns>
         public virtual LocalizationTable AddNewTable(LocaleIdentifier localeIdentifier, string path)
         {
             if (ContainsTable(localeIdentifier))
                 throw new Exception("Can not add new table. The same LocaleIdentifier is already in use.");
 
-            var table = CreateInstance(TableType) as LocalizationTable;
-            table.LocaleIdentifier = localeIdentifier;
-            table.SharedData = SharedData;
+            LocalizationTable table;
+            if (File.Exists(path))
+                table = AssetDatabase.LoadAssetAtPath<LocalizationTable>(path);
+            else
+            {
+                table = CreateInstance(TableType) as LocalizationTable;
+                table.LocaleIdentifier = localeIdentifier;
+                table.SharedData = SharedData;
 
-            LocalizationEditorSettings.Instance.CreateAsset(table, path);
+                LocalizationEditorSettings.Instance.CreateAsset(table, path);
+            }
             AddTable(table);
             return table;
         }
@@ -380,6 +397,13 @@ namespace UnityEditor.Localization
             extension.TargetCollection = null;
         }
 
+        /// <summary>
+        /// Returns an enumerable for stepping through the rows of the collection.
+        /// </summary>
+        /// <typeparam name="TTable"></typeparam>
+        /// <typeparam name="TEntry"></typeparam>
+        /// <param name="tables"></param>
+        /// <returns></returns>
         protected static IEnumerable<Row<TEntry>> GetRowEnumerator<TTable, TEntry>(IEnumerable<TTable> tables)
             where TTable : DetailedLocalizationTable<TEntry>
             where TEntry : TableEntry

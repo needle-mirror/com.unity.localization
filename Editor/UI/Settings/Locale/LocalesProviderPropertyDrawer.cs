@@ -17,6 +17,7 @@ namespace UnityEditor.Localization.UI
 
             var list = new ReorderableList(new List<Locale>());
             list.HeaderTitle = "Available Locales";
+            list.HeaderIcon = EditorIcons.Locale;
             list.ReorderCallback = ChangeLocaleOrder;
             list.CreateItemCallback = CreateItem;
             list.RefreshListCallback = UpdateList;

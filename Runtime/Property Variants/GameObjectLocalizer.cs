@@ -1,6 +1,7 @@
 #if ENABLE_PROPERTY_VARIANTS || PACKAGE_DOCS_GENERATION
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Localization.PropertyVariants.TrackedObjects;
 using UnityEngine.Localization.Settings;
@@ -65,13 +66,13 @@ namespace UnityEngine.Localization.PropertyVariants
             LocalizationSettings.SelectedLocaleChanged -= SelectedLocaleChanged;
         }
 
-        void Start()
+        IEnumerator Start()
         {
             var localeOp = LocalizationSettings.SelectedLocaleAsync;
             if (!localeOp.IsDone)
-                localeOp.Completed += SelectedLocaleChanged;
-            else
-                SelectedLocaleChanged(localeOp.Result);
+                yield return localeOp;
+
+            SelectedLocaleChanged(localeOp.Result);
         }
 
         void SelectedLocaleChanged(AsyncOperationHandle<Locale> localeOp) => SelectedLocaleChanged(localeOp.Result);

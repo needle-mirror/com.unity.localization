@@ -5,6 +5,9 @@ namespace UnityEngine.Localization.Settings
     /// </summary>
     public interface IReset
     {
+        /// <summary>
+        /// Resets the internal state of the object so it is ready to be used again and does not contain any data left over from a previous run.
+        /// </summary>
         void ResetState();
     }
 }

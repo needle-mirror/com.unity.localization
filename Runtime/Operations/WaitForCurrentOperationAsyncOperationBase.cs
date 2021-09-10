@@ -30,6 +30,9 @@ namespace UnityEngine.Localization
                 if (!HasExecuted && Dependency.HasValue)
                 {
                     Dependency.Value.WaitForCompletion();
+
+                    // Its possible that an operation will complete instantly once all dependencies have finished so we return and start again.
+                    return false;
                 }
 
                 if (!CurrentOperation.HasValue)

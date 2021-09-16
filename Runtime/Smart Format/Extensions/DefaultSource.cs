@@ -22,6 +22,8 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         /// <summary>
         /// Performs the default index-based selector, same as String.Format.
         /// </summary>
+        /// <param name="selectorInfo"></param>
+        /// <returns></returns>
         public bool TryEvaluateSelector(ISelectorInfo selectorInfo)
         {
             var current = selectorInfo.CurrentValue;

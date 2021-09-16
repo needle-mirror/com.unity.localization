@@ -48,26 +48,26 @@ apiRules:
 
   # Misc Unity
   - exclude:
-      uid: OnBeforeSerialize
+      uidRegex: OnAfterDeserialize$
       type: Method
   - exclude:
-      uid: OnAfterDeserialize
+      uidRegex: OnBeforeSerialize$
       type: Method
   - exclude:
-      uid: OnEnable
+      uidRegex: OnEnable$
       type: Method
   - exclude:
-      uid: OnDisable
+      uidRegex: OnDisable$
       type: Method
   - exclude:
-      uid: Finalize
+      uidRegex: Finalize$
       type: Method
   - exclude:
-      uid: ToString
+      uidRegex: ToString$
       type: Method
   - exclude:
-      uidRegex: UxmlFactory
+      uidRegex: UxmlFactory$
       type: Class
   - exclude:
-      uidRegex: UxmlTraits
+      uidRegex: UxmlTraits$
       type: Class

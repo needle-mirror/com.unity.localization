@@ -172,7 +172,7 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Add an entry to <see cref="Entries"/>.
+        /// Add an entry to <see cref="MetadataEntries"/>.
         /// </summary>
         /// <param name="md"></param>
         public void AddMetadata(IMetadata md)
@@ -552,9 +552,9 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Tables do not store the full information for an entry, instead they store just the Id of that entry which can then be referenced in <see cref="SharedData"/>.
-        /// It is possible that something may have caused an entry to be in the Table but missing from <see cref="SharedData"/>.
-        /// This will cause issues and often result in the entry being ignored. This will check for any entries that exist in the table but do not have an entry in <see cref="SharedData"/>.
+        /// Tables do not store the full information for an entry, instead they store just the Id of that entry which can then be referenced in <see cref="LocalizationTable.SharedData"/>.
+        /// It is possible that something may have caused an entry to be in the Table but missing from <see cref="LocalizationTable.SharedData"/>.
+        /// This will cause issues and often result in the entry being ignored. This will check for any entries that exist in the table but do not have an entry in <see cref="LocalizationTable.SharedData"/>.
         /// </summary>
         /// <param name="action">The action to take on the found missing entries.</param>
         /// <returns>The identified missing entries.</returns>

@@ -71,7 +71,7 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Returns the first Metadata item from <see cref="Entries"/> of type TObject.
+        /// Returns the first Metadata item from <see cref="MetadataEntries"/> of type TObject.
         /// </summary>
         /// <typeparam name="TObject"></typeparam>
         /// <returns></returns>
@@ -81,7 +81,7 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Populates the list with all Metadata from <see cref="Entries"/> that is of type TObject.
+        /// Populates the list with all Metadata from <see cref="MetadataEntries"/> that is of type TObject.
         /// </summary>
         /// <typeparam name="TObject"></typeparam>
         /// <param name="foundItems"></param>
@@ -91,7 +91,7 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Returns all Metadata from <see cref="Entries"/> that is of type TObject.
+        /// Returns all Metadata from <see cref="MetadataEntries"/> that is of type TObject.
         /// </summary>
         /// <typeparam name="TObject"></typeparam>
         /// <returns></returns>
@@ -101,7 +101,7 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Add an entry to <see cref="Entries"/>.
+        /// Add an entry to <see cref="MetadataEntries"/>.
         /// </summary>
         /// <param name="md"></param>
         public void AddMetadata(IMetadata md)
@@ -110,7 +110,7 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Remove an entry from <see cref="Entries"/>.
+        /// Remove an entry from <see cref="MetadataEntries"/>.
         /// </summary>
         /// <param name="md"></param>
         /// <returns></returns>
@@ -120,7 +120,7 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Checks if the Metadata is contained within <see cref="Entries"/>.
+        /// Checks if the Metadata is contained within <see cref="MetadataEntries"/>.
         /// </summary>
         /// <param name="md"></param>
         /// <returns></returns>
@@ -138,9 +138,10 @@ namespace UnityEngine.Localization.Tables
         /// <summary>
         /// Returns the key with the matching name from the <see cref="SharedTableData"/>, if one exists.
         /// </summary>
-        /// <param name="key"></param>
-        /// <returns>The found key or null if one could not be found.</returns>
+        /// <param name="key">The key to search for.</param>
+        /// <param name="addKey">Should a new key be added if one can not be found?</param>
         /// <exception cref="Exception">Thrown if the <see cref="SharedTableData"/> is null.</exception>
+        /// <returns>The found key or null if one could not be found.</returns>
         protected long FindKeyId(string key, bool addKey)
         {
             VerifySharedTableDataIsNotNull();

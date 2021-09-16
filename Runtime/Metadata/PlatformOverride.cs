@@ -122,7 +122,7 @@ namespace UnityEngine.Localization.Metadata
         /// <param name="platform">The platform to override.</param>
         /// <param name="table">The table collection to use instead of the current one.</param>
         /// <param name="entry">The entry to use instead of the current one.</param>
-        /// <param name="EntryOverrideType">Flags to insidcate the type of override to apply, table, entry or both.</param>
+        /// <param name="entryOverrideType">Flags to insidcate the type of override to apply, table, entry or both.</param>
         public void AddPlatformOverride(RuntimePlatform platform, TableReference table, TableEntryReference entry, EntryOverrideType entryOverrideType = EntryOverrideType.TableAndEntry)
         {
             PlatformOverrideData platformOverrideData = null;

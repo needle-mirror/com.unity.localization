@@ -9,6 +9,9 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
     [Serializable]
     public class DefaultFormatter : FormatterBase
     {
+        /// <summary>
+        /// Creates a new instance of the formatter.
+        /// </summary>
         public DefaultFormatter()
         {
             Names = DefaultNames;

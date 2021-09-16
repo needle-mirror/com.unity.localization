@@ -104,8 +104,8 @@ namespace UnityEngine.Localization.Metadata
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        /// <param name="foundItems">List that will be populated with the metadata that was found.</param>
         /// <typeparam name="TObject"></typeparam>
-        /// <returns></returns>
         public void GetMetadatas<TObject>(IList<TObject> foundItems) where TObject : IMetadata
         {
             foundItems.Clear();

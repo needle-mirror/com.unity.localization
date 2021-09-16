@@ -214,6 +214,11 @@ namespace UnityEngine.Localization.SmartFormat.PersistentVariables
             }
         }
 
+        /// <summary>
+        /// <inheritdoc cref="ContainsKey(string)"/>
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         [Obsolete("Please use ContainsKey instead.", false)]
         public bool ContainsName(string name) => ContainsKey(name);
 

@@ -20,7 +20,7 @@ namespace UnityEngine.Localization.SmartFormat.PersistentVariables
     /// <summary>
     /// Represents a variable that can be provided through a global <see cref="VariablesGroupAsset"/> or as a local
     /// variable through <see cref="LocalizedString"/> instead of as a string format argument.
-    /// A variable can be a single variable, in which case the value should be returned in the <see cref="SourceValue"/> or a
+    /// A variable can be a single variable, in which case the value should be returned in <see cref="GetSourceValue(ISelectorInfo)"/> or a
     /// class with multiple variables which can then be further extracted with additional string format arguments.
     /// </summary>
     /// <example>
@@ -33,6 +33,7 @@ namespace UnityEngine.Localization.SmartFormat.PersistentVariables
         /// The value that will be used when the smart string matches this variable. This value can then be further used by additional sources/formatters.
         /// </summary>
         /// <param name="selector">The details about the current format operation.</param>
+        /// <returns></returns>
         object GetSourceValue(ISelectorInfo selector);
     }
 

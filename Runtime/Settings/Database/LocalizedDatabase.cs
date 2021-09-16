@@ -341,7 +341,7 @@ namespace UnityEngine.Localization.Settings
         }
 
         /// <summary>
-        /// Releases all references to the table that matches the <paramref name="tableReference"/> and <paramref name="locale"></param>.
+        /// Releases all references to the table that matches the <paramref name="tableReference"/> and <paramref name="locale"/>.
         /// This will also release any references to the <see cref="SharedTableData"/> providing there are no other references to it, such as different Locale versions of the table that have been loaded.
         /// A table is released by calling <see cref="AddressableAssets.Addressables.Release"/> on it which decrements the ref-count.
         /// When a given Asset's ref-count is zero, that Asset is ready to be unloaded.
@@ -442,8 +442,8 @@ namespace UnityEngine.Localization.Settings
         /// yield on the operation or call [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion)
         /// to force the operation to complete.
         /// Once the Completed event has been called, during the next update, the internal operation will be returned to a pool so that it can be reused.
-        /// If you do plan to keep hold of the handle after completion then you should call <see cref="Addressables.ResourceManager.Acquire(AsyncOperationHandle)"/>
-        /// to prevent the operation being reused and <see cref="Addressables.Release(AsyncOperationHandle)"/> to finally return the operation back to the pool.
+        /// If you do plan to keep hold of the handle after completion then you should call [Acquire](xref::UnityEngine.ResourceManagement.AsyncOperationHandle.Acquire)
+        /// to prevent the operation being reused and <see cref="AddressableAssets.Addressables.Release(AsyncOperationHandle)"/> to finally return the operation back to the pool.
         /// </summary>
         /// <remarks>
         /// Internally the following is performed when an Entry is requested.
@@ -504,6 +504,7 @@ namespace UnityEngine.Localization.Settings
         /// <summary>
         /// Called before the LocaleChanged event is sent out in order to give the database a chance to prepare.
         /// </summary>
+        /// <param name="locale"></param>
         public virtual void OnLocaleChanged(Locale locale)
         {
             using (HashSetPool<TTable>.Get(out var releasedTables))

@@ -73,10 +73,17 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
 
         /// <summary>
         /// Creates columns by attempting to match to expected column names(case insensitive).<br/>
-        /// The following names are checked:<br/>
-        /// "key" => <see cref="KeyColumn"/><br/>
-        /// "key id" => <see cref="KeyIdColumn"/><br/>
-        /// Project <see cref="Locale"/>'s name, <see cref="LocaleIdentifier.ToString"/> or <see cref="LocaleIdentifier.Code"/> => <see cref="LocaleColumn"/>
+        /// The following names are checked:
+        /// <list type="bullet">
+        /// <item>
+        /// <term>key</term>
+        /// <description><see cref="KeyColumn"/></description>
+        /// </item>
+        /// <item>
+        /// <term>Project <see cref="Locale"/>'s name, <see cref="LocaleIdentifier.ToString"/> or <see cref="LocaleIdentifier.Code"/></term>
+        /// <description><see cref="LocaleColumn"/></description>
+        /// </item>
+        /// </list>
         /// </summary>
         /// <param name="columNames">The column names to create mappings for.</param>
         /// <param name="unusedNames">Optional list that can be populated with the names that a match could not be found for.</param>

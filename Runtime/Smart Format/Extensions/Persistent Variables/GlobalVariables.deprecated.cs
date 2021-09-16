@@ -19,7 +19,9 @@ namespace UnityEngine.Localization.SmartFormat.GlobalVariables
     [Obsolete("Please use UnityEngine.Localization.SmartFormat.PersistentVariables.NestedVariablesGroup instead (UnityUpgradable) -> UnityEngine.Localization.SmartFormat.PersistentVariables.NestedVariablesGroup")]
     public class NestedGlobalVariablesGroup : NestedVariablesGroup {}
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Collection of <see cref="IVariable"/> that can be used during formatting of a localized string.
+    /// </summary>
     [Obsolete("Please use UnityEngine.Localization.SmartFormat.PersistentVariables.GlobalVariablesGroup instead (UnityUpgradable) -> UnityEngine.Localization.SmartFormat.PersistentVariables.VariablesGroupAsset")]
     public class GlobalVariablesGroup : VariablesGroupAsset {}
 

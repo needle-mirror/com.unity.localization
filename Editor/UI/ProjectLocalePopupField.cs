@@ -112,6 +112,10 @@ namespace UnityEditor.Localization.UI
             SetValueWithoutNotify(locale);
         }
 
+        /// <summary>
+        /// Supports pressing up and down to change selected Locale.
+        /// </summary>
+        /// <param name="evt"></param>
         protected override void ExecuteDefaultActionAtTarget(EventBase evt)
         {
             base.ExecuteDefaultActionAtTarget(evt);

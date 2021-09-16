@@ -204,7 +204,7 @@ namespace UnityEditor.Localization.Plugins.Google
 
         /// <summary>
         /// Call to preauthorize when using OAuth authorization. This will cause a browser to open a Google authorization
-        /// page after which the token will be stored in <see cref="IDataStore"/> so that this does not need to be done each time.
+        /// page after which the token will be stored in IDataStore so that this does not need to be done each time.
         /// If this is not called then the first time <see cref="Service"/> is called it will be performed then.
         /// </summary>
         /// <returns></returns>
@@ -227,7 +227,7 @@ namespace UnityEditor.Localization.Plugins.Google
 
         /// <summary>
         /// Call to preauthorize when using OAuth authorization. This will cause a browser to open a Google authorization
-        /// page after which the token will be stored in <see cref="IDataStore"/> so that this does not need to be done each time.
+        /// page after which the token will be stored in IDataStore so that this does not need to be done each time.
         /// If this is not called then the first time <see cref="Service"/> is called it will be performed then.
         /// </summary>
         /// <param name="cancellationToken">Token that can be used to cancel the task prematurely.</param>

@@ -188,7 +188,7 @@ namespace UnityEngine.Localization
         /// </remarks>
         /// <returns>Returns the loading operation for the request.</returns>
         /// <example>
-        /// This example shows how <see cref="GetLocalizedString"/> can be used to request an updated string when the <see cref="LocalizationSettings.SelectedLocale"/> changes.
+        /// This example shows how <see cref="LoadAssetAsync"/> can be used to request a sprite asset when the <see cref="LocalizationSettings.SelectedLocale"/> changes.
         /// <code source="../../DocCodeSamples.Tests/LocalizedAssetSamples.cs" region="localized-sprite"/>
         /// </example>
         public AsyncOperationHandle<TObject> LoadAssetAsync()

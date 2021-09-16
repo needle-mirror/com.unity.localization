@@ -10,7 +10,6 @@ namespace UnityEngine.Localization.SmartFormat.Core.Extensions
         /// This is used to extract all possible values so that we can determine the distinct characters for font generation etc.
         /// </summary>
         /// <param name="formattingInfo"></param>
-        /// <returns></returns>
         void WriteAllLiterals(IFormattingInfo formattingInfo);
     }
 }

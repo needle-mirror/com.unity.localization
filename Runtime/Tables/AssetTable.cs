@@ -137,6 +137,7 @@ namespace UnityEngine.Localization.Tables
         /// Check isDone to see if the asset is available for immediate use, if not you can yield on the operation or add a callback subscriber.
         /// </summary>
         /// <param name="entryReference"></param>
+        /// <typeparam name="TObject">The type of object to load.</typeparam>
         /// <returns></returns>
         public AsyncOperationHandle<TObject> GetAssetAsync<TObject>(TableEntryReference entryReference) where TObject : Object
         {
@@ -229,7 +230,6 @@ namespace UnityEngine.Localization.Tables
         /// Release an asset for a single entry that have been preloaded  or cached
         /// </summary>
         /// <param name="entry">A reference to the entry in the table.</param>
-        /// <returns></returns>
         public void ReleaseAsset(AssetTableEntry entry)
         {
             if (entry == null)
@@ -252,7 +252,6 @@ namespace UnityEngine.Localization.Tables
         /// Release an asset for a single entry that have been preloaded  or cached
         /// </summary>
         /// <param name="entry">A reference to the entry in the table.</param>
-        /// <returns></returns>
         public void ReleaseAsset(TableEntryReference entry)
         {
             ReleaseAsset(GetEntryFromReference(entry));

@@ -47,6 +47,9 @@ namespace UnityEngine.Localization.SmartFormat
         /// </summary>
         public List<IFormatter> FormatterExtensions => m_Formatters;
 
+        /// <summary>
+        /// Creates a new instance of SmartFormatter.
+        /// </summary>
         public SmartFormatter()
         {
             m_Settings = new SmartSettings();

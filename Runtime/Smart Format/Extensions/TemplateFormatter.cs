@@ -38,7 +38,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                     var stringComparer = Formatter.Settings.GetCaseSensitivityComparer();
                     m_TemplatesDict = new Dictionary<string, Format>(stringComparer);
 
-                    foreach(var t in m_Templates)
+                    foreach (var t in m_Templates)
                     {
                         if (!string.IsNullOrEmpty(t.name))
                         {
@@ -46,7 +46,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                             {
                                 m_TemplatesDict[t.name] = Formatter.Parser.ParseFormat(t.text, Formatter.GetNotEmptyFormatterExtensionNames());
                             }
-                            catch(Exception e)
+                            catch (Exception e)
                             {
                                 Debug.LogException(e);
                             }

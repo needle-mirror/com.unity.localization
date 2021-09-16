@@ -22,6 +22,7 @@ namespace UnityEngine.Localization.Settings
         /// <summary>
         /// Add a Locale to allow support for a specific language.
         /// </summary>
+        /// <param name="locale">The locale to add.</param>
         void AddLocale(Locale locale);
 
         /// <summary>

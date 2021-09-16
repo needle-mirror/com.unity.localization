@@ -97,8 +97,8 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
         /// <param name="keyEntry">The Key that represents the row in the spreadsheet.</param>
         /// <param name="tableEntries">The <see cref="StringTableEntry"/> for the current <see cref="SharedTableData.SharedTableEntry"/>.
         /// The order of the tables will match the source <see cref="StringTableCollection"/>, If a table does not contain data for the current key then a null entry will be used.</param>
-        /// <param name="value">The value to be used for the cell. This can be null if <see cref="PushFields"/> is <see cref="Fields.Note"/> or the cell should be empty.</param>
-        /// <param name="note">The value to be used for the cell note. This can be null if <see cref="PushFields"/> is <see cref="Fields.Value"/> or if there should not be a note for this cell.</param>
+        /// <param name="value">The value to be used for the cell. This can be null if <see cref="PushFields"/> is <see cref="PushFields.Note"/> or the cell should be empty.</param>
+        /// <param name="note">The value to be used for the cell note. This can be null if <see cref="PushFields"/> is <see cref="PushFields.Value"/> or if there should not be a note for this cell.</param>
         public abstract void PushCellData(SharedTableData.SharedTableEntry keyEntry, IList<StringTableEntry> tableEntries, out string value, out string note);
 
         /// <summary>

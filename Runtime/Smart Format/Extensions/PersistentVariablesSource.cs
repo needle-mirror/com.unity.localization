@@ -8,7 +8,7 @@ using UnityEngine.Localization.SmartFormat.PersistentVariables;
 namespace UnityEngine.Localization.SmartFormat.Extensions
 {
     /// <summary>
-    /// Can be used to provide global values that do not need to be passed in as arguments when formatting a string.
+    /// Can be used to provide global or local values that do not need to be passed in as arguments when formatting a string.
     /// The smart string should take the format {groupName.variableName}. e.g {global.player-score}.
     /// Note: The group name and variable names must not contain any spaces.
     /// </summary>
@@ -29,6 +29,9 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         /// </summary>
         public struct ScopedUpdate : IDisposable
         {
+            /// <summary>
+            /// Calls <see cref="EndUpdating"/>.
+            /// </summary>
             public void Dispose() => EndUpdating();
         }
 

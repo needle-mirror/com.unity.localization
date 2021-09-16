@@ -130,7 +130,7 @@ The final Spanish translation would take the form:
 `{item.gender:choose(Male|Female):El|La} {item} es {item:{color}}`
 
 When formatting a nested translation, they have access to both the parent local variables and the local
-variables defined in the current [LocalizedStrings](xref:UnityEngine.Localization.LocalizedStrings). The local variables are first evaluated and then the parent variables if no match was found locally..
+variables defined in the current [LocalizedStrings](xref:UnityEngine.Localization.LocalizedString). The local variables are first evaluated and then the parent variables if no match was found locally..
 
 The colors would be translated to:
 
@@ -166,7 +166,7 @@ This example shows how to create a variable to convert XML text into an XElement
 
 [!code-cs[](../../DocCodeSamples.Tests/PersistentVariablesSamples.cs#xml-example)]
 
-To trigger updates to any [LocalizedStrings](xref:UnityEngine.Localization.LocalizedStrings) that uses the Variable, implement the [IVariableValueChanged](xref:UnityEngine.Localization.SmartFormat.PersistentVariables.IVariableValueChanged) interface.
+To trigger updates to any [LocalizedStrings](xref:UnityEngine.Localization.LocalizedString) that uses the Variable, implement the [IVariableValueChanged](xref:UnityEngine.Localization.SmartFormat.PersistentVariables.IVariableValueChanged) interface.
 
 [!code-cs[](../../DocCodeSamples.Tests/PersistentVariablesSamples.cs#custom-value-changed-example)]
 

@@ -35,6 +35,10 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         [SerializeReference, HideInInspector]
         SmartSettings m_SmartSettings;
 
+        /// <summary>
+        /// Creates a new instance of the formatter.
+        /// </summary>
+        /// <param name="formatter"></param>
         public ListFormatter(SmartFormatter formatter)
         {
             formatter.Parser.AddOperators("[]()");
@@ -51,6 +55,8 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         /// CustomFormat("{Dates.2.Year}", {#1/1/2000#, #12/31/2999#, #9/9/9999#}) = "9999"
         /// The ".2" selector is used to reference Dates[2].
         /// </summary>
+        /// <param name="selectorInfo"></param>
+        /// <returns></returns>
         public bool TryEvaluateSelector(ISelectorInfo selectorInfo)
         {
             var current = selectorInfo.CurrentValue;

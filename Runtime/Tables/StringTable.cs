@@ -210,6 +210,7 @@ namespace UnityEngine.Localization.Tables
         /// This will also include Smart String entries but will only consider the <see cref="UnityEngine.Localization.SmartFormat.Core.Parsing.LiteralText"/> values,
         /// it will not consider <see cref="UnityEngine.Localization.SmartFormat.Core.Parsing.Placeholder"/> values.
         /// </summary>
+        /// <returns></returns>
         public string GenerateCharacterSet()
         {
             var literals = CollectLiteralCharacters();

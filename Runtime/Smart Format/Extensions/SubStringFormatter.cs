@@ -48,6 +48,9 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             set => m_OutOfRangeBehavior = value;
         }
 
+        /// <summary>
+        /// Creates a new instance of the formatter.
+        /// </summary>
         public SubStringFormatter()
         {
             Names = DefaultNames;

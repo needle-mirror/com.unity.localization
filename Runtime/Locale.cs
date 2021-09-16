@@ -402,7 +402,8 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// Compares the Locales <see cref="name"/> properties.
+        /// Compares the Locales properties.
+        /// First the sort orders are compared, if they are the same then the <see cref="LocaleName"/> will be considered instead.
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
@@ -441,7 +442,7 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// Returns <see cref="LocaleName"/> or <see cref="name"/> if it is null or empty.
+        /// Returns <see cref="LocaleName"/> or name if it is null or empty.
         /// </summary>
         /// <returns></returns>
         public override string ToString() => string.IsNullOrEmpty(LocaleName) ? name : LocaleName;

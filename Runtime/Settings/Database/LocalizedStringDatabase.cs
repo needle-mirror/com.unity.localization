@@ -171,6 +171,7 @@ namespace UnityEngine.Localization.Settings
             return GetLocalizedStringAsync(tableReference, tableEntryReference, arguments, locale, fallbackBehavior, null);
         }
 
+        /// <summary>
         /// Attempts to retrieve a string from the requested table.
         /// The string will first be formatted with <see cref="SmartFormat"/> if <see cref="StringTableEntry.IsSmart"/> is enabled otherwise it will use String.Format.
         /// Uses [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) to force the loading to complete synchronously.

@@ -18,6 +18,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Extensions
         /// IF this extension cannot write the value, returns false, otherwise true.
         /// </summary>
         /// <param name="formattingInfo"></param>
+        /// <returns></returns>
         bool TryEvaluateFormat(IFormattingInfo formattingInfo);
     }
 }

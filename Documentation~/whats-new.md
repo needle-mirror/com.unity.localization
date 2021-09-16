@@ -1,4 +1,4 @@
-# What's new in **1.0.0-pre.11**
+# What's new in **1.0.0**
 
 This section contains information about new features, improvements, and issues fixed.
 

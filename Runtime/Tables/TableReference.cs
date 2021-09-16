@@ -113,6 +113,7 @@ namespace UnityEngine.Localization.Tables
         /// Convert a table collection name into a <see cref="TableReference"/>.
         /// </summary>
         /// <param name="tableCollectionName">The name of the table.</param>
+        /// <returns></returns>
         public static implicit operator TableReference(string tableCollectionName)
         {
             return new TableReference { TableCollectionName = tableCollectionName, ReferenceType = string.IsNullOrWhiteSpace(tableCollectionName) ? Type.Empty : Type.Name };
@@ -122,6 +123,7 @@ namespace UnityEngine.Localization.Tables
         /// Convert a table collection name guid into a <see cref="TableReference"/>.
         /// </summary>
         /// <param name="tableCollectionNameGuid">The table collection name guid.</param>
+        /// <returns></returns>
         public static implicit operator TableReference(Guid tableCollectionNameGuid)
         {
             return new TableReference { TableCollectionNameGuid = tableCollectionNameGuid, ReferenceType = tableCollectionNameGuid == Guid.Empty ? Type.Empty : Type.Guid };

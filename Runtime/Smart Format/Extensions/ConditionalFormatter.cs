@@ -227,6 +227,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             return true;
         }
 
+        /// <inheritdoc/>
         public void WriteAllLiterals(IFormattingInfo formattingInfo)
         {
             var format = formattingInfo.Format;

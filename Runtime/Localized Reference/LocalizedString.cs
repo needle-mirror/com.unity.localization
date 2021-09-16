@@ -245,6 +245,7 @@ namespace UnityEngine.Localization
         /// Please note that [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on
         /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
         /// </summary>
+        /// <returns></returns>
         public string GetLocalizedString() => GetLocalizedStringAsync().WaitForCompletion();
 
         /// <summary>
@@ -715,6 +716,9 @@ namespace UnityEngine.Localization
             }
         }
 
+        /// <summary>
+        /// Clears the current loading operation.
+        /// </summary>
         protected override void Reset() => ClearLoadingOperation();
 
         public override void OnAfterDeserialize()

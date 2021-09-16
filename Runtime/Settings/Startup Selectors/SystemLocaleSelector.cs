@@ -48,8 +48,16 @@ namespace UnityEngine.Localization.Settings
             return locale;
         }
 
+        /// <summary>
+        /// Returns CultureInfo.CurrentUICulture.
+        /// </summary>
+        /// <returns></returns>
         protected virtual CultureInfo GetSystemCulture() => CultureInfo.CurrentUICulture;
 
+        /// <summary>
+        /// Returns Application.systemLanguage.
+        /// </summary>
+        /// <returns></returns>
         protected virtual SystemLanguage GetApplicationSystemLanguage() => Application.systemLanguage;
     }
 }

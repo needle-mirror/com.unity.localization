@@ -69,7 +69,7 @@ namespace UnityEngine.Localization.Components
     /// </summary>
     /// <example>
     /// This example shows how a [Font](https://docs.unity3d.com/ScriptReference/Font.html) asset could be localized.
-    /// ![](../manual/images/scripting/LocalizedFontEventComponent.png)
+    /// ![](../manual/images/LocalizedFontEventComponent.png)
     /// <code source="../../DocCodeSamples.Tests/LocalizedFontEventComponent.cs" region="sample-code"/>
     /// </example>
     /// <typeparam name="TObject">The type of Asset to be Localized. Must inherit from [UnityEngine.Object](https://docs.unity3d.com/ScriptReference/Object.html)</typeparam>

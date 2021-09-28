@@ -2,6 +2,7 @@
 
 using System;
 using UnityEngine;
+using UnityEngine.Localization;
 using UnityEngine.Localization.PropertyVariants;
 using UnityEngine.Localization.PropertyVariants.TrackedObjects;
 using UnityEngine.Localization.PropertyVariants.TrackedProperties;
@@ -9,7 +10,6 @@ using UnityEngine.Localization.Settings;
 using UnityEngine.ResourceManagement.AsyncOperations;
 #if PACKAGE_UGUI
 using UnityEngine.UI;
-using UnityEngine.Localization;
 #endif
 
 #if PACKAGE_TMP

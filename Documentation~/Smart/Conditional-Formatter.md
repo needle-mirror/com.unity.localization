@@ -15,7 +15,9 @@ To invoke the Conditional Formatter explicitly use the name "conditional" or "co
 | | {0:negative\|zero\|positive} | My birthday {0:was {0} ago\|is today!\|will be in {0} from now} |
 | **object** | {0:default\|nothing} | Property: {0:{0}\|(Nothing)} |
 
-- Each parameter is separated by "|". The comparison is followed by a "?" and then the text. The last (default) entry does not contain a comparison nor a "?". The following comparisons are supported:
+Each parameter is separated by "|". The comparison is followed by a "?" and then the text. The last (default) entry does not contain a comparison nor a "?".
+
+The following comparisons are supported:
 
 - **>=**
 - **\>**

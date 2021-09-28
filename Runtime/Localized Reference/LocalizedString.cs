@@ -78,11 +78,11 @@ namespace UnityEngine.Localization
         /// Provides a callback that will be invoked when the translated string has changed.
         /// The following events will trigger an update:
         /// <list type="bullet">
-        /// <item>The first time the action is added to the event.</item>
-        /// <item>The <seealso cref="LocalizationSettings.SelectedLocale"/> changing.</item>
-        /// <item>If the string is currently using a <see cref="IVariable"/> which supports <see cref="IVariableValueChanged"/> and it's value has changed.</item>
-        /// <item>When <see cref="RefreshString"/> is called.</item>
-        /// <item>The <see cref="TableReference"/> or <see cref="TableEntryReference"/> changing.</item>
+        /// <item><description>The first time the action is added to the event.</description></item>
+        /// <item><description>The <seealso cref="LocalizationSettings.SelectedLocale"/> changing.</description></item>
+        /// <item><description>If the string is currently using a <see cref="IVariable"/> which supports <see cref="IVariableValueChanged"/> and it's value has changed.</description></item>
+        /// <item><description>When <see cref="RefreshString"/> is called.</description></item>
+        /// <item><description>The <see cref="TableReference"/> or <see cref="TableEntryReference"/> changing.</description></item>
         /// </list>
         /// When the first <see cref="ChangeHandler"/> is added, a loading operation (see <see cref="CurrentLoadingOperation"/>) automatically starts.
         /// When the loading operation is completed, the localized string value is sent to the subscriber.

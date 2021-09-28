@@ -132,6 +132,43 @@ public class LocalizedStringGetExample : MonoBehaviour
 }
 #endregion
 
+#region get-localized-string-synchronous
+
+public class LocalizedStringSynchronousGetExample : MonoBehaviour
+{
+    public Text myText;
+
+    public LocalizedString myString = new LocalizedString
+    {
+        TableReference = "My String Table",
+        TableEntryReference = "My Game Text"
+    };
+
+    void OnEnable()
+    {
+        LocalizationSettings.SelectedLocaleChanged += LocaleChanged;
+        LoadString();
+    }
+
+    void OnDisable()
+    {
+        LocalizationSettings.SelectedLocaleChanged -= LocaleChanged;
+    }
+
+    void LocaleChanged(Locale locale)
+    {
+        LoadString();
+    }
+
+    void LoadString()
+    {
+        var operation = myString.GetLocalizedStringAsync();
+        operation.WaitForCompletion(); // Force synchronous loading
+        myText.text = operation.Result;
+    }
+}
+#endregion
+
 public class LocalizedStringConstructor
 {
     #region localized-string-constructor

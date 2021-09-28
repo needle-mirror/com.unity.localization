@@ -15,6 +15,16 @@ using System.Text.RegularExpressions;
 
 namespace UnityEditor.Localization.Platform.Android
 {
+    enum DPI_Info
+    {
+        IDPI,
+        MDPI,
+        HDPI,
+        XHDPI,
+        XXHDPI,
+        XXXHDPI
+    }
+
     public static class Player
     {
         const string k_InfoFile = "strings.xml";
@@ -24,6 +34,7 @@ namespace UnityEditor.Localization.Platform.Android
         const string k_AdaptiveIconForegroundName = "ic_launcher_foreground.png";
         const string k_AdaptiveIcon_AppIconInfo = "app_icon.xml";
         const string k_AdaptiveIcon_AppRoundIconInfo = "app_icon_round.xml";
+        const string k_IconsCacheFolderPath = "/../Library/com.unity.localization/Android/";
 
         static PackageManager.PackageInfo s_PackageInfo;
         static PackageManager.PackageInfo LocalizationPackageInfo
@@ -79,18 +90,20 @@ namespace UnityEditor.Localization.Platform.Android
                 //Generate icons
                 var folderNames = new List<string>
                 {
-                    $"mipmap-{localeIdentifier}-hdpi",
                     $"mipmap-{localeIdentifier}-ldpi",
                     $"mipmap-{localeIdentifier}-mdpi",
+                    $"mipmap-{localeIdentifier}-hdpi",
                     $"mipmap-{localeIdentifier}-xhdpi",
                     $"mipmap-{localeIdentifier}-xxhdpi",
-                    $"mipmap-{localeIdentifier}-xxxhdpi",
-                    $"mipmap-{localeIdentifier}-anydpi-v26"
+                    $"mipmap-{localeIdentifier}-xxxhdpi"
                 };
+                var adaptiveIconFolderName = $"mipmap-{localeIdentifier}-anydpi-v26";
 
 
-                if (roundIconsInfo != null || legacyIconsInfo != null || adaptiveIconsInfo != null)
+                if (roundIconsInfo != null || legacyIconsInfo != null)
                     GenerateIconDirectory(folderNames, project.GetResFolderPath(projectDirectory), locale);
+                if (adaptiveIconsInfo != null)
+                    GenerateIconDirectory(adaptiveIconFolderName, project.GetResFolderPath(projectDirectory), locale);
 
                 if (roundIconsInfo != null)
                     GenerateRoundIcons(folderNames, project.GetResFolderPath(projectDirectory), locale, roundIconsInfo);
@@ -99,7 +112,7 @@ namespace UnityEditor.Localization.Platform.Android
                     GenerateLegacyIcons(folderNames, project.GetResFolderPath(projectDirectory), locale, legacyIconsInfo);
 
                 if (adaptiveIconsInfo != null)
-                    GenerateAdaptiveIcons(folderNames, project.GetResFolderPath(projectDirectory), locale, adaptiveIconsInfo);
+                    GenerateAdaptiveIcons(folderNames, project.GetResFolderPath(projectDirectory), locale, adaptiveIconsInfo, adaptiveIconFolderName);
             }
 
             var androidManifest = new AndroidManifest(project.GetManifestPath(projectDirectory));
@@ -118,9 +131,14 @@ namespace UnityEditor.Localization.Platform.Android
         {
             foreach (var name in folderNames)
             {
-                if (!Directory.Exists(Path.Combine(path, name)))
-                    Directory.CreateDirectory(Path.Combine(path, name));
+                GenerateIconDirectory(name, path, locale);
             }
+        }
+
+        static void GenerateIconDirectory(string name, string path, Locale locale)
+        {
+            if (!Directory.Exists(Path.Combine(path, name)))
+                Directory.CreateDirectory(Path.Combine(path, name));
         }
 
         static void GenerateRoundIcons(List<string> folderNames, string path, Locale locale, RoundIconsInfo iconInfo)
@@ -128,12 +146,11 @@ namespace UnityEditor.Localization.Platform.Android
             // We get the folder path of the respective density qualifier by combining the android `res' folder path and
             // the localized folder name from the folderNames list, for exmaple "mipmap-ar-hdpi" which is icon folder for arabic Locale
             // The k_RoundIconName variable contains the round icon name which will be used as file name for saving the respective LocalizedTexture to a ".png" file.
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[0]), k_RoundIconName), locale, iconInfo.RoundHdpi);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[1]), k_RoundIconName), locale, iconInfo.RoundIdpi);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[2]), k_RoundIconName), locale, iconInfo.RoundMdpi);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[3]), k_RoundIconName), locale, iconInfo.RoundXhdpi);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[4]), k_RoundIconName), locale, iconInfo.RoundXXHdpi);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[5]), k_RoundIconName), locale, iconInfo.RoundXXXHdpi);
+            iconInfo.RefreshRoundIcons();
+            foreach (var foldername in folderNames.Select((value, index) => (value, index)))
+            {
+                GenerateLocalizedIcon(Path.Combine(Path.Combine(path, foldername.value), k_RoundIconName), locale, iconInfo.RoundIcons[foldername.index], (DPI_Info)foldername.index);
+            }
         }
 
         static void GenerateLegacyIcons(List<string> folderNames, string path, Locale locale, LegacyIconsInfo iconInfo)
@@ -141,45 +158,41 @@ namespace UnityEditor.Localization.Platform.Android
             // We get the folder path of the respective density qualifier by combining the android `res' folder path and
             // the localized folder name from the folderNames list, for exmaple "mipmap-ar-hdpi" which is icon folder for arabic Locale
             // The k_LegacyIconName variable contains the round icon name which will be used as file name for saving the respective LocalizedTexture to a ".png" file.
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[0]), k_LegacyIconName), locale, iconInfo.LegacyHdpi);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[1]), k_LegacyIconName), locale, iconInfo.LegacyIdpi);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[2]), k_LegacyIconName), locale, iconInfo.LegacyMdpi);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[3]), k_LegacyIconName), locale, iconInfo.LegacyXhdpi);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[4]), k_LegacyIconName), locale, iconInfo.LegacyXXHdpi);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[5]), k_LegacyIconName), locale, iconInfo.LegacyXXXHdpi);
+            iconInfo.RefreshLegacyIcons();
+            foreach (var foldername in folderNames.Select((value, index) => (value, index)))
+            {
+                GenerateLocalizedIcon(Path.Combine(Path.Combine(path, foldername.value), k_LegacyIconName), locale, iconInfo.LegacyIcons[foldername.index], (DPI_Info)foldername.index);
+            }
         }
 
-        static void GenerateAdaptiveIcons(List<string> folderNames, string path, Locale locale, AdaptiveIconsInfo iconInfo)
+        static void GenerateAdaptiveIcons(List<string> folderNames, string path, Locale locale, AdaptiveIconsInfo iconInfo, string adaptiveIconXMLFolderName)
         {
             //Adaptive Background Icons
             // We get the folder path of the respective density qualifier by combining the android `res' folder path and
             // the localized folder name from the folderNames list, for exmaple "mipmap-ar-hdpi" which is icon folder for arabic Locale
             // The k_AdaptiveIconBackgroundName variable contains the name for background icon which we use it for our Adaptive icon,
             // which will be used as file name for saving the respective LocalizedTexture to a ".png" file.
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[0]), k_AdaptiveIconBackgroundName), locale, iconInfo.AdaptiveHdpi.Background);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[1]), k_AdaptiveIconBackgroundName), locale, iconInfo.AdaptiveIdpi.Background);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[2]), k_AdaptiveIconBackgroundName), locale, iconInfo.AdaptiveMdpi.Background);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[3]), k_AdaptiveIconBackgroundName), locale, iconInfo.AdaptiveXhdpi.Background);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[4]), k_AdaptiveIconBackgroundName), locale, iconInfo.AdaptiveXXHdpi.Background);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[5]), k_AdaptiveIconBackgroundName), locale, iconInfo.AdaptiveXXXHdpi.Background);
+            iconInfo.RefreshAdaptiveIcons();
+            foreach (var foldername in folderNames.Select((value, index) => (value, index)))
+            {
+                GenerateLocalizedIcon(Path.Combine(Path.Combine(path, foldername.value), k_AdaptiveIconBackgroundName), locale, iconInfo.AdaptiveIcons[foldername.index].Background, (DPI_Info)foldername.index, true);
+            }
 
             //Adaptive Foreground Icons
             // We get the folder path of the respective density qualifier by combining the android `res' folder path and
             // the localized folder name from the folderNames list, for exmaple "mipmap-ar-hdpi" which is icon folder for arabic Locale
             // The k_AdaptiveIconForegroundName variable contains the name for foreground icon which we use it for our Adaptive icon.
             // which will be used as file name for saving the respective LocalizedTexture to a ".png" file.
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[0]), k_AdaptiveIconForegroundName), locale, iconInfo.AdaptiveHdpi.Foreground);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[1]), k_AdaptiveIconForegroundName), locale, iconInfo.AdaptiveIdpi.Foreground);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[2]), k_AdaptiveIconForegroundName), locale, iconInfo.AdaptiveMdpi.Foreground);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[3]), k_AdaptiveIconForegroundName), locale, iconInfo.AdaptiveXhdpi.Foreground);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[4]), k_AdaptiveIconForegroundName), locale, iconInfo.AdaptiveXXHdpi.Foreground);
-            GenerateLocalizedIcon(Path.Combine(Path.Combine(path, folderNames[5]), k_AdaptiveIconForegroundName), locale, iconInfo.AdaptiveXXXHdpi.Foreground);
+            foreach (var foldername in folderNames.Select((value, index) => (value, index)))
+            {
+                GenerateLocalizedIcon(Path.Combine(Path.Combine(path, foldername.value), k_AdaptiveIconForegroundName), locale, iconInfo.AdaptiveIcons[foldername.index].Foreground, (DPI_Info)foldername.index, true);
+            }
 
-            WriteAdaptiveIconsXML(Path.Combine(Path.Combine(path, folderNames[6]), k_AdaptiveIcon_AppIconInfo));
-            WriteAdaptiveIconsXML(Path.Combine(Path.Combine(path, folderNames[6]), k_AdaptiveIcon_AppRoundIconInfo));
+            WriteAdaptiveIconsXML(Path.Combine(Path.Combine(path, adaptiveIconXMLFolderName), k_AdaptiveIcon_AppIconInfo));
+            WriteAdaptiveIconsXML(Path.Combine(Path.Combine(path, adaptiveIconXMLFolderName), k_AdaptiveIcon_AppRoundIconInfo));
         }
 
-        static void GenerateLocalizedIcon(string filePath, Locale locale, LocalizedTexture localizedTexture)
+        static void GenerateLocalizedIcon(string filePath, Locale locale, LocalizedTexture localizedTexture, DPI_Info resolution, bool IsAdaptiveIcon = false)
         {
             if (localizedTexture.IsEmpty)
                 return;
@@ -193,7 +206,7 @@ namespace UnityEditor.Localization.Platform.Android
                 var fallBack = FallbackLocaleHelper.GetLocaleFallback(locale);
                 if (fallBack != null)
                 {
-                    GenerateLocalizedIcon(filePath, fallBack, localizedTexture);
+                    GenerateLocalizedIcon(filePath, fallBack, localizedTexture, resolution, IsAdaptiveIcon);
                     return;
                 }
 
@@ -208,10 +221,93 @@ namespace UnityEditor.Localization.Platform.Android
                 File.Delete(filePath);
 
             var texture = AssetDatabase.LoadAssetAtPath(iconPath, typeof(Texture2D)) as Texture2D;
-            byte[] bytes = texture.EncodeToPNG();
+            var cachedDirectoryPath = Application.dataPath + k_IconsCacheFolderPath;
+            cachedDirectoryPath = Directory.Exists(cachedDirectoryPath) ? cachedDirectoryPath : Directory.CreateDirectory(cachedDirectoryPath).FullName;
+            var imageHash = texture.imageContentsHash.ToString();
+            var cachedFilePath = $"{cachedDirectoryPath}{imageHash.ToString()}{resolution}";
+            cachedFilePath = IsAdaptiveIcon ? cachedFilePath + "_Adaptive.png" : cachedFilePath + ".png";
+            CreatePNG(cachedFilePath, filePath, texture, resolution, IsAdaptiveIcon);
+        }
 
-            //Saving the Icon as ".png" file to gradle res folder
-            File.WriteAllBytes(filePath, bytes);
+        static void CreatePNG(string filePath, string targetPath, Texture2D icon, DPI_Info dpi, bool IsAdaptiveIcon)
+        {
+            if (!File.Exists(filePath))
+            {
+                int width, height;
+                GetResolution(dpi, out width, out height, IsAdaptiveIcon);
+                var newResizedIcon = ResizeIcons(icon, width, height);
+                var bytes = newResizedIcon.EncodeToPNG();
+
+                //Saving the Icon as ".png" file to gradle res folder
+                File.WriteAllBytes(filePath, bytes);
+            }
+
+            File.Copy(filePath, targetPath);
+        }
+
+        static Texture2D ResizeIcons(Texture2D source, int width, int height)
+        {
+            var scaledIcon = new Texture2D(width, height, TextureFormat.ARGB32, true);
+            var iconPixels = scaledIcon.GetPixels(0);
+            var incX = ((float)1 / source.width) * ((float)source.width / width);
+            var incY = ((float)1 / source.height) * ((float)source.height / height);
+            for (var pixel = 0; pixel < iconPixels.Length; pixel++)
+            {
+                iconPixels[pixel] = source.GetPixelBilinear(incX * ((float)pixel % width), incY * ((float)Mathf.Floor(pixel / width)));
+            }
+            scaledIcon.SetPixels(iconPixels, 0);
+            scaledIcon.Apply();
+            return scaledIcon;
+        }
+
+        static void GetResolution(DPI_Info dpi, out int width, out int height, bool IsAdaptiveIcon)
+        {
+            var resolution = IsAdaptiveIcon ? 9 : 12;
+            switch (dpi)
+            {
+                case DPI_Info.MDPI:
+                    if (IsAdaptiveIcon)
+                        width = height = resolution * 12;
+                    else
+                        width = height = resolution * 4;
+                    break;
+
+                case DPI_Info.HDPI:
+                    if (IsAdaptiveIcon)
+                        width = height = resolution * 18;
+                    else
+                        width = height = resolution * 6;
+                    break;
+
+                case DPI_Info.XHDPI:
+                    if (IsAdaptiveIcon)
+                        width = height = resolution * 24;
+                    else
+                        width = height = resolution * 8;
+                    break;
+
+                case DPI_Info.XXHDPI:
+                    if (IsAdaptiveIcon)
+                        width = height = resolution * 36;
+                    else
+                        width = height = resolution * 12;
+                    break;
+
+                case DPI_Info.XXXHDPI:
+                    if (IsAdaptiveIcon)
+                        width = height = resolution * 48;
+                    else
+                        width = height = resolution * 16;
+                    break;
+
+                case DPI_Info.IDPI:
+                default:
+                    if (IsAdaptiveIcon)
+                        width = height = resolution * 9;
+                    else
+                        width = height = resolution * 3;
+                    break;
+            }
         }
 
         static void WriteAdaptiveIconsXML(string filePath)

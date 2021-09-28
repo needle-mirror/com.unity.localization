@@ -200,6 +200,10 @@ namespace UnityEditor.Localization.PropertyVariants
                     UpdateTrackedProperty(LocalizationSettings.ProjectLocale.Identifier, propertyModification.previousValue, trackedProperty);
             }
 
+            // Dont add new variant values to a property when we are not adding new variants. (LOC-380).
+            if (!trackedProperty.HasVariant(localeIdentifier) && !addNewVariant)
+                return false;
+
             UpdateTrackedProperty(localeIdentifier, propertyModification.currentValue, trackedProperty);
             return true;
         }

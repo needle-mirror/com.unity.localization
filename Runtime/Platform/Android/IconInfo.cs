@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine.Localization.Metadata;
 
 namespace UnityEngine.Localization.Platform.Android
@@ -36,12 +37,26 @@ namespace UnityEngine.Localization.Platform.Android
     [Serializable]
     public class AdaptiveIconsInfo : IMetadata
     {
-        [SerializeField] AdaptiveIcon m_Adaptive_hdpi;
         [SerializeField] AdaptiveIcon m_Adaptive_idpi;
         [SerializeField] AdaptiveIcon m_Adaptive_mdpi;
+        [SerializeField] AdaptiveIcon m_Adaptive_hdpi;
         [SerializeField] AdaptiveIcon m_Adaptive_xhdpi;
         [SerializeField] AdaptiveIcon m_Adaptive_xxhdpi;
         [SerializeField] AdaptiveIcon m_Adaptive_xxxhdpi;
+
+        internal List<AdaptiveIcon> AdaptiveIcons = new List<AdaptiveIcon>();
+
+        internal void RefreshAdaptiveIcons()
+        {
+            AdaptiveIcons.Clear();
+
+            AdaptiveIcons.Add(m_Adaptive_idpi);
+            AdaptiveIcons.Add(m_Adaptive_mdpi);
+            AdaptiveIcons.Add(m_Adaptive_hdpi);
+            AdaptiveIcons.Add(m_Adaptive_xhdpi);
+            AdaptiveIcons.Add(m_Adaptive_xxhdpi);
+            AdaptiveIcons.Add(m_Adaptive_xxxhdpi);
+        }
 
         /// <summary>
         /// Contains resources for high-density (hdpi) screens (~240dpi) that can be localized in the Android Application
@@ -90,12 +105,26 @@ namespace UnityEngine.Localization.Platform.Android
     [Serializable]
     public class RoundIconsInfo : IMetadata
     {
-        [SerializeField] LocalizedTexture m_Round_hdpi;
         [SerializeField] LocalizedTexture m_Round_idpi;
         [SerializeField] LocalizedTexture m_Round_mdpi;
+        [SerializeField] LocalizedTexture m_Round_hdpi;
         [SerializeField] LocalizedTexture m_Round_xhdpi;
         [SerializeField] LocalizedTexture m_Round_xxhdpi;
         [SerializeField] LocalizedTexture m_Round_xxxhdpi;
+
+        internal List<LocalizedTexture> RoundIcons = new List<LocalizedTexture>();
+
+        internal void RefreshRoundIcons()
+        {
+            RoundIcons.Clear();
+
+            RoundIcons.Add(m_Round_idpi);
+            RoundIcons.Add(m_Round_mdpi);
+            RoundIcons.Add(m_Round_hdpi);
+            RoundIcons.Add(m_Round_xhdpi);
+            RoundIcons.Add(m_Round_xxhdpi);
+            RoundIcons.Add(m_Round_xxxhdpi);
+        }
 
         /// <summary>
         /// Contains resources for high-density (hdpi) screens (~240dpi) that can be localized in the Android Application
@@ -145,12 +174,26 @@ namespace UnityEngine.Localization.Platform.Android
     [Serializable]
     public class LegacyIconsInfo : IMetadata
     {
-        [SerializeField] LocalizedTexture m_Legacy_hdpi;
         [SerializeField] LocalizedTexture m_Legacy_idpi;
         [SerializeField] LocalizedTexture m_Legacy_mdpi;
+        [SerializeField] LocalizedTexture m_Legacy_hdpi;
         [SerializeField] LocalizedTexture m_Legacy_xhdpi;
         [SerializeField] LocalizedTexture m_Legacy_xxhdpi;
         [SerializeField] LocalizedTexture m_Legacy_xxxhdpi;
+
+        internal List<LocalizedTexture> LegacyIcons = new List<LocalizedTexture>();
+
+        internal void RefreshLegacyIcons()
+        {
+            LegacyIcons.Clear();
+
+            LegacyIcons.Add(m_Legacy_idpi);
+            LegacyIcons.Add(m_Legacy_mdpi);
+            LegacyIcons.Add(m_Legacy_hdpi);
+            LegacyIcons.Add(m_Legacy_xhdpi);
+            LegacyIcons.Add(m_Legacy_xxhdpi);
+            LegacyIcons.Add(m_Legacy_xxxhdpi);
+        }
 
         /// <summary>
         /// Contains resources for high-density (hdpi) screens (~240dpi) that can be localized in the Android Application

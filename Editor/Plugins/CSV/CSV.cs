@@ -81,6 +81,9 @@ namespace UnityEditor.Localization.Plugins.CSV
                         csvWriter.NextRecord();
                         foreach (var cell in columnMappings)
                         {
+                            if (string.IsNullOrEmpty(row.KeyEntry.Key))
+                                continue;
+
                             cell.WriteRow(row.KeyEntry, row.TableEntries, csvWriter);
                         }
                     }

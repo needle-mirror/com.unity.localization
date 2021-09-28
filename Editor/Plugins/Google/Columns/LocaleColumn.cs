@@ -69,7 +69,7 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
         /// <inheritdoc/>
         public override void PushCellData(SharedTableData.SharedTableEntry keyEntry, IList<StringTableEntry> tableEntries, out string value, out string note)
         {
-            if (m_CollectionTableIndex != -1 && tableEntries[m_CollectionTableIndex] != null)
+            if (m_CollectionTableIndex != -1 && tableEntries[m_CollectionTableIndex] != null && !string.IsNullOrEmpty(tableEntries[m_CollectionTableIndex].Key))
             {
                 var entry = tableEntries[m_CollectionTableIndex];
                 value = entry?.LocalizedValue;

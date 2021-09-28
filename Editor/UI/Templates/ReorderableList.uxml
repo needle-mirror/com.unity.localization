@@ -1,5 +1,4 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
-    <Style src="project://database/Packages/com.unity.localization/Editor/UI/Templates/LocalizationStyles.uss?fileID=7433441132597879392&amp;guid=a0e6791349514c44896de5b6d49f1043&amp;type=3#LocalizationStyles" />
     <ui:VisualElement name="unity-theme-env-variables" class="unity-theme-env-variables">
         <ui:VisualElement name="header" class="reorderable-list__header">
             <ui:Image name="header-icon" />

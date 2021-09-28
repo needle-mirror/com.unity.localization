@@ -173,6 +173,10 @@ namespace UnityEditor.Localization.UI.Toolkit
         {
             Resources.GetTemplateAsset(nameof(ReorderableList)).CloneTree(this);
 
+            // We cant use the Style tag in uxml as its not supported in 2019.4 so we assign it this way.
+            var style = Resources.GetStyleSheetAsset("LocalizationStyles");
+            styleSheets.Add(style);
+
             m_AddButton = this.Q<Button>("addButton");
             m_AddButton.clicked += OnAddItem;
 

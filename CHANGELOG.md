@@ -2,6 +2,15 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.0.2] - 2021-09-28
+
+### Fixed
+
+- Fixed `Element 'Style' has no registered factory method` error in 2019.4. (LOC-318)
+- Fixed AppIcon not resizing according to the DPI input for the selected Android Icon Configurations when building for Android. ([LOC-371](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-368))
+- Fixed changes to existing Property Variants being recorded for a Locale that was not currently tracked when Track changes was disabled. ([LOC-380](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-380))
+- Fixed XLIFF exporter crash when String Table Entry is null or empty. (LOC-383)
+
 ## [1.0.1] - 2021-09-16
 
 ### Fixed

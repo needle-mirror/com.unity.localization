@@ -190,7 +190,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF
 
             foreach (var row in StringTableCollection.GetRowEnumerator(source, target))
             {
-                if (row.TableEntries[0].SharedEntry.Metadata.HasMetadata<ExcludeEntryFromExport>())
+                if (row.TableEntries[0] != null && row.TableEntries[0].SharedEntry.Metadata.HasMetadata<ExcludeEntryFromExport>())
                     continue;
 
                 var unit = group.AddNewTranslationUnit();
@@ -200,7 +200,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF
                 unit.Source = row.TableEntries[0]?.Value;
 
                 // Dont add a value if its empty.
-                if (row.TableEntries[1] != null && !string.IsNullOrEmpty(row.TableEntries[1].Value))
+                if (row.TableEntries[1] != null && !string.IsNullOrEmpty(row.TableEntries[1].Value) && !string.IsNullOrEmpty(row.TableEntries[1].Key))
                     unit.Target = row.TableEntries[1].Value;
 
                 // Add notes

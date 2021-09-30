@@ -2,6 +2,12 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.0.3] - 2021-09-30
+
+### Fixed
+
+- Removed duplicate sample code `StringTableCollectionSamples`. This was causing some internal test failures that was preventing us from adding the package to 2021.2.
+
 ## [1.0.2] - 2021-09-28
 
 ### Fixed

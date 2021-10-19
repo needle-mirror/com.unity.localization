@@ -1,6 +1,6 @@
 # Choose Formatter
 
-Use the Choose Formatter to add logic to a Smart String by selecting an output, using a provided set of choices. To invoke the Choose Formatter explicitly, use the name "choose" or "c".
+Use the [Choose Formatter](xref:UnityEngine.Localization.SmartFormat.Extensions.ChooseFormatter) to add logic to a Smart String by selecting an output, using a provided set of choices. To invoke the Choose Formatter explicitly, use the name "choose" or "c".
 
 ![Diagram showing the breakdown of the Smart String when using a Choose formatter.](../images/SmartString-ChooseSyntax.dot.svg)
 

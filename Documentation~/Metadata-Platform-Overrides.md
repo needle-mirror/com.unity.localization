@@ -1,8 +1,8 @@
 # Platform Overrides
 
-To change where a Localized value for an entry in a [String Table Collection](StringTables.md) or [Asset Table Collection](AssetTables.md) should be taken from, use a Platform Override. 
+To change where a Localized value for an entry in a [String Table Collection](StringTables.md) or [Asset Table Collection](AssetTables.md) should be taken from, use a Platform Override.
 
-You can add Platform Overrides Metadata to an Entry’s Locale specific or Shared [Metadata](Metadata.md).
+You can add [Platform Overrides Metadata](xref:UnityEngine.Localization.Metadata.PlatformOverride) to an Entry’s Locale specific or Shared [Metadata](Metadata.md).
 If a Platform Override exists for the platform that the application is running on, the Override value will be used instead of the default entry value. The Locale override will first be evaluated. If no override is found for the Locale, the Shared Override will be evaluated instead.
 
 Create a new Platform Override by clicking the Add (+) button. This shows the available platforms that do not currently have an override. To remove a Platform Override, select them and click the Remove (-) button.

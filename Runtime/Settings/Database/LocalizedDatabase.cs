@@ -110,7 +110,6 @@ namespace UnityEngine.Localization.Settings
 
         AsyncOperationHandle? m_PreloadOperationHandle;
 
-        Action<AsyncOperationHandle> m_ReleaseNextFrame;
         internal Action<AsyncOperationHandle> ReleaseNextFrame
         {
             get
@@ -121,12 +120,7 @@ namespace UnityEngine.Localization.Settings
                     return AddressablesInterface.SafeRelease;
                 }
                 #endif
-
-                if (m_ReleaseNextFrame == null)
-                {
-                    m_ReleaseNextFrame = LocalizationBehaviour.Instance.ReleaseNextFrame;
-                }
-                return m_ReleaseNextFrame;
+                return LocalizationBehaviour.ReleaseNextFrame;
             }
         }
 
@@ -538,7 +532,6 @@ namespace UnityEngine.Localization.Settings
         /// </summary>
         public void ResetState()
         {
-            m_ReleaseNextFrame = null;
             OnLocaleChanged(null);
         }
     }

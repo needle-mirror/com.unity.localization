@@ -1,7 +1,7 @@
 # Conditional Formatter
 
 Conditional formatting occurs on any placeholder that contains a pipe character (|) after the colon (:).
-To invoke the Conditional Formatter explicitly use the name "conditional" or "cond". It can also be used implicitly when no name is provided.
+To invoke the [Conditional Formatter](xref:UnityEngine.Localization.SmartFormat.Extensions.ConditionalFormatter) explicitly use the name "conditional" or "cond". It can also be used implicitly when no name is provided.
 
 | **Data Type** | **Syntax** | **Example** |
 | ------------- | ---------- | ----------- |

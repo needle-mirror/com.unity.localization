@@ -513,6 +513,9 @@ namespace UnityEditor.Localization.Plugins.Google
                 modifiedAssets.ForEach(EditorUtility.SetDirty);
 
                 LocalizationEditorSettings.EditorEvents.RaiseCollectionModified(this, collection);
+
+                // Flush changes to disk.
+                collection.SaveChangesToDisk();
             }
             catch (Exception e)
             {
@@ -681,7 +684,7 @@ namespace UnityEditor.Localization.Plugins.Google
                     // Missing entries that we want to keep go to the bottom of the list
                     sortedEntries.Add(entry);
                 }
-                else if (stringTables[0].GetEntry(entry.Id).SharedEntry.Metadata.HasMetadata<ExcludeEntryFromExport>())
+                else if (entry.Metadata.HasMetadata<ExcludeEntryFromExport>())
                 {
                     //add back the entry which has ExcludeEntryFromExport Metadata and was not exported to the google sheets.
                     sortedEntries.Insert(i, entry);

@@ -1,6 +1,6 @@
 # List Formatter
 
-The List Formatter is a Source and a Formatter. You can use it as a Formatter to repeat the contents of any [IEnumerable](https://docs.microsoft.com/en-us/dotnet/api/system.collections.ienumerable), such as an Array or List.
+The [List Formatter](xref:UnityEngine.Localization.SmartFormat.Extensions.ListFormatter) is a Source and a Formatter. You can use it as a Formatter to repeat the contents of any [IEnumerable](https://docs.microsoft.com/en-us/dotnet/api/system.collections.ienumerable), such as an Array or List.
 
 ![Diagram showing the breakdown of the Smart String and how each part is evaluated.](../images/SmartString-ListFormatterSyntax.dot.svg)
 

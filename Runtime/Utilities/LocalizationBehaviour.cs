@@ -18,7 +18,9 @@ namespace UnityEngine.Localization
         /// If you plan to keep hold of a reference, call <see cref="AsyncOperationHandle.Acquire"/>, and <see cref="AsyncOperationHandle.Release"/> when it's finished.
         /// </summary>
         /// <param name="handle"></param>
-        public void ReleaseNextFrame(AsyncOperationHandle handle)
+        public static void ReleaseNextFrame(AsyncOperationHandle handle) => Instance.DoReleaseNextFrame(handle);
+
+        void DoReleaseNextFrame(AsyncOperationHandle handle)
         {
             if (Time.frameCount != m_ReleaseFrame)
             {

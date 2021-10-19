@@ -6,7 +6,7 @@ You can place Assets into different Addressable groups based on criteria such as
 
 ## Addressable Group Rules
 
-To configure the group rules, create an **Addressable Group Rules** asset (**Assets > Create > Localization > Addressable Group Rules**).
+To configure the group rules, create an [Addressable Group Rules](xref:UnityEditor.Localization.Addressables.AddressableGroupRules) asset (**Assets > Create > Localization > Addressable Group Rules**).
 Some examples of different rule sets are:
 
 - Using a single group for all assets

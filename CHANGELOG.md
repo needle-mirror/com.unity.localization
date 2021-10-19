@@ -2,6 +2,20 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.0.4] - 2021-10-19
+
+### Fixed
+
+- Added new XLIFF import option "Import / XLIFF into Collection". (LOC-376)
+- Fixed `FileNotFoundException` being thrown when using the CSV extension **Export** button with a new file. ([LOC-429](https://issuetracker.unity3d.com/issues/filenotfoundexception-is-thrown-when-exporting-localization-csv-file))
+- Fixed `MissingReferenceException` occurring due to `ReleaseNextFrame` when exiting play mode.
+- Fixed `NullReferenceException` when pulling a Google sheet with the **Remove Missing Pulled Keys** option enabled and the missing key did not contain an entry in the first table. ([LOC-434](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-434))
+- Fixed issue where Localized Property Variants reset the world space UI's z position when Active Locale is changed. (LOC-399)
+- Fixed issue where 'RaiseTableEntryModified' event not been invoked when there is a change in EntryKey. (LOC-397)
+- Fixed nested `LocalizedStrings` not trigging a ValueChanged event when their local variables were changed. ([LOC-418](https://issuetracker.unity3d.com/issues/nested-localizedstring-does-not-refresh))
+- Modified assets will now be written to disk after importing CSV, XLIFF or Google Sheets. ([LOC-341](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-341))
+- Pressing Escape key will now close the popup window for selecting a table or table entry. ([LOC-416](https://issuetracker.unity3d.com/issues/localization-cant-close-localizedstring-dropdown-with-esc-key))
+
 ## [1.0.3] - 2021-09-30
 
 ### Fixed

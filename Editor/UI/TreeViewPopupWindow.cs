@@ -22,6 +22,14 @@ namespace UnityEditor.Localization.UI
 
         public override void OnGUI(Rect rect)
         {
+            // Escape closes the window
+            if (m_ShouldClose || Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
+            {
+                GUIUtility.hotControl = 0;
+                editorWindow.Close();
+                GUIUtility.ExitGUI();
+            }
+
             const int border = 4;
             const int topPadding = 12;
             const int searchHeight = 20;
@@ -31,12 +39,6 @@ namespace UnityEditor.Localization.UI
 
             m_TreeView.searchString = m_SearchField.OnGUI(searchRect, m_TreeView.searchString);
             m_TreeView.OnGUI(remainingRect);
-
-            if (m_ShouldClose)
-            {
-                GUIUtility.hotControl = 0;
-                editorWindow.Close();
-            }
 
             if (m_TreeView.HasSelection())
                 ForceClose();

@@ -131,7 +131,7 @@ The **Mirror** method reverses the input string to simulate right-to-left langua
 
 ## Custom Methods
 
-To create a new Pseudo-Localization Method, implement the **IPseudoLocalizationMethod** interface. Unity adds custom Methods to the Pseudo-Locale Assets’ list of available Methods.
+To create a new Pseudo-Localization Method, implement the [IPseudoLocalizationMethod](xref:UnityEngine.Localization.Pseudo.IPseudoLocalizationMethod) interface. Unity adds custom Methods to the Pseudo-Locale Assets’ list of available Methods.
 
 ## Apply a Pseudo-Locale Asset
 

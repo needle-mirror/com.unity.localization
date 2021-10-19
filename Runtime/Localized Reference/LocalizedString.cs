@@ -557,6 +557,8 @@ namespace UnityEngine.Localization
             var formatCache = entry?.GetOrCreateFormatCache();
             if (formatCache != null)
             {
+                formatCache.VariableTriggers.Clear();
+
                 if (m_VariableLookup.Count > 0)
                 {
                     // Use the child and parent local variables.
@@ -577,8 +579,16 @@ namespace UnityEngine.Localization
                     args.AddRange(Arguments);
 
                 var result = LocalizationSettings.StringDatabase.GenerateLocalizedString(operation.Result.Table, entry, TableReference, TableEntryReference, locale, args);
+
                 if (formatCache != null)
+                {
                     formatCache.LocalVariables = null;
+
+                    // Subscribe to changes to local variables.
+                    // Note: This could cause issues if the nested string is being used in multiple places.
+                    // We may need to consider keeping multiple lists of callbacks in the future.
+                    UpdateVariableListeners(formatCache.VariableTriggers);
+                }
                 return new StringTableEntryVariable(result, entry);
             }
         }
@@ -633,6 +643,7 @@ namespace UnityEngine.Localization
             else
             {
                 RefreshString();
+                ValueChanged?.Invoke(this);
             }
         }
 
@@ -641,6 +652,7 @@ namespace UnityEngine.Localization
             PersistentVariablesSource.EndUpdate -= OnVariablesSourceUpdateCompleted;
             m_WaitingForVariablesEndUpdate = false;
             RefreshString();
+            ValueChanged?.Invoke(this);
         }
 
         void HandleLocaleChange(Locale _)

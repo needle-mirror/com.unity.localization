@@ -112,6 +112,6 @@ This controls the exporting and importing of the Key, Id(optional) and Shared Co
 
 ### Custom columns
 
-To create custom CSV columns, you can inherit from the `CsvColumns` class. You can use custom columns to import and export custom data, such as custom metadata.
+To create custom CSV columns, you can inherit from the [CsvColumns](xref:UnityEditor.Localization.Plugins.CSV.Columns.CsvColumns) class. You can use custom columns to import and export custom data, such as custom metadata.
 
 See the CSV package samples for further details.

@@ -1,6 +1,6 @@
 # Locale
 
-A Locale represents a language and region. It can also contain additional information, such as currency, calendar, and user-added custom data.
+A [Locale](xref:UnityEngine.Localization.Locale) represents a language and region. It can also contain additional information, such as currency, calendar, and user-added custom data.
 
 Locales wrap the .Net [CultureInfo](https://docs.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo) class. However, you can also define a custom Locale that the CultureInfo class does not support.
 
@@ -21,7 +21,7 @@ Locales wrap the .Net [CultureInfo](https://docs.microsoft.com/en-us/dotnet/api/
 When the Localization system can not find a localized asset or string for a particular Locale, it can attempt to fallback to another Locale and use the localized value from that.
 For example, a game may have a regional language such as French(Canadian) that only implements a subset of the game’s text, and then falls back to French(France) for the remainder. You can also use this to fallback to completely different Locales, such as when a game may only be partially translated and it is better to show the text in the game's default language rather than not at all.
 
-To configure a Locale fallback, add the Fallback metadata to a Locale.
+To configure a Locale fallback, add the [Fallback Locale](xref:UnityEngine.Localization.Metadata.FallbackLocale) metadata to a Locale.
 
 ![Example of a French Locale configured to fallback to English.](images/FallbackMetadata.png)
 _Example of a French Locale configured to fallback to English_

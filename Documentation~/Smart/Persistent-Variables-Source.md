@@ -1,6 +1,6 @@
 # Persistent Variables source
 
-Providing Arguments to a Smart String often requires writing a script. The persistent variables source works with Global Variables and LocalizedString Locale Variables to let you specify arguments to a Smart String without a script. In the Editor you can configure arguments for various data types, and create custom arguments.
+Providing Arguments to a Smart String often requires writing a script. The [persistent variables](xref:UnityEngine.Localization.SmartFormat.Extensions.PersistentVariablesSource) source works with Global Variables and [LocalizedString](xref:UnityEngine.Localization.LocalizedString) Local Variables to let you specify arguments to a Smart String without a script. In the Editor you can configure arguments for various data types, and create custom arguments.
 
 ![Inspector window showing Smart String Persistent Variables source field.](../images/GlobalVariables_Source.png)
 
@@ -130,7 +130,7 @@ The final Spanish translation would take the form:
 `{item.gender:choose(Male|Female):El|La} {item} es {item:{color}}`
 
 When formatting a nested translation, they have access to both the parent local variables and the local
-variables defined in the current [LocalizedStrings](xref:UnityEngine.Localization.LocalizedString). The local variables are first evaluated and then the parent variables if no match was found locally..
+variables defined in the current [LocalizedStrings](xref:UnityEngine.Localization.LocalizedString). The local variables are first evaluated and then the parent variables if no match was found locally.
 
 The colors would be translated to:
 

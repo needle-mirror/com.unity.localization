@@ -1,6 +1,6 @@
 # List Formatter
 
-The List Formatter is both a Source and a Formatter. You can use it as a Source  to extract specific values from an [IList](https://docs.microsoft.com/en-us/dotnet/api/system.collections.ilist) by using an index.
+The [List Formatter](xref:UnityEngine.Localization.SmartFormat.Extensions.ListFormatter) is both a Source and a Formatter. You can use it as a Source to extract specific values from an [IList](https://docs.microsoft.com/en-us/dotnet/api/system.collections.ilist) by using an index.
 
 | **Example Smart String**                                                                | **Arguments**                                                              | **Result**                                                                                             |
 |-----------------------------------------------------------------------------------------|----------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|

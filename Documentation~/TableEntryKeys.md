@@ -10,7 +10,7 @@ You can change the Key Name, but not the Key Id. Unity uses the Key Id as a refe
 
 ## Distributed ID generator
 
-By default, Unity uses a distributed Key Id generator to provide a unique Key Id value specific to the machine that generates it. This means that it is safe for multiple users to work on the same Table. Note that you might need to resolve some merge conflicts, but because Unity never generates the same Key Id twice, resolving these conflicts should be straightforward.
+By default, Unity uses a [distributed Key Id generator](xref:UnityEngine.Localization.Tables.DistributedUIDGenerator) to provide a unique Key Id value specific to the machine that generates it. This means that it is safe for multiple users to work on the same Table. Note that you might need to resolve some merge conflicts, but because Unity never generates the same Key Id twice, resolving these conflicts should be straightforward.
 
 A Key is a 64-bit long data type. It has the following structure:.
 

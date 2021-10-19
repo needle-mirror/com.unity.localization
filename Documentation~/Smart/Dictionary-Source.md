@@ -1,6 +1,6 @@
 # Dictionary source
 
-The Dictionary source extracts objects with a matching Key from an [IDictionary](https://docs.microsoft.com/en-us/dotnet/api/system.collections.idictionary) or [IDictionary<string, object>](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.idictionary-).
+The [Dictionary source](xref:UnityEngine.Localization.SmartFormat.Extensions.DictionarySource) extracts objects with a matching Key from an [IDictionary](https://docs.microsoft.com/en-us/dotnet/api/system.collections.idictionary) or [IDictionary<string, object>](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.idictionary-).
 
 When evaluating an IDictionary, if the Key is not a string, the Dictionary source first converts it to a string using the object’s ToString method. The case sensitivity of the comparison is determined by the Smart Form [Case Sensitivity](../LocalizationSettings.md#smart-format-settings) option.
 

@@ -50,7 +50,7 @@ Unity can determine the **Character Sets** for **String Tables** by examining th
 
 For example, the **Character Set** for the [Smart String](Smart/SmartStrings.md) `You have {count:plural:an Apple|{} apples}!` would be ` !AYaehlnopsuv`.
 
-You can export a **Character Set** file from the context menu of the String Table window, the String Table Collection window, or the Localization Tables window.
+You can export a **Character Set** file from the context menu of the String Table window, the String Table Collection window, or the Localization Tables window. A **Character Set** can also be generated through script by calling [GenerateCharacterSet](xref:UnityEditor.Localization.StringTableCollection.GenerateCharacterSet).
 
 The type of export depends on where you run the export from:
 

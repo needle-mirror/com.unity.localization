@@ -431,6 +431,8 @@ namespace UnityEditor.Localization.UI
                     sharedData.RenameKey(data.SelectedTableEntry.Key, newName);
                     EditorUtility.SetDirty(sharedData);
                     data.entryNameLabel = Styles.entryName;
+
+                    LocalizationEditorSettings.EditorEvents.RaiseTableEntryModified(entry);
                 }
                 else
                 {

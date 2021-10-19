@@ -18,7 +18,7 @@ Metadata can be used for many purposes, such as the following:
 
 ## Creating Metadata
 
-Add new Metadata by implementing the **IMetadata** interface. Any class can be Metadata if it is **serializable** and does not inherit from `UnityEngine.Object`.
+Add new Metadata by implementing the [IMetadata](xref:UnityEngine.Localization.Metadata.IMetadata) interface. Any class can be Metadata if it is **serializable** and does not inherit from `UnityEngine.Object`.
 
 `UnityEngine.Objects` can be included in Metadata.
 For example, the following Metadata could be used to attach information to a Locale:

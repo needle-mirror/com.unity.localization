@@ -48,6 +48,16 @@
             "name": "Unity",
             "expression": "2020.3",
             "define": "ENABLE_PROPERTY_VARIANTS"
+        },
+        {
+            "name": "Unity",
+            "expression": "[2020.3.16,2021.1.0]",
+            "define": "ENABLE_SAVE_ASSET_IF_DIRTY"
+        },
+        {
+            "name": "Unity",
+            "expression": "2021.2",
+            "define": "ENABLE_SAVE_ASSET_IF_DIRTY"
         }
     ],
     "noEngineReferences": false

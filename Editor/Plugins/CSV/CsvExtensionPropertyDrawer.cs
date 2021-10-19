@@ -61,10 +61,8 @@ namespace UnityEditor.Localization.Plugins.CSV
             data.m_Columns.serializedObject.ApplyModifiedProperties();
         }
 
-        static void Export(string path, StringTableCollection collection, IList<CsvColumns> columns)
+        internal static void Export(string path, StringTableCollection collection, IList<CsvColumns> columns)
         {
-            var ac = File.GetAttributes(path);
-
             // Use FileShare.ReadWrite to avoid IOException: Sharing violation (LOC-348)
             using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite))
             {

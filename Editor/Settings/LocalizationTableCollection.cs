@@ -397,6 +397,19 @@ namespace UnityEditor.Localization
             extension.TargetCollection = null;
         }
 
+        internal void SaveChangesToDisk()
+        {
+            #if ENABLE_SAVE_ASSET_IF_DIRTY // Added in 2020.3.16 and 2021.2
+            foreach (var tbl in m_Tables)
+            {
+                AssetDatabase.SaveAssetIfDirty(tbl.asset);
+            }
+            AssetDatabase.SaveAssetIfDirty(SharedData);
+            #else
+            AssetDatabase.SaveAssets();
+            #endif
+        }
+
         /// <summary>
         /// Returns an enumerable for stepping through the rows of the collection.
         /// </summary>

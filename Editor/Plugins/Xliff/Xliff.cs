@@ -358,6 +358,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF
                 {
                     extraNodes = null;
                     ImportFileIntoCollection(collection, file, source, target, importOptions);
+                    collection.SaveChangesToDisk();
                 }
             }
 
@@ -380,6 +381,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF
                 }
 
                 ImportGroupIntoCollection(groupCollection, group, extraNodes, source, target, importOptions);
+                groupCollection.SaveChangesToDisk();
             }
         }
 
@@ -622,7 +624,10 @@ namespace UnityEditor.Localization.Plugins.XLIFF
 
             var collection = LocalizationEditorSettings.GetCollectionFromTable(target);
             if (collection != null)
+            {
                 LocalizationEditorSettings.EditorEvents.RaiseCollectionModified(document, collection);
+                collection.SaveChangesToDisk();
+            }
 
             reporter?.Completed("Finished importing XLIFF");
         }

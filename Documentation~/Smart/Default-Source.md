@@ -1,6 +1,6 @@
 # Default source
 
-The default source replicates the [String.Format](https://docs.microsoft.com/en-us/dotnet/api/system.string.format) behavior and extracts an argument by the index.
+The [default source](xref:UnityEngine.Localization.SmartFormat.Extensions.DefaultSource) replicates the [String.Format](https://docs.microsoft.com/en-us/dotnet/api/system.string.format) behavior and extracts an argument by the index.
 
 The default source examines the current selector. If the selector can be parsed as an integer and is a valid index (within the number of provided arguments), the default source extracts the argument at the selected index and no further selectors are considered.
 

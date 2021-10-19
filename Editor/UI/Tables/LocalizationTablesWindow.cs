@@ -158,7 +158,8 @@ namespace UnityEditor.Localization.UI
             var selectedCollection = panel.SelectedCollection as StringTableCollection;
             if (selectedCollection != null)
             {
-                menu.AddItem(new GUIContent("Import/XLIFF File"), false, () => Plugins.XLIFF.MenuItems.ImportIntoCollection(new MenuCommand(selectedCollection)));
+                menu.AddItem(new GUIContent("Import/XLIFF File into Collection"), false, () => Plugins.XLIFF.MenuItems.ImportIntoCollection(new MenuCommand(selectedCollection)));
+                menu.AddItem(new GUIContent("Import/XLIFF File"), false, () => Plugins.XLIFF.MenuItems.ImportXliffFile());
                 menu.AddItem(new GUIContent("Import/CSV File"), false, () => Plugins.CSV.MenuItems.ImportCollection(new MenuCommand(selectedCollection)));
                 menu.AddItem(new GUIContent("Export/XLIFF"), false, () => Plugins.XLIFF.MenuItems.ExportCollection(new MenuCommand(selectedCollection)));
                 menu.AddItem(new GUIContent("Export/CSV"), false, () => Plugins.CSV.MenuItems.ExportCollection(new MenuCommand(selectedCollection)));

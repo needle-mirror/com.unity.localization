@@ -1,6 +1,6 @@
 # Is Match Formatter
 
-Use the Is Match Formatter to evaluate [regular expressions](https://en.wikipedia.org/wiki/Regular_expression) to control the output.
+Use the [Is Match Formatter](xref:UnityEngine.Localization.SmartFormat.Extensions.IsMatchFormatter) to evaluate [regular expressions](https://en.wikipedia.org/wiki/Regular_expression) to control the output.
 The Is Match Formatter is not included by default. You can add it to the Formatters in the [Smart Format Settings](../LocalizationSettings.md#formatters).
 
 **Note**: In the options part of the formatter, not all RegEx characters are valid, for example curly braces and parentheses aren’t supported. This is because the same parser is used as for all other extensions.

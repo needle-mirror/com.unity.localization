@@ -52,11 +52,11 @@ The following Unity assets are already supported:
 
 ### TableReference
 
-Use the `TableReference` struct to reference an Asset Table or String Table. To reference a table, you can use either the table's name or its unique GUID. It is usually safer to use the GUID, because you might decide to change the table name in future, which would require you to manually update your references, but the GUID always stays the same. 
+Use the [TableReference](xref:UnityEngine.Localization.Tables.TableReference) struct to reference an Asset Table or String Table. To reference a table, you can use either the table's name or its unique GUID. It is usually safer to use the GUID, because you might decide to change the table name in future, which would require you to manually update your references, but the GUID always stays the same. 
 
 ### TableEntryReference
 
-Use the `TableEntryReference` struct to reference an entry in an Asset Table or String Table. To reference a table, you can use either the table entry's name or its unique Key ID, an unsigned long integer. It is usually safer to use the Key ID, because you might decide to change the table entry name in future, which would require you to manually update your references, but the Key ID always stays the same.
+Use the [TableEntryReference](xref:UnityEngine.Localization.Tables.TableEntryReference) struct to reference an entry in an Asset Table or String Table. To reference a table, you can use either the table entry's name or its unique Key ID, an unsigned long integer. It is usually safer to use the Key ID, because you might decide to change the table entry name in future, which would require you to manually update your references, but the Key ID always stays the same.
 
 ## Using AsyncOperationHandle
 

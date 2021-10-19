@@ -19,7 +19,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
     [CustomTrackedObject(typeof(RectTransform), false)]
     public class TrackedRectTransform : TrackedTransform
     {
-        Vector2 m_AnchorPosToApply;
+        Vector3 m_AnchorPosToApply;
         Vector2 m_AnchorMinToApply;
         Vector2 m_AnchorMaxToApply;
         Vector2 m_PivotToApply;
@@ -31,6 +31,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
 
             handlers["m_AnchoredPosition.x"] = val => m_AnchorPosToApply.x = val;
             handlers["m_AnchoredPosition.y"] = val => m_AnchorPosToApply.y = val;
+            handlers["m_AnchoredPosition.z"] = val => m_AnchorPosToApply.z = val;
             handlers["m_AnchorMin.x"] = val => m_AnchorMinToApply.x = val;
             handlers["m_AnchorMin.y"] = val => m_AnchorMinToApply.y = val;
             handlers["m_AnchorMax.x"] = val => m_AnchorMaxToApply.x = val;
@@ -44,7 +45,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
         public override AsyncOperationHandle ApplyLocale(Locale variantLocale, Locale defaultLocale)
         {
             var rectTransform = (RectTransform)Target;
-            m_AnchorPosToApply = rectTransform.anchoredPosition;
+            m_AnchorPosToApply = rectTransform.anchoredPosition3D;
             m_AnchorMinToApply = rectTransform.anchorMin;
             m_AnchorMaxToApply = rectTransform.anchorMax;
             m_PivotToApply = rectTransform.pivot;
@@ -52,7 +53,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
 
             base.ApplyLocale(variantLocale, defaultLocale);
 
-            rectTransform.anchoredPosition = m_AnchorPosToApply;
+            rectTransform.anchoredPosition3D = m_AnchorPosToApply;
             rectTransform.anchorMin = m_AnchorMinToApply;
             rectTransform.anchorMax = m_AnchorMaxToApply;
             rectTransform.pivot = m_PivotToApply;

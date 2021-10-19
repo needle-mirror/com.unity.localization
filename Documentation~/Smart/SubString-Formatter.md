@@ -1,6 +1,6 @@
 # Sub String Formatter
 
-Use SubString Formatter to output parts of an input string. If the value is not a string it is first converted to one using the value’s ToString method.
+Use [SubString Formatter](xref:UnityEngine.Localization.SmartFormat.Extensions.SubStringFormatter) to output parts of an input string. If the value is not a string it is first converted to one using the value’s ToString method.
 
 ![Diagram showing the breakdown of the Smart String and how each part is evaluated.](../images/SmartString-SubStringSyntax.dot.svg)
 

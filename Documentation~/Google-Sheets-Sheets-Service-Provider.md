@@ -1,6 +1,6 @@
 # Sheets Service Provider
 
-To connect your project to the Google Sheets service, you need to use a Sheets Service Provider asset. This asset includes properties for authentication and for creating a new sheet from inside the Editor.
+To connect your project to the Google Sheets service, you need to use a [Sheets Service Provider](xref:UnityEditor.Localization.Plugins.Google.GoogleSheetsExtension.SheetsServiceProvider) asset. This asset includes properties for authentication and for creating a new sheet from inside the Editor.
 You can create the Sheets Service Provider through the Assets menu. Navigate to **Assets > Create > Localization > Google Sheets Service**.
 
 There are two possible ways to authorize: OAuth or API Key. Use OAuth if you want to read from or write to private sheets, or API Key if you only need to read from public sheets.

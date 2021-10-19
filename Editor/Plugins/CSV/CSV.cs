@@ -185,6 +185,9 @@ namespace UnityEditor.Localization.Plugins.CSV
 
                 modifiedAssets.ForEach(EditorUtility.SetDirty);
                 LocalizationEditorSettings.EditorEvents.RaiseCollectionModified(null, collection);
+
+                // Flush changes to disk.
+                collection.SaveChangesToDisk();
                 reporter?.Completed("Finished Importing");
             }
             catch (Exception e)

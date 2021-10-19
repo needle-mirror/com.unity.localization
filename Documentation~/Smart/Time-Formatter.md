@@ -1,6 +1,6 @@
 # Time Formatter
 
-Use the Time Formatter to format a [DateTime](https://docs.microsoft.com/en-us/dotnet/api/system.datetime) or [TimeSpan](https://docs.microsoft.com/en-us/dotnet/api/system.timespan) object.
+Use the [Time Formatter](xref:UnityEngine.Localization.SmartFormat.Extensions.TimeFormatter) to format a [DateTime](https://docs.microsoft.com/en-us/dotnet/api/system.datetime) or [TimeSpan](https://docs.microsoft.com/en-us/dotnet/api/system.timespan) object.
 
 ![Diagram showing the breakdown of the Smart String and how each part is evaluated.](../images/SmartString-TimeSyntax.dot.svg)
 

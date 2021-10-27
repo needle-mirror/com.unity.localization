@@ -8,6 +8,7 @@ using UnityEngine.Localization.Tables;
 using UnityEngine.Pool;
 using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
+using TreeView = UnityEditor.IMGUI.Controls.TreeView;
 
 namespace UnityEditor.Localization.UI
 {

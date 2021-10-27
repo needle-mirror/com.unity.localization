@@ -232,6 +232,9 @@ namespace UnityEditor.Localization
                 // We only send the event if the table has been added for the first time though.
                 if (!m_Tables.Any(tbl => tbl.asset == table || tbl.asset?.LocaleIdentifier == table.LocaleIdentifier))
                 {
+                    //Setting the PreloadTableFlag true if PreladAll is set true
+                    LocalizationEditorSettings.SetPreloadTableFlag(table, IsPreloadTableFlagSet());
+
                     m_Tables.Add(new LazyLoadReference<LocalizationTable> { asset = table });
 
                     // We need to SetDirty after AddTableToAddressables as AddTableToAddressables may call

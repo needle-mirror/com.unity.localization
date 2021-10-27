@@ -2,6 +2,13 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.0.5] - 2021-10-27
+
+### Fixed
+
+- Fixed bug where New Localization Tables are not preloaded when Preload All Tables is enabled. ([LOC-423](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-422))
+- Fixed TreeView compilation issue on 2022.1.
+
 ## [1.0.4] - 2021-10-19
 
 ### Fixed

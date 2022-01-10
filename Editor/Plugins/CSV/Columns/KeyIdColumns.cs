@@ -116,13 +116,13 @@ namespace UnityEditor.Localization.Plugins.CSV.Columns
         /// <inheritdoc/>
         public override void WriteBegin(StringTableCollection collection, CsvWriter csvWriter)
         {
-            csvWriter.WriteField("Key");
+            csvWriter.WriteField(KeyFieldName);
 
             if (IncludeId)
-                csvWriter.WriteField("Id");
+                csvWriter.WriteField(IdFieldName);
 
             if (IncludeSharedComments)
-                csvWriter.WriteField("Shared Comment");
+                csvWriter.WriteField(SharedCommentFieldName);
         }
 
         /// <inheritdoc/>

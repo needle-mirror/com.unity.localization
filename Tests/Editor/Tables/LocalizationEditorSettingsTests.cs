@@ -6,6 +6,7 @@ using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
 using UnityEngine.Localization.Tests;
 using Object = UnityEngine.Object;
+using UnityEngine.Localization.Pseudo;
 
 namespace UnityEditor.Localization.Tests
 {
@@ -154,6 +155,23 @@ namespace UnityEditor.Localization.Tests
 
             Assert.True(AssetDatabase.DeleteAsset(localeAssetPath), "Failed to delete asset");
             Undo.ClearAll();
+        }
+
+        [Test]
+        public void AddingAndRemovingPseudoLocale_UpdatesAvailablePseudoLocales()
+        {
+            var pseudoLocaleAssetName = "Pseudo-Locale_en";
+            var path = Application.dataPath + "/" + pseudoLocaleAssetName + ".asset";
+            var relativePath = PathHelper.MakePathRelative(path);
+            var assetPath = AssetDatabase.GenerateUniqueAssetPath(relativePath);
+
+            var pseudoLocale = PseudoLocale.CreatePseudoLocale();
+            pseudoLocale.name = pseudoLocaleAssetName;
+            AssetDatabase.CreateAsset(pseudoLocale, assetPath);
+            Assert.That(LocalizationEditorSettings.GetPseudoLocales(), Does.Contain(pseudoLocale), "Expected pseudo locale asset to be in project locales.");
+
+            AssetDatabase.DeleteAsset(assetPath);
+            Assert.That(LocalizationEditorSettings.GetPseudoLocales(), !Does.Contain(pseudoLocale), "Expected pseudo locale asset to be in project locales.");
         }
     }
 }

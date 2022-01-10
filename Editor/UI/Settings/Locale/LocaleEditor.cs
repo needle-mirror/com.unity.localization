@@ -11,15 +11,15 @@ namespace UnityEditor.Localization.UI
     {
         static class Styles
         {
-            public static readonly GUIContent code = new GUIContent("Locale Code");
-            public static readonly GUIContent cultureNotFoundLabel = new GUIContent("Not Found");
-            public static readonly GUIContent cultureInfo = new GUIContent("Culture Info");
-            public static readonly GUIContent formatCurrency = new GUIContent("Currency");
-            public static readonly GUIContent formatDateTime = new GUIContent("Date/Time");
-            public static readonly GUIContent formatNumber = new GUIContent("Number");
-            public static readonly GUIContent formatterCode = new GUIContent("Custom Formatter Code", "The Language code to use when applying any culture specific string formatting, such as date, time, currency. By default, the Locale Code will be used however this field can be used to override this such as when you are using a custom Locale which has no known formatter.");
-            public static readonly GUIContent formatCultureInfo = new GUIContent("Formatting Culture Info", "The Culture specific formatting that will be used for this Locale.");
-            public static readonly GUIContent sortOrder = new GUIContent("Sort Order", "The order the Locales will appear in any sorted Lists. By default Locales are ordered by name however the Sort Order can be used to override this.");
+            public static readonly GUIContent code = EditorGUIUtility.TrTextContent("Locale Code");
+            public static readonly GUIContent cultureNotFoundLabel = EditorGUIUtility.TrTextContent("Not Found");
+            public static readonly GUIContent cultureInfo = EditorGUIUtility.TrTextContent("Culture Info");
+            public static readonly GUIContent formatCurrency = EditorGUIUtility.TrTextContent("Currency");
+            public static readonly GUIContent formatDateTime = EditorGUIUtility.TrTextContent("Date/Time");
+            public static readonly GUIContent formatNumber = EditorGUIUtility.TrTextContent("Number");
+            public static readonly GUIContent formatterCode = EditorGUIUtility.TrTextContent("Custom Formatter Code", "The Language code to use when applying any culture specific string formatting, such as date, time, currency. By default, the Locale Code will be used however this field can be used to override this such as when you are using a custom Locale which has no known formatter.");
+            public static readonly GUIContent formatCultureInfo = EditorGUIUtility.TrTextContent("Formatting Culture Info", "The Culture specific formatting that will be used for this Locale.");
+            public static readonly GUIContent sortOrder = EditorGUIUtility.TrTextContent("Sort Order", "The order the Locales will appear in any sorted Lists. By default Locales are ordered by name however the Sort Order can be used to override this.");
         }
 
         SerializedProperty m_Name;

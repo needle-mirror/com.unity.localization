@@ -18,15 +18,15 @@ namespace UnityEditor.Localization.UI
 
         class Texts
         {
-            public GUIContent generateLocalesButton = new GUIContent("Generate Locales");
-            public GUIContent localeSource = new GUIContent("Locale Source", "Source data for generating the locales");
+            public GUIContent generateLocalesButton = EditorGUIUtility.TrTextContent("Generate Locales");
+            public GUIContent localeSource = EditorGUIUtility.TrTextContent("Locale Source", "Source data for generating the locales");
             public const string progressTitle = "Generating Locales";
             public const string saveDialog = "Save locales to folder";
 
             public GUIContent[] toolbarButtons =
             {
-                new GUIContent("Select All", "Select all visible locales"),
-                new GUIContent("Deselect All", "Deselect all visible locales")
+                EditorGUIUtility.TrTextContent("Select All", "Select all visible locales"),
+                EditorGUIUtility.TrTextContent("Deselect All", "Deselect all visible locales")
             };
         }
 
@@ -45,7 +45,7 @@ namespace UnityEditor.Localization.UI
         public static void ShowWindow()
         {
             var window = (LocaleGeneratorWindow)GetWindow(typeof(LocaleGeneratorWindow));
-            window.titleContent = new GUIContent("Locale Generator", EditorIcons.Locale);
+            window.titleContent = EditorGUIUtility.TrTextContent("Locale Generator", EditorIcons.Locale);
             window.minSize = new Vector2(500, 500);
             window.ShowUtility();
         }

@@ -73,3 +73,11 @@ To add a UI dropdown menu to the Scene, go to **GameObject > UI > Dropdown**, an
 [!code-cs[locale-dropdown](../DocCodeSamples.Tests/LocaleDropdown.cs#example-code)]
 
 You can see a more advanced version of this script in the Localization package samples.
+
+## Editor
+
+Use the Editor scripting class [LocalizationEditorSettings](xref:UnityEditor.Localization.LocalizationEditorSettings) to make changes to Localization assets.
+
+The following example shows how to update a collection by adding support for a new Locale.
+
+[!code-cs[update-collection](../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs#get-string-table)]

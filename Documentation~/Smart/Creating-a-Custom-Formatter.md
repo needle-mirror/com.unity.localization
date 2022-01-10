@@ -2,9 +2,11 @@
 
 You can create a custom Formatter by inheriting from the [FormatterBase](xref:UnityEngine.Localization.SmartFormat.Core.Extensions.FormatterBase) class.
 
+To use a custom Formatter, add it to the [Formatters](LocalizationSettings.md#formatters) list in the **LocalizationSettings**.
+
 This example shows how to create a formatter to format an integer that represents bytes.
 
-[!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#byte-formatter)]
+[!code-cs[](../../DocCodeSamples.Tests/ByteFormatter.cs)]
 
 | **Example Smart String**    | **Arguments** | **Result**               |
 | --------------------------- | ------------- | ------------------------ |

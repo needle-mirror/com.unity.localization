@@ -12,10 +12,10 @@ namespace UnityEditor.Localization.UI
     {
         class Styles
         {
-            public static readonly GUIContent identifier = new GUIContent("Source Locale", "The locale the pseudo localized values will be generated from.");
-            public static readonly GUIContent methods = new GUIContent("Pseudo-Localization Methods", "The pseudo-localization transformations that will be applied in order(top to bottom).");
-            public static readonly GUIContent preview = new GUIContent("Pseudo-Localization Preview", "Preview the result of applying the pseudo-localization methods to a sample string.");
-            public static readonly GUIContent sortOrder = new GUIContent("Sort Order", "The order the Locales will appear in any sorted Lists. By default Locales are ordered by name however the Sort Order can be used to override this.");
+            public static readonly GUIContent identifier = EditorGUIUtility.TrTextContent("Source Locale", "The locale the pseudo localized values will be generated from.");
+            public static readonly GUIContent methods = EditorGUIUtility.TrTextContent("Pseudo-Localization Methods", "The pseudo-localization transformations that will be applied in order(top to bottom).");
+            public static readonly GUIContent preview = EditorGUIUtility.TrTextContent("Pseudo-Localization Preview", "Preview the result of applying the pseudo-localization methods to a sample string.");
+            public static readonly GUIContent sortOrder = EditorGUIUtility.TrTextContent("Sort Order", "The order the Locales will appear in any sorted Lists. By default Locales are ordered by name however the Sort Order can be used to override this.");
         }
 
         const string k_PreviewTextPref = "Localization-Pseudo-PreviewText";

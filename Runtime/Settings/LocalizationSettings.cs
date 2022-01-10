@@ -44,7 +44,7 @@ namespace UnityEngine.Localization.Settings
         MetadataCollection m_Metadata = new MetadataCollection();
 
         [SerializeField]
-        LocaleIdentifier m_ProjectLocaleIdentifier = "en";
+        internal LocaleIdentifier m_ProjectLocaleIdentifier = "en";
 
         [SerializeField]
         bool m_InitializeSynchronously;

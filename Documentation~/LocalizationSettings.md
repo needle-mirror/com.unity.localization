@@ -56,6 +56,14 @@ The **Default Table** field can be used to set a default String Table name, this
 
 The **No Translation Found Format** field can be used to configure the string that should be returned for non-localized values.
 
+## Project Locale
+
+The Project Locale identifies the default locale, such as the locale that the application was developed in. This property is primarily used by the [Localized Property Variants](LocalizedPropertyVariants.md) system.
+
+## Initialize Synchronously
+
+When the application starts or the selected Locale changes, the Localization system must initialize itself. Initialization involves loading the supported locales and preloading the string and asset tables. By default this is performed asynchronously and executes in the background while Unity is running. Enabling the **Initialize Synchronously** setting blocks the main thread until initialization is complete. This forces the localization initialization operation to complete immediately. The [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) method is used to force the operation to complete, note this is not supported on [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
+
 ## Smart Format Settings
 
 The **Smart Format** section can be used to configure the behavior when parsing and formatting [Smart Strings](Smart/SmartStrings.md)

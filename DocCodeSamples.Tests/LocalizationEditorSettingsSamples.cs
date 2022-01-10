@@ -187,6 +187,10 @@ public static class LocalizationEditorSettingsSamples
         table.AddEntry("OPTIONS_MENU", "Options");
         table.AddEntry("EXIT_MENU", "Quit");
 
+        // Mark modified assets dirty so changes are saved.
+        EditorUtility.SetDirty(table);
+        EditorUtility.SetDirty(table.SharedData);
+
         #endregion
     }
 

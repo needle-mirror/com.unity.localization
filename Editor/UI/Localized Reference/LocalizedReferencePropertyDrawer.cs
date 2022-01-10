@@ -11,25 +11,26 @@ namespace UnityEditor.Localization.UI
     {
         protected static class Styles
         {
-            public static readonly GUIContent addLocale = new GUIContent("Add Locale", "Add a new Locale.");
-            public static readonly GUIContent addTable = new GUIContent("Create Table", "Create a new table for the selected locale.");
-            public static readonly GUIContent addTableCollection = new GUIContent("Create Table Collection", "Create a new table collection for every Locale in the project");
-            public static readonly GUIContent addTableEntry = new GUIContent("Add Table Entry", "Create a new table entry in the selected table collection.");
-            public static readonly GUIContent defaultArg = new GUIContent("Default Argument", "The Default Argument will be the argument passed in at index 0 and will be used when no index placeholder is used");
-            public static readonly GUIContent entryName = new GUIContent("Entry Name", "The name or key of the selected table entry");
-            public static readonly GUIContent useFallback = new GUIContent("Enable Fallback", "Determines if a Fallback should be used when no value could be found for the Locale");
+            public static readonly GUIContent addLocale = EditorGUIUtility.TrTextContent("Add Locale", "Add a new Locale.");
+            public static readonly GUIContent addTable = EditorGUIUtility.TrTextContent("Create Table", "Create a new table for the selected locale.");
+            public static readonly GUIContent addTableCollection = EditorGUIUtility.TrTextContent("Create Table Collection", "Create a new table collection for every Locale in the project");
+            public static readonly GUIContent addTableEntry = EditorGUIUtility.TrTextContent("Add Table Entry", "Create a new table entry in the selected table collection.");
+            public static readonly GUIContent defaultArg = EditorGUIUtility.TrTextContent("Default Argument", "The Default Argument will be the argument passed in at index 0 and will be used when no index placeholder is used");
+            public static readonly GUIContent entryName = EditorGUIUtility.TrTextContent("Entry Name", "The name or key of the selected table entry");
+            public static readonly GUIContent useFallback = EditorGUIUtility.TrTextContent("Enable Fallback", "Determines if a Fallback should be used when no value could be found for the Locale");
             public static readonly GUIContent noTableSelected = new GUIContent($"None({typeof(TCollection).Name})");
             public static readonly GUIContent mixedValueContent = EditorGUIUtility.TrTextContent("\u2014", "Mixed Values");
-            public static readonly GUIContent previewArguments = new GUIContent("Preview Arguments", "Arguments to pass to the string formatter. These are for preview purposes only and are not stored.");
-            public static readonly GUIContent selectedTable = new GUIContent("Table Collection");
-            public static readonly GUIContent variableName = new GUIContent("Variable Name");
-            public static readonly GUIContent waitForCompletion = new GUIContent("Wait For Completion", "Should the operation wait for the localization operation to complete before returning, blocking the main thread, or allow it to finish asyncronously? Please note that this is not supported on WebGL.");
+            public static readonly GUIContent previewArguments = EditorGUIUtility.TrTextContent("Preview Arguments", "Arguments to pass to the string formatter. These are for preview purposes only and are not stored.");
+            public static readonly GUIContent selectedTable = EditorGUIUtility.TrTextContent("Table Collection");
+            public static readonly GUIContent variableName = EditorGUIUtility.TrTextContent("Variable Name");
+            public static readonly GUIContent waitForCompletion = EditorGUIUtility.TrTextContent("Wait For Completion", "Should the operation wait for the localization operation to complete before returning, blocking the main thread, or allow it to finish asyncronously? Please note that this is not supported on WebGL.");
         }
 
         protected static Func<ReadOnlyCollection<TCollection>> GetProjectTableCollections { get; set; }
 
         public class Data : PropertyDrawerExtendedData
         {
+            public SerializedProperty rootProperty;
             public SerializedObject serializedObject;
             public SerializedTableReference tableReference;
             public SerializedTableEntryReference tableEntryReference;
@@ -108,10 +109,13 @@ namespace UnityEditor.Localization.UI
                     m_SelectedTableIdx = -1;
                     SelectedTableEntry = null;
                     warningMessage = null;
-                    if (value != null)
-                        tableReference.Reference = value.SharedData.TableCollectionNameGuid;
-                    else
-                        tableReference.Reference = string.Empty;
+                    if (tableReference != null)
+                    {
+                        if (value != null)
+                            tableReference.Reference = value.SharedData.TableCollectionNameGuid;
+                        else
+                            tableReference.Reference = string.Empty;
+                    }
                 }
             }
 
@@ -145,7 +149,8 @@ namespace UnityEditor.Localization.UI
                 {
                     m_FieldLabel = null;
                     m_SelectedEntry = value;
-                    tableEntryReference.Reference = value != null ? value.Id : SharedTableData.EmptyId;
+                    if (tableEntryReference != null)
+                        tableEntryReference.Reference = value != null ? value.Id : SharedTableData.EmptyId;
                 }
             }
 
@@ -200,6 +205,7 @@ namespace UnityEditor.Localization.UI
 
             public virtual void Init(SerializedProperty property)
             {
+                rootProperty = property;
                 serializedObject = property.serializedObject;
                 tableReference = new SerializedTableReference(property.FindPropertyRelative("m_TableReference"));
                 tableEntryReference = new SerializedTableEntryReference(property.FindPropertyRelative("m_TableEntryReference"));
@@ -258,7 +264,7 @@ namespace UnityEditor.Localization.UI
             Undo.undoRedoPerformed -= UndoRedoPerformed;
         }
 
-        void UndoRedoPerformed()
+        protected virtual void UndoRedoPerformed()
         {
             foreach (var prop in PropertyData.Values)
             {
@@ -314,16 +320,7 @@ namespace UnityEditor.Localization.UI
 
             if (EditorGUI.DropdownButton(dropDownPosition, data.FieldLabel, FocusType.Passive))
             {
-                var treeSelection = new TableEntryTreeView(data.assetType, (collection, entry) =>
-                {
-                    data.SelectedTableCollection = collection as TCollection;
-                    data.SelectedTableEntry = entry;
-
-                    // Will be called outside of OnGUI so we need to call ApplyModifiedProperties.
-                    data.serializedObject.ApplyModifiedProperties();
-                });
-
-                PopupWindow.Show(dropDownPosition, new TreeViewPopupWindow(treeSelection) { Width = dropDownPosition.width });
+                ShowPicker(data, dropDownPosition);
             }
 
             // Missing table collection warning
@@ -336,6 +333,20 @@ namespace UnityEditor.Localization.UI
             }
 
             DrawTableDetails(position, rowPosition, data, property);
+        }
+
+        protected virtual void ShowPicker(Data data, Rect dropDownPosition)
+        {
+            var treeSelection = new TableEntryTreeView(data.assetType, (collection, entry) =>
+            {
+                data.SelectedTableCollection = collection as TCollection;
+                data.SelectedTableEntry = entry;
+
+                // Will be called outside of OnGUI so we need to call ApplyModifiedProperties.
+                data.serializedObject.ApplyModifiedProperties();
+            });
+
+            PopupWindow.Show(dropDownPosition, new TreeViewPopupWindow(treeSelection) { Width = dropDownPosition.width });
         }
 
         void DrawTableDetails(Rect position, Rect rowPosition, Data data, SerializedProperty property)

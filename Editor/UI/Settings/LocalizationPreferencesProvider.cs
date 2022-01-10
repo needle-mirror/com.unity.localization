@@ -5,7 +5,9 @@ namespace UnityEditor.Localization.UI
 {
     class LocalizationPreferencesProvider : SettingsProvider
     {
-        static readonly GUIContent showGameViewToolbar = new GUIContent("Locale Game View Menu", "Shows a menu for changing the selected locale in the GameView during playmode.");
+        static readonly GUIContent showGameViewToolbar = EditorGUIUtility.TrTextContent("Locale Game View Menu", "Shows a menu for changing the selected locale in the GameView during playmode.");
+        static readonly GUIContent stringPicker = new GUIContent("String Search Picker");
+        static readonly GUIContent assetPicker = new GUIContent("Asset Search Picker");
 
         public LocalizationPreferencesProvider()
             : base("Preferences/Localization", SettingsScope.User)
@@ -17,12 +19,7 @@ namespace UnityEditor.Localization.UI
         {
             GUILayout.Space(10);
 
-            const float indent = 8;
-
-            // Small indent to match the other preference editors.
-            var rect = EditorGUILayout.GetControlRect();
-            rect.xMin += indent;
-
+            var rect = GetControlRect();
             EditorGUI.BeginChangeCheck();
             LocalizationEditorSettings.ShowLocaleMenuInGameView = EditorGUI.Toggle(rect, showGameViewToolbar, LocalizationEditorSettings.ShowLocaleMenuInGameView);
             if (EditorGUI.EndChangeCheck() && Application.isPlaying)
@@ -32,6 +29,22 @@ namespace UnityEditor.Localization.UI
                 else
                     GameViewLanguageMenu.Hide();
             }
+
+            rect = GetControlRect();
+            LocalizationEditorSettings.UseLocalizedAssetSearchPicker = EditorGUI.Toggle(rect, assetPicker, LocalizationEditorSettings.UseLocalizedAssetSearchPicker);
+
+            rect = GetControlRect();
+            LocalizationEditorSettings.UseLocalizedStringSearchPicker = EditorGUI.Toggle(rect, stringPicker, LocalizationEditorSettings.UseLocalizedStringSearchPicker);
+        }
+
+        static Rect GetControlRect()
+        {
+            // Small indent to match the other preference editors.
+            const float indent = 8;
+
+            var rect = EditorGUILayout.GetControlRect();
+            rect.xMin += indent;
+            return rect;
         }
 
         [SettingsProvider]

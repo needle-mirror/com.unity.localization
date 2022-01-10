@@ -187,6 +187,17 @@ namespace UnityEditor.Localization.Platform.iOS
             }
         }
 
+        public static void SetDevelopmentRegion(this PBXProject project, string code)
+        {
+            const string elementName = "developmentRegion";
+
+            var section = s_ProjectSection.GetValue(project);
+            var data = s_ProjectSectionObjectData.GetValue(section);
+            var rawProperties = s_GetPropertiesRaw.Invoke(data, null);
+            var dict = s_KnownRegionsDict.GetValue(rawProperties) as IDictionary;
+            dict[elementName] = Activator.CreateInstance(s_PBXElementString, code);
+        }
+
         public static void ClearKnownRegions(this PBXProject project)
         {
             var regions = project.GetKnownRegions();

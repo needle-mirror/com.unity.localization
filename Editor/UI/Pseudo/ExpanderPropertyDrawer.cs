@@ -20,9 +20,9 @@ namespace UnityEditor.Localization.UI
         class Styles
         {
             public static readonly GUIContent addItem = new GUIContent("+");
-            public static readonly GUIContent expansionAmount = new GUIContent("Expansion", "The amount to increase the string size. For example 0.3 would add 30% onto the length.");
+            public static readonly GUIContent expansionAmount = EditorGUIUtility.TrTextContent("Expansion", "The amount to increase the string size. For example 0.3 would add 30% onto the length.");
             public static readonly GUIContent removeItem = new GUIContent("-");
-            public static readonly GUIContent stringLength = new GUIContent("String Length", "The length the string should fall within for this rule to be applied.");
+            public static readonly GUIContent stringLength = EditorGUIUtility.TrTextContent("String Length", "The length the string should fall within for this rule to be applied.");
         }
 
         static (SerializedProperty min, SerializedProperty max, SerializedProperty rate) ExtractExpansionRuleProperties(SerializedProperty prop)

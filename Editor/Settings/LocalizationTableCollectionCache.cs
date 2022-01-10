@@ -11,8 +11,8 @@ namespace UnityEditor.Localization
         // Contains table and shared table data guids that map to the parent collection.
         Dictionary<string, LocalizationTableCollection> m_GuidToCollection;
 
-        List<StringTableCollection> m_StringTableCollections;
-        List<AssetTableCollection> m_AssetTableCollections;
+        internal List<StringTableCollection> m_StringTableCollections;
+        internal List<AssetTableCollection> m_AssetTableCollections;
 
         public List<AssetTableCollection> AssetTableCollections
         {

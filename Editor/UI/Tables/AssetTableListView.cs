@@ -7,7 +7,7 @@ namespace UnityEditor.Localization.UI
     class LocalizedAssetTableListView : GenericAssetTableListView<AssetTable, AssetTableTreeViewItem>
     {
         protected static readonly Color k_SelectedColor = new Color(0.37f, 0.41f, 0.7f);
-        static readonly GUIContent k_MetadataIcon = new GUIContent(EditorIcons.Metadata, "Edit Table Entry Metadata");
+        static readonly GUIContent k_MetadataIcon = EditorGUIUtility.TrTextContent(string.Empty, "Edit Table Entry Metadata", EditorIcons.Metadata);
         const int k_MetadataLabelWidth = 20;
         const float k_ThumbnailPreviewHeight = 80;
 

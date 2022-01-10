@@ -18,7 +18,7 @@ namespace UnityEditor.Localization.UI
         public static void ShowWindow()
         {
             var window = (CustomLocaleUIWindow)GetWindow(typeof(CustomLocaleUIWindow));
-            window.titleContent = new GUIContent("Add Custom Locale");
+            window.titleContent = EditorGUIUtility.TrTextContent("Add Custom Locale");
             window.minSize = new Vector2(500, 500);
             window.ShowUtility();
         }

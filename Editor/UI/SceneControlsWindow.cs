@@ -12,16 +12,16 @@ namespace UnityEditor.Localization.UI
 
         static class Styles
         {
-            public static readonly GUIContent assetTable = new GUIContent("Asset Table", "The Asset Table to add new assets in to.");
-            public static readonly GUIContent stringTable = new GUIContent("String Table", "The String Table to add new Localized Strings in to.");
-            public static readonly GUIContent trackChanges = new GUIContent("Track Changes", "When enabled any changes made to a Components properties will be recorded for the selected Locale.");
+            public static readonly GUIContent assetTable = EditorGUIUtility.TrTextContent("Asset Table", "The Asset Table to add new assets in to.");
+            public static readonly GUIContent stringTable = EditorGUIUtility.TrTextContent("String Table", "The String Table to add new Localized Strings in to.");
+            public static readonly GUIContent trackChanges = EditorGUIUtility.TrTextContent("Track Changes", "When enabled any changes made to a Components properties will be recorded for the selected Locale.");
         }
 
         [MenuItem("Window/Asset Management/Localization Scene Controls")]
         static void ShowWindow()
         {
             var window = GetWindow<SceneControlsWindow>();
-            window.titleContent = new GUIContent("Localization Scene Controls");
+            window.titleContent = EditorGUIUtility.TrTextContent("Localization Scene Controls");
             window.Show();
         }
 

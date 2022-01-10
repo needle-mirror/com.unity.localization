@@ -5,10 +5,10 @@ using UnityEngine.Localization.SmartFormat.PersistentVariables;
 
 namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
 {
-    public class GlobalVariablesSourceTests
+    public class PersistentVariablesSourceTest
     {
         SmartFormatter m_Formatter;
-        PersistentVariablesSource m_GlobalVariablesSource;
+        PersistentVariablesSource m_PersistentVariablesSource;
         VariablesGroupAsset m_Group1;
         VariablesGroupAsset m_Group2;
         VariablesGroupAsset m_NestedGroup1;
@@ -61,25 +61,33 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
         public void Setup()
         {
             m_Formatter = Smart.CreateDefaultSmartFormat();
-            m_GlobalVariablesSource = new PersistentVariablesSource(m_Formatter);
-            m_Formatter.AddExtensions(m_GlobalVariablesSource);
+            m_PersistentVariablesSource = new PersistentVariablesSource(m_Formatter);
+            m_Formatter.AddExtensions(m_PersistentVariablesSource);
 
             m_NestedGroup1 = ScriptableObject.CreateInstance<VariablesGroupAsset>();
             m_NestedGroup2 = ScriptableObject.CreateInstance<VariablesGroupAsset>();
 
             m_Group1 = ScriptableObject.CreateInstance<VariablesGroupAsset>();
-            m_GlobalVariablesSource.Add("global", m_Group1);
+            m_PersistentVariablesSource.Add("global", m_Group1);
             m_Group1.Add("myInt", new IntVariable { Value = 123 });
+            m_Group1.Add("my-unsigned-int", new UIntVariable { Value = 132 });
+            m_Group1.Add("my-sbyte", new SByteVariable { Value = -100 });
+            m_Group1.Add("my-byte", new ByteVariable { Value = 101 });
+            m_Group1.Add("my-ushort", new ShortVariable { Value = -22 });
+            m_Group1.Add("my-short", new UShortVariable { Value = 22 });
+            m_Group1.Add("long", new LongVariable { Value = -123456 });
+            m_Group1.Add("ulong", new ULongVariable { Value = 7890 });
             m_Group1.Add("my-Int-var", new IntVariable());
             m_Group1.Add("apple-count", new IntVariable { Value = 10 });
             m_Group1.Add("myFloat", new FloatVariable { Value = 1.23f });
             m_Group1.Add("some-float-value", new FloatVariable());
             m_Group1.Add("time", new FloatVariable { Value = 1.234f });
+            m_Group1.Add("my-double", new DoubleVariable { Value = 12345 });
             m_Group1.Add("door-state", new BoolVariable { Value = true });
             m_Group1.Add("max", new CharacterDetailsNoReflection());
 
             m_Group2 = ScriptableObject.CreateInstance<VariablesGroupAsset>();
-            m_GlobalVariablesSource.Add("npc", m_Group2);
+            m_PersistentVariablesSource.Add("npc", m_Group2);
             m_Group2.Add("emily", new CharacterDetails { FirstName = "Emily", Surname = "Kaldwin", Age = 20, Alive = true });
             m_Group2.Add("guy", new CharacterDetails { FirstName = "Guy", Surname = "Threepwood", Alive = false });
 
@@ -109,6 +117,14 @@ namespace UnityEngine.Localization.SmartFormat.Tests.Extensions
         [TestCase("Max Caulfield is from Arcadia Bay and is 18 years old.", "{global.max.Name} is from {global.max.Home} and is {global.max.Age} years old.")]
         [TestCase("This value is nested 1 deep: 0.12345", "This value is nested 1 deep: {global.nested.nested-float}")]
         [TestCase("This value is nested 2 deep: 1111 - I am nested deep", "This value is nested 2 deep: {global.nested.further-nested.my-nested-int} - {global.nested.further-nested.my-nested-string}")]
+        [TestCase("My UInt Value is 132", "My UInt Value is {global.my-unsigned-int}")]
+        [TestCase("My short Value is 22", "My short Value is {global.my-short}")]
+        [TestCase("My ushort Value is -22", "My ushort Value is {global.my-ushort}")]
+        [TestCase("Byte = 101", "Byte = {global.my-byte}")]
+        [TestCase("SByte = -100", "SByte = {global.my-sbyte}")]
+        [TestCase("Long = -123456", "Long = {global.long}")]
+        [TestCase("ULong = 7890", "ULong = {global.ulong}")]
+        [TestCase("Double = 12345", "Double = {global.my-double}")]
         public void Format_UsesExpectedVariables(string expected, string format)
         {
             var result = m_Formatter.Format(format, null);

@@ -402,5 +402,30 @@ namespace UnityEditor.Localization
 
             LocalizationEditorSettings.EditorEvents.RaiseTableEntryRemoved(this, entry);
         }
+
+        /// <inheritdoc/>
+        public override void ClearAllEntries()
+        {
+            foreach (var table in AssetTables)
+            {
+                if (table == null)
+                    continue;
+
+                for (int i = 0; i < table.Values.Count; ++i)
+                {
+                    var tableEntry = table.Values.ElementAt(i);
+
+                    // Remove the asset from Addressables
+                    if (!string.IsNullOrEmpty(tableEntry.Guid))
+                    {
+                        RemoveAssetFromTable(table, tableEntry.KeyId);
+                    }
+                }
+
+                table.Clear();
+                EditorUtility.SetDirty(table);
+            }
+            base.ClearAllEntries();
+        }
     }
 }

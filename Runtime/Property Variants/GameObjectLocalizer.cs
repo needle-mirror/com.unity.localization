@@ -75,8 +75,6 @@ namespace UnityEngine.Localization.PropertyVariants
             SelectedLocaleChanged(localeOp.Result);
         }
 
-        void SelectedLocaleChanged(AsyncOperationHandle<Locale> localeOp) => SelectedLocaleChanged(localeOp.Result);
-
         void SelectedLocaleChanged(Locale locale)
         {
             // Ignore null, this will reset the driven properties back to their defaults.

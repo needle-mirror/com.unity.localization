@@ -103,6 +103,16 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
+        /// Clear all entries in this table.
+        /// </summary>
+        public void Clear()
+        {
+            m_Entries.Clear();
+            m_IdDictionary.Clear();
+            m_KeyDictionary.Clear();
+        }
+
+        /// <summary>
         /// The name of this table collection.
         /// All <see cref="LocalizationTable"/> that use this SharedTableData will have this name.
         /// </summary>

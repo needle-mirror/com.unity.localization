@@ -245,7 +245,7 @@ namespace UnityEngine.Localization
         /// Please note that [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on
         /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The localized string for the <see cref="LocalizationSettings.SelectedLocale"/> or <see cref="LocalizedReference.LocaleOverride"/> if it is not <c>null</c>.</returns>
         public string GetLocalizedString() => GetLocalizedStringAsync().WaitForCompletion();
 
         /// <summary>
@@ -264,7 +264,7 @@ namespace UnityEngine.Localization
         /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
         /// </summary>
         /// <param name="arguments">The arguments to pass into the Smart String formatter or <c>String.Format</c>.</param>
-        /// <returns></returns>
+        /// <returns>The localized string for the <see cref="LocalizationSettings.SelectedLocale"/> or <see cref="LocalizedReference.LocaleOverride"/> if it is not <c>null</c>.</returns>
         public string GetLocalizedString(params object[] arguments) => GetLocalizedStringAsync((IList<object>)arguments).WaitForCompletion();
 
         /// <summary>
@@ -272,7 +272,7 @@ namespace UnityEngine.Localization
         /// the translated string that matches <see cref="TableEntryReference"/>.
         /// </summary>
         /// <param name="arguments">The arguments to pass into the Smart String formatter or <c>String.Format</c>.</param>
-        /// <returns></returns>
+        /// <returns>The localized string for the <see cref="LocalizationSettings.SelectedLocale"/> or <see cref="LocalizedReference.LocaleOverride"/> if it is not <c>null</c>.</returns>
         public string GetLocalizedString(IList<object> arguments) => GetLocalizedStringAsync(arguments).WaitForCompletion();
 
         /// <summary>
@@ -329,6 +329,10 @@ namespace UnityEngine.Localization
         /// <param name="name">The name of the variable.</param>
         /// <param name="value">The variable that was found or <c>default</c>.</param>
         /// <returns><c>true</c> if a variable was found and <c>false</c> if one could not.</returns>
+        /// <example>
+        /// This example shows how to get and add a local variable using TryGetValue.
+        /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="try-get-variable"/>
+        /// </example>
         public bool TryGetValue(string name, out IVariable value)
         {
             if (m_VariableLookup.TryGetValue(name, out var v))
@@ -374,8 +378,12 @@ namespace UnityEngine.Localization
         /// <summary>
         /// Removes a local variable with the specified name.
         /// </summary>
-        /// <param name="name"></param>
+        /// <param name="name">The name of the variable to be removed.</param>
         /// <returns><c>true</c> if a variable with the specified name was removed, <c>false</c> if one was not.</returns>
+        /// <example>
+        /// This example shows how to remove a local variable.
+        /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="remove-variable"/>
+        /// </example>
         public bool Remove(string name)
         {
             if (m_VariableLookup.TryGetValue(name, out var v))

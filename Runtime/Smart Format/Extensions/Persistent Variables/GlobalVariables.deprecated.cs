@@ -22,7 +22,7 @@ namespace UnityEngine.Localization.SmartFormat.GlobalVariables
     /// <summary>
     /// Collection of <see cref="IVariable"/> that can be used during formatting of a localized string.
     /// </summary>
-    [Obsolete("Please use UnityEngine.Localization.SmartFormat.PersistentVariables.GlobalVariablesGroup instead (UnityUpgradable) -> UnityEngine.Localization.SmartFormat.PersistentVariables.VariablesGroupAsset")]
+    [Obsolete("Please use UnityEngine.Localization.SmartFormat.PersistentVariables.VariablesGroupAsset instead.")]
     public class GlobalVariablesGroup : VariablesGroupAsset {}
 
     /// <inheritdoc/>

@@ -22,5 +22,7 @@ namespace UnityEngine.Localization.Metadata
             get => m_CommentText;
             set => m_CommentText = value;
         }
+
+        public override string ToString() => CommentText;
     }
 }

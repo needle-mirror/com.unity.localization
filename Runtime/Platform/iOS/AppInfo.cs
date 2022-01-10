@@ -35,19 +35,23 @@ namespace UnityEngine.Localization.Platform.iOS
             "NSLocationWhenInUseUsageDescription field in xcode projects info.plist file.")]
         [SerializeField] LocalizedString m_LocationUsageDescription = new LocalizedString();
 
+        [Tooltip("A message that informs the user why an app is requesting permission to use data for " +
+            "tracking the user or the device.\n" +
+            "NSUserTrackingUsageDescription field in xcode projects info.plist file.")]
+        [SerializeField] LocalizedString m_UserTrackingUsageDescription = new LocalizedString();
+
         /// <summary>
         /// The user-visible name for the bundle, used by Siri and visible on the iOS Home screen.
         /// This name can contain up to 15 characters.
         /// CFBundleName field in xcode projects info.plist file.
         /// </summary>
-        /// <remarks></remarks>
         public LocalizedString ShortName { get => m_ShortName; set => m_ShortName = value; }
 
         /// <summary>
         /// The user-visible name for the bundle, used by Siri and visible on the iOS Home screen.
         /// Use this key if you want a product name that's longer than <see cref="ShortName"/>.
+        /// CFBundleDisplayName field in xcode projects info.plist file.
         /// </summary>
-        /// <remarks>CFBundleDisplayName field in xcode projects info.plist file.</remarks>
         public LocalizedString DisplayName { get => m_DisplayName; set => m_DisplayName = value; }
 
         /// <summary>
@@ -68,5 +72,12 @@ namespace UnityEngine.Localization.Platform.iOS
         /// NSLocationWhenInUseUsageDescription field in xcode projects info.plist file.
         /// </summary>
         public LocalizedString LocationUsageDescription { get => m_LocationUsageDescription; set => m_LocationUsageDescription = value; }
+
+        /// <summary>
+        /// A message that informs the user why an app is requesting permission to use data for tracking the
+        /// user or the device.
+        /// NSUserTrackingUsageDescription field in xcode projects info.plist file.
+        /// </summary>
+        public LocalizedString UserTrackingUsageDescription { get => m_UserTrackingUsageDescription; set => m_UserTrackingUsageDescription = value; }
     }
 }

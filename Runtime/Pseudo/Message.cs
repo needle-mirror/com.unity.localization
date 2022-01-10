@@ -63,7 +63,8 @@ namespace UnityEngine.Localization.Pseudo
         {
             var frag = GenericPool<WritableMessageFragment>.Get();
             var startIndex = m_StartIndex == -1 ? start : m_StartIndex + start;
-            frag.Initialize(@Message, m_OriginalString, startIndex, end);
+            var endIndex = m_StartIndex == -1 ? end : m_StartIndex + end;
+            frag.Initialize(@Message, m_OriginalString, startIndex, endIndex);
             return frag;
         }
 
@@ -72,7 +73,8 @@ namespace UnityEngine.Localization.Pseudo
         {
             var frag = GenericPool<ReadOnlyMessageFragment>.Get();
             var startIndex = m_StartIndex == -1 ? start : m_StartIndex + start;
-            frag.Initialize(@Message, m_OriginalString, startIndex, end);
+            var endIndex = m_StartIndex == -1 ? end : m_StartIndex + end;
+            frag.Initialize(@Message, m_OriginalString, startIndex, endIndex);
             return frag;
         }
 

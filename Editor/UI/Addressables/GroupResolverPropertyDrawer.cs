@@ -17,18 +17,18 @@ namespace UnityEditor.Localization.UI.Addressables
             root.RegisterValueChangedCallback(evt => property.isExpanded = evt.newValue);
 
             var name = new TextField("Shared Group Name");
-            name.BindProperty(property.FindPropertyRelative("m_SharedGroupName"));
+            name.bindingPath = "m_SharedGroupName";
             root.Add(name);
 
             var group = new ObjectField("Shared Group") { allowSceneObjects = false, objectType = typeof(AddressableAssetGroup) };
             var groupProperty = property.FindPropertyRelative("m_SharedGroup");
-            group.BindProperty(groupProperty);
+            group.bindingPath = "m_SharedGroup";
             group.RegisterValueChangedCallback(evt => name.style.display = evt.newValue != null ? DisplayStyle.None : DisplayStyle.Flex);
             name.style.display = groupProperty.objectReferenceValue != null ? DisplayStyle.None : DisplayStyle.Flex;
             root.Add(group);
 
             var localeName = new TextField("Locale Group Name");
-            localeName.BindProperty(property.FindPropertyRelative("m_LocaleGroupNamePattern"));
+            localeName.bindingPath = "m_LocaleGroupNamePattern";
             root.Add(localeName);
 
             var localeGroupsProperty = property.FindPropertyRelative("m_LocaleGroups");
@@ -42,7 +42,7 @@ namespace UnityEditor.Localization.UI.Addressables
             root.Add(list);
 
             var readOnly = new Toggle("Read Only");
-            readOnly.BindProperty(property.FindPropertyRelative("m_MarkEntriesReadOnly"));
+            readOnly.bindingPath = "m_MarkEntriesReadOnly";
             root.Add(readOnly);
 
             return root;

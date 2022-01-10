@@ -15,9 +15,9 @@ namespace UnityEditor.Localization.UI
     {
         const float k_MetadataLabelHeight = 20;
 
-        static readonly GUIContent k_MissingTableMenuItem = new GUIContent("Missing Tables");
+        static readonly GUIContent k_MissingTableMenuItem = EditorGUIUtility.TrTextContent("Missing Tables");
 
-        static readonly GUIContent k_MetadataIcon = new GUIContent(EditorIcons.Metadata, "Edit Table Metadata");
+        static readonly GUIContent k_MetadataIcon = EditorGUIUtility.TrTextContent(string.Empty, "Edit Table Metadata", EditorIcons.Metadata);
 
         LocalizationTableCollection TableCollection { get; set; }
 

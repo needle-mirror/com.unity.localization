@@ -87,7 +87,6 @@ namespace UnityEditor.Localization.UI
                 m_PropertiesPanel.style.display = DisplayStyle.Flex;
                 var editor = selected.CreateEditor();
                 m_PropertiesPanel.Add(editor);
-                editor.StretchToParentSize();
             }
             else
             {

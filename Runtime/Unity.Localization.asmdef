@@ -1,6 +1,6 @@
 {
     "name": "Unity.Localization",
-    "rootNamespace": "",
+    "rootNamespace": "UnityEngine.Localization",
     "references": [
         "Unity.Addressables",
         "Unity.ResourceManager",

@@ -277,6 +277,45 @@ public class LocalizedStringConstructor
 
         #endregion
     }
+
+    void TryGetVariable()
+    {
+        var localizedString = new LocalizedString("My Table", "My Entry");
+
+        #region try-get-variable
+
+        FloatVariable playerScore = null;
+        if (!localizedString.TryGetValue("player-score", out var variable))
+        {
+            playerScore = new FloatVariable();
+            localizedString.Add("player-score", playerScore);
+        }
+        else
+        {
+            playerScore = variable as FloatVariable;
+        }
+
+        playerScore.Value += 10;
+
+        #endregion
+    }
+
+    void RemoveVariable()
+    {
+        var localizedString = new LocalizedString("My Table", "My Entry");
+
+        #region remove-variable
+
+        const string variableName = "my-variable";
+
+        localizedString.Add(variableName, new FloatVariable { Value = 100.45f });
+        Debug.LogFormat("Contains variable before remove: {0}", localizedString.ContainsKey(variableName));
+
+        localizedString.Remove(variableName);
+        Debug.LogFormat("Contains variable after remove: {0}", localizedString.ContainsKey(variableName));
+
+        #endregion
+    }
 }
 
 #region health-counter

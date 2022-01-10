@@ -22,7 +22,6 @@ namespace UnityEditor.Localization.UI.Addressables
                 }
             }));
 
-            root.Bind(new SerializedObject(target));
             return root;
         }
     }

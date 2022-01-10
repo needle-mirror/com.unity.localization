@@ -30,7 +30,7 @@ namespace UnityEditor.Localization.UI
         public static void ShowWindow()
         {
             var window = GetWindow<LocalizationTablesWindow>(false, k_WindowTitle, true);
-            window.titleContent = new GUIContent("Localization Tables", EditorIcons.TableWindow);
+            window.titleContent = EditorGUIUtility.TrTextContent("Localization Tables", EditorIcons.TableWindow);
             window.Show();
         }
 
@@ -41,7 +41,7 @@ namespace UnityEditor.Localization.UI
         public static void ShowWindow(LocalizationTableCollection selectedcollection)
         {
             var window = GetWindow<LocalizationTablesWindow>(false, k_WindowTitle, true);
-            window.titleContent = new GUIContent("Localization Tables", EditorIcons.TableWindow);
+            window.titleContent = EditorGUIUtility.TrTextContent("Localization Tables", EditorIcons.TableWindow);
             window.Show();
             window.EditCollection(selectedcollection);
         }
@@ -144,7 +144,7 @@ namespace UnityEditor.Localization.UI
         /// <param name="menu"></param>
         public void AddItemsToMenu(GenericMenu menu)
         {
-            menu.AddItem(new GUIContent("Import/XLIFF Directory"), false, Plugins.XLIFF.MenuItems.ImportXliffDirectory);
+            menu.AddItem(EditorGUIUtility.TrTextContent("Import/XLIFF Directory"), false, Plugins.XLIFF.MenuItems.ImportXliffDirectory);
 
             if (LocalizationEditorSettings.ActiveLocalizationSettings == null)
                 return;
@@ -158,13 +158,13 @@ namespace UnityEditor.Localization.UI
             var selectedCollection = panel.SelectedCollection as StringTableCollection;
             if (selectedCollection != null)
             {
-                menu.AddItem(new GUIContent("Import/XLIFF File into Collection"), false, () => Plugins.XLIFF.MenuItems.ImportIntoCollection(new MenuCommand(selectedCollection)));
-                menu.AddItem(new GUIContent("Import/XLIFF File"), false, () => Plugins.XLIFF.MenuItems.ImportXliffFile());
-                menu.AddItem(new GUIContent("Import/CSV File"), false, () => Plugins.CSV.MenuItems.ImportCollection(new MenuCommand(selectedCollection)));
-                menu.AddItem(new GUIContent("Export/XLIFF"), false, () => Plugins.XLIFF.MenuItems.ExportCollection(new MenuCommand(selectedCollection)));
-                menu.AddItem(new GUIContent("Export/CSV"), false, () => Plugins.CSV.MenuItems.ExportCollection(new MenuCommand(selectedCollection)));
-                menu.AddItem(new GUIContent("Export/CSV(With Comments)"), false, () => Plugins.CSV.MenuItems.ExportCollectionWithComments(new MenuCommand(selectedCollection)));
-                menu.AddItem(new GUIContent("Export/Character Set"), false, () => ExportCharacterSetWindow.ShowWindow().SelectedTables.SetSelection(selectedCollection));
+                menu.AddItem(EditorGUIUtility.TrTextContent("Import/XLIFF File into Collection"), false, () => Plugins.XLIFF.MenuItems.ImportIntoCollection(new MenuCommand(selectedCollection)));
+                menu.AddItem(EditorGUIUtility.TrTextContent("Import/XLIFF File"), false, () => Plugins.XLIFF.MenuItems.ImportXliffFile());
+                menu.AddItem(EditorGUIUtility.TrTextContent("Import/CSV File"), false, () => Plugins.CSV.MenuItems.ImportCollection(new MenuCommand(selectedCollection)));
+                menu.AddItem(EditorGUIUtility.TrTextContent("Export/XLIFF"), false, () => Plugins.XLIFF.MenuItems.ExportCollection(new MenuCommand(selectedCollection)));
+                menu.AddItem(EditorGUIUtility.TrTextContent("Export/CSV"), false, () => Plugins.CSV.MenuItems.ExportCollection(new MenuCommand(selectedCollection)));
+                menu.AddItem(EditorGUIUtility.TrTextContent("Export/CSV(With Comments)"), false, () => Plugins.CSV.MenuItems.ExportCollectionWithComments(new MenuCommand(selectedCollection)));
+                menu.AddItem(EditorGUIUtility.TrTextContent("Export/Character Set"), false, () => ExportCharacterSetWindow.ShowWindow().SelectedTables.SetSelection(selectedCollection));
             }
         }
     }

@@ -31,15 +31,6 @@ namespace UnityEditor.Localization.Plugins.TMPro
             var methodDelegate = System.Delegate.CreateDelegate(typeof(UnityAction<string>), target, setStringMethod) as UnityAction<string>;
             Events.UnityEventTools.AddPersistentListener(comp.OnUpdateString, methodDelegate);
             comp.OnUpdateString.SetPersistentListenerState(0, UnityEventCallState.EditorAndRuntime);
-
-            const int kMatchThreshold = 5;
-            var foundKey = LocalizationEditorSettings.FindSimilarKey(target.text);
-            if (foundKey.collection != null && foundKey.matchDistance < kMatchThreshold)
-            {
-                comp.StringReference.TableEntryReference = foundKey.entry.Id;
-                comp.StringReference.TableReference = foundKey.collection.TableCollectionNameReference;
-            }
-
             return comp;
         }
     }

@@ -15,7 +15,7 @@ namespace UnityEditor.Localization.UI.PropertyVariants
             var trackedObjects = serializedObject.FindProperty("m_TrackedObjects");
             m_TrackedObjectsList = new ReorderableListExtended(serializedObject, trackedObjects);
             m_TrackedObjectsList.drawElementCallback = DrawElement;
-            m_TrackedObjectsList.Header = new GUIContent("Tracked Objects");
+            m_TrackedObjectsList.Header = EditorGUIUtility.TrTextContent("Tracked Objects");
             m_TrackedObjectsList.displayAdd = false;
         }
 

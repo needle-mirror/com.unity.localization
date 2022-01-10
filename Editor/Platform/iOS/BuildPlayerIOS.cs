@@ -19,7 +19,11 @@ namespace UnityEditor.Localization.Platform.iOS
         public void OnPreprocessBuild(BuildReport report)
         {
             var appInfo = LocalizationSettings.Metadata.GetMetadata<AppInfo>();
-            if (appInfo != null)
+            if (appInfo == null)
+            {
+                Debug.LogWarning("iOS App Info has not been configured. Please add and configure `iOS App Info` metadata to the Localization Settings in order to correctly support Localization on iOS.");
+            }
+            else
             {
                 bool wasDirty = IsPlayerSettingsDirty();
 

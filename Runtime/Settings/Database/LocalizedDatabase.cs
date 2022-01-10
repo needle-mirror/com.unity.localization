@@ -175,6 +175,14 @@ namespace UnityEngine.Localization.Settings
                 handle.Completed += RegisterSharedTableOperation;
         }
 
+        void RegisterTablesOperation(AsyncOperationHandle<IList<TTable>> tablesOperation)
+        {
+            foreach (var table in tablesOperation.Result)
+            {
+                RegisterTableOperation(AddressablesInterface.ResourceManager.CreateCompletedOperation(table, null), table.LocaleIdentifier, table.name);
+            }
+        }
+
         void RegisterSharedTableOperation(AsyncOperationHandle<TTable> tableOperation)
         {
             if (tableOperation.Result == null)
@@ -244,7 +252,7 @@ namespace UnityEngine.Localization.Settings
             tableReference.Validate();
             var tableIdString = tableReference.ReferenceType == TableReference.Type.Guid ? TableReference.StringFromGuid(tableReference.TableCollectionNameGuid) : tableReference.TableCollectionName;
             var localeId = useSelectedLocalePlaceholder ? k_SelectedLocaleId : locale.Identifier;
-            if (TableOperations.TryGetValue((localeId, tableIdString), out var operationHandle))
+            if (TableOperations.TryGetValue((localeId, tableIdString), out var operationHandle) && operationHandle.Result != null)
                 return operationHandle;
 
             // Start a new operation
@@ -422,6 +430,47 @@ namespace UnityEngine.Localization.Settings
                     SharedTableDataOperations.Remove(sharedTableData.TableCollectionNameGuid);
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns all the tables available.
+        /// This method is asynchronous and may not have an immediate result.
+        /// Check [IsDone](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.IsDone) to see if the tables are available.
+        /// if it is false then you can use the [Completed](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.Completed) event to get a callback when it is finished,
+        /// yield on the operation or call [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion)
+        /// to force the operation to complete.```
+        /// </summary>
+        /// <param name="locale">The <see cref="Locale"/> to load the table from, use null to default to cref="LocalizationSettings.SelectedLocale"/>.</param>
+        /// <returns></returns>
+        public virtual AsyncOperationHandle<IList<TTable>> GetAllTables(Locale locale = null)
+        {
+            var operation = GenericPool<LoadAllTablesOperation<TTable, TEntry>>.Get();
+            operation.Init(locale);
+            operation.Dependency = LocalizationSettings.InitializationOperation;
+            var handle = AddressablesInterface.ResourceManager.StartOperation(operation, LocalizationSettings.InitializationOperation);
+            if (handle.IsDone)
+                RegisterTablesOperation(handle);
+            else
+                handle.Completed += RegisterTablesOperation;
+
+            handle.CompletedTypeless += ReleaseNextFrame;
+            return handle;
+        }
+
+        /// <summary>
+        /// Checks if the table is currently loaded or not.
+        /// </summary>
+        /// <param name="tableReference">The table identifier. Can be either the name of the table or the table collection name Guid.</param>
+        /// <param name="locale">The <see cref="Locale"/> to load the table from, use null to default to cref="LocalizationSettings.SelectedLocale"/>.</param>
+        /// <returns></returns>
+        public virtual bool IsTableLoaded(TableReference tableReference, Locale locale = null)
+        {
+            var tableIdString = tableReference.ReferenceType == TableReference.Type.Guid ? TableReference.StringFromGuid(tableReference.TableCollectionNameGuid) : tableReference.TableCollectionName;
+            var localeAndName = locale != null ? (locale.Identifier, tableIdString) : (LocalizationSettings.SelectedLocaleAsync.Result.Identifier, tableIdString);
+            if (TableOperations.TryGetValue(localeAndName, out var TableOperationHandle))
+                return TableOperationHandle.Status == AsyncOperationStatus.Succeeded;
+            else
+                return false;
         }
 
         internal virtual LoadTableOperation<TTable, TEntry> CreateLoadTableOperation() => GenericPool<LoadTableOperation<TTable, TEntry>>.Get();

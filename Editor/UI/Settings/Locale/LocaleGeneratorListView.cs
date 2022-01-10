@@ -69,7 +69,7 @@ namespace UnityEditor.Localization.UI
             {
                 new MultiColumnHeaderState.Column()
                 {
-                    headerContent = new GUIContent("Name"),
+                    headerContent = EditorGUIUtility.TrTextContent("Name"),
                     minWidth = 100,
                     headerTextAlignment = TextAlignment.Center,
                     canSort = true
@@ -77,7 +77,7 @@ namespace UnityEditor.Localization.UI
 
                 new MultiColumnHeaderState.Column()
                 {
-                    headerContent = new GUIContent("Code"),
+                    headerContent = EditorGUIUtility.TrTextContent("Code"),
                     minWidth = 25,
                     headerTextAlignment = TextAlignment.Center,
                     canSort = true

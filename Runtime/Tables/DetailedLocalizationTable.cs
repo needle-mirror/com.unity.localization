@@ -596,7 +596,11 @@ namespace UnityEngine.Localization.Tables
         /// <summary>
         /// Clear all entries in this table.
         /// </summary>
-        public void Clear() => m_TableEntries.Clear();
+        public void Clear()
+        {
+            TableData.Clear();
+            m_TableEntries.Clear();
+        }
 
         /// <summary>
         /// Copies the contents of the table into an array starting at the arrayIndex.

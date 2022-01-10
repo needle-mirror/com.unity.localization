@@ -26,14 +26,14 @@ namespace UnityEditor.Localization.UI
 
         class Styles
         {
-            public static readonly GUIContent addToCollection = new GUIContent("Add Table to Collection", "Adds the table to the collection that shares the same Shared Table Data");
-            public static readonly GUIContent createAssetTableCollection = new GUIContent("Create Asset Table Collection", "Creates a new asset table collection from the loose tables.");
-            public static readonly GUIContent createStringTableCollection = new GUIContent("Create String Table Collection", "Creates a new string table collection from the loose tables.");
-            public static readonly GUIContent missingEntriesAdd = new GUIContent("Add to Shared Data", "Add the entries to the Shared Table Data so that they can be used.");
-            public static readonly GUIContent missingEntriesRemove = new GUIContent("Remove from Table", "Removed the entries from the table");
-            public static readonly GUIContent removeFromCollection = new GUIContent("Remove Table from Collection", "Removes the table from the collection so that is is not used in the project");
+            public static readonly GUIContent addToCollection = EditorGUIUtility.TrTextContent("Add Table to Collection", "Adds the table to the collection that shares the same Shared Table Data");
+            public static readonly GUIContent createAssetTableCollection = EditorGUIUtility.TrTextContent("Create Asset Table Collection", "Creates a new asset table collection from the loose tables.");
+            public static readonly GUIContent createStringTableCollection = EditorGUIUtility.TrTextContent("Create String Table Collection", "Creates a new string table collection from the loose tables.");
+            public static readonly GUIContent missingEntriesAdd = EditorGUIUtility.TrTextContent("Add to Shared Data", "Add the entries to the Shared Table Data so that they can be used.");
+            public static readonly GUIContent missingEntriesRemove = EditorGUIUtility.TrTextContent("Remove from Table", "Removed the entries from the table");
+            public static readonly GUIContent removeFromCollection = EditorGUIUtility.TrTextContent("Remove Table from Collection", "Removes the table from the collection so that is is not used in the project");
             public static readonly GUIContent removeTableFromList = new GUIContent("-");
-            public static readonly GUIContent sharedTableData = new GUIContent("Shared Table");
+            public static readonly GUIContent sharedTableData = EditorGUIUtility.TrTextContent("Shared Table");
         }
 
         public virtual void OnEnable()
@@ -50,7 +50,7 @@ namespace UnityEditor.Localization.UI
             m_TargetTable = target as LocalizationTable;
             m_LocaleId = serializedObject.FindProperty("m_LocaleId");
             m_SharedTableData = serializedObject.FindProperty("m_SharedData");
-            m_TableEditorButton = new GUIContent("Open Table Editor", EditorGUIUtility.ObjectContent(target, target.GetType()).image);
+            m_TableEditorButton = EditorGUIUtility.TrTextContent("Open Table Editor", EditorGUIUtility.ObjectContent(target, target.GetType()).image);
             ValidateTableData();
         }
 
@@ -85,7 +85,7 @@ namespace UnityEditor.Localization.UI
 
             if (m_Collection != null)
             {
-                m_CollectionButton = new GUIContent("Select Collection", EditorGUIUtility.ObjectContent(m_Collection, m_Collection.GetType()).image);
+                m_CollectionButton = EditorGUIUtility.TrTextContent("Select Collection", EditorGUIUtility.ObjectContent(m_Collection, m_Collection.GetType()).image);
                 return;
             }
 

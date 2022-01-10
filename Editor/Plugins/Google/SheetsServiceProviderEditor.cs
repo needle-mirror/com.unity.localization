@@ -11,14 +11,14 @@ namespace UnityEditor.Localization.Plugins.Google
     {
         class Styles
         {
-            public static readonly GUIContent apiKey = new GUIContent("API Key");
-            public static readonly GUIContent authorize = new GUIContent("Authorize", "Authorize the user. This is not required however the first time a connection to a Google sheet is required then authorization will be required.");
-            public static readonly GUIContent authentication = new GUIContent("Authentication");
-            public static readonly GUIContent cancel = new GUIContent("Cancel Authentication");
-            public static readonly GUIContent clientId = new GUIContent("Client Id");
-            public static readonly GUIContent clientSecret = new GUIContent("Client Secret");
-            public static readonly GUIContent noCredentials = new GUIContent("No Credentials Selected");
-            public static readonly GUIContent loadCredentials = new GUIContent("Load Credentials", "Load the credentials from a json file");
+            public static readonly GUIContent apiKey = EditorGUIUtility.TrTextContent("API Key");
+            public static readonly GUIContent authorize = EditorGUIUtility.TrTextContent("Authorize", "Authorize the user. This is not required however the first time a connection to a Google sheet is required then authorization will be required.");
+            public static readonly GUIContent authentication = EditorGUIUtility.TrTextContent("Authentication");
+            public static readonly GUIContent cancel = EditorGUIUtility.TrTextContent("Cancel Authentication");
+            public static readonly GUIContent clientId = EditorGUIUtility.TrTextContent("Client Id");
+            public static readonly GUIContent clientSecret = EditorGUIUtility.TrTextContent("Client Secret");
+            public static readonly GUIContent noCredentials = EditorGUIUtility.TrTextContent("No Credentials Selected");
+            public static readonly GUIContent loadCredentials = EditorGUIUtility.TrTextContent("Load Credentials", "Load the credentials from a json file");
         }
 
         SerializedProperty m_ClientId;

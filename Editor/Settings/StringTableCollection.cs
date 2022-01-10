@@ -91,5 +91,20 @@ namespace UnityEditor.Localization
 
             LocalizationEditorSettings.EditorEvents.RaiseTableEntryRemoved(this, entry);
         }
+
+        /// <inheritdoc/>
+        public override void ClearAllEntries()
+        {
+            foreach (var table in StringTables)
+            {
+                if (table == null)
+                    continue;
+
+                table.Clear();
+                EditorUtility.SetDirty(table);
+            }
+
+            base.ClearAllEntries();
+        }
     }
 }

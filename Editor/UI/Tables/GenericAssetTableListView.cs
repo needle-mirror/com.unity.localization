@@ -26,7 +26,7 @@ namespace UnityEditor.Localization.UI
         const string k_DragId = "GenericAssetTableListViewDragging";
         const int k_TableStartIndex = 2; // Key, Key Id and then tables
 
-        static readonly GUIContent newEntry = new GUIContent("Add New Entry");
+        static readonly GUIContent newEntry = EditorGUIUtility.TrTextContent("Add New Entry");
 
         protected string TableCollectionName => TableCollection.TableCollectionName;
 

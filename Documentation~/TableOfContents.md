@@ -27,6 +27,7 @@
   * [Pseudo-Localization](Pseudo-Localization.md)
     * [Methods](Pseudo-Localization-Methods.md)
   * [Scripting](Scripting.md)
+  * [Search Filters](SearchFilters.md)
   * [Smart Strings](Smart/SmartStrings.md)
     * Sources
       * [Default](Smart/Default-Source.md)

@@ -20,14 +20,14 @@ namespace UnityEditor.Localization.Plugins.CSV
     {
         class Styles
         {
-            public static readonly GUIContent addDefaultColumns = new GUIContent("Add Default Columns");
-            public static readonly GUIContent addDefaultColumnsWithComments = new GUIContent("Add Default Columns(With Comments)");
-            public static readonly GUIContent header = new GUIContent("Comma Separated Values (CSV)", EditorIcons.Csv);
-            public static readonly GUIContent save = new GUIContent("Save");
-            public static readonly GUIContent open = new GUIContent("Open");
-            public static readonly GUIContent import = new GUIContent("Import");
-            public static readonly GUIContent export = new GUIContent("Export");
-            public static readonly GUIContent show = new GUIContent("Show Folder");
+            public static readonly GUIContent addDefaultColumns = EditorGUIUtility.TrTextContent("Add Default Columns");
+            public static readonly GUIContent addDefaultColumnsWithComments = EditorGUIUtility.TrTextContent("Add Default Columns(With Comments)");
+            public static readonly GUIContent header = EditorGUIUtility.TrTextContent("Comma Separated Values (CSV)", EditorIcons.Csv);
+            public static readonly GUIContent save = EditorGUIUtility.TrTextContent("Save");
+            public static readonly GUIContent open = EditorGUIUtility.TrTextContent("Open");
+            public static readonly GUIContent import = EditorGUIUtility.TrTextContent("Import");
+            public static readonly GUIContent export = EditorGUIUtility.TrTextContent("Export");
+            public static readonly GUIContent show = EditorGUIUtility.TrTextContent("Show Folder");
         }
 
         public override CsvExtensionPropertyDrawerData CreatePropertyData(SerializedProperty property)

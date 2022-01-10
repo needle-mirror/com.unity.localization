@@ -2,7 +2,7 @@ using NUnit.Framework;
 using System.Collections.Generic;
 using UnityEditor.Localization.UI.Toolkit;
 
-namespace Tests
+namespace UnityEditor.Localization.Tests.UI
 {
     public class ReorderableListTests
     {

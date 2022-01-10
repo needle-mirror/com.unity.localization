@@ -37,11 +37,11 @@ namespace UnityEditor.Localization.UI
         class Styles
         {
             public static readonly GUIContent addItem = new GUIContent("+");
-            public static readonly GUIContent addTypicalCharacterSet = new GUIContent("Add Typical Character Set");
-            public static readonly GUIContent original = new GUIContent("Original");
+            public static readonly GUIContent addTypicalCharacterSet = EditorGUIUtility.TrTextContent("Add Typical Character Set");
+            public static readonly GUIContent original = EditorGUIUtility.TrTextContent("Original");
             public static readonly GUIContent removeItem = new GUIContent("-");
-            public static readonly GUIContent replacement = new GUIContent("Replacement");
-            public static readonly GUIContent replacementCharacters = new GUIContent("Replacement Characters");
+            public static readonly GUIContent replacement = EditorGUIUtility.TrTextContent("Replacement");
+            public static readonly GUIContent replacementCharacters = EditorGUIUtility.TrTextContent("Replacement Characters");
         }
 
         public override void OnGUI(CharacterSubstitutorPropertyDrawerData data, Rect position, SerializedProperty property, GUIContent label)

@@ -24,6 +24,8 @@ namespace UnityEditor.Localization
         static readonly IEnumerable<char> k_InvalidFileNameChars = Path.GetInvalidFileNameChars().Concat(k_UnityInvalidFileNameChars);
 
         internal const string k_GameViewPref = "Localization-ShowLocaleMenuInGameView";
+        internal const string k_StringPicker = "Localization-UseSearchStringPicker";
+        internal const string k_AssetPicker = "Localization-UseSearchAssetPicker";
 
         static LocalizationEditorSettings s_Instance;
 
@@ -56,6 +58,26 @@ namespace UnityEditor.Localization
         {
             get => EditorPrefs.GetBool(k_GameViewPref, true);
             set => EditorPrefs.SetBool(k_GameViewPref, value);
+        }
+
+        /// <summary>
+        /// When <c>true</c> the advanced Unity Search picker will be used when selecting <see cref="LocalizedString"/> table entries.
+        /// When <c>false</c> the tree view picker will be used.
+        /// </summary>
+        public static bool UseLocalizedStringSearchPicker
+        {
+            get => EditorPrefs.GetBool(k_StringPicker, true);
+            set => EditorPrefs.SetBool(k_StringPicker, value);
+        }
+
+        /// <summary>
+        /// When <c>true</c> the advanced Unity Search picker will be used when selecting <see cref="LocalizedAsset{TObject}"/> table entries.
+        /// When <c>false</c> the tree view picker will be used.
+        /// </summary>
+        public static bool UseLocalizedAssetSearchPicker
+        {
+            get => EditorPrefs.GetBool(k_AssetPicker, true);
+            set => EditorPrefs.SetBool(k_AssetPicker, value);
         }
 
         /// <summary>
@@ -279,6 +301,7 @@ namespace UnityEditor.Localization
         /// </summary>
         /// <param name="keyName"></param>
         /// <returns></returns>
+        [Obsolete("FindSimilarKey will be removed in the future, please use Unity Search. See TableEntrySearchData class for further details.")]
         public static (StringTableCollection collection, SharedTableData.SharedTableEntry entry, int matchDistance) FindSimilarKey(string keyName)
         {
             return Instance.FindSimilarKeyInternal(keyName);
@@ -516,6 +539,7 @@ namespace UnityEditor.Localization
 
                 // Clear the locales cache.
                 m_ProjectLocales = null;
+                m_ProjectPseudoLocales = null;
                 if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
                     LocalizationSettings.Instance.ResetState();
 
@@ -533,6 +557,7 @@ namespace UnityEditor.Localization
         {
             // Clear the locale cache
             m_ProjectLocales = null;
+            m_ProjectPseudoLocales = null;
             if (!LocalizationSettings.Instance)
                 LocalizationSettings.Instance.ResetState();
 

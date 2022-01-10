@@ -80,5 +80,24 @@ namespace UnityEditor.Localization.Tests.Pseudo
             Assert.AreEqual(expected, message.ToString());
             message.Release();
         }
+
+        [Test]
+        [Description("OverflowException in pseudo locale when using multiple preserve tags (LOC-517)")]
+        public static void TransformWithMultiplePreserveTags_DoesNotCorruptFragments()
+        {
+            const string input = "n ex[CONTROLS-Ffdsafdsa]amsf dsa";
+
+            var preserve1 = new PreserveTags { Opening = '<', Closing = '>' };
+            var preserve2 = new PreserveTags { Opening = '[', Closing = ']' };
+            var preserve3 = new PreserveTags { Opening = '{', Closing = '}' };
+
+            var message = Message.CreateMessage(input);
+
+            preserve1.Transform(message);
+            preserve2.Transform(message);
+            preserve3.Transform(message);
+
+            Assert.AreEqual(input, message.ToString());
+        }
     }
 }

@@ -9,8 +9,8 @@ namespace UnityEditor.Localization.UI
     {
         class Texts
         {
-            public GUIContent noSettingsMsg = new GUIContent("You have no active Localization Settings. Would you like to create one?");
-            public GUIContent activeSettings = new GUIContent("Active Settings", "The Localization Settings that will be used by this project and included into any builds.");
+            public GUIContent noSettingsMsg = EditorGUIUtility.TrTextContent("You have no active Localization Settings. Would you like to create one?");
+            public GUIContent activeSettings = EditorGUIUtility.TrTextContent("Active Settings", "The Localization Settings that will be used by this project and included into any builds.");
         }
         static Texts s_Texts;
 

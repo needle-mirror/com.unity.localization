@@ -155,7 +155,8 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                         // In the Editor the instanceID field is used however in the player a different
                         // serialization path is taken and instanceID ends up getting mapped from m_FileID.
                         // https://unity.slack.com/archives/C9SQHJGN6/p1623329879079600
-                        #if UNITY_EDITOR
+                        // This is now fixed in 2022.2.0a1 - 1342327
+                        #if UNITY_EDITOR || UNITY_2022_2_OR_NEWER
                         const string instanceIdField = ".instanceID";
                         #else
                         const string instanceIdField = ".m_FileID";

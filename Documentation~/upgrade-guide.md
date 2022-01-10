@@ -1,5 +1,11 @@
 # Upgrade guides
 
+## Upgrade Guide to 1.1.0
+
+- `LocalizationEditorSettings.FindSimilarKey` has been deprecated. In Unity 2021.2 and above, you can use Unity Search as an alternative. See [TableEntrySearchData](xref:UnityEditor.Localization.Search.TableEntrySearchData) for further details.
+- To configure your Android and iOS builds correctly, add `App Info` to the **Localization Settings** for the platform.
+If `App Info` isn't included, the Unity Editor might not detect the available languages when attempting to select the system locale. The Editor displays a warning if `App Info` isn't included.
+
 ## Upgrade Guide to 1.0.0
 
 - `LocalizedStringEvent` arguments have been deprecated. If your project uses this argument, the Inspector displays a warning and offers to upgrade by transferring them into the String Reference Local Variables field. Note the Smart String will need to be updated to use the local variable name. For example `{appleCount}` would need to be changed to `{local-variable-name.appleCount}`.

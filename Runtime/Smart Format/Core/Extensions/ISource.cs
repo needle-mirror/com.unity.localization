@@ -12,6 +12,11 @@ namespace UnityEngine.Localization.SmartFormat.Core.Extensions
         /// </summary>
         /// <param name="selectorInfo"></param>
         /// <returns></returns>
+        /// <example>
+        /// The following example shows how to create a source that generates a random number.
+        /// This could then be combined with a <see cref="SmartFormat.Extensions.ChooseFormatter"/> to produce different random responses.
+        /// <code source="../../../../DocCodeSamples.Tests/RandomValueSource.cs"/>
+        /// </example>
         bool TryEvaluateSelector(ISelectorInfo selectorInfo);
     }
 }

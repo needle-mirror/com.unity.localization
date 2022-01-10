@@ -2,6 +2,39 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.1.0] - 2022-01-10
+
+### Added
+
+- Added a 'ClearAllEntries' API to `StringTableCollection` and `AssetTableCollection` for clearing all the Entries and assets when needed. (LOC-420)
+- Added a new Localized Asset and Localized String picker which uses **Unity Search**. This has improved performance and supports multiple localization filters and custom table view columns. This is also available in the Unity Search window but does not currently do anything when an entry is selected. The legacy picker can be reenabled through the preferences window. (LOC-267)
+- Added additional Persistent Variable types for: byte, sbyte, short, ushort, long, ulong, uint and double. (LOC-431)
+- Added support for localizing the User Tracking Description (NSUserTrackingUsageDescription) on iOS. (LOC-403)
+
+### Changed
+
+- Added a warning when building to iOS/Android and the App Info has not been configured. App Info must be present in order to correctly configure the apps language settings.
+- Updated to Addressables `1.19.15`.
+
+### Deprecated
+
+- `LocalizationEditorSettings.FindSimilarKey` is now deprecated and will be removed in the future. Unity Search now supports searching. See [TableEntrySearchData](xref:UnityEditor.Localization.Search.TableEntrySearchData) for further details.
+
+### Fixed
+
+- Added ScrollView support to Table metadata editor. (LOC-500)
+- Entries with duplicate names will now be ignored when pulling from Google Sheets. A message will be added to the report to notify you when this happens. ([LOC-464](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-464))
+- Fixed `NullReferenceException` when showing property drawer for PlatForm Override Type Entry and no entry was selected. (LOC-502)
+- Fixed bug where adding Pseudo Locale to the project were not been shown in Active Locale popup in Localization Scene Controls window. (LOC-439)
+- Fixed bug where LocaleIdentifier code comparisons were case-sensitive. (LOC-463)
+- Fixed CSV `KeyIdColumns` not using the custom Key, Id, and Shared Comments field names when exporting to CSV. ([LOC-481](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-481))
+- Fixed detection of Android system language. ([LOC-478](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-478))
+- Fixed possible `OverflowException` occurring when using multiple `Preserve Tags` methods in a pseudo-locale. ([LOC-517](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-517))
+- Fixed localized property variant assets not being applied in 2022.2 standalone player builds due to changes from 1342327.
+- iOS Xcode project will now be configured to use the **Project Locale** as the development language. This should cause this language to become the default language used when the app does not support the system language. ([LOC-507](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-507))
+- The `SystemLocaleSelector` will now detect the preferred language on iOS. ([LOC-452](https://issuetracker.unity3d.com/issues/ios-localization-is-ignored-when-changed-through-application-settings))
+- When building to Android the App Name localization will now always be included and not only when an Icon was also configured.
+
 ## [1.0.5] - 2021-10-27
 
 ### Fixed

@@ -319,6 +319,22 @@ namespace UnityEditor.Localization
         }
 
         /// <summary>
+        /// Removes all the entries from <see cref="SharedTableData"/> and all <see cref="Tables"/> that are part of this collection.
+        /// </summary>
+        public virtual void ClearAllEntries()
+        {
+            // Clear all keys
+            if (SharedData != null)
+            {
+                SharedData.Clear();
+                EditorUtility.SetDirty(SharedData);
+            }
+
+            EditorUtility.SetDirty(this);
+            LocalizationEditorSettings.EditorEvents.RaiseCollectionModified(this, this);
+        }
+
+        /// <summary>
         /// Returns the table with the matching <see cref="LocaleIdentifier"/>.
         /// </summary>
         /// <param name="localeIdentifier">The locale identifier that the table must have.</param>
@@ -331,6 +347,16 @@ namespace UnityEditor.Localization
                     return tbl.asset;
             }
             return null;
+        }
+
+        // We use this so we can enumerate all the tables and mock it in tests.
+        // LazyLoadReference only works with perssistent assets which makes testing temporary assets hard so we use this instead.
+        internal virtual IEnumerable<LocalizationTable> GetTableEnumerator()
+        {
+            foreach (var table in m_Tables)
+            {
+                yield return table.asset;
+            }
         }
 
         /// <summary>
@@ -536,6 +562,9 @@ namespace UnityEditor.Localization
         /// <param name="createUndo">Should an Undo operation be recorded?</param>
         protected virtual void AddTableToAddressables(LocalizationTable table, bool createUndo)
         {
+            if (table == null)
+                throw new ArgumentNullException(nameof(table), "Can add a null table to Addressables");
+
             var aaSettings = LocalizationEditorSettings.Instance.GetAddressableAssetSettings(true);
             if (aaSettings == null)
                 return;

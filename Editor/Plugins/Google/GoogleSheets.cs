@@ -598,6 +598,8 @@ namespace UnityEditor.Localization.Plugins.Google
 
             // We want to keep track of the order the entries are pulled in so we can match it
             var sortedEntries = new List<SharedTableEntry>(rowCount);
+            var addedIds = new Dictionary<long, int>(); // So we dont add duplicates. (id,row)
+            var addedKeys = new Dictionary<string, int>(); // So we dont add duplicate names. (name, row)
 
             long totalCellsProcessed = 0;
 
@@ -614,6 +616,24 @@ namespace UnityEditor.Localization.Plugins.Google
                     continue;
 
                 var rowKeyEntry = keyColumn.PullKey(keyValue, keyNote);
+
+                // Ignore duplicate ids (LOC-464)
+                if (addedIds.TryGetValue(rowKeyEntry.Id, out int duplicateRowId))
+                {
+                    messages.AppendLine($"An entry with the Id {rowKeyEntry.Id} has already been processed at row {duplicateRowId}, The entry {keyValue} at row {row} will be ignored.");
+                    continue;
+                }
+
+                // Rename duplicate names with unique ids.
+                if (addedKeys.TryGetValue(rowKeyEntry.Key, out int duplicateRowKey))
+                {
+                    string newName = $"{rowKeyEntry.Key}_{rowKeyEntry.Id}";
+                    messages.AppendLine($"An entry with the name `{rowKeyEntry.Key}` has already been processed at row {duplicateRowKey}, The entry {keyValue} at row {row} has been renamed to {newName}.");
+                    rowKeyEntry.Key = newName;
+                }
+
+                addedIds.Add(rowKeyEntry.Id, row);
+                addedKeys.Add(rowKeyEntry.Key, row);
                 sortedEntries.Add(rowKeyEntry);
 
                 if (rowKeyEntry == null)

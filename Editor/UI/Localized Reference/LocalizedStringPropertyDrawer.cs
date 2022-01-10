@@ -9,6 +9,11 @@ using UnityEngine.Localization.SmartFormat.Extensions;
 using UnityEngine.Localization.SmartFormat.PersistentVariables;
 using UnityEngine.Localization.Tables;
 
+#if ENABLE_SEARCH
+using UnityEditor.Localization.Search;
+using UnityEditor.Search;
+#endif
+
 namespace UnityEditor.Localization.UI
 {
     [CustomPropertyDrawer(typeof(LocalizedString), true)]
@@ -140,7 +145,7 @@ namespace UnityEditor.Localization.UI
                 localizedString = property.GetActualObjectForSerializedProperty<LocalizedString>(fieldInfo),
                 variableArguments = new ReorderableListExtended(property.serializedObject, property.FindPropertyRelative("m_LocalVariables"))
                 {
-                    Header = new GUIContent("Local Variables"),
+                    Header = EditorGUIUtility.TrTextContent("Local Variables"),
                     onAddDropdownCallback = ShowArgumentsAddMenu,
                 }
             };
@@ -279,6 +284,23 @@ namespace UnityEditor.Localization.UI
                 rowPosition.xMin = xMin;
             }
         }
+
+        #if ENABLE_SEARCH
+        protected override void ShowPicker(Data data, Rect dropDownPosition)
+        {
+            if (!LocalizationEditorSettings.UseLocalizedStringSearchPicker)
+            {
+                base.ShowPicker(data, dropDownPosition);
+                return;
+            }
+
+            var provider = new StringTableSearchProvider();
+            var context = UnityEditor.Search.SearchService.CreateContext(provider, provider.filterId);
+            var picker = new LocalizedReferencePicker<StringTableCollection>(context, "string table entry", data, this);
+            picker.Show();
+        }
+
+        #endif
 
         public override float GetPropertyHeight(Data data, SerializedProperty property, GUIContent label)
         {

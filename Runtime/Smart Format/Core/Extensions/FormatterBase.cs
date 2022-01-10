@@ -5,7 +5,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Extensions
     /// </summary>
     /// <example>
     /// This example shows how to create a formatter to format an integer that represents bytes.
-    /// <code source="../../../../DocCodeSamples.Tests/SmartStringSamples.cs" region="byte-formatter"/>
+    /// <code source="../../../../DocCodeSamples.Tests/ByteFormatter.cs"/>
     /// </example>
     public abstract class FormatterBase : IFormatter, ISerializationCallbackReceiver
     {

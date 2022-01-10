@@ -18,10 +18,10 @@ namespace UnityEditor.Localization.UI
     {
         class Styles
         {
-            public static readonly GUIContent entry = new GUIContent("Table Entry");
-            public static readonly GUIContent none = new GUIContent("None");
-            public static readonly GUIContent reference = new GUIContent("Reference");
-            public static readonly GUIContent tableCollection = new GUIContent("Table Collection");
+            public static readonly GUIContent entry = EditorGUIUtility.TrTextContent("Table Entry");
+            public static readonly GUIContent none = EditorGUIUtility.TrTextContent("None");
+            public static readonly GUIContent reference = EditorGUIUtility.TrTextContent("Reference");
+            public static readonly GUIContent tableCollection = EditorGUIUtility.TrTextContent("Table Collection");
         }
 
         LocalizationTableCollection m_Collection;
@@ -48,27 +48,13 @@ namespace UnityEditor.Localization.UI
             data.m_PlatformOverridesList.onAddDropdownCallback = (rect, _) => DrawAddDropdown(rect, data);
             data.m_PlatformOverridesList.elementHeightCallback = (index) => GetHeight(index, data);
 
+            var target = data.m_PlatformOverridesList.serializedProperty.serializedObject.targetObject;
+            SharedTableData sharedTableData = target as SharedTableData ?? (target as LocalizationTable)?.SharedData;
+            Debug.Assert(sharedTableData != null, "Shared Table Data is null. Platform Override can only be used on a Shared Table Entry.");
+            m_Collection = LocalizationEditorSettings.GetCollectionForSharedTableData(sharedTableData);
+            m_TableType = m_Collection.GetType() == typeof(StringTableCollection) ? typeof(StringTable) : typeof(AssetTable);
+
             return data;
-        }
-
-        void Init(PlatformOverridePropertyData data, SerializedProperty property)
-        {
-            if (data.m_PlatformOverridesList == null)
-            {
-                data.m_PlatformOverridesList = new ReorderableList(property.serializedObject, data.m_PlatformOverridesProperty)
-                {
-                    drawElementCallback = (rect, index, isActive, isFocused) => DrawListElement(rect, index, isActive, isFocused, data),
-                    drawHeaderCallback = DrawListHeader,
-                    onAddDropdownCallback = (rect, _) => DrawAddDropdown(rect, data),
-                    elementHeightCallback = (index) => GetHeight(index, data)
-                };
-
-                var target = data.m_PlatformOverridesList.serializedProperty.serializedObject.targetObject;
-                SharedTableData sharedTableData = target as SharedTableData ?? (target as LocalizationTable)?.SharedData;
-                Debug.Assert(sharedTableData != null, "Shared Table Data is null. Platform Override can only be used on a Shared Table Entry.");
-                m_Collection = LocalizationEditorSettings.GetCollectionForSharedTableData(sharedTableData);
-                m_TableType = m_Collection.GetType() == typeof(StringTableCollection) ? typeof(StringTable) : typeof(AssetTable);
-            }
         }
 
         void DrawListElement(Rect rect, int index, bool isActive, bool isFocused, PlatformOverridePropertyData data)
@@ -265,7 +251,6 @@ namespace UnityEditor.Localization.UI
 
         public override void OnGUI(PlatformOverridePropertyData data, Rect position, SerializedProperty property, GUIContent label)
         {
-            Init(data, property);
             data.m_PlatformOverridesList.DoList(position);
         }
 
@@ -273,7 +258,6 @@ namespace UnityEditor.Localization.UI
         {
             var height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 
-            Init(data, property);
             height += data.m_PlatformOverridesList.GetHeight();
             return height;
         }

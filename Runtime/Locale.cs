@@ -156,7 +156,7 @@ namespace UnityEngine.Localization
             if (string.IsNullOrEmpty(other.Code) && string.IsNullOrEmpty(Code))
                 return true;
 
-            return Code == other.Code;
+            return Code.Equals(other.Code, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

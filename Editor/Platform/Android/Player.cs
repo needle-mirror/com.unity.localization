@@ -60,8 +60,11 @@ namespace UnityEditor.Localization.Platform.Android
             var legacyIconInfo = LocalizationSettings.Metadata.GetMetadata<LegacyIconsInfo>();
             var adaptiveIconInfo = LocalizationSettings.Metadata.GetMetadata<AdaptiveIconsInfo>();
 
-            if (appInfo == null && roundIconInfo == null && legacyIconInfo == null && adaptiveIconInfo == null)
+            if (appInfo == null)
+            {
+                Debug.LogWarning("Android App Info has not been configured. Please add and configure `Android App Info` metadata to the Localization Settings in order to correctly support Localization on Android.");
                 return;
+            }
 
             AddLocalizationToAndroidGradleProject(projectDirectory, appInfo, roundIconInfo, legacyIconInfo, adaptiveIconInfo);
         }

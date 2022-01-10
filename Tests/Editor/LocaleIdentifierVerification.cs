@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using System;
 using UnityEngine;
 using UnityEngine.Localization;
 
@@ -39,6 +40,15 @@ namespace UnityEditor.Localization.Tests
         {
             LocaleIdentifier id = new LocaleIdentifier(string.Empty);
             Assert.AreEqual(new LocaleIdentifier(), id);
+        }
+
+        [Test]
+        public void LocaleIdentifierComparision_IsNotCaseSensitive()
+        {
+            var locale = Locale.CreateLocale(SystemLanguage.ChineseSimplified);
+            var id_zn_CN = new LocaleIdentifier("zh-Hans");
+
+            Assert.IsTrue(locale.Identifier.Equals(id_zn_CN), "Expected LocaleIdentifier comparisons to be case-insensitive.");
         }
     }
 }

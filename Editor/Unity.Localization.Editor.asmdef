@@ -1,6 +1,6 @@
 {
     "name": "Unity.Localization.Editor",
-    "rootNamespace": "",
+    "rootNamespace": "UnityEditor.Localization",
     "references": [
         "Unity.Localization",
         "Unity.Addressables.Editor",
@@ -9,6 +9,7 @@
         "Unity.ResourceManager",
         "Unity.TextMeshPro",
         "Unity.ugui",
+        "com.unity.quicksearch",
         "Unity.Nuget.NewtonsoftJson.EditorTests",
         "Unity.DeviceSimulator.Editor"
     ],
@@ -57,7 +58,12 @@
         {
             "name": "Unity",
             "expression": "2021.2",
-            "define": "ENABLE_SAVE_ASSET_IF_DIRTY"
+            "define": "ENABLE_SEARCH"
+        },
+        {
+            "name": "Unity",
+            "expression": "2022",
+            "define": "ENABLE_SEARCH_QUERY_BUILDER"
         }
     ],
     "noEngineReferences": false

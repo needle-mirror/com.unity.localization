@@ -66,9 +66,16 @@ namespace UnityEditor.Localization
                                     collection.SharedData = sharedTableData;
                                 }
 
-                                foreach (var tableReference in collection.Tables)
+                                for (int i = 0; i < collection.Tables.Count; i++)
                                 {
-                                    if (tableReference.asset == null && tableReference.asset.SharedData != null)
+                                    var tableReference = collection.Tables[i];
+                                    if (tableReference.asset == null)
+                                    {
+                                        collection.RemoveTable(tableReference.asset);
+                                        continue;
+                                    }
+
+                                    if (tableReference.asset?.SharedData != null)
                                         continue;
 
                                     modified = true;

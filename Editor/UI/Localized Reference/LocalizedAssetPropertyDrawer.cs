@@ -5,6 +5,10 @@ using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
 using Object = UnityEngine.Object;
 
+#if ENABLE_SEARCH
+using UnityEditor.Localization.Search;
+#endif
+
 namespace UnityEditor.Localization.UI
 {
     [CustomPropertyDrawer(typeof(LocalizedAsset<>), true)]
@@ -84,6 +88,23 @@ namespace UnityEditor.Localization.UI
                 rowPosition.y += rowPosition.height + EditorGUIUtility.standardVerticalSpacing;
             }
         }
+
+        #if ENABLE_SEARCH
+        protected override void ShowPicker(Data data, Rect dropDownPosition)
+        {
+            if (!LocalizationEditorSettings.UseLocalizedAssetSearchPicker)
+            {
+                base.ShowPicker(data, dropDownPosition);
+                return;
+            }
+
+            var provider = new AssetTableSearchProvider(data.assetType);
+            var context = UnityEditor.Search.SearchService.CreateContext(provider, provider.filterId);
+            var picker = new LocalizedReferencePicker<AssetTableCollection>(context, "asset table entry", data, this);
+            picker.Show();
+        }
+
+        #endif
 
         public override float GetPropertyHeight(Data data, SerializedProperty property, GUIContent label)
         {

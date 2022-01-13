@@ -2,6 +2,12 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.1.1] - 2022-01-13
+
+### Fixed
+
+- Rerelease of 1.1.0 to fix an issue with package promotions.
+
 ## [1.1.0] - 2022-01-10
 
 ### Added

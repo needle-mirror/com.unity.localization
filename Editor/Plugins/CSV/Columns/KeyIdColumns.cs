@@ -182,13 +182,27 @@ namespace UnityEditor.Localization.Plugins.CSV.Columns
 
             if (m_CommentFieldIndex != -1)
             {
-                var comment = key.Metadata.GetMetadata<Comment>();
-                if (comment == null)
+                reader.GetField(m_CommentFieldIndex);
+
+                var commentText = reader.GetField(m_CommentFieldIndex);
+                if (string.IsNullOrEmpty(commentText))
                 {
-                    comment = new Comment();
-                    key.Metadata.AddMetadata(comment);
+                    // Remove any comment that exists
+                    var comment = key.Metadata.GetMetadata<Comment>();
+                    if (comment != null)
+                        key.Metadata.RemoveMetadata(comment);
                 }
-                comment.CommentText = reader.GetField(m_CommentFieldIndex);
+                else
+                {
+                    var comment = key.Metadata.GetMetadata<Comment>();
+                    if (comment == null)
+                    {
+                        comment = new Comment();
+                        key.Metadata.AddMetadata(comment);
+                    }
+
+                    comment.CommentText = commentText;
+                }
             }
 
             return key;

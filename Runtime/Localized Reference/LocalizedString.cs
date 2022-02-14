@@ -364,8 +364,16 @@ namespace UnityEngine.Localization
                 throw new ArgumentNullException(nameof(variable));
 
             name = name.ReplaceWhiteSpaces("-");
+            if (m_VariableLookup.TryGetValue(name, out VariableNameValuePair value))
+            {
+                if (ReferenceEquals(value.variable, variable))
+                    return;
+                else
+                    m_LocalVariables.Remove(value);
+            }
+
             var v = new VariableNameValuePair { name = name, variable = variable };
-            m_VariableLookup.Add(name, v);
+            m_VariableLookup[name] = v;
             m_LocalVariables.Add(v);
         }
 

@@ -148,7 +148,7 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public string GetLocalizedString(TableEntryReference tableEntryReference, IList<object> arguments, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings)
         {
-            return GetLocalizedStringAsync(GetDefaultTable(), tableEntryReference, locale, fallbackBehavior, arguments, null).WaitForCompletion();
+            return GetLocalizedStringAsync(GetDefaultTable(), tableEntryReference, arguments, locale, fallbackBehavior, null).WaitForCompletion();
         }
 
         /// <summary>

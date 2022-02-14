@@ -35,8 +35,8 @@ namespace UnityEngine.Localization
         public string Code => m_Code;
 
         /// <summary>
-        /// A <see cref="CultureInfo"/> representation of the Locale.
-        /// The <see cref="Code"/> is used to query for a valid <see cref="CultureInfo"/>.
+        /// A [CultureInfo}(https://docs.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo) representation of the Locale.
+        /// The <see cref="Code"/> is used to query for a valid [CultureInfo}(https://docs.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo).
         /// If a value can not be determined from the <see cref="Code"/> then <c>null</c> will be returned.
         /// </summary>
         /// <example>
@@ -87,7 +87,7 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// Create a LocaleIdentifier from a <see cref="UnityEngine.SystemLanguage"/> enum value.
+        /// Create a LocaleIdentifier from a [SystemLanguage](https://docs.unity3d.com/ScriptReference/SystemLanguage.html) enum value.
         /// </summary>
         /// <param name="systemLanguage"></param>
         public LocaleIdentifier(SystemLanguage systemLanguage)
@@ -113,7 +113,7 @@ namespace UnityEngine.Localization
         public static implicit operator LocaleIdentifier(CultureInfo culture) => new LocaleIdentifier(culture);
 
         /// <summary>
-        /// Create a LocaleIdentifier from a <see cref="UnityEngine.SystemLanguage"/> enum value.
+        /// Create a LocaleIdentifier from a [SystemLanguage](https://docs.unity3d.com/ScriptReference/SystemLanguage.html) enum value.
         /// </summary>
         /// <param name="systemLanguage"></param>
         /// <returns></returns>
@@ -160,7 +160,7 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// Returns the hash code of <see cref="CultureInfo"/> or <see cref="Code"/> if it is null.
+        /// Returns the hash code of [CultureInfo}(https://docs.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo) or <see cref="Code"/> if it is null.
         /// </summary>
         /// <returns></returns>
         public override int GetHashCode()
@@ -421,7 +421,8 @@ namespace UnityEngine.Localization
             // If they are both the same type then use the name to sort
             if (GetType() == other.GetType())
             {
-                return String.CompareOrdinal(LocaleName, other.LocaleName);
+                var result = String.CompareOrdinal(LocaleName, other.LocaleName);
+                return result != 0 ? result : GetInstanceID().CompareTo(other.GetInstanceID());
             }
 
             // Normal Locale's go before PseudoLocale's

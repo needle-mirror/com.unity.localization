@@ -6,7 +6,7 @@ namespace UnityEditor.Localization
 {
     static class CharacterSetMenuItems
     {
-        [MenuItem("CONTEXT/StringTableCollection/Export/Character Set")]
+        [MenuItem("CONTEXT/StringTableCollection/Export/Character Set...")]
         public static void ExportCollection(MenuCommand command)
         {
             var collection = command.context as StringTableCollection;
@@ -15,7 +15,7 @@ namespace UnityEditor.Localization
             wnd.SelectedTables.SetSelection(collection);
         }
 
-        [MenuItem("CONTEXT/StringTable/Export/Character Set")]
+        [MenuItem("CONTEXT/StringTable/Export/Character Set...")]
         public static void ExportStringTable(MenuCommand command)
         {
             var table = command.context as StringTable;

@@ -192,7 +192,7 @@ namespace UnityEditor.Localization
                 RemoveEntryAssetType(tableEntry.KeyId, table.LocaleIdentifier.Code);
 
                 // If the entry has metadata then we will leave an empty entry otherwise we just remove the whole thing.
-                if (tableEntry.MetadataEntries.Count == 0)
+                if (tableEntry.MetadataEntries.Count == 0 && !string.IsNullOrEmpty(removedAssetGuid))
                     table.RemoveEntry(tableEntry.KeyId);
 
                 // Determine if the asset is being referenced by any entries or tables with the same locale, if not then we can

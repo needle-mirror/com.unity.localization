@@ -1,7 +1,7 @@
 {
   "name": "com.unity.localization",
   "displayName": "Localization",
-  "version": "1.1.1",
+  "version": "1.2.1",
   "unity": "2019.4",
   "description": "Use the Localization package to easily configure localization settings for your application.\n\nAdd support for multiple languages and regional variants, including:\n\n• String localization: Set different strings to display based on locale. Use the Smart Strings feature to add logic to automatically replace specific strings, such as placeholders and plurals.\n• Asset localization: Use a different asset (such as a texture, model, or audio file) based on a locale.\n• Pseudo-localization: Test how your project will adapt to different localizations at an early stage, before adding your translations.\n• Import and export localization data to XLIFF, CSV and Google Sheets.\n\nAdd localization to your projects using the Localization package to help make your applications more accessible to a wider audience.",
   "keywords": [
@@ -10,16 +10,16 @@
     "language"
   ],
   "dependencies": {
-    "com.unity.addressables": "1.19.15",
+    "com.unity.addressables": "1.19.17",
     "com.unity.nuget.newtonsoft-json": "2.0.0"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.localization.git",
     "type": "git",
-    "revision": "9cf6f186d1faba034bccb21ac5874b2bb5eb28b8"
+    "revision": "f0028e29cc1ef7aba9ede44f69b3c3b391bd18e1"
   },
   "upmCi": {
-    "footprint": "0907235ffa671735e4d84b854cfadd76f6bd89fb"
+    "footprint": "acbdf92e774544fd646e8517816bc057133cc9ed"
   },
   "samples": [
     {

@@ -24,9 +24,18 @@ namespace UnityEditor.Localization.UI
         where T2 : GenericAssetTableTreeViewItem<T1>, new()
     {
         const string k_DragId = "GenericAssetTableListViewDragging";
+        const string k_CurrentPagePref = "Localization-CurrentPage";
+        const string k_PageSizePref = "Localization-PageSize";
+        const string k_Search = "Localization-TablesView-Search";
+        const int k_DefaultPageSize = 50;
         const int k_TableStartIndex = 2; // Key, Key Id and then tables
 
-        static readonly GUIContent newEntry = EditorGUIUtility.TrTextContent("Add New Entry");
+        static readonly GUIContent k_NewEntry = EditorGUIUtility.TrTextContent("Add New Entry");
+        static readonly GUIContent k_PrevPage = new GUIContent(EditorGUIUtility.IconContent("Animation.PrevKey").image as Texture2D);
+        static readonly GUIContent k_NextPage = new GUIContent(EditorGUIUtility.IconContent("Animation.NextKey").image as Texture2D);
+        static readonly GUIContent k_FirstPage = new GUIContent(EditorGUIUtility.IconContent("Animation.FirstKey").image as Texture2D);
+        static readonly GUIContent k_LastPage = new GUIContent(EditorGUIUtility.IconContent("Animation.LastKey").image as Texture2D);
+        static readonly GUIContent k_PageSize = new GUIContent(EditorGUIUtility.TrTextContent("Page Size"));
 
         protected string TableCollectionName => TableCollection.TableCollectionName;
 
@@ -55,6 +64,48 @@ namespace UnityEditor.Localization.UI
             }
         }
 
+        int PageSize
+        {
+            get => m_PageSize;
+            set
+            {
+                var clampedValue = Mathf.Clamp(value, 1, 1000);
+                if (clampedValue != m_PageSize)
+                {
+                    m_PageSize = clampedValue;
+                    TotalPages = Mathf.CeilToInt(TableCollection.SharedData.Entries.Count / (float)m_PageSize);
+                    m_CurrentPage = Mathf.Clamp(value, 1, TotalPages);
+                    EditorPrefs.SetInt(k_PageSizePref, m_PageSize);
+                    ReloadPages();
+                }
+            }
+        }
+
+        int CurrentPage
+        {
+            get => m_CurrentPage;
+            set
+            {
+                var clampedValue = Mathf.Clamp(value, 1, TotalPages);
+                if (clampedValue != m_CurrentPage)
+                {
+                    m_CurrentPage = clampedValue;
+                    EditorPrefs.SetInt(k_CurrentPagePref, m_CurrentPage);
+                    ReloadPages();
+                }
+            }
+        }
+
+        int TotalPages
+        {
+            get => m_TotalPages;
+            set
+            {
+                m_TotalPages = value;
+                m_TotalPagesLabel = new GUIContent($"/{value}");
+            }
+        }
+
         public delegate void SelectedDelegate(ISelectable selected);
         public event SelectedDelegate SelectedForEditing;
 
@@ -64,9 +115,16 @@ namespace UnityEditor.Localization.UI
         TreeViewItem m_AddKeyItem;
         SearchField m_SearchField;
 
-        List<LocalizationTable> m_SortedTables = new List<LocalizationTable>();
+        int m_CurrentPage = -1;
+        int m_PageSize = -1;
+        int m_TotalPages = -1;
+        GUIContent m_TotalPagesLabel;
 
-        const string kSearch = "Localization-TablesView-Search";
+        List<TreeViewItem> m_AllItems = new List<TreeViewItem>();
+        List<TreeViewItem> m_VisibleRows = new List<TreeViewItem>();
+        TreeViewItem m_Root;
+
+        List<LocalizationTable> m_SortedTables = new List<LocalizationTable>();
 
         protected GenericAssetTableListView(LocalizationTableCollection tableCollection) :
             base(new TreeViewState())
@@ -74,7 +132,7 @@ namespace UnityEditor.Localization.UI
             TableCollection = tableCollection;
             m_SearchField = new SearchField();
             m_SearchField.downOrUpArrowKeyPressed += SetFocusAndEnsureSelectedItem;
-            searchString = SessionState.GetString(kSearch, string.Empty);
+            searchString = SessionState.GetString(k_Search, string.Empty);
             Undo.undoRedoPerformed += UndoRedoPerformed;
             LocalizationEditorSettings.EditorEvents.TableEntryAdded += EditorEvents_TableEntryModified;
             LocalizationEditorSettings.EditorEvents.TableEntryRemoved += EditorEvents_TableEntryModified;
@@ -84,6 +142,9 @@ namespace UnityEditor.Localization.UI
             LocalizationEditorSettings.EditorEvents.TableRemovedFromCollection += EditorEvents_TableAddedOrRemoveFromCollection;
             LocalizationEditorSettings.EditorEvents.CollectionModified += EditorEvents_CollectionModified;
             LocalizationEditorSettings.EditorEvents.LocaleSortOrderChanged += EditorEvents_LocaleSortOrderChanged;
+
+            m_PageSize = EditorPrefs.GetInt(k_PageSizePref, k_DefaultPageSize);
+            m_CurrentPage = EditorPrefs.GetInt(k_CurrentPagePref, 1);
 
             rowHeight = EditorStyles.textArea.lineHeight;
         }
@@ -248,15 +309,25 @@ namespace UnityEditor.Localization.UI
             return item;
         }
 
+        void ReloadPages()
+        {
+            m_Root = rootItem;
+            Reload();
+            m_Root = null;
+        }
+
         protected override TreeViewItem BuildRoot()
         {
+            if (m_Root != null)
+                return m_Root;
+
             var root = new TreeViewItem(-1, -1, "root");
-            var items = new List<TreeViewItem>();
+            m_AllItems.Clear();
 
             if (TableCollection.SharedData == null)
             {
                 Debug.LogError($"No {nameof(SharedTableData)} assigned to Table: " + TableCollectionName);
-                SetupParentsAndChildrenFromDepths(root, items);
+                SetupParentsAndChildrenFromDepths(root, m_AllItems);
                 return root;
             }
 
@@ -275,13 +346,13 @@ namespace UnityEditor.Localization.UI
             for (int i = 0; i < sharedEntries.Count; ++i)
             {
                 var tvi = CreateTreeViewItem(i, sharedEntries[i]);
-                items.Add(tvi);
+                m_AllItems.Add(tvi);
             }
 
             // At the end we add an extra node which will be used to add new keys.
             m_AddKeyItem = new GenericAssetTableTreeViewItem<T1>() { id = k_AddItemId, displayName = "Add Key" };
-            items.Add(m_AddKeyItem);
-            SetupParentsAndChildrenFromDepths(root, items);
+            m_AllItems.Add(m_AddKeyItem);
+            SetupParentsAndChildrenFromDepths(root, m_AllItems);
             return root;
         }
 
@@ -295,13 +366,67 @@ namespace UnityEditor.Localization.UI
             searchString = m_SearchField.OnToolbarGUI(searchRect, searchString);
             if (EditorGUI.EndChangeCheck())
             {
-                SessionState.SetString(kSearch, searchString);
+                SessionState.SetString(k_Search, searchString);
             }
             rect.yMin += EditorGUIUtility.singleLineHeight + (2 * borderHeight);
             return rect;
         }
 
-        public override void OnGUI(Rect rect) => base.OnGUI(DrawSearchField(rect));
+        void DrawPageControls(Rect rect)
+        {
+            var buttonWidth = GUILayout.Width(30);
+
+            GUILayout.BeginArea(rect);
+            GUILayout.BeginHorizontal(EditorStyles.toolbar);
+            if (GUILayout.Button(new GUIContent(k_FirstPage), EditorStyles.toolbarButton, buttonWidth))
+            {
+                CurrentPage = 0;
+            }
+            if (GUILayout.Button(new GUIContent(k_PrevPage), EditorStyles.toolbarButton, buttonWidth))
+            {
+                CurrentPage--;
+            }
+
+            var size = EditorStyles.textField.CalcSize(new GUIContent(CurrentPage.ToString()));
+            EditorGUI.BeginChangeCheck();
+            var page = EditorGUILayout.DelayedIntField(CurrentPage, EditorStyles.toolbarTextField, GUILayout.ExpandWidth(false), GUILayout.Width(size.x));
+            if (EditorGUI.EndChangeCheck())
+            {
+                CurrentPage = page;
+            }
+
+            var totalePagesWidth = EditorStyles.textField.CalcSize(m_TotalPagesLabel).x;
+            GUILayout.Label(m_TotalPagesLabel, GUILayout.Width(totalePagesWidth));
+            if (GUILayout.Button(new GUIContent(k_NextPage), EditorStyles.toolbarButton, buttonWidth))
+            {
+                CurrentPage++;
+            }
+            if (GUILayout.Button(new GUIContent(k_LastPage), EditorStyles.toolbarButton, buttonWidth))
+            {
+                CurrentPage = TotalPages;
+            }
+
+            GUILayout.FlexibleSpace();
+            EditorGUI.BeginChangeCheck();
+
+            EditorGUI.BeginChangeCheck();
+            PageSize = EditorGUILayout.DelayedIntField(k_PageSize, PageSize, EditorStyles.toolbarTextField);
+
+            GUILayout.EndHorizontal();
+            GUILayout.EndArea();
+        }
+
+        public override void OnGUI(Rect rect)
+        {
+            rect = DrawSearchField(rect);
+
+            rect.yMax -= 20;
+            base.OnGUI(rect);
+
+            rect.y = rect.yMax;
+            rect.height = 20;
+            DrawPageControls(rect);
+        }
 
         protected override void RowGUI(RowGUIArgs args)
         {
@@ -352,7 +477,19 @@ namespace UnityEditor.Localization.UI
             var rows = base.BuildRows(root);
             if (hasSearch)
                 rows.Add(m_AddKeyItem);
-            return rows;
+
+            TotalPages = Mathf.CeilToInt(rows.Count / (float)m_PageSize);
+            m_CurrentPage = Mathf.Clamp(m_CurrentPage, 1, TotalPages);
+
+            m_VisibleRows.Clear();
+            var startIndex = (m_CurrentPage - 1) * m_PageSize;
+            var endIndex = Mathf.Min(startIndex + m_PageSize, rows.Count);
+            for (int i = startIndex; i < endIndex; i++)
+            {
+                m_VisibleRows.Add(rows[i]);
+            }
+
+            return m_VisibleRows;
         }
 
         protected virtual void DrawKeyIdField(Rect cellRect, T2 keyItem) => EditorGUI.LabelField(cellRect, keyItem.KeyId.ToString());
@@ -406,12 +543,19 @@ namespace UnityEditor.Localization.UI
         /// </summary>
         protected virtual void DrawNewKeyField(Rect cellRect)
         {
-            if (GUI.Button(cellRect, newEntry))
+            if (GUI.Button(cellRect, k_NewEntry))
             {
+                searchString = String.Empty;
+                SessionState.SetString(k_Search, searchString);
+
                 AddNewKey();
                 var s = state;
                 s.scrollPos += new Vector2(0, 100);
                 Reload();
+
+                CurrentPage = TotalPages;
+                var index = TableCollection.SharedData.Entries.Count - 1;
+                SetSelection(new int[] { index }, TreeViewSelectionOptions.RevealAndFrame);
             }
         }
 

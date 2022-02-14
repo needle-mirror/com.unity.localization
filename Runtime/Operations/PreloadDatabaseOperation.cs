@@ -119,14 +119,31 @@ namespace UnityEngine.Localization
             // Iterate through the loaded tables, add them to our known tables and preload the actual table contents if required.
             foreach (var table in loadTablesOperation.Result)
             {
-                if (m_Database.TableOperations.TryGetValue((table.LocaleIdentifier, table.TableCollectionName), out var tableOp))
+                var tableCollectionName = "";
+                try
                 {
-                    if (tableOp.Result != table)
-                        Debug.LogError($"A table with the same key `{table.TableCollectionName}` already exists. Something went wrong during preloading.");
-                    continue;
+                    tableCollectionName = table.TableCollectionName;
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"Exception occured when loading table collection name: {e.Message}");
+                    Complete(m_Database, false, $"Failed to preload tables.");
+                    return;
                 }
 
-                m_Database.RegisterTableOperation(AddressablesInterface.ResourceManager.CreateCompletedOperation(table, null), table.LocaleIdentifier, table.TableCollectionName);
+                if (m_Database.TableOperations.TryGetValue((table.LocaleIdentifier, tableCollectionName), out var tableOp))
+                {
+                    // If the operation is still loading then we can leave it to continue, no need to register this operation.
+                    if (tableOp.IsDone && !ReferenceEquals(tableOp.Result, table))
+                    {
+                        Debug.LogError($"A table with the same key `{tableCollectionName}` already exists. Something went wrong during preloading. Table {table} does not match {tableOp.Result}.");
+                        continue;
+                    }
+                }
+                else
+                {
+                    m_Database.RegisterTableOperation(AddressablesInterface.ResourceManager.CreateCompletedOperation(table, null), table.LocaleIdentifier, tableCollectionName);
+                }
 
                 if (table is IPreloadRequired preloadRequired)
                 {

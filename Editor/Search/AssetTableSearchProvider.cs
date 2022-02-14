@@ -244,6 +244,7 @@ namespace UnityEditor.Localization.Search
                 yield return new SearchProposition("Translated", locale.LocaleName, $"{FilterIds.TranslatedValue}({locale.Identifier.Code}):\"some value\"", $"Filter by {locale.LocaleName} Table localized value.", icon: EditorIcons.Locale);
             }
         }
+
         #endif
     }
 }

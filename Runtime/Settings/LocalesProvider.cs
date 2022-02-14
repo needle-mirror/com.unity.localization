@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using UnityEngine.Localization.Pseudo;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
@@ -21,8 +22,15 @@ namespace UnityEngine.Localization.Settings
         {
             get
             {
-                if (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode && m_LoadOperation == null)
+                if (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode && m_LoadOperation == null && !LocalizationSettings.InitializationOperation.IsDone)
+                {
+                    #if !UNITY_WEBGL // WebGL does not support WaitForCompletion
+                    LocalizationSettings.InitializationOperation.WaitForCompletion();
+                    #else
                     Debug.LogError("Locales PreloadOperation has not been initialized, can not return the available locales.");
+                    #endif
+                }
+
                 return m_Locales;
             }
         }
@@ -53,10 +61,13 @@ namespace UnityEngine.Localization.Settings
         {
             foreach (var locale in Locales)
             {
-                if (locale != null && locale.Identifier.Equals(id))
+                if (locale == null || locale is PseudoLocale)
+                    continue;
+
+                if (locale.Identifier.Equals(id))
                     return locale;
             }
-            return null;
+            return FindFallbackLocale(id);
         }
 
         /// <summary>
@@ -64,32 +75,14 @@ namespace UnityEngine.Localization.Settings
         /// </summary>
         /// <param name="code">If no Locale can be found then null is returned.</param>
         /// <returns></returns>
-        public Locale GetLocale(string code)
-        {
-            foreach (var locale in Locales)
-            {
-                if (locale == null)
-                    continue;
-
-                // Ignore PseudoLocale's
-                if (locale is PseudoLocale)
-                    continue;
-
-                if (locale.Identifier.Code == code)
-                    return locale;
-            }
-            return null;
-        }
+        public Locale GetLocale(string code) => GetLocale(new LocaleIdentifier(code));
 
         /// <summary>
-        /// Attempt to retrieve a Locale using a <see cref="UnityEngine.SystemLanguage"/>.
+        /// Attempt to retrieve a Locale using a [SystemLanguage](https://docs.unity3d.com/ScriptReference/SystemLanguage.html).
         /// </summary>
         /// <param name="systemLanguage"></param>
         /// <returns>If no Locale can be found then null is returned.</returns>
-        public Locale GetLocale(SystemLanguage systemLanguage)
-        {
-            return GetLocale(SystemLanguageConverter.GetSystemLanguageCultureCode(systemLanguage));
-        }
+        public Locale GetLocale(SystemLanguage systemLanguage) => GetLocale(new LocaleIdentifier(systemLanguage));
 
         /// <summary>
         /// Add a Locale to allow support for a specific language.
@@ -106,13 +99,16 @@ namespace UnityEngine.Localization.Settings
                 var foundLocale = GetLocale(locale.Identifier);
                 if (foundLocale != null && !(foundLocale is PseudoLocale))
                 {
-                    Debug.LogWarning("Ignoring locale. A locale with the same Id has already been added: " + locale.Identifier);
+                    Debug.LogWarning($"Ignoring locale {locale}. A locale with the same Id has already been added: {locale.Identifier}");
                     return;
                 }
             }
 
             var index = m_Locales.BinarySearch(locale);
-            m_Locales.Insert(~index, locale);
+            if (index < 0)
+            {
+                m_Locales.Insert(~index, locale);
+            }
         }
 
         /// <summary>
@@ -129,6 +125,28 @@ namespace UnityEngine.Localization.Settings
             var settings = LocalizationSettings.GetInstanceDontCreateDefault();
             settings?.OnLocaleRemoved(locale);
             return ret;
+        }
+
+        /// <summary>
+        /// Attempt to retrieve a fallback Locale using the identifier.
+        /// </summary>
+        /// <param name="localeIdentifier"><see cref="LocaleIdentifier"/> to find.</param>
+        /// <returns>If no Locale can be found then null is returned.</returns>
+        public Locale FindFallbackLocale(LocaleIdentifier localeIdentifier)
+        {
+            var cultureInfo = localeIdentifier.CultureInfo;
+            if (cultureInfo == null)
+                return null;
+
+            // Attempt to use CultureInfo fallbacks to find the closest locale
+            Locale locale = null;
+            cultureInfo = cultureInfo.Parent;
+            while (cultureInfo != CultureInfo.InvariantCulture && locale == null)
+            {
+                locale = GetLocale(cultureInfo);
+                cultureInfo = cultureInfo.Parent;
+            }
+            return locale;
         }
 
         /// <summary>

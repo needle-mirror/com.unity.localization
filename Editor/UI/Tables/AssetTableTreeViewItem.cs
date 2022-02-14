@@ -13,12 +13,24 @@ namespace UnityEditor.Localization.UI
         static readonly Dictionary<string, Object> s_CachedAssets = new Dictionary<string, Object>();
 
         (ISelectable selected, Object value, AssetTable table)[] m_TableProperties;
+        List<LocalizationTable> m_SortedTables;
+        int m_StartIndex;
 
         SharedTableData m_SharedTableData;
         AssetTypeMetadata m_AssetTypeMetadata;
         AssetTableCollection m_AssetTableCollection;
 
         public Type AssetType => m_AssetTypeMetadata == null ? typeof(Object) : m_AssetTypeMetadata.Type;
+
+        public override string displayName
+        {
+            get
+            {
+                DelayedInit();
+                return base.displayName;
+            }
+            set => base.displayName = value;
+        }
 
         static Object GetAssetFromCache(string guid)
         {
@@ -37,7 +49,11 @@ namespace UnityEditor.Localization.UI
 
         public override void Initialize(LocalizationTableCollection collection, int startIdx, List<LocalizationTable> sortedTables)
         {
-            m_AssetTableCollection = collection as AssetTableCollection;
+            m_SortedTables = sortedTables;
+            m_StartIndex = startIdx;
+            m_AssetTableCollection = (AssetTableCollection)collection;
+
+
             m_TableProperties = new(ISelectable, Object, AssetTable)[startIdx + sortedTables.Count];
 
             // Get the shared data
@@ -49,6 +65,24 @@ namespace UnityEditor.Localization.UI
                 m_TableProperties[i] = (null, null, sortedTables[i - startIdx] as AssetTable);
             }
             RefreshFields();
+        }
+
+        void DelayedInit()
+        {
+            if (m_TableProperties == null)
+            {
+                m_TableProperties = new (ISelectable, Object, AssetTable)[m_StartIndex + m_SortedTables.Count];
+
+                // Get the shared data
+                m_SharedTableData = m_AssetTableCollection.SharedData;
+
+                Debug.Assert(m_SharedTableData != null);
+                for (int i = m_StartIndex; i < m_TableProperties.Length; ++i)
+                {
+                    m_TableProperties[i] = (null, null, m_SortedTables[i - m_StartIndex] as AssetTable);
+                }
+                RefreshFields();
+            }
         }
 
         public void RefreshFields()
@@ -90,17 +124,20 @@ namespace UnityEditor.Localization.UI
 
         public Object GetTableAsset(int colIdx)
         {
+            DelayedInit();
             return m_TableProperties[colIdx].value;
         }
 
         public bool IsTableEntrySelected(int colIdx)
         {
+            DelayedInit();
             ISelectable s = m_TableProperties[colIdx].selected;
             return s?.Selected ?? false;
         }
 
         public ISelectable Select(int colIdx, Locale locale)
         {
+            DelayedInit();
             if (m_TableProperties[colIdx].selected == null)
             {
                 var s = new TableEntrySelected(m_TableProperties[colIdx].table, KeyId, locale, MetadataType.AssetTableEntry | MetadataType.SharedAssetTableEntry);
@@ -111,6 +148,7 @@ namespace UnityEditor.Localization.UI
 
         public void SetAsset(Object asset, int colIdx)
         {
+            DelayedInit();
             if (asset == null)
             {
                 m_AssetTableCollection.RemoveAssetFromTable(m_TableProperties[colIdx].table, KeyId, true);
@@ -128,6 +166,7 @@ namespace UnityEditor.Localization.UI
 
         public override void OnDeleteKey()
         {
+            DelayedInit();
             foreach (var tableProperties in m_TableProperties)
             {
                 // If the column is selected then we need to disable it, so we are not trying to edit data that has been removed.
@@ -143,6 +182,7 @@ namespace UnityEditor.Localization.UI
 
         void UpdateSearchString()
         {
+            DelayedInit();
             using (StringBuilderPool.Get(out var sb))
             {
                 sb.AppendLine(SharedEntry.Id.ToString());

@@ -20,6 +20,7 @@ namespace UnityEditor.Localization.UI
             public static readonly GUIContent formatterCode = EditorGUIUtility.TrTextContent("Custom Formatter Code", "The Language code to use when applying any culture specific string formatting, such as date, time, currency. By default, the Locale Code will be used however this field can be used to override this such as when you are using a custom Locale which has no known formatter.");
             public static readonly GUIContent formatCultureInfo = EditorGUIUtility.TrTextContent("Formatting Culture Info", "The Culture specific formatting that will be used for this Locale.");
             public static readonly GUIContent sortOrder = EditorGUIUtility.TrTextContent("Sort Order", "The order the Locales will appear in any sorted Lists. By default Locales are ordered by name however the Sort Order can be used to override this.");
+            public static readonly GUIContent emptyCultureInfo = new GUIContent("-");
         }
 
         SerializedProperty m_Name;
@@ -103,6 +104,10 @@ namespace UnityEditor.Localization.UI
                 m_FormattingExampleDateTime = new GUIContent(DateTime.Now.ToString(formatter));
                 m_FormattingExampleCurrency = new GUIContent(string.Format(formatter, "{0:C}", 123));
                 m_FormattingExampleNumber = new GUIContent(string.Format(formatter, "{0:N}", 123456789.12));
+            }
+            else
+            {
+                m_FormattingExampleDateTime = m_FormattingExampleCurrency = m_FormattingExampleNumber = Styles.emptyCultureInfo;
             }
         }
 

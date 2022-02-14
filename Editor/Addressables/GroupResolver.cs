@@ -170,13 +170,13 @@ namespace UnityEditor.Localization.Addressables
             else
                 locale = LocalizationEditorSettings.GetLocale(locales[0].Code) ?? Locale.CreateLocale(locales[0]);
 
-            var args = new object[] { locale, asset };
             var expectedGroupPair = m_LocaleGroups.FirstOrDefault(g => g.localeIdentifier == locales[0]);
-            var expectedGroupName = expectedGroupPair?.group != null ? expectedGroupPair.group.Name : Smart.Format(LocaleGroupNamePattern, args);
+            var expectedGroupName = expectedGroupPair?.group != null ? expectedGroupPair.group.Name : Smart.Format(LocaleGroupNamePattern, locale, asset);
             for (var i = 1; i < locales.Count; ++i)
             {
                 var groupPair = m_LocaleGroups.FirstOrDefault(g => g.localeIdentifier == locales[i]);
-                var groupName = groupPair?.group != null ? groupPair.group.Name : Smart.Format(LocaleGroupNamePattern, args);
+                locale = LocalizationEditorSettings.GetLocale(locales[i]);
+                var groupName = groupPair?.group != null ? groupPair.group.Name : Smart.Format(LocaleGroupNamePattern, locale, asset);
                 if (expectedGroupName != groupName)
                 {
                     // Use shared group

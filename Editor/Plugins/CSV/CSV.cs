@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using CsvHelper;
 using UnityEditor.Localization.Plugins.CSV.Columns;
 using UnityEditor.Localization.Reporting;
+using UnityEngine;
 using UnityEngine.Localization.Metadata;
+using static UnityEngine.Localization.Tables.SharedTableData;
 
 namespace UnityEditor.Localization.Plugins.CSV
 {
@@ -73,7 +76,7 @@ namespace UnityEditor.Localization.Plugins.CSV
                     }
 
                     reporter?.ReportProgress("Writing Contents", 0.1f);
-                    foreach (var row in collection.GetRowEnumerator())
+                    foreach (var row in collection.GetRowEnumeratorUnsorted())
                     {
                         if (row.TableEntries[0] != null && row.TableEntries[0].SharedEntry.Metadata.HasMetadata<ExcludeEntryFromExport>())
                             continue;
@@ -111,13 +114,15 @@ namespace UnityEditor.Localization.Plugins.CSV
         /// <param name="collection">The target collection to be updated using the CSV data.</param>
         /// <param name="createUndo">Should an Undo operation be created so the changes can be undone?</param>
         /// <param name="reporter">An optional reporter that can be used to provide feedback during import.</param>
+        /// <param name="removeMissingEntries">After a pull has completed, any keys that exist in the <paramref name="collection"/> but did not exist in the CSV are considered missing,
+        /// this may be because they have been deleted from the sheet. A value of true will remove these missing entries; false will preserve them.</param>
         /// <example>
         /// This example show how to import a collection with default settings.
         /// <code source="../../../DocCodeSamples.Tests/CsvSamples.cs" region="import-file"/>
         /// </example>
-        public static void ImportInto(TextReader reader, StringTableCollection collection, bool createUndo = false, ITaskReporter reporter = null)
+        public static void ImportInto(TextReader reader, StringTableCollection collection, bool createUndo = false, ITaskReporter reporter = null, bool removeMissingEntries = false)
         {
-            ImportInto(reader, collection, ColumnMapping.CreateDefaultMapping(), createUndo, reporter);
+            ImportInto(reader, collection, ColumnMapping.CreateDefaultMapping(), createUndo, reporter, removeMissingEntries);
         }
 
         /// <summary>
@@ -128,6 +133,8 @@ namespace UnityEditor.Localization.Plugins.CSV
         /// <param name="columnMappings"></param>
         /// <param name="createUndo"></param>
         /// <param name="reporter"></param>
+        /// <param name="removeMissingEntries">After a pull has completed, any keys that exist in the <paramref name="collection"/> but did not exist in the CSV are considered missing,
+        /// this may be because they have been deleted from the sheet. A value of true will remove these missing entries; false will preserve them.</param>
         /// <example>
         /// This example shows how to configure the data you wish to import in CSV through column mappings.
         /// <code source="../../../DocCodeSamples.Tests/CsvSamples.cs" region="import-mappings"/>
@@ -136,7 +143,7 @@ namespace UnityEditor.Localization.Plugins.CSV
         /// This example shows how to import every <see cref="StringTableCollection"/> that contains a <see cref="CsvExtension"/>.
         /// <code source="../../../DocCodeSamples.Tests/CsvSamples.cs" region="bulk-import"/>
         /// </example>
-        public static void ImportInto(TextReader reader, StringTableCollection collection, IList<CsvColumns> columnMappings, bool createUndo = false, ITaskReporter reporter = null)
+        public static void ImportInto(TextReader reader, StringTableCollection collection, IList<CsvColumns> columnMappings, bool createUndo = false, ITaskReporter reporter = null, bool removeMissingEntries = false)
         {
             if (reader == null)
                 throw new ArgumentNullException(nameof(reader));
@@ -168,9 +175,20 @@ namespace UnityEditor.Localization.Plugins.CSV
                     var keyCell = columnMappings.First(o => o is IKeyColumn) as IKeyColumn;
 
                     reporter?.ReportProgress("Reading Contents", 0.1f);
+
+                    // We want to keep track of the order the entries are pulled in so we can match it
+                    var sortedEntries = new List<SharedTableEntry>();
+                    var keysProcessed = new HashSet<long>();
+
                     while (csvReader.Read())
                     {
                         var keyEntry = keyCell.ReadKey(csvReader);
+                        if (keyEntry == null)
+                            continue;
+
+                        sortedEntries.Add(keyEntry);
+                        keysProcessed.Add(keyEntry.Id);
+
                         foreach (var cell in columnMappings)
                         {
                             cell.ReadRow(keyEntry, csvReader);
@@ -181,6 +199,10 @@ namespace UnityEditor.Localization.Plugins.CSV
                     {
                         cell.ReadEnd(collection);
                     }
+
+                    var removedEntriesLog = new StringBuilder();
+                    collection.MergeUpdatedEntries(keysProcessed, sortedEntries, removedEntriesLog, removeMissingEntries);
+                    reporter?.ReportProgress(removedEntriesLog.ToString(), 0.9f);
                 }
 
                 modifiedAssets.ForEach(EditorUtility.SetDirty);

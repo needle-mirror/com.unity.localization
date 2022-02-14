@@ -50,6 +50,8 @@ namespace UnityEngine.Localization.PropertyVariants
         [SerializeReference]
         List<TrackedObject> m_TrackedObjects = new List<TrackedObject>();
 
+        Locale m_CurrentLocale;
+
         internal AsyncOperationHandle? CurrentOperation
         {
             get;
@@ -59,6 +61,16 @@ namespace UnityEngine.Localization.PropertyVariants
         void OnEnable()
         {
             LocalizationSettings.SelectedLocaleChanged += SelectedLocaleChanged;
+
+            // Update when reenabled (LOC-579)
+            if (m_CurrentLocale != null)
+            {
+                var locale = LocalizationSettings.SelectedLocale;
+                if (!ReferenceEquals(m_CurrentLocale, locale))
+                {
+                    SelectedLocaleChanged(locale);
+                }
+            }
         }
 
         void OnDisable()
@@ -68,6 +80,7 @@ namespace UnityEngine.Localization.PropertyVariants
 
         IEnumerator Start()
         {
+            m_CurrentLocale = null;
             var localeOp = LocalizationSettings.SelectedLocaleAsync;
             if (!localeOp.IsDone)
                 yield return localeOp;
@@ -77,6 +90,8 @@ namespace UnityEngine.Localization.PropertyVariants
 
         void SelectedLocaleChanged(Locale locale)
         {
+            m_CurrentLocale = locale;
+
             // Ignore null, this will reset the driven properties back to their defaults.
             if (locale == null)
                 return;

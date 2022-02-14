@@ -440,7 +440,7 @@ namespace UnityEditor.Localization
         }
 
         /// <summary>
-        /// Returns an enumerable for stepping through the rows of the collection.
+        /// Returns an enumerable for stepping through the rows of the collection. Sorted by the <see cref="SharedData"/> entry Ids.
         /// </summary>
         /// <typeparam name="TTable"></typeparam>
         /// <typeparam name="TEntry"></typeparam>
@@ -537,6 +537,53 @@ namespace UnityEditor.Localization
                     warningMessage.Insert(0, "Found entries in Tables that were missing a Shared Table Data Entry. These entries were ignored:\n");
                     Debug.LogWarning(warningMessage.ToString(), sharedTableData);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Returns an enumerable for stepping through the rows of the collection. Unlike <see cref="GetRowEnumerator"/>,
+        /// the items are not sorted by Id and will be returned in the same order as they are stored in <see cref="SharedData"/>.
+        /// </summary>
+        /// <typeparam name="TTable"></typeparam>
+        /// <typeparam name="TEntry"></typeparam>
+        /// <param name="tables"></param>
+        /// <returns></returns>
+        protected static IEnumerable<Row<TEntry>> GetRowEnumeratorUnsorted<TTable, TEntry>(IList<TTable> tables)
+            where TTable : DetailedLocalizationTable<TEntry>
+            where TEntry : TableEntry
+        {
+            if (tables == null)
+                throw new ArgumentNullException(nameof(tables));
+
+            SharedTableData sharedTableData = null;
+
+            // Prepare the tables - Sort the keys and table entries
+            foreach (var table in tables)
+            {
+                if (sharedTableData == null)
+                {
+                    sharedTableData = table.SharedData;
+                }
+                else if (sharedTableData != table.SharedData)
+                {
+                    throw new Exception("All tables must share the same SharedData.");
+                }
+            }
+
+            var currentRow = new Row<TEntry>
+            {
+                TableEntriesReference = tables.Select(t => t.LocaleIdentifier).ToArray(),
+                TableEntries = new TEntry[tables.Count]
+            };
+
+            foreach (var keyEntry in sharedTableData.Entries)
+            {
+                currentRow.KeyEntry = keyEntry;
+                for (int i = 0; i < tables.Count; ++i)
+                {
+                    currentRow.TableEntries[i] = tables[i].GetEntry(keyEntry.Id);
+                }
+                yield return currentRow;
             }
         }
 

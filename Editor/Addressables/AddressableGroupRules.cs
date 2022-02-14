@@ -83,7 +83,7 @@ namespace UnityEditor.Localization.Addressables
             {
                 instance.StringTablesResolver = new GroupResolver("Localization-StringTables", "Localization-Assets-Shared");
                 instance.AssetTablesResolver = new GroupResolver("Localization-AssetTables", "Localization-Assets-Shared");
-                instance.AssetResolver = new GroupResolver("Localization-Assets-{Identifier-Code}", "Localization-Assets-Shared");
+                instance.AssetResolver = new GroupResolver("Localization-Assets-{Identifier.Code}", "Localization-Assets-Shared");
             });
         }
 

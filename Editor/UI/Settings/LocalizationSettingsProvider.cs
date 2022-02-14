@@ -46,7 +46,7 @@ namespace UnityEditor.Localization.UI
         {
             if (LocalizationEditorSettings.ActiveLocalizationSettings == null)
             {
-                if (m_Editor != null)
+                if (Event.current.type != EventType.Layout && m_Editor != null)
                 {
                     m_Editor.RemoveFromHierarchy();
                     m_Editor = null;

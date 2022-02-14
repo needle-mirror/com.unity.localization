@@ -10,7 +10,8 @@ namespace UnityEngine.Localization.Settings
     public class SystemLocaleSelector : IStartupLocaleSelector
     {
         /// <summary>
-        /// Uses <see cref="CultureInfo.CurrentUICulture"/> and <see cref="Application.systemLanguage"/> to find a matching <see cref="Locale"/> from the available locales.
+        /// Uses [CultureInfo.CurrentUICulture](https://docs.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo.currentuiculture) and
+        /// [Application.systemLanguage](https://docs.unity3d.com/ScriptReference/Application-systemLanguage.html) to find a matching <see cref="Locale"/> from the available locales.
         /// </summary>
         /// <param name="availableLocales"></param>
         /// <returns></returns>
@@ -75,7 +76,7 @@ namespace UnityEngine.Localization.Settings
         }
 
         /// <summary>
-        /// Returns CultureInfo.CurrentUICulture.
+        /// Returns [CultureInfo.CurrentUICulture](https://docs.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo.currentuiculture).
         /// </summary>
         /// <returns></returns>
         protected virtual CultureInfo GetSystemCulture() => CultureInfo.CurrentUICulture;
@@ -102,7 +103,7 @@ namespace UnityEngine.Localization.Settings
                     {
                         if (locale != null)
                         {
-                            // This API requires Android 21 which is the min version in 2021.2 and above. 
+                            // This API requires Android 21 which is the min version in 2021.2 and above.
                             #if UNITY_2021_2_OR_NEWER
                             return locale.Call<string>("toLanguageTag");
                             #else
@@ -115,6 +116,7 @@ namespace UnityEngine.Localization.Settings
             }
             return null;
         }
+
         #endif
     }
 }

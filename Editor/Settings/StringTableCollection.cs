@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text;
 using UnityEngine.Localization;
+using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Tables;
+using static UnityEngine.Localization.Tables.SharedTableData;
 
 namespace UnityEditor.Localization
 {
@@ -57,6 +60,52 @@ namespace UnityEditor.Localization
         }
 
         /// <summary>
+        /// Updates the collection entries with a <paramref name="sortedEntries"/> and optionally removes entries that are missing from the update.
+        /// Used by various importers such as <see cref="Plugins.Google.GoogleSheets"/> and <see cref="Plugins.CSV.Csv"/>.
+        /// </summary>
+        /// <param name="entriesToKeep">The entries that should not be removed if <paramref name="removeMissingEntries"/> is <c>true</c>.</param>
+        /// <param name="sortedEntries">The new sorted entries.</param>
+        /// <param name="removedEntriesLog">Optional log for reporting what entries were removed.</param>
+        /// <param name="removeMissingEntries">Should missing entries be removed? If <c>false</c> they will be placed at the end after the sorted entries.</param>
+        internal void MergeUpdatedEntries(HashSet<long> entriesToKeep, List<SharedTableEntry> sortedEntries, StringBuilder removedEntriesLog, bool removeMissingEntries)
+        {
+            // We either remove missing entries or add them to the end.
+            var stringTables = StringTables;
+
+            removedEntriesLog.AppendLine("Removed missing entries:");
+            for (int i = 0; i < SharedData.Entries.Count; ++i)
+            {
+                var entry = SharedData.Entries[i];
+                if (entriesToKeep.Contains(entry.Id))
+                    continue;
+
+                if (!removeMissingEntries)
+                {
+                    // Missing entries that we want to keep go to the bottom of the list.
+                    sortedEntries.Add(entry);
+                }
+                else if (entry.Metadata.HasMetadata<ExcludeEntryFromExport>())
+                {
+                    // Add back the entry which has ExcludeEntryFromExport Metadata.
+                    sortedEntries.Insert(i, entry);
+                }
+                else
+                {
+                    removedEntriesLog.AppendLine($"  {entry}");
+
+                    // Remove from tables
+                    foreach (var table in stringTables)
+                    {
+                        table.Remove(entry.Id);
+                    }
+                }
+            }
+
+            // Now replace the old list with our new one that is in the correct order.
+            SharedData.Entries = sortedEntries;
+        }
+
+        /// <summary>
         /// Returns an enumerator that can be used to step through each key and its localized values, such as in a foreach loop.
         /// Internally <see cref="SharedTableData"/> and <see cref="StringTable"/>'s are separate assets with their own internal list of values.
         /// This means that when iterating through each key a lookup must be made in each table in order to retrieve the localized value,
@@ -70,6 +119,14 @@ namespace UnityEditor.Localization
         /// </example>
         /// <returns></returns>
         public IEnumerable<Row<StringTableEntry>> GetRowEnumerator() => GetRowEnumerator<StringTable, StringTableEntry>(StringTables);
+
+        /// <summary>
+        /// Returns an enumerator that can be used to step through each key and its localized values, such as in a foreach loop.
+        /// This version does not sort the items by the Key Id but instead returns them in the order of the <see cref="SharedTableData.Entries"/>.
+        /// If the order of the rows is not important then using <see cref="GetRowEnumerator"/> will provide better performance.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<Row<StringTableEntry>> GetRowEnumeratorUnsorted() => GetRowEnumeratorUnsorted<StringTable, StringTableEntry>(StringTables);
 
         /// <summary>
         /// <inheritdoc cref="GetRowEnumerator"/>

@@ -254,7 +254,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF.V20
                 {
                     foreach (var i in Items)
                     {
-                        if (i is segment seg)
+                        if (i is segment seg && seg.source != null && seg.source.Text != null)
                         {
                             foreach (var t in seg.source.Text)
                             {

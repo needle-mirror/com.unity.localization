@@ -15,7 +15,7 @@ namespace UnityEditor.Localization.UI
     [InitializeOnLoad]
     class GameViewLanguageMenu : PopupField<Locale>
     {
-        static List<(VisualElement toolbar, GameViewLanguageMenu menu)> s_GameViews = new List<(VisualElement toolbar, GameViewLanguageMenu menu)>();
+        static List<GameViewLanguageMenu> s_GameViews = new List<GameViewLanguageMenu>();
         static List<Locale> s_Locales = new List<Locale>();
 
         static GameViewLanguageMenu()
@@ -97,7 +97,7 @@ namespace UnityEditor.Localization.UI
         {
             foreach (var gv in s_GameViews)
             {
-                gv.toolbar.RemoveFromHierarchy();
+                gv.RemoveFromHierarchy();
             }
             s_GameViews.Clear();
         }
@@ -112,19 +112,15 @@ namespace UnityEditor.Localization.UI
 
             foreach (EditorWindow gameView in gameViews)
             {
-                var toolbar = new VisualElement();
-                toolbar.style.flexDirection = FlexDirection.Row;
-                toolbar.style.justifyContent = Justify.FlexEnd;
-                toolbar.style.top = 22;
-
                 var menu = new GameViewLanguageMenu();
                 menu.style.backgroundImage = EditorStyles.popup.normal.background;
                 menu.RegisterValueChangedCallback((evt) => LocalizationSettings.SelectedLocale = evt.newValue);
-                toolbar.Add(menu);
+                menu.style.alignSelf = Align.FlexEnd;
+                menu.style.top = 22;
 
-                gameView.rootVisualElement.Add(toolbar);
-                toolbar.BringToFront();
-                s_GameViews.Add((toolbar, menu));
+                gameView.rootVisualElement.Add(menu);
+                menu.BringToFront();
+                s_GameViews.Add(menu);
             }
             OnLanguageChanged(LocalizationSettings.SelectedLocale);
         }
@@ -140,7 +136,7 @@ namespace UnityEditor.Localization.UI
         {
             foreach (var gv in s_GameViews)
             {
-                gv.menu.SetValueWithoutNotify(locale);
+                gv.SetValueWithoutNotify(locale);
             }
         }
     }

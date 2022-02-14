@@ -553,7 +553,7 @@ namespace UnityEngine.Localization.Settings
         /// If the locale is the current <see cref="SelectedLocale"/> then a new one will be found using <see cref="StartupLocaleSelectors"/>.
         /// </summary>
         /// <param name="locale"></param>
-        public void OnLocaleRemoved(Locale locale)
+        public virtual void OnLocaleRemoved(Locale locale)
         {
             if (m_SelectedLocaleAsync.HasValue && ReferenceEquals(m_SelectedLocaleAsync.Value.Result, locale))
             {

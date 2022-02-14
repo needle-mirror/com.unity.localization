@@ -9,7 +9,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF
         const string kPrefXliffDirectory = "Localization-xliff-import-directory";
         const string kPrefXliffFile = "Localization-xliff-import-file";
 
-        [MenuItem("CONTEXT/StringTableCollection/Export/XLIFF")]
+        [MenuItem("CONTEXT/StringTableCollection/Export/XLIFF...")]
         public static void ExportCollection(MenuCommand command)
         {
             var collection = command.context as StringTableCollection;
@@ -19,7 +19,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF
             wnd.SelectedTables.SetSelection(collection);
         }
 
-        [MenuItem("CONTEXT/StringTable/Export/XLIFF")]
+        [MenuItem("CONTEXT/StringTable/Export/XLIFF...")]
         static void ExportStringTable(MenuCommand command)
         {
             var table = command.context as StringTable;
@@ -29,7 +29,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF
             wnd.SelectedTables.SetSelection(table);
         }
 
-        [MenuItem("CONTEXT/StringTableCollection/Import/XLIFF")]
+        [MenuItem("CONTEXT/StringTableCollection/Import/XLIFF...")]
         public static void ImportIntoCollection(MenuCommand command)
         {
             var collection = command.context as StringTableCollection;
@@ -43,7 +43,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF
             Xliff.ImportFileIntoCollection(collection, file, null, TaskReporter.CreateDefaultReporter());
         }
 
-        [MenuItem("CONTEXT/StringTable/Import/XLIFF")]
+        [MenuItem("CONTEXT/StringTable/Import/XLIFF...")]
         static void ImportIntoTable(MenuCommand command)
         {
             var table = command.context as StringTable;

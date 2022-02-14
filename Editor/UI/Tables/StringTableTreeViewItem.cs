@@ -8,28 +8,44 @@ namespace UnityEditor.Localization.UI
 {
     class StringTableTreeViewItem : GenericAssetTableTreeViewItem<StringTable>
     {
-        SharedTableData m_SharedTableData;
-
         (SmartFormatField editor, ISelectable selected)[] m_TableProperties;
+        List<LocalizationTable> m_SortedTables;
+        int m_StartIndex;
+
+        public override string displayName
+        {
+            get
+            {
+                if (base.displayName == null)
+                    UpdateSearchString();
+                return base.displayName;
+            }
+            set => base.displayName = value;
+        }
 
         public override void Initialize(LocalizationTableCollection collection, int startIdx, List<LocalizationTable> sortedTables)
+        {            m_SortedTables = sortedTables;
+            m_StartIndex = startIdx;
+
+        }
+
+        void DelayedInit()
         {
-            m_TableProperties = new(SmartFormatField, ISelectable)[startIdx + sortedTables.Count];
-
-            // Get the shared data
-            m_SharedTableData = collection.SharedData;
-
-            Debug.Assert(m_SharedTableData != null);
-            for (int i = startIdx; i < m_TableProperties.Length; ++i)
+            if (m_TableProperties == null)
             {
-                var table = sortedTables[i - startIdx] as StringTable;
-                var smartEditor = new SmartFormatField();
-                smartEditor.KeyId = KeyId;
-                smartEditor.Table = table;
-                smartEditor.RefreshData();
-                m_TableProperties[i].editor = smartEditor;
+                m_TableProperties = new (SmartFormatField, ISelectable)[m_StartIndex + m_SortedTables.Count];
+
+                for (int i = m_StartIndex; i < m_TableProperties.Length; ++i)
+                {
+                    var table = m_SortedTables[i - m_StartIndex] as StringTable;
+                    var smartEditor = new SmartFormatField();
+                    smartEditor.KeyId = KeyId;
+                    smartEditor.Table = table;
+                    m_TableProperties[i].editor = smartEditor;
+                }
+
+                RefreshFields();
             }
-            RefreshFields();
         }
 
         public void RefreshFields()
@@ -44,12 +60,16 @@ namespace UnityEditor.Localization.UI
 
         public SmartFormatField GetSmartFormatEditor(int colIdx)
         {
+            DelayedInit();
+
             // Some cols may be missing table cols.
             return colIdx < m_TableProperties.Length ? m_TableProperties[colIdx].editor : null;
         }
 
         public bool Draw(int colIdx, Rect rect, StringTableListView listView)
         {
+            DelayedInit();
+
             var editor = m_TableProperties[colIdx].editor;
 
             if (m_TableProperties[colIdx].selected != null)
@@ -77,12 +97,14 @@ namespace UnityEditor.Localization.UI
 
         public bool IsTableEntrySelected(int colIdx)
         {
+            DelayedInit();
             ISelectable s = m_TableProperties[colIdx].selected;
             return s?.Selected ?? false;
         }
 
         public override void OnDeleteKey()
         {
+            DelayedInit();
             foreach (var tableField in m_TableProperties)
             {
                 // If the column is selected then we need to disable it, so we are not trying to edit data that has been removed.
@@ -102,12 +124,12 @@ namespace UnityEditor.Localization.UI
                 sb.AppendLine(SharedEntry.Id.ToString());
                 sb.AppendLine(SharedEntry.Key);
 
-                foreach (var tableField in m_TableProperties)
+                for (int i = m_StartIndex; i < m_SortedTables.Count; ++i)
                 {
-                    if (tableField.editor != null)
-                    {
-                        sb.Append(tableField.editor.RawText);
-                    }
+                    var st = (StringTable)m_SortedTables[i];
+                    var entry = st.GetEntry(KeyId);
+                    if (entry != null)
+                    sb.Append(entry.LocalizedValue);
                 }
 
                 displayName = sb.ToString();

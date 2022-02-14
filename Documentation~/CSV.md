@@ -48,7 +48,13 @@ The type of import depends on where you import the file to:
 - **String Table Collection window:** This imports all values for the selected String Table Collection.
 - **Localization window:** This imports all values for the selected String Table Collection.
 
-To import from CSV, select the vertical ellipsis (⋮), go to **Import** and select **CSV**, then select the CSV file from your file explorer.
+To import from CSV:
+
+1. Select the vertical ellipsis (⋮).
+2. Go to **Import** and select either:
+   - **CSV** to replace the contents.
+   - **CSV(Merge)** to only update the entries in the CSV.
+3. Select the CSV file from your file explorer.
 
 CSV data must contain a **Key** or **Id** column. All other columns are optional.
 

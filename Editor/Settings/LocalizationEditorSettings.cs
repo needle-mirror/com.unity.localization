@@ -141,7 +141,7 @@ namespace UnityEditor.Localization
         /// </summary>
         /// <param name="localeId"></param>
         /// <example>
-        /// This example shows how to find a <see cref="Locale"/> using a <see cref="SystemLanguage"/> or code.
+        /// This example shows how to find a <see cref="Locale"/> using a [SystemLanguage](https://docs.unity3d.com/ScriptReference/SystemLanguage.html) or code.
         /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="get-locale"/>
         /// </example>
         /// <returns>The found <see cref="Locale"/> or null if one could not be found.</returns>

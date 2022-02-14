@@ -22,7 +22,7 @@ namespace UnityEditor.Localization.Plugins.CSV
             }
         }
 
-        [MenuItem("CONTEXT/StringTableCollection/Export/CSV")]
+        [MenuItem("CONTEXT/StringTableCollection/Export/CSV...")]
         public static void ExportCollection(MenuCommand command)
         {
             var collection = command.context as StringTableCollection;
@@ -30,7 +30,7 @@ namespace UnityEditor.Localization.Plugins.CSV
             Export(ColumnMapping.CreateDefaultMapping(false), collection);
         }
 
-        [MenuItem("CONTEXT/StringTableCollection/Export/CSV(With Comments)")]
+        [MenuItem("CONTEXT/StringTableCollection/Export/CSV(With Comments)...")]
         public static void ExportCollectionWithComments(MenuCommand command)
         {
             var collection = command.context as StringTableCollection;
@@ -38,7 +38,7 @@ namespace UnityEditor.Localization.Plugins.CSV
             Export(ColumnMapping.CreateDefaultMapping(true), collection);
         }
 
-        [MenuItem("CONTEXT/StringTable/Export/CSV")]
+        [MenuItem("CONTEXT/StringTable/Export/CSV...")]
         static void ExportStringTable(MenuCommand command)
         {
             var table = command.context as StringTable;
@@ -46,7 +46,7 @@ namespace UnityEditor.Localization.Plugins.CSV
             ExportTable(table, false);
         }
 
-        [MenuItem("CONTEXT/StringTable/Export/CSV(With Comments)")]
+        [MenuItem("CONTEXT/StringTable/Export/CSV(With Comments)...")]
         static void ExportStringTableWithComments(MenuCommand command)
         {
             var table = command.context as StringTable;
@@ -87,11 +87,23 @@ namespace UnityEditor.Localization.Plugins.CSV
             EditorUtility.RevealInFinder(path);
         }
 
-        [MenuItem("CONTEXT/StringTableCollection/Import/CSV")]
+        [MenuItem("CONTEXT/StringTableCollection/Import/CSV...")]
         public static void ImportCollection(MenuCommand command)
         {
             var collection = command.context as StringTableCollection;
-            Assert.IsTrue(collection != null, "Expected StringTableCollection");
+            ImportIntoCollection(collection, true);
+        }
+
+        [MenuItem("CONTEXT/StringTableCollection/Import/CSV(Merge)...")]
+        public static void ImportCollectionMerge(MenuCommand command)
+        {
+            var collection = command.context as StringTableCollection;
+            ImportIntoCollection(collection, false);
+        }
+
+        static void ImportIntoCollection(StringTableCollection collection, bool removeMissingEntries)
+        {
+            Assert.IsNotNull(collection, "Expected StringTableCollection");
 
             var path = EditorUtility.OpenFilePanel($"Import CSV into {collection.TableCollectionName}", PreviousDirectory, "csv");
             if (string.IsNullOrEmpty(path))
@@ -105,15 +117,27 @@ namespace UnityEditor.Localization.Plugins.CSV
                 var stream = new StreamReader(fs);
                 var reporter = TaskReporter.CreateDefaultReporter();
                 reporter.Start("Importing " + path, string.Empty);
-                Csv.ImportInto(stream, collection, true, reporter);
+                Csv.ImportInto(stream, collection, true, reporter, removeMissingEntries);
             }
         }
 
-        [MenuItem("CONTEXT/StringTable/Import/CSV File")]
+        [MenuItem("CONTEXT/StringTable/Import/CSV...")]
         static void ImportStringTable(MenuCommand command)
         {
             var table = command.context as StringTable;
-            Assert.IsTrue(table != null, "Expected StringTable");
+            ImportIntoStringTable(table, true);
+        }
+
+        [MenuItem("CONTEXT/StringTable/Import/CSV(Merge)...")]
+        static void ImportStringTableMerge(MenuCommand command)
+        {
+            var table = command.context as StringTable;
+            ImportIntoStringTable(table, false);
+        }
+
+        static void ImportIntoStringTable(StringTable table, bool removeMissingEntries)
+        {
+            Assert.IsNotNull(table, "Expected StringTable");
 
             var path = EditorUtility.OpenFilePanel($"Import CSV into {table.TableData}({table.LocaleIdentifier})", PreviousDirectory, "csv");
             if (string.IsNullOrEmpty(path))
@@ -136,7 +160,7 @@ namespace UnityEditor.Localization.Plugins.CSV
                 var stream = new StreamReader(fs);
                 var reporter = TaskReporter.CreateDefaultReporter();
                 reporter.Start("Importing " + path, string.Empty);
-                Csv.ImportInto(stream, collection, cellMappings, true, reporter);
+                Csv.ImportInto(stream, collection, cellMappings, true, reporter, removeMissingEntries);
             }
         }
     }

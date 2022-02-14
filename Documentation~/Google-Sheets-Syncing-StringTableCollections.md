@@ -43,7 +43,7 @@ The Mapped Columns must include one Key Column or derived Key Column. Unity need
 
 It is possible to add support for pushing and pulling custom data.
 
-To create a custom column, you need to inherit from the abstract class *SheetColumn*. A common use for a custom column is to support additional metadata. In this case, you can use the abstract classes *KeyMetadataColumn* and *LocaleMetadataColumn* to simplify the process.
+To create a custom column, you need to inherit from the abstract class [SheetColumn](xref:UnityEditor.Localization.Plugins.Google.Columns.SheetColumn). A common use for a custom column is to support additional metadata. In this case, you can use the abstract classes [KeyMetadataColumn](xref:UnityEditor.Localization.Plugins.Google.Columns.KeyMetadataColumn`1) and [LocaleMetadataColumn](xref:UnityEditor.Localization.Plugins.Google.Columns.LocaleMetadataColumn`1) to simplify the process.
 
 The following example demonstrates how to populate custom metadata into a column.
 
@@ -57,4 +57,4 @@ The **Pull** option downloads the mapped columns and updates the String Table Co
 
 If **Remove Missing Pulled Keys** is enabled, any keys that are not in the Spreadsheet during a Pull are removed from the String Table Collection.
 
-The script API **UnityEditor.Localization.Plugins.Google.GoogleSheets** allows you to **Push** and **Pull** from custom code.
+The script API [GoogleSheets](xref:UnityEditor.Localization.Plugins.Google.GoogleSheets) allows you to **Push** and **Pull** from custom code.

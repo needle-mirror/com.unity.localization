@@ -43,6 +43,29 @@ public class LocalizedStringWithEvents : MonoBehaviour
 }
 #endregion
 
+#region localized-string-locale-override
+
+public class LocaleOverrideExample : MonoBehaviour
+{
+    public LocalizedString myString = new LocalizedString("My Table", "My Entry");
+    public LocaleIdentifier localeOverride = SystemLanguage.Spanish; // Override to always use Spanish
+
+    IEnumerator Start()
+    {
+        // Wait for the Locales to load.
+        yield return LocalizationSettings.InitializationOperation;
+
+        // Set the LocalizedString to use the locale override instead of the selected locale.
+        myString.LocaleOverride = LocalizationSettings.AvailableLocales.GetLocale(localeOverride);
+    }
+
+    void OnGUI()
+    {
+        GUILayout.Label(myString.GetLocalizedString());
+    }
+}
+#endregion
+
 #region localized-string-smart
 
 /// <summary>

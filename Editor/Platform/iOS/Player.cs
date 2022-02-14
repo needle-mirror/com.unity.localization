@@ -63,7 +63,7 @@ namespace UnityEditor.Localization.Platform.iOS
 
             // Default language
             // How iOS Determines the Language For Your App - https://developer.apple.com/library/archive/qa/qa1828/_index.html
-            var developmentRegion = string.IsNullOrEmpty(LocalizationSettings.Instance.m_ProjectLocaleIdentifier.Code) ? LocalizationEditorSettings.GetLocales()?[0]?.Identifier : LocalizationSettings.Instance.m_ProjectLocaleIdentifier;
+            var developmentRegion = string.IsNullOrEmpty(LocalizationSettings.Instance.m_ProjectLocaleIdentifier.Code) ? LocalizationEditorSettings.GetLocales() ? [0]?.Identifier : LocalizationSettings.Instance.m_ProjectLocaleIdentifier;
             if (developmentRegion.HasValue)
                 project.SetDevelopmentRegion(developmentRegion.Value.Code);
             plistDocument.root.SetString("CFBundleDevelopmentRegion", "$(DEVELOPMENT_LANGUAGE)");

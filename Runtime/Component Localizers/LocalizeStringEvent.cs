@@ -76,6 +76,24 @@ namespace UnityEngine.Localization.Components
         }
 
         /// <summary>
+        /// Changes the <see cref="TableReference"/> value of a LocalizeString.
+        /// </summary>
+        /// <param name="tableReference">A reference to the table that will be set to StringReference of a LocalizeString</param>
+        public void SetTable(string tableReference)
+        {
+            StringReference.TableReference = tableReference;
+        }
+
+        /// <summary>
+        /// Changes the <see cref="TableEntry"/> value of a LocalizeString.
+        /// </summary>
+        /// <param name="entryName">A reference to the entry in the table that will be set to StringReference of a LocalizeString</param>
+        public void SetEntry(string entryName)
+        {
+            StringReference.TableEntryReference = entryName;
+        }
+
+        /// <summary>
         /// Starts listening for changes to <see cref="StringReference"/>.
         /// </summary>
         protected virtual void OnEnable() => RegisterChangeHandler();

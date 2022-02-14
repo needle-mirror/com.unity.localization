@@ -2,6 +2,38 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.2.1] - 2022-02-14
+
+### Added
+
+- Added **Import/CSV(Merge)** to only update the entries in the CSV. ([LOC-540](https://issuetracker.unity3d.com/issues/localization-table-editor-does-not-remove-extra-rows-when-opening-csv-file-with-lower-rows-count))
+- Added **Page Controls** to the **Table editor**. This limits the number of items visible at one time and helps to improve the performance when dealing with large tables. ([LOC-474](https://issuetracker.unity3d.com/issues/localizations-string-table-update-time-is-low-when-working-with-many-entries))
+- Added `GetRowEnumeratorUnsorted` to `LocalizationTableCollection.cs`, this allows for stepping through the rows in the same order as the `SharedTableData`.
+- Added SetTable and SetEntry methods to LocalizedStringEvents. These can be used with UnityEvents to update localized strings. (LOC-377)
+
+### Changed
+
+- **Import/CSV** will now replace the contents and remove missing entries. ([LOC-540](https://issuetracker.unity3d.com/issues/localization-table-editor-does-not-remove-extra-rows-when-opening-csv-file-with-lower-rows-count))
+- CSV export now exports the rows in the same order as the `SharedTableData`. ([LOC-588](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-558))
+- Improved some menu items UX by renaming to include ellipses ("...") when the action requires additional input.
+- Updated to Addressables `1.19.17`.
+
+### Fixed
+
+- Fix null reference exceptions been thrown when Custom Locale does not use Custom Formatter. (LOC-526)
+- Fixed `GameObjectLocalizer` not updating when reenabled. ([LOC-568](https://issuetracker.unity3d.com/issues/localization-scene-controls-do-not-change-font-asset-in-disabled-gameobjects))
+- Fixed `LocalesProvider` throwing exception when adding a pseudo-locale with the same name as another. ([LOC-548](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-548))
+- Fixed `LocalizedStringDatabase.GetLocalizedStringAsync` wrapping IList arguments with `params object[]`. ([LOC-575](https://issuetracker.unity3d.com/issues/localizedstringdatabase-dot-getlocalizedstring-wraps-corrupts-arguments))
+- Fixed AvailableLocales locales list returns an empty list if InitializationOperation is not done. (LOC-506)
+- Fixed crash with YGLayoutNodeInternal when opening the docked Project Settings window after deleting the Localization Settings file. ([1371884](https://issuetracker.unity3d.com/issues/editor-crashes-when-opening-the-attached-project-settings-window-after-deleting-the-localization-settings-file))
+- Fixed InvalidOperationException when setting Asset Table Entry to None when it is already empty. ([LOC-520](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-519))
+- Fixed issue where GetLocale returns a null reference instead of a fallback Locale when providing CultureInfo. (LOC-462)
+- Fixed Legacy `GroupResolver` generating a `FormattingException` when resolving an asset's addressable group name. The Smart String argument  {Identifier-Code} should be {Identifier.Code}. This will need to be fixed manually to existing legacy group resolvers, alternatively create a new legacy group resolver asset. ([LOC-544](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-544))
+- Fixed preloading error "A table with the same key already exists. " caused when loading a table before preloading had completed. ([LOC-581](https://issuetracker.unity3d.com/issues/error-a-table-with-the-same-key-already-exists-something-went-wrong-during-preloading))
+- Fixed shared comments not being updated correctly when imported from CSV. ([LOC-577](https://issuetracker.unity3d.com/issues/shared-comments-are-lost-when-exporting-slash-importing-a-csv-file))
+- Fixed the Locale Game View Menu from blocking the top part of the GameVIew. ([LOC-552](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-552))
+- Fixed the player freeze or player crash caused by WaitForCompletion on PreloadDatabaseOperation. when doing an Il2cpp Standalone build. (LOC-527)
+
 ## [1.1.1] - 2022-01-13
 
 ### Fixed

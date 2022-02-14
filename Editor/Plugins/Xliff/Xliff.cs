@@ -112,7 +112,8 @@ namespace UnityEditor.Localization.Plugins.XLIFF
                 // Used for reporting
                 float taskStep = 1.0f / (tables.Count * 2.0f);
                 float progress = 0;
-                reporter?.Start($"Exporting {tables.Count} String Tables to XLIFF", string.Empty);
+                if (reporter != null && reporter.Started != true)
+                    reporter.Start($"Exporting {tables.Count} String Tables to XLIFF", string.Empty);
 
                 // We need the key, source value and translated value.
                 foreach (var stringTable in tables)
@@ -240,7 +241,8 @@ namespace UnityEditor.Localization.Plugins.XLIFF
         {
             try
             {
-                reporter?.Start("Importing XLIFF files in directory", "Finding xlf and xliff files.");
+                if (reporter != null && reporter.Started != true)
+                    reporter.Start("Importing XLIFF files in directory", "Finding xlf and xliff files.");
 
                 var files = Directory.GetFiles(directory, "*", SearchOption.AllDirectories);
                 var filteredFiles = files.Where(s => s.EndsWith(".xlf") || s.EndsWith(".xliff"));
@@ -274,7 +276,8 @@ namespace UnityEditor.Localization.Plugins.XLIFF
         /// <param name="reporter">Optional reporter which can report the current progress.</param>
         public static void ImportFile(string file, ImportOptions importOptions = null, ITaskReporter reporter = null)
         {
-            reporter?.Start("Importing XLIFF", $"Importing {file}");
+            if (reporter != null && reporter.Started != true)
+                reporter.Start("Importing XLIFF", $"Importing {file}");
             try
             {
                 if (!File.Exists(file))
@@ -306,7 +309,8 @@ namespace UnityEditor.Localization.Plugins.XLIFF
             if (document == null)
                 throw new ArgumentNullException(nameof(document));
 
-            reporter?.Start("Importing XLIFF", "Importing document");
+            if (reporter != null && reporter.Started != true)
+                reporter.Start("Importing XLIFF", "Importing document");
 
             try
             {
@@ -431,7 +435,8 @@ namespace UnityEditor.Localization.Plugins.XLIFF
             if (collection == null)
                 throw new ArgumentNullException(nameof(collection));
 
-            reporter?.Start("Importing XLIFF", $"Importing {file}");
+            if (reporter != null && reporter.Started != true)
+                reporter.Start("Importing XLIFF", $"Importing {file}");
             try
             {
                 if (!File.Exists(file))
@@ -572,7 +577,8 @@ namespace UnityEditor.Localization.Plugins.XLIFF
             if (target == null)
                 throw new ArgumentNullException(nameof(target));
 
-            reporter?.Start("Importing XLIFF", $"Importing {file}");
+            if (reporter != null && reporter.Started != true)
+                reporter.Start("Importing XLIFF", $"Importing {file}");
             try
             {
                 if (!File.Exists(file))
@@ -719,7 +725,8 @@ namespace UnityEditor.Localization.Plugins.XLIFF
                 int totalTasks = collectionsWithSelectedIndexes.Sum(c => c.Value.Count);
                 float taskStep = 1.0f / (totalTasks * 2.0f);
                 float progress = 0;
-                reporter?.Start($"Exporting {totalTasks} String Tables to XLIFF", string.Empty);
+                if (reporter != null && reporter.Started != true)
+                    reporter.Start($"Exporting {totalTasks} String Tables to XLIFF", string.Empty);
 
                 foreach (var kvp in collectionsWithSelectedIndexes)
                 {

@@ -80,7 +80,8 @@ namespace UnityEditor.Localization.Plugins.Google
 
             try
             {
-                reporter?.Start("Create Spreadsheet", "Preparing Request");
+                if (reporter != null && reporter.Started != true)
+                    reporter.Start("Create Spreadsheet", "Preparing Request");
 
                 var createRequest = SheetsService.Service.Spreadsheets.Create(new Spreadsheet
                 {
@@ -283,7 +284,8 @@ namespace UnityEditor.Localization.Plugins.Google
 
             try
             {
-                reporter?.Start($"Push `{collection.TableCollectionName}` to Google Sheets", "Checking if sheet needs resizing");
+                if (reporter != null && reporter.Started != true)
+                    reporter.Start($"Push `{collection.TableCollectionName}` to Google Sheets", "Checking if sheet needs resizing");
 
                 var requests = new List<Request>();
                 var rowCountTask = GetRowCountAsync(sheetId);
@@ -348,7 +350,8 @@ namespace UnityEditor.Localization.Plugins.Google
 
             try
             {
-                reporter?.Start($"Push `{collection.TableCollectionName}` to Google Sheets", "Checking if sheet needs resizing");
+                if (reporter != null && reporter.Started != true)
+                    reporter.Start($"Push `{collection.TableCollectionName}` to Google Sheets", "Checking if sheet needs resizing");
 
                 var requests = new List<Request>();
                 var rowCount = GetRowCount(sheetId);
@@ -390,25 +393,15 @@ namespace UnityEditor.Localization.Plugins.Google
                 colRequest.AddHeader(header, note);
             }
 
-            var stringTables = collection.StringTables;
-            var tableEntries = new StringTableEntry[stringTables.Count];
-
             reporter?.ReportProgress("Generating push data", 0.1f);
-            foreach (var keyEntry in collection.SharedData.Entries)
+            foreach (var row in collection.GetRowEnumeratorUnsorted())
             {
-                // Collect the table entry data.
-                for (int i = 0; i < stringTables.Count; ++i)
-                {
-                    tableEntries[i] = stringTables[i].GetEntry(keyEntry.Id);
-                }
-
-                // Now process each sheet column so they can update their requests.
                 foreach (var colReq in columnSheetRequests)
                 {
-                    if (tableEntries[0] != null && tableEntries[0].SharedEntry.Metadata.HasMetadata<ExcludeEntryFromExport>())
+                    if (row.KeyEntry.Metadata.HasMetadata<ExcludeEntryFromExport>())
                         continue;
 
-                    colReq.Column.PushCellData(keyEntry, tableEntries, out var value, out var note);
+                    colReq.Column.PushCellData(row.KeyEntry, row.TableEntries, out var value, out var note);
                     colReq.AddRow(value, note);
                 }
             }
@@ -462,7 +455,8 @@ namespace UnityEditor.Localization.Plugins.Google
                     Undo.RegisterCompleteObjectUndo(modifiedAssets.ToArray(), $"Pull `{collection.TableCollectionName}` from Google sheets");
                 }
 
-                reporter?.Start($"Pull `{collection.TableCollectionName}` from Google sheets", "Preparing columns");
+                if (reporter != null && reporter.Started != true)
+                    reporter.Start($"Pull `{collection.TableCollectionName}` from Google sheets", "Preparing columns");
 
                 // The response columns will be in the same order we request them, we need the key
                 // before we can process any values so ensure the first column is the key column.
@@ -680,54 +674,8 @@ namespace UnityEditor.Localization.Plugins.Google
             }
 
             reporter?.ReportProgress("Removing missing entries and matching sheet row order", 0.9f);
-            HandleMissingEntriesAndMatchPullOrder(keysProcessed, sortedEntries, collection, messages, removeMissingEntries);
+            collection.MergeUpdatedEntries(keysProcessed, sortedEntries, messages, removeMissingEntries);
             reporter?.Completed($"Completed merge of {rowCount} rows and {totalCellsProcessed} cells from {columnMapping.Count} columns successfully.\n{messages.ToString()}");
-        }
-
-        void HandleMissingEntriesAndMatchPullOrder(HashSet<long> entriesToKeep, List<SharedTableEntry> sortedEntries, StringTableCollection collection, StringBuilder removedEntriesLog, bool removeMissingEntries)
-        {
-            // We either remove missing entries or add them to the end.
-
-            var stringTables = collection.StringTables;
-
-            removedEntriesLog.AppendLine("Removed missing entries:");
-            for (int i = 0; i < collection.SharedData.Entries.Count; ++i)
-            {
-                var entry = collection.SharedData.Entries[i];
-                if (entriesToKeep.Contains(entry.Id))
-                {
-                    continue;
-                }
-
-                if (!removeMissingEntries)
-                {
-                    // Missing entries that we want to keep go to the bottom of the list
-                    sortedEntries.Add(entry);
-                }
-                else if (entry.Metadata.HasMetadata<ExcludeEntryFromExport>())
-                {
-                    //add back the entry which has ExcludeEntryFromExport Metadata and was not exported to the google sheets.
-                    sortedEntries.Insert(i, entry);
-                }
-                else
-                {
-                    removedEntriesLog.AppendLine($"\t{entry.Key}({entry.Id})");
-
-                    // Remove the entry
-                    collection.SharedData.RemoveKey(entry.Id);
-                    i--;
-
-                    // Remove from tables
-                    foreach (var table in stringTables)
-                    {
-                        table.Remove(entry.Id);
-                    }
-                }
-            }
-
-            // Now replace the old list with our new one that is in the correct order.
-            Debug.Assert(collection.SharedData.Entries.Count == sortedEntries.Count, "Expected sorted entries to match unsorted.");
-            collection.SharedData.Entries = sortedEntries;
         }
 
         void ThrowIfDuplicateColumnIds(IList<SheetColumn> columnMapping)

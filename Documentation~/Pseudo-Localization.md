@@ -1,6 +1,6 @@
 # Pseudo-Localization
 
-Pseudo-localization is a method for testing internationalization aspects of your application during the early stages of development, before you begin translation into different languages. It generates fake translations that take up the same amount of space and use similar character sets, and highlights issues that might occur when you apply real translation the content of your application.
+Pseudo-localization is a method for testing internationalization aspects of your application during the early stages of development, before you begin translation into different languages. It generates fake translations that take up the same amount of space and use similar character sets, and highlights issues that might occur when you apply real translation to the content of your application.
 
 Pseudo-localization can help flag potential problem areas, such as:
 

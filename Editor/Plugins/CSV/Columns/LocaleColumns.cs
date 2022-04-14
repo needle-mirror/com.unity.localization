@@ -173,7 +173,10 @@ namespace UnityEditor.Localization.Plugins.CSV.Columns
         /// <inheritdoc/>
         public override void WriteRow(SharedTableData.SharedTableEntry keyEntry, IList<StringTableEntry> tableEntries, CsvWriter writer)
         {
-            if (m_CollectionTableIndex != -1 && tableEntries[m_CollectionTableIndex] != null)
+            if (m_CollectionTableIndex == -1)
+                return;
+
+            if (tableEntries[m_CollectionTableIndex] != null)
             {
                 var entry = tableEntries[m_CollectionTableIndex];
                 writer.WriteField(entry.LocalizedValue, true);

@@ -3,6 +3,7 @@
 * Guides
   * [Upgrade guide](upgrade-guide.md)
   * [Installation](Installation.md)
+  * [Package samples](Package-Samples.md)
   * [Quick start guide: 2019.4+](QuickStartGuide.md)
   * [Quick start guide: 2020.3+](QuickStartGuideWithVariants.md)
 * Reference
@@ -17,6 +18,7 @@
     * [XLIFF](XLIFF.md)
   * [Locale](Locale.md)
   * [Localization Settings](LocalizationSettings.md)
+    * [Locale Selector](LocaleSelector.md)
   * [Localized Property Variants](LocalizedPropertyVariants.md)
   * [Metadata](Metadata.md)
     * [Platform Overrides](Metadata-Platform-Overrides.md)

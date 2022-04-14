@@ -88,6 +88,17 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
         }
 
         /// <summary>
+        /// Remove a tracked property for this object.
+        /// </summary>
+        /// <param name="trackedProperty">The tracked property to be removed.</param>
+        /// <returns>Returns <c>true</c> if the value was removed; otherwise <c>false</c>.</returns>
+        public virtual bool RemoveTrackedProperty(ITrackedProperty trackedProperty)
+        {
+            m_PropertiesLookup.Remove(trackedProperty.PropertyPath);
+            return TrackedProperties.Remove(trackedProperty);
+        }
+
+        /// <summary>
         /// Return the tracked property for the property path.
         /// </summary>
         /// <typeparam name="T"></typeparam>

@@ -4,4 +4,4 @@ The [XML source](xref:UnityEngine.Localization.SmartFormat.Extensions.XmlSource)
 
 | **Example Smart String** | **Arguments**                           | **Result**  |
 |--------------------------|-----------------------------------------|-------------|
-| {value}}                 | `<xml><Value>Hello World</Value></xml>` | Hello World |
+| {value}                  | `<xml><Value>Hello World</Value></xml>` | Hello World |

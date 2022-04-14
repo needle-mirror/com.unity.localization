@@ -1,3 +1,5 @@
+#if PACKAGE_UGUI
+
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.SmartFormat.Extensions;
 using UnityEngine.Localization.SmartFormat.PersistentVariables;
@@ -34,3 +36,5 @@ namespace UnityEngine.Localization.Samples
         }
     }
 }
+
+#endif

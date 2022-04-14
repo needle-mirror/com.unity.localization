@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Linq;
+using UnityEngine;
 
 namespace UnityEditor.Localization
 {
@@ -56,6 +57,41 @@ namespace UnityEditor.Localization
         {
             property.InsertArrayElementAtIndex(index);
             return property.GetArrayElementAtIndex(index);
+        }
+
+        public static string GetValueAsString(this SerializedProperty property)
+        {
+            Debug.Assert(property.propertyType != SerializedPropertyType.ObjectReference);
+
+            switch (property.type)
+            {
+                case "ArraySize":
+                case "int":
+                case "byte":
+                case "sbyte":
+                case "short":
+                case "ushort":
+                case "Enum":
+                    return property.intValue.ToString();
+
+                case "long":
+                case "ulong":
+                    return property.longValue.ToString();
+
+                case "float":
+                    return property.floatValue.ToString();
+
+                case "double":
+                    return property.doubleValue.ToString();
+
+                case "string":
+                    return property.stringValue;
+
+                case "bool":
+                    return property.boolValue == true ? "1" : "0";
+                default:
+                    return string.Empty;
+            }
         }
 
         public static void ApplyPropertyModification(this SerializedProperty property, PropertyModification modification)

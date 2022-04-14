@@ -316,12 +316,14 @@ namespace UnityEditor.Localization.UI
             var foldoutRect = new Rect(rowPosition.x, rowPosition.y, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight);
             var dropDownPosition = new Rect(foldoutRect.xMax, rowPosition.y, rowPosition.width - EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight);
             rowPosition.MoveToNextLine();
-            property.isExpanded = EditorGUI.Foldout(foldoutRect, property.isExpanded, label, true);
 
+            EditorGUI.BeginProperty(foldoutRect, label, property);
+            property.isExpanded = EditorGUI.Foldout(foldoutRect, property.isExpanded, label, true);
             if (EditorGUI.DropdownButton(dropDownPosition, data.FieldLabel, FocusType.Passive))
             {
                 ShowPicker(data, dropDownPosition);
             }
+            EditorGUI.EndProperty();
 
             // Missing table collection warning
             if (data.warningMessage != null)

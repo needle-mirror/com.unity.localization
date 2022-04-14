@@ -85,9 +85,7 @@ namespace UnityEditor.Localization.Platform.Android
             var project = new GradleProjectSettings();
             foreach (var locale in LocalizationEditorSettings.GetLocales())
             {
-                var localeIdentifier = locale.Identifier.Code;
-                var IsSpecialLocaleIdentifier = localeIdentifier.Contains("Hans") || localeIdentifier.Contains("Hant") || localeIdentifier.Contains("Latn") || localeIdentifier.Contains("Cyrl") || localeIdentifier.Contains("Arab") || localeIdentifier.Contains("valencia");
-                localeIdentifier = localeIdentifier.Contains("-") ? IsSpecialLocaleIdentifier ? localeIdentifier.Replace("-", "+") : localeIdentifier.Replace("-", "-r") : localeIdentifier;
+                var localeIdentifier = GenerateAndroidLanguageCode(locale.Identifier);
                 GenerateLocalizedXmlFile("App Name", Path.Combine(Directory.CreateDirectory(Path.Combine(project.GetResFolderPath(projectDirectory), "values-b+" + localeIdentifier)).FullName, k_InfoFile), locale, appInfo);
 
                 //Generate icons
@@ -128,6 +126,24 @@ namespace UnityEditor.Localization.Platform.Android
             }
 
             androidManifest.SaveIfModified();
+        }
+
+        internal static string GenerateAndroidLanguageCode(LocaleIdentifier localeIdentifier)
+        {
+            // When we use System Language as Locale Source Chinese (Simplified) code is represented as (zh-hans) and Chinese (Traditional) code is represented as (zh-hant).
+            // But Android Localization is case-sensitive and ony supports Chinese (Simplified) code as (zh-Hans) and Chinese (Traditional) code as (zh-Hant).
+            // https://developer.android.com/reference/java/util/Locale.LanguageRange
+            localeIdentifier = localeIdentifier.Code.Contains("hans") ? localeIdentifier.Code.Replace("hans", "Hans") : localeIdentifier.Code.Contains("hant") ? localeIdentifier.Code.Replace("hant", "Hant") : localeIdentifier;
+            var code = localeIdentifier.Code;
+
+            var IsSpecialLocaleIdentifier = code.Contains("Hans") || code.Contains("Hant") || code.Contains("Latn") || code.Contains("Cyrl") || code.Contains("Arab") || code.Contains("valencia");
+
+            // The language is defined by a two-letter ISO 639-1 language code, optionally followed by a two letter ISO 3166-1-alpha-2 region code (preceded by lowercase r).
+            // The codes are not case-sensitive; the r prefix is used to distinguish the region portion. You cannot specify a region alone.
+            // https://developer.android.com/guide/topics/resources/providing-resources
+            localeIdentifier = code.Contains("-") ? IsSpecialLocaleIdentifier ? code.Replace("-", "+") : code.Replace("-", "-r") : localeIdentifier;
+
+            return localeIdentifier.Code;
         }
 
         static void GenerateIconDirectory(List<string> folderNames, string path, Locale locale)

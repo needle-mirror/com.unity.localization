@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.Util;
 
@@ -8,8 +6,7 @@ namespace UnityEngine.Localization
 {
     class LocalizationBehaviour : ComponentSingleton<LocalizationBehaviour>
     {
-        List<AsyncOperationHandle> m_CurrentReleaseHandles;
-        int m_ReleaseFrame = -1;
+        Queue<(int frame, AsyncOperationHandle handle)> m_ReleaseQueue = new Queue<(int, AsyncOperationHandle)> ();
 
         protected override string GetGameObjectName() => "Localization Resource Manager";
 
@@ -22,31 +19,21 @@ namespace UnityEngine.Localization
 
         void DoReleaseNextFrame(AsyncOperationHandle handle)
         {
-            if (Time.frameCount != m_ReleaseFrame)
-            {
-                // Start a new release coroutine
-                m_ReleaseFrame = Time.frameCount;
-                m_CurrentReleaseHandles = ListPool<AsyncOperationHandle>.Get();
-                m_CurrentReleaseHandles.Add(handle);
-                StartCoroutine(ReleaseHandlesNextFrame(m_CurrentReleaseHandles));
-            }
-            else
-            {
-                // Queue up to the next release call
-                m_CurrentReleaseHandles?.Add(handle);
-            }
+            enabled = true;
+            m_ReleaseQueue.Enqueue((Time.frameCount, handle));
         }
 
-        static IEnumerator ReleaseHandlesNextFrame(List<AsyncOperationHandle> handles)
+        void LateUpdate()
         {
-            // Defer to the next frame
-            yield return null;
-
-            foreach (var h in handles)
+            var currentFrame = Time.frameCount;
+            while(m_ReleaseQueue.Count > 0 && m_ReleaseQueue.Peek().frame < currentFrame)
             {
-                AddressablesInterface.SafeRelease(h);
+                var item = m_ReleaseQueue.Dequeue();
+                AddressablesInterface.SafeRelease(item.handle);
             }
-            ListPool<AsyncOperationHandle>.Release(handles);
+
+            if (m_ReleaseQueue.Count == 0)
+                enabled = false;
         }
     }
 }

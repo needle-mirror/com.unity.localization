@@ -9,9 +9,9 @@ namespace UnityEngine.Localization
     /// <typeparam name="TObject"></typeparam>
     abstract class WaitForCurrentOperationAsyncOperationBase<TObject> : AsyncOperationBase<TObject>
     {
-        protected AsyncOperationHandle? CurrentOperation { get; set; }
+        protected AsyncOperationHandle CurrentOperation { get; set; }
 
-        public AsyncOperationHandle? Dependency { get; set; }
+        public AsyncOperationHandle Dependency { get; set; }
 
         bool m_Waiting;
 
@@ -27,21 +27,21 @@ namespace UnityEngine.Localization
                 m_Waiting = true;
 
                 // If we have dependencies then we need to wait for them.
-                if (!HasExecuted && Dependency.HasValue)
+                if (!HasExecuted && Dependency.IsValid())
                 {
-                    Dependency.Value.WaitForCompletion();
+                    Dependency.WaitForCompletion();
 
                     // Its possible that an operation will complete instantly once all dependencies have finished so we return and start again.
                     return false;
                 }
 
-                if (!CurrentOperation.HasValue)
+                if (!CurrentOperation.IsValid())
                 {
                     Complete(default, false, "Expected to have a current operation to wait on. Can not complete.");
                     return true;
                 }
 
-                CurrentOperation.Value.WaitForCompletion();
+                CurrentOperation.WaitForCompletion();
                 return false;
             }
             finally
@@ -53,8 +53,8 @@ namespace UnityEngine.Localization
         protected override void Destroy()
         {
             base.Destroy();
-            Dependency = null;
-            CurrentOperation = null;
+            Dependency = default;
+            CurrentOperation = default;
 
             // HasExecuted does not get reset so we need to do it. https://unity.slack.com/archives/C8Z80RV4K/p1620124726080400
             HasExecuted = false;

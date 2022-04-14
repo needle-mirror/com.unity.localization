@@ -49,9 +49,10 @@ namespace UnityEngine.Localization.Settings
         [SerializeField]
         bool m_InitializeSynchronously;
 
-        AsyncOperationHandle<LocalizationSettings>? m_InitializingOperationHandle;
-        AsyncOperationHandle<Locale>? m_SelectedLocaleAsync;
+        AsyncOperationHandle<LocalizationSettings> m_InitializingOperationHandle;
+        AsyncOperationHandle<Locale> m_SelectedLocaleAsync;
         Locale m_ProjectLocale;
+        CallbackArray<Action<Locale>> m_SelectedLocaleChanged;
 
         static LocalizationSettings s_Instance;
 
@@ -59,12 +60,20 @@ namespace UnityEngine.Localization.Settings
         /// Called when the <see cref="SelectedLocale"/> is changed.
         /// This will be called after <see cref="InitializationOperation"/> is completed so any preloading operations will be finished.
         /// </summary>
-        public event Action<Locale> OnSelectedLocaleChanged;
-
         /// <summary>
         /// Returns <c>true</c> if <seealso cref="OnSelectedLocaleChanged"/> has any subscribers.
         /// </summary>
-        internal bool HasSelectedLocaleChangedSubscribers => OnSelectedLocaleChanged != null;
+        internal bool HasSelectedLocaleChangedSubscribers => m_SelectedLocaleChanged.Length != 0;
+
+        /// <summary>
+        /// Called when the <see cref="SelectedLocale"/> is changed.
+        /// This will be called after <see cref="InitializationOperation"/> is completed so any preloading operations will be finished.
+        /// </summary>
+        public event Action<Locale> OnSelectedLocaleChanged
+        {
+            add => m_SelectedLocaleChanged.Add(value);
+            remove => m_SelectedLocaleChanged.RemoveByMovingTail(value);
+        }
 
         /// <summary>
         /// Indicates if there is a LocalizationSettings present. If one is not found then it will attempt to find one however
@@ -264,18 +273,18 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public virtual AsyncOperationHandle<LocalizationSettings> GetInitializationOperation()
         {
-            if (m_InitializingOperationHandle == null)
+            if (!m_InitializingOperationHandle.IsValid())
             {
                 var operation = GenericPool<InitializationOperation>.Get();
                 operation.Init(this);
                 m_InitializingOperationHandle = AddressablesInterface.ResourceManager.StartOperation(operation, default);
                 #if !UNITY_WEBGL // WebGL does not support WaitForCompletion
-                if (!m_InitializingOperationHandle.Value.IsDone && m_InitializeSynchronously && IsPlaying)
-                    m_InitializingOperationHandle.Value.WaitForCompletion();
+                if (!m_InitializingOperationHandle.IsDone && m_InitializeSynchronously && IsPlaying)
+                    m_InitializingOperationHandle.WaitForCompletion();
                 #endif
             }
 
-            return m_InitializingOperationHandle.Value;
+            return m_InitializingOperationHandle;
         }
 
         #if UNITY_EDITOR
@@ -379,16 +388,16 @@ namespace UnityEngine.Localization.Settings
             m_StringDatabase?.OnLocaleChanged(locale);
             m_AssetDatabase?.OnLocaleChanged(locale);
 
-            if (m_InitializingOperationHandle.HasValue)
+            if (m_InitializingOperationHandle.IsValid())
             {
-                AddressablesInterface.SafeRelease(m_InitializingOperationHandle.Value);
-                m_InitializingOperationHandle = null;
+                AddressablesInterface.SafeRelease(m_InitializingOperationHandle);
+                m_InitializingOperationHandle = default;
             }
 
             var initOp = GetInitializationOperation();
             if (initOp.Status == AsyncOperationStatus.Succeeded)
             {
-                OnSelectedLocaleChanged?.Invoke(locale);
+                InvokeSelectedLocaleChanged(locale);
             }
             else
             {
@@ -402,8 +411,33 @@ namespace UnityEngine.Localization.Settings
 
         IEnumerator InitializeAndCallSelectedLocaleChangedCoroutine(Locale locale)
         {
-            yield return m_InitializingOperationHandle.Value;
-            OnSelectedLocaleChanged?.Invoke(locale);
+            yield return m_InitializingOperationHandle;
+            InvokeSelectedLocaleChanged(locale);
+        }
+
+        void InvokeSelectedLocaleChanged(Locale locale)
+        {
+            try
+            {
+                m_SelectedLocaleChanged.LockForChanges();
+                var len = m_SelectedLocaleChanged.Length;
+                if (len == 1)
+                {
+                    m_SelectedLocaleChanged.SingleDelegate(locale);
+                }
+                else if (len > 1)
+                {
+                    var array = m_SelectedLocaleChanged.MultiDelegates;
+                    for (int i = 0; i < len; ++i)
+                        array[i](locale);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+
+            m_SelectedLocaleChanged.UnlockForChanges();
         }
 
         Locale SelectActiveLocale()
@@ -480,7 +514,7 @@ namespace UnityEngine.Localization.Settings
         /// <param name="locale"></param>
         public void SetSelectedLocale(Locale locale)
         {
-            if (m_SelectedLocaleAsync != null && ReferenceEquals(m_SelectedLocaleAsync.Value.Result, locale))
+            if (m_SelectedLocaleAsync.IsValid() && ReferenceEquals(m_SelectedLocaleAsync.Result, locale))
                 return;
 
             // We need to ensure initialization has been started
@@ -498,7 +532,7 @@ namespace UnityEngine.Localization.Settings
             if (locale == null && IsPlayingOrWillChangePlaymode)
                 return;
 
-            if (!m_SelectedLocaleAsync.HasValue || !ReferenceEquals(m_SelectedLocaleAsync.Value.Result, locale))
+            if (!m_SelectedLocaleAsync.IsValid() || !ReferenceEquals(m_SelectedLocaleAsync.Result, locale))
             {
                 #if UNITY_EDITOR
                 if (!IsPlayingOrWillChangePlaymode)
@@ -508,8 +542,8 @@ namespace UnityEngine.Localization.Settings
                 }
                 #endif
 
-                if (m_SelectedLocaleAsync.HasValue)
-                    AddressablesInterface.Release(m_SelectedLocaleAsync.Value);
+                if (m_SelectedLocaleAsync.IsValid())
+                    AddressablesInterface.Release(m_SelectedLocaleAsync);
 
                 m_SelectedLocaleAsync = AddressablesInterface.ResourceManager.CreateCompletedOperation(locale, null);
                 SendLocaleChangedEvents(locale);
@@ -522,7 +556,7 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public virtual AsyncOperationHandle<Locale> GetSelectedLocaleAsync()
         {
-            if (!m_SelectedLocaleAsync.HasValue)
+            if (!m_SelectedLocaleAsync.IsValid())
             {
                 if (m_AvailableLocales is IPreloadRequired localesProvider && !localesProvider.PreloadOperation.IsDone)
                 {
@@ -533,7 +567,7 @@ namespace UnityEngine.Localization.Settings
                     m_SelectedLocaleAsync = AddressablesInterface.ResourceManager.CreateCompletedOperation(SelectActiveLocale(), null);
                 }
             }
-            return m_SelectedLocaleAsync.Value;
+            return m_SelectedLocaleAsync;
         }
 
         /// <summary>
@@ -555,18 +589,18 @@ namespace UnityEngine.Localization.Settings
         /// <param name="locale"></param>
         public virtual void OnLocaleRemoved(Locale locale)
         {
-            if (m_SelectedLocaleAsync.HasValue && ReferenceEquals(m_SelectedLocaleAsync.Value.Result, locale))
+            if (m_SelectedLocaleAsync.IsValid() && ReferenceEquals(m_SelectedLocaleAsync.Result, locale))
             {
-                AddressablesInterface.Release(m_SelectedLocaleAsync.Value);
-                m_SelectedLocaleAsync = null;
+                AddressablesInterface.Release(m_SelectedLocaleAsync);
+                m_SelectedLocaleAsync = default;
             }
         }
 
         /// <inheritdoc/>
         public void ResetState()
         {
-            m_SelectedLocaleAsync = null;
-            m_InitializingOperationHandle = null;
+            m_SelectedLocaleAsync = default;
+            m_InitializingOperationHandle = default;
             (m_AvailableLocales as IReset)?.ResetState();
             (m_AssetDatabase as IReset)?.ResetState();
             (m_StringDatabase as IReset)?.ResetState();

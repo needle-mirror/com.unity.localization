@@ -92,13 +92,13 @@ namespace UnityEngine.Localization.Settings
                     return AddressablesInterface.ResourceManager.CreateCompletedOperation(this, null);
                 #endif
 
-                if (!m_PreloadOperationHandle.HasValue)
+                if (!m_PreloadOperationHandle.IsValid())
                 {
                     var operation = GenericPool<PreloadDatabaseOperation<TTable, TEntry>>.Get();
                     operation.Init(this);
                     m_PreloadOperationHandle = AddressablesInterface.ResourceManager.StartOperation(operation, default);
                 }
-                return m_PreloadOperationHandle.Value;
+                return m_PreloadOperationHandle;
             }
         }
 
@@ -108,21 +108,11 @@ namespace UnityEngine.Localization.Settings
         [SerializeField]
         bool m_UseFallback;
 
-        AsyncOperationHandle? m_PreloadOperationHandle;
+        AsyncOperationHandle m_PreloadOperationHandle;
+        Action<AsyncOperationHandle> m_ReleaseNextFrame;
+        Action<AsyncOperationHandle<TTable>> m_RegisterSharedTableOperation;
 
-        internal Action<AsyncOperationHandle> ReleaseNextFrame
-        {
-            get
-            {
-                #if UNITY_EDITOR
-                if (!LocalizationSettings.Instance.IsPlaying)
-                {
-                    return AddressablesInterface.SafeRelease;
-                }
-                #endif
-                return LocalizationBehaviour.ReleaseNextFrame;
-            }
-        }
+        internal Action<AsyncOperationHandle> ReleaseNextFrame => m_ReleaseNextFrame;
 
         // Used in place of the actual selected locale when it is still being loaded.
         internal static readonly LocaleIdentifier k_SelectedLocaleId = new LocaleIdentifier("selected locale placeholder");
@@ -155,6 +145,15 @@ namespace UnityEngine.Localization.Settings
             set => m_UseFallback = value;
         }
 
+        /// <summary>
+        /// Creates a new instance of the database.
+        /// </summary>
+        public LocalizedDatabase()
+        {
+            m_ReleaseNextFrame = LocalizationBehaviour.ReleaseNextFrame;
+            m_RegisterSharedTableOperation = RegisterSharedTableOperation;
+        }
+
         internal TableReference GetDefaultTable()
         {
             if (m_DefaultTableReference.ReferenceType == TableReference.Type.Empty)
@@ -172,7 +171,7 @@ namespace UnityEngine.Localization.Settings
             if (handle.IsDone)
                 RegisterSharedTableOperation(handle);
             else
-                handle.Completed += RegisterSharedTableOperation;
+                handle.Completed += m_RegisterSharedTableOperation;
         }
 
         void RegisterTablesOperation(AsyncOperationHandle<IList<TTable>> tablesOperation)
@@ -230,7 +229,7 @@ namespace UnityEngine.Localization.Settings
         /// ![](../manual/images/scripting/GetTable.dot.svg)
         /// </remarks>
         /// <param name="tableReference">The table identifier. Can be either the name of the table or the table collection name Guid.</param>
-        /// <param name="locale">The <see cref="Locale"/> to load the table from, use null to default to cref="LocalizationSettings.SelectedLocale"/>.</param>
+        /// <param name="locale">The <see cref="Locale"/> to load the table from, use null to default to <see cref="LocalizationSettings.SelectedLocale"/>.</param>
         /// <returns></returns>
         public virtual AsyncOperationHandle<TTable> GetTableAsync(TableReference tableReference, Locale locale = null)
         {
@@ -242,7 +241,7 @@ namespace UnityEngine.Localization.Settings
                 if (locale == null)
                 {
                     if (LocalizationSettings.SelectedLocaleAsync.Result == null)
-                        return AddressablesInterface.ResourceManager.CreateCompletedOperation<TTable>(null, "SelectedLocale is null");
+                        return AddressablesInterface.ResourceManager.CreateCompletedOperation<TTable>(null, "SelectedLocale is null. Database could not get table.");
                     locale = LocalizationSettings.SelectedLocaleAsync.Result;
                 }
                 useSelectedLocalePlaceholder = false;
@@ -252,7 +251,7 @@ namespace UnityEngine.Localization.Settings
             tableReference.Validate();
             var tableIdString = tableReference.ReferenceType == TableReference.Type.Guid ? TableReference.StringFromGuid(tableReference.TableCollectionNameGuid) : tableReference.TableCollectionName;
             var localeId = useSelectedLocalePlaceholder ? k_SelectedLocaleId : locale.Identifier;
-            if (TableOperations.TryGetValue((localeId, tableIdString), out var operationHandle) && operationHandle.Result != null)
+            if (TableOperations.TryGetValue((localeId, tableIdString), out var operationHandle))
                 return operationHandle;
 
             // Start a new operation
@@ -313,7 +312,10 @@ namespace UnityEngine.Localization.Settings
             operation.Init(this, new[] { tableReference }, locale);
             operation.Dependency = LocalizationSettings.InitializationOperation;
             var handle = AddressablesInterface.ResourceManager.StartOperation(operation, LocalizationSettings.InitializationOperation);
-            handle.CompletedTypeless += ReleaseNextFrame;
+
+            if (LocalizationSettings.Instance.IsPlaying)
+                handle.CompletedTypeless += ReleaseNextFrame;
+
             return handle;
         }
 
@@ -338,7 +340,10 @@ namespace UnityEngine.Localization.Settings
             operation.Init(this, tableReferences, locale);
             operation.Dependency = LocalizationSettings.InitializationOperation;
             var handle = AddressablesInterface.ResourceManager.StartOperation(operation, LocalizationSettings.InitializationOperation);
-            handle.CompletedTypeless += ReleaseNextFrame;
+
+            if (LocalizationSettings.Instance.IsPlaying)
+                handle.CompletedTypeless += ReleaseNextFrame;
+
             return handle;
         }
 
@@ -453,7 +458,9 @@ namespace UnityEngine.Localization.Settings
             else
                 handle.Completed += RegisterTablesOperation;
 
-            handle.CompletedTypeless += ReleaseNextFrame;
+            if (LocalizationSettings.Instance.IsPlaying)
+                handle.CompletedTypeless += ReleaseNextFrame;
+
             return handle;
         }
 
@@ -478,7 +485,6 @@ namespace UnityEngine.Localization.Settings
 
         /// <summary>
         /// Returns the entry from the requested table. A table entry will contain the localized item and metadata.
-        /// This function is asynchronous and may not have an immediate result available.
         /// This method is asynchronous and may not have an immediate result.
         /// Check [IsDone](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.IsDone) to see if the data is available,
         /// if it is false then you can use the [Completed](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.Completed) event to get a callback when it is finished,
@@ -505,13 +511,9 @@ namespace UnityEngine.Localization.Settings
             var getTableEntryOperation = GenericPool<GetTableEntryOperation<TTable, TEntry>>.Get();
             var useFallback = fallbackBehavior != FallbackBehavior.UseProjectSettings ? fallbackBehavior == FallbackBehavior.UseFallback : UseFallback;
 
-            getTableEntryOperation.Init(this, loadTableOperation, tableReference, tableEntryReference, locale, useFallback);
+            getTableEntryOperation.Init(this, loadTableOperation, tableReference, tableEntryReference, locale, useFallback, true);
             getTableEntryOperation.Dependency = loadTableOperation;
             var handle = AddressablesInterface.ResourceManager.StartOperation(getTableEntryOperation, loadTableOperation);
-
-            // We don't want to force users to have to manage the reference counting so by default we will release the operation for reuse once completed in the next frame
-            // If a user wants to hold onto it then they should call Acquire on the operation and later Release.
-            handle.CompletedTypeless += ReleaseNextFrame;
 
             return handle;
         }
@@ -567,11 +569,8 @@ namespace UnityEngine.Localization.Settings
                 }
             }
 
-            if (m_PreloadOperationHandle.HasValue)
-            {
-                AddressablesInterface.SafeRelease(m_PreloadOperationHandle.Value);
-                m_PreloadOperationHandle = null;
-            }
+            AddressablesInterface.SafeRelease(m_PreloadOperationHandle);
+            m_PreloadOperationHandle = default;
 
             TableOperations.Clear();
         }

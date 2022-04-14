@@ -24,16 +24,16 @@ namespace UnityEditor.Localization.UI
         }
 
         public override void Initialize(LocalizationTableCollection collection, int startIdx, List<LocalizationTable> sortedTables)
-        {            m_SortedTables = sortedTables;
+        {
+            m_SortedTables = sortedTables;
             m_StartIndex = startIdx;
-
         }
 
         void DelayedInit()
         {
             if (m_TableProperties == null)
             {
-                m_TableProperties = new (SmartFormatField, ISelectable)[m_StartIndex + m_SortedTables.Count];
+                m_TableProperties = new(SmartFormatField, ISelectable)[m_StartIndex + m_SortedTables.Count];
 
                 for (int i = m_StartIndex; i < m_TableProperties.Length; ++i)
                 {
@@ -129,7 +129,7 @@ namespace UnityEditor.Localization.UI
                     var st = (StringTable)m_SortedTables[i];
                     var entry = st.GetEntry(KeyId);
                     if (entry != null)
-                    sb.Append(entry.LocalizedValue);
+                        sb.Append(entry.LocalizedValue);
                 }
 
                 displayName = sb.ToString();

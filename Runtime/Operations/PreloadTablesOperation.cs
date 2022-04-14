@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
@@ -14,16 +15,23 @@ namespace UnityEngine.Localization
         readonly List<AsyncOperationHandle<TTable>> m_LoadTables = new List<AsyncOperationHandle<TTable>>();
         readonly List<AsyncOperationHandle> m_LoadTablesOperation = new List<AsyncOperationHandle>();
         readonly List<AsyncOperationHandle> m_PreloadTablesOperations = new List<AsyncOperationHandle>();
+        readonly Action<AsyncOperationHandle> m_LoadTableContentsAction;
+        readonly Action<AsyncOperationHandle> m_FinishPreloadingAction;
 
         IList<TableReference> m_TableReferences;
         Locale m_SelectedLocale;
+
+        public PreloadTablesOperation()
+        {
+            m_LoadTableContentsAction = a => LoadTableContents();
+            m_FinishPreloadingAction = FinishPreloading;
+        }
 
         public void Init(LocalizedDatabase<TTable, TEntry> database, IList<TableReference> tableReference, Locale locale = null)
         {
             m_Database = database;
             m_TableReferences = tableReference;
             m_SelectedLocale = locale;
-            CurrentOperation = null;
         }
 
         protected override void Execute()
@@ -50,16 +58,11 @@ namespace UnityEngine.Localization
                 if (!loadTablesOperationHandle.IsDone)
                 {
                     CurrentOperation = loadTablesOperationHandle;
-                    loadTablesOperationHandle.CompletedTypeless += LoadTableContents;
+                    loadTablesOperationHandle.CompletedTypeless += m_LoadTableContentsAction;
                     return;
                 }
             }
 
-            LoadTableContents();
-        }
-
-        void LoadTableContents(AsyncOperationHandle handle)
-        {
             LoadTableContents();
         }
 
@@ -90,7 +93,7 @@ namespace UnityEngine.Localization
             if (!preloadTablesContents.IsDone)
             {
                 CurrentOperation = preloadTablesContents;
-                preloadTablesContents.CompletedTypeless += FinishPreloading;
+                preloadTablesContents.CompletedTypeless += m_FinishPreloadingAction;
             }
             else
             {

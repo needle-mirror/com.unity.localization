@@ -7,10 +7,11 @@ namespace UnityEditor.Localization
     {
         internal static string MakePathRelative(string path)
         {
-            if (path.Contains(Application.dataPath))
+            var dataPath = Application.dataPath;
+            var root = dataPath.Substring(0, dataPath.Length - "Assets".Length);
+            if (path.StartsWith(root))
             {
-                var length = Application.dataPath.Length - "Assets".Length;
-                return path.Substring(length, path.Length - length);
+                path = path.Substring(root.Length);
             }
 
             return path;

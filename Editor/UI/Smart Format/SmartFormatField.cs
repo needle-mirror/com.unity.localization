@@ -69,6 +69,7 @@ namespace UnityEditor.Localization.UI
             set
             {
                 m_Mode = Mode.Edit;
+                SessionState.SetInt(SessionKey, (int)m_Mode);
                 m_IsSmart = value;
             }
         }

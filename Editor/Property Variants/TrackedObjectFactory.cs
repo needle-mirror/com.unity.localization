@@ -76,14 +76,12 @@ namespace UnityEditor.Localization.PropertyVariants
                 return instance;
             }
 
-            Debug.LogWarning($"Could not find a TrackedObject for {typeToMatch}.");
             return null;
         }
 
-        public static ITrackedProperty CreateTrackedProperty(Object target, PropertyModification propertyModification)
+        public static ITrackedProperty CreateTrackedProperty(Object target, string path, bool addNewTableEntry = true)
         {
             // We need to know the type. We could try to infer it from the property value but this is safer.
-            var path = propertyModification.propertyPath;
             var serializedObject = new SerializedObject(target);
             var serializedProperty = serializedObject.FindProperty(path);
 
@@ -91,13 +89,9 @@ namespace UnityEditor.Localization.PropertyVariants
             {
                 ScriptAttributeUtilityBridge.GetFieldInfoAndStaticTypeFromProperty(serializedProperty, out var type);
 
-                var collection = LocalizationProjectSettings.NewAssetTable.IsEmpty ? null : LocalizationEditorSettings.GetAssetTableCollection(LocalizationProjectSettings.NewAssetTable.TableReference);
-                if (collection == null)
+                var collection = LocalizationProjectSettings.NewAssetTable == null ? null : LocalizationEditorSettings.GetAssetTableCollection(LocalizationProjectSettings.NewAssetTable.TableReference);
+                if (collection == null && addNewTableEntry)
                     return new UnityObjectProperty {PropertyPath = path, PropertyType = type};
-
-                Undo.RecordObject(collection.SharedData, "Update table");
-                var newEntry = AddNewEntry(target, collection.SharedData);
-                EditorUtility.SetDirty(collection.SharedData);
 
                 // Find a LocalizedAsset for this type or fallback to LocalizedObject.
                 var allLocalizedAssetTypes = TypeCache.GetTypesDerivedFrom<LocalizedAssetBase>();
@@ -108,22 +102,33 @@ namespace UnityEditor.Localization.PropertyVariants
                     PropertyPath = path,
                     LocalizedObject = locAssetType == null ? new LocalizedObject() : (LocalizedAssetBase)Activator.CreateInstance(locAssetType)
                 };
-                locAsset.LocalizedObject.SetReference(LocalizationProjectSettings.NewAssetTable.TableReference, newEntry.Id);
+
+                if (addNewTableEntry)
+                {
+                    Undo.RecordObject(collection.SharedData, "Update table");
+                    var newEntry = AddNewEntry(target, collection.SharedData);
+                    EditorUtility.SetDirty(collection.SharedData);
+
+                    locAsset.LocalizedObject.SetReference(LocalizationProjectSettings.NewAssetTable.TableReference, newEntry.Id);
+                }
 
                 return locAsset;
             }
 
             if (serializedProperty.propertyType == SerializedPropertyType.String)
             {
-                var collection = LocalizationProjectSettings.NewStringTable.IsEmpty ? null : LocalizationEditorSettings.GetStringTableCollection(LocalizationProjectSettings.NewStringTable.TableReference);
-                if (collection != null)
+                var collection = LocalizationProjectSettings.NewStringTable == null ? null : LocalizationEditorSettings.GetStringTableCollection(LocalizationProjectSettings.NewStringTable.TableReference);
+                if (collection != null || !addNewTableEntry)
                 {
-                    Undo.RecordObject(collection.SharedData, "Update table");
-                    var newEntry = AddNewEntry(target, collection.SharedData);
-                    EditorUtility.SetDirty(collection.SharedData);
-
                     var locString = new LocalizedStringProperty { PropertyPath = path };
-                    locString.LocalizedString.SetReference(LocalizationProjectSettings.NewStringTable.TableReference, newEntry.Id);
+
+                    if (addNewTableEntry)
+                    {
+                        Undo.RecordObject(collection.SharedData, "Update table");
+                        var newEntry = AddNewEntry(target, collection.SharedData);
+                        EditorUtility.SetDirty(collection.SharedData);
+                        locString.LocalizedString.SetReference(LocalizationProjectSettings.NewStringTable.TableReference, newEntry.Id);
+                    }
 
                     return locString;
                 }

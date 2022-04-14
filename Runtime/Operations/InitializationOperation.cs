@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Pool;
@@ -10,6 +11,9 @@ namespace UnityEngine.Localization
     /// </summary>
     class InitializationOperation : WaitForCurrentOperationAsyncOperationBase<LocalizationSettings>
     {
+        readonly Action<AsyncOperationHandle<Locale>> m_PreloadTablesAction;
+        readonly Action<AsyncOperationHandle> m_FinishInitializingAction;
+
         LocalizationSettings m_Settings;
         readonly List<AsyncOperationHandle> m_LoadDatabasesOperations = new List<AsyncOperationHandle>();
 
@@ -20,20 +24,25 @@ namespace UnityEngine.Localization
         {
             get
             {
-                if (CurrentOperation.HasValue)
-                    return (k_PreloadSteps - m_RemainingSteps + CurrentOperation.Value.PercentComplete) / (k_PreloadSteps + 1);
+                if (CurrentOperation.IsValid())
+                    return (k_PreloadSteps - m_RemainingSteps + CurrentOperation.PercentComplete) / (k_PreloadSteps + 1);
                 return base.Progress;
             }
         }
 
         protected override string DebugName => "Localization Settings Initialization";
 
+        public InitializationOperation()
+        {
+            m_PreloadTablesAction = a => PreloadTables();
+            m_FinishInitializingAction = FinishInitializing;
+        }
+
         public void Init(LocalizationSettings settings)
         {
             m_Settings = settings;
             m_LoadDatabasesOperations.Clear();
             m_RemainingSteps = k_PreloadSteps;
-            CurrentOperation = null;
         }
 
         protected override void Execute()
@@ -47,7 +56,7 @@ namespace UnityEngine.Localization
             if (!localeOp.IsDone)
             {
                 CurrentOperation = localeOp;
-                localeOp.Completed += async => PreloadTables();
+                localeOp.Completed += m_PreloadTablesAction;
             }
             else
             {
@@ -73,7 +82,7 @@ namespace UnityEngine.Localization
             {
                 var operation = AddressablesInterface.ResourceManager.CreateGenericGroupOperation(m_LoadDatabasesOperations, true);
                 CurrentOperation = operation;
-                operation.CompletedTypeless += FinishInitializing;
+                operation.CompletedTypeless += m_FinishInitializingAction;
             }
             else
             {

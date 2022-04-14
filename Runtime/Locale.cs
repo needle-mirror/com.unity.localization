@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Pseudo;
 using UnityEngine.Localization.Settings;
+using UnityEngine.Pool;
 
 namespace UnityEngine.Localization
 {
@@ -271,27 +273,57 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// Returns the fallback locale or <c>null</c> if one does not exist or it could not be found.
+        /// Returns the first fallback locale or <c>null</c> if one does not exist or it could not be found.
         /// </summary>
         /// <returns>The fallback locale or <c>null</c>.</returns>
-        public virtual Locale GetFallback()
+        [Obsolete("GetFallback is obsolete, please use GetFallbacks.")]
+        public virtual Locale GetFallback() => GetFallbacks().GetEnumerator().Current;
+
+        /// <summary>
+        /// Returns the fallbacks in order or priority. If the locale does not contain any <see cref="FallbackLocale"/> metadata then the CultureInfo will be used to find a fallback.
+        /// </summary>
+        /// <returns>The fallback locale or <c>null</c>.</returns>
+        public IEnumerable<Locale> GetFallbacks()
         {
-            var fallBack = Metadata?.GetMetadata<FallbackLocale>()?.Locale;
-            if (fallBack == null)
+            if (Metadata == null)
+                yield break;
+
+            // Ensure we only return each locale once.
+            using (HashSetPool<Locale>.Get(out var processedLocales))
             {
-                var cultureInfo = Identifier.CultureInfo;
-                if (cultureInfo != null)
+                var entries = Metadata.MetadataEntries;
+                for (int i = 0; i < entries.Count; ++i)
                 {
-                    while (cultureInfo != CultureInfo.InvariantCulture && fallBack == null)
+                    if (entries[i] is FallbackLocale fallbackLocale)
                     {
-                        var fb = LocalizationSettings.AvailableLocales.GetLocale(cultureInfo);
-                        if (fb != this)
-                            fallBack = fb;
-                        cultureInfo = cultureInfo.Parent;
+                        if (fallbackLocale.Locale != null && !processedLocales.Contains(fallbackLocale.Locale))
+                        {
+                            processedLocales.Add(fallbackLocale.Locale);
+                            yield return fallbackLocale.Locale;
+                        }
                     }
                 }
+
+                // If we did not find any then revert to using the culture info fallback data.
+                if (processedLocales.Count == 0)
+                {
+                    Locale fallBack = null;
+                    var cultureInfo = Identifier.CultureInfo;
+                    if (cultureInfo != null)
+                    {
+                        while (cultureInfo != CultureInfo.InvariantCulture && fallBack == null)
+                        {
+                            var fb = LocalizationSettings.AvailableLocales.GetLocale(cultureInfo);
+                            if (fb != this)
+                                fallBack = fb;
+                            cultureInfo = cultureInfo.Parent;
+                        }
+                    }
+
+                    if (fallBack != null)
+                        yield return fallBack;
+                }
             }
-            return fallBack;
         }
 
         /// <summary>

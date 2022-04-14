@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
@@ -11,18 +12,31 @@ namespace UnityEngine.Localization
         where TTable : DetailedLocalizationTable<TEntry>
         where TEntry : TableEntry
     {
+        readonly Action<AsyncOperationHandle<SharedTableData>> m_LoadTableByGuidAction;
+        readonly Action<AsyncOperationHandle<IList<IResourceLocation>>> m_LoadTableResourceAction;
+        readonly Action<AsyncOperationHandle<TTable>> m_TableLoadedAction;
+
         LocalizedDatabase<TTable, TEntry> m_Database;
         TableReference m_TableReference;
-        AsyncOperationHandle<TTable>? m_LoadTableOperation;
+        AsyncOperationHandle<TTable> m_LoadTableOperation;
         Locale m_SelectedLocale;
         string m_CollectionName;
+
+        public Action<AsyncOperationHandle<TTable>> RegisterTableOperation { get; private set; }
+
+        public LoadTableOperation()
+        {
+            RegisterTableOperation = RegisterTableOperationInternal;
+            m_LoadTableByGuidAction = LoadTableByGuid;
+            m_LoadTableResourceAction = LoadTableResource;
+            m_TableLoadedAction = TableLoaded;
+        }
 
         public void Init(LocalizedDatabase<TTable, TEntry> database, TableReference tableReference, Locale locale)
         {
             m_Database = database;
             m_TableReference = tableReference;
             m_SelectedLocale = locale;
-            CurrentOperation = null;
         }
 
         protected override void Execute()
@@ -32,7 +46,7 @@ namespace UnityEngine.Localization
                 m_SelectedLocale = LocalizationSettings.SelectedLocale;
                 if (m_SelectedLocale == null)
                 {
-                    Complete(null, false, "SelectedLocale is null");
+                    Complete(null, false, "SelectedLocale is null. Could not load table.");
                     return;
                 }
             }
@@ -49,7 +63,7 @@ namespace UnityEngine.Localization
                 else
                 {
                     CurrentOperation = operation;
-                    operation.Completed += LoadTableByGuid;
+                    operation.Completed += m_LoadTableByGuidAction;
                 }
             }
             else
@@ -84,7 +98,7 @@ namespace UnityEngine.Localization
             else
             {
                 CurrentOperation = tableResourceOp;
-                tableResourceOp.Completed += LoadTableResource;
+                tableResourceOp.Completed += m_LoadTableResourceAction;
             }
         }
 
@@ -98,17 +112,17 @@ namespace UnityEngine.Localization
             }
 
             m_LoadTableOperation = AddressablesInterface.LoadTableFromLocation<TTable>(operationHandle.Result[0]);
-            if (m_LoadTableOperation.Value.IsDone)
+            if (m_LoadTableOperation.IsDone)
             {
-                TableLoaded(m_LoadTableOperation.Value);
-                AddressablesInterface.Release(operationHandle);
+                TableLoaded(m_LoadTableOperation);
             }
             else
             {
-                CurrentOperation = m_LoadTableOperation.Value;
-                m_LoadTableOperation.Value.Completed += TableLoaded;
-                m_LoadTableOperation.Value.Completed += op => AddressablesInterface.Release(operationHandle);
+                CurrentOperation = m_LoadTableOperation;
+                m_LoadTableOperation.Completed += m_TableLoadedAction;
             }
+
+            AddressablesInterface.Release(operationHandle);
         }
 
         void TableLoaded(AsyncOperationHandle<TTable> operationHandle)
@@ -116,7 +130,7 @@ namespace UnityEngine.Localization
             Complete(operationHandle.Result, operationHandle.Status == AsyncOperationStatus.Succeeded, null);
         }
 
-        public void RegisterTableOperation(AsyncOperationHandle<TTable> handle)
+        void RegisterTableOperationInternal(AsyncOperationHandle<TTable> handle)
         {
             if (handle.Status == AsyncOperationStatus.Succeeded)
                 m_Database.RegisterTableOperation(handle, m_SelectedLocale.Identifier, m_CollectionName);
@@ -126,11 +140,8 @@ namespace UnityEngine.Localization
         {
             base.Destroy();
 
-            if (m_LoadTableOperation.HasValue)
-            {
-                AddressablesInterface.Release(m_LoadTableOperation.Value);
-                m_LoadTableOperation = null;
-            }
+            AddressablesInterface.SafeRelease(m_LoadTableOperation);
+            m_LoadTableOperation = default;
 
             GenericPool<LoadTableOperation<TTable, TEntry>>.Release(this);
         }

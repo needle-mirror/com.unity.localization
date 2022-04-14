@@ -82,7 +82,9 @@ namespace UnityEngine.Localization
     [Serializable]
     public partial class LocalizedAsset<TObject> : LocalizedAssetBase where TObject : Object
     {
-        ChangeHandler m_ChangeHandler;
+        CallbackArray<ChangeHandler> m_ChangeHandler;
+        Action<Locale> m_SelectedLocaleChanged;
+        Action<AsyncOperationHandle<TObject>> m_AutomaticLoadingCompleted;
 
         /// <summary>
         /// Delegate used by <see cref="AssetChanged"/>.
@@ -100,16 +102,16 @@ namespace UnityEngine.Localization
 
                 base.WaitForCompletion = value;
                 #if !UNITY_WEBGL // WebGL does not support WaitForCompletion
-                if (value && CurrentLoadingOperation.HasValue && !CurrentLoadingOperation.Value.IsDone)
-                    CurrentLoadingOperation.Value.WaitForCompletion();
+                if (value && CurrentLoadingOperationHandle.IsValid() && !CurrentLoadingOperationHandle.IsDone)
+                    CurrentLoadingOperationHandle.WaitForCompletion();
                 #endif
             }
         }
 
         /// <summary>
-        /// The current loading operation for the asset when using <see cref="AssetChanged"/>. This is <c>null</c> if a loading operation is not available.
+        /// The current loading operation for the asset when using <see cref="AssetChanged"/>. This is <c>default</c> if a loading operation is not available.
         /// </summary>
-        public AsyncOperationHandle<TObject>? CurrentLoadingOperation
+        public AsyncOperationHandle<TObject> CurrentLoadingOperationHandle
         {
             get;
             internal set;
@@ -124,7 +126,7 @@ namespace UnityEngine.Localization
         /// - The <seealso cref="LocalizationSettings.SelectedLocale"/> changing.
         /// - The <see cref="TableReference"/> or <see cref="TableEntryReference"/> changing.
         ///
-        /// When the first <see cref="ChangeHandler"/> is added, a loading operation (see <see cref="CurrentLoadingOperation"/>) will automatically
+        /// When the first <see cref="ChangeHandler"/> is added, a loading operation (see <see cref="CurrentLoadingOperationHandle"/>) will automatically
         /// start and the localized asset will be sent to the subscriber when completed. Any adding additional subscribers added after
         /// loading has completed will also be sent the latest localized asset when they are added.
         /// This ensures that a subscriber will always have the correct localized value regardless of when it was added.
@@ -140,34 +142,29 @@ namespace UnityEngine.Localization
                 if (value == null)
                     throw new ArgumentNullException();
 
-                bool wasEmpty = m_ChangeHandler == null;
-                m_ChangeHandler += value;
+                m_ChangeHandler.Add(value);
 
-                if (wasEmpty)
+                if (m_ChangeHandler.Length == 1)
                 {
                     LocalizationSettings.ValidateSettingsExist();
                     ForceUpdate();
 
                     // We subscribe after the first update as its possible that a SelectedLocaleChanged may be fired
                     // during ForceUpdate when using WaitForCompletion and we want to avoid this.
-                    LocalizationSettings.SelectedLocaleChanged += HandleLocaleChange;
+                    LocalizationSettings.SelectedLocaleChanged += m_SelectedLocaleChanged;
                 }
-                else if (CurrentLoadingOperation.HasValue && CurrentLoadingOperation.Value.IsDone)
+                else if (CurrentLoadingOperationHandle.IsValid() && CurrentLoadingOperationHandle.IsDone)
                 {
                     // Call the event with the latest value.
-                    value(CurrentLoadingOperation.Value.Result);
+                    value(CurrentLoadingOperationHandle.Result);
                 }
             }
             remove
             {
-                if (value == null)
-                    throw new ArgumentNullException();
-
-                m_ChangeHandler -= value;
-
-                if (m_ChangeHandler == null)
+                m_ChangeHandler.RemoveByMovingTail(value);
+                if (m_ChangeHandler.Length == 0)
                 {
-                    LocalizationSettings.SelectedLocaleChanged -= HandleLocaleChange;
+                    LocalizationSettings.SelectedLocaleChanged -= m_SelectedLocaleChanged;
                     ClearLoadingOperation();
                 }
             }
@@ -176,7 +173,16 @@ namespace UnityEngine.Localization
         /// <summary>
         /// Returns <c>true</c> if <seealso cref="AssetChanged"/> has any subscribers.
         /// </summary>
-        public bool HasChangeHandler => m_ChangeHandler != null;
+        public bool HasChangeHandler => m_ChangeHandler.Length != 0;
+
+        /// <summary>
+        /// Initializes and returns an empty instance of a <see cref="LocalizedAsset{TObject}"/>.
+        /// </summary>
+        public LocalizedAsset()
+        {
+            m_SelectedLocaleChanged = HandleLocaleChange;
+            m_AutomaticLoadingCompleted = AutomaticLoadingCompleted;
+        }
 
         /// <summary>
         /// Provides a localized asset from a <see cref="AssetTable"/> with the <see cref="TableReference"/> and the
@@ -253,7 +259,7 @@ namespace UnityEngine.Localization
         /// <inheritdoc/>
         protected internal override void ForceUpdate()
         {
-            if (m_ChangeHandler != null)
+            if (m_ChangeHandler.Length != 0)
             {
                 HandleLocaleChange(null);
             }
@@ -278,55 +284,77 @@ namespace UnityEngine.Localization
                 #if UNITY_EDITOR
                 // If we are empty and playing or previewing then we should force an update.
                 if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
-                    m_ChangeHandler(null);
+                    InvokeChangeHandler(null);
                 #endif
                 return;
             }
 
-            CurrentLoadingOperation = LoadAssetAsync();
-            AddressablesInterface.Acquire(CurrentLoadingOperation.Value);
+            CurrentLoadingOperationHandle = LoadAssetAsync();
+            AddressablesInterface.Acquire(CurrentLoadingOperationHandle);
 
-            if (!CurrentLoadingOperation.Value.IsDone)
+            if (!CurrentLoadingOperationHandle.IsDone)
             {
                 #if !UNITY_WEBGL
                 if (WaitForCompletion)
                 {
-                    CurrentLoadingOperation.Value.WaitForCompletion();
+                    CurrentLoadingOperationHandle.WaitForCompletion();
                 }
                 else
                 #endif
                 {
-                    CurrentLoadingOperation.Value.Completed += AutomaticLoadingCompleted;
+                    CurrentLoadingOperationHandle.Completed += m_AutomaticLoadingCompleted;
                     return;
                 }
             }
 
-            AutomaticLoadingCompleted(CurrentLoadingOperation.Value);
+            AutomaticLoadingCompleted(CurrentLoadingOperationHandle);
         }
 
         void AutomaticLoadingCompleted(AsyncOperationHandle<TObject> loadOperation)
         {
             if (loadOperation.Status != AsyncOperationStatus.Succeeded)
             {
-                CurrentLoadingOperation = null;
+                CurrentLoadingOperationHandle = default;
                 return;
             }
 
-            m_ChangeHandler(loadOperation.Result);
+            InvokeChangeHandler(loadOperation.Result);
+        }
+
+        void InvokeChangeHandler(TObject value)
+        {
+            try
+            {
+                m_ChangeHandler.LockForChanges();
+                var len = m_ChangeHandler.Length;
+                if (len == 1)
+                {
+                    m_ChangeHandler.SingleDelegate(value);
+                }
+                else if (len > 1)
+                {
+                    var array = m_ChangeHandler.MultiDelegates;
+                    for (int i = 0; i < len; ++i)
+                        array[i](value);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+
+            m_ChangeHandler.UnlockForChanges();
         }
 
         internal void ClearLoadingOperation()
         {
-            if (CurrentLoadingOperation.HasValue)
+            if (CurrentLoadingOperationHandle.IsValid())
             {
-                if (CurrentLoadingOperation.Value.IsValid())
-                {
-                    // We should only call this if we are not done as its possible that the internal list is null if its not been used.
-                    if (!CurrentLoadingOperation.Value.IsDone)
-                        CurrentLoadingOperation.Value.Completed -= AutomaticLoadingCompleted;
-                    AddressablesInterface.Release(CurrentLoadingOperation.Value);
-                }
-                CurrentLoadingOperation = null;
+                // We should only call this if we are not done as its possible that the internal list is null if its not been used.
+                if (!CurrentLoadingOperationHandle.IsDone)
+                    CurrentLoadingOperationHandle.Completed -= m_AutomaticLoadingCompleted;
+                AddressablesInterface.Release(CurrentLoadingOperationHandle);
+                CurrentLoadingOperationHandle = default;
             }
         }
 

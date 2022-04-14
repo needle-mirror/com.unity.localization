@@ -48,7 +48,7 @@ namespace UnityEditor.Localization.UI
         {
             position.height = EditorGUIUtility.singleLineHeight;
             property.isExpanded = EditorGUI.Foldout(position, property.isExpanded, label, true);
-            position.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+            position.MoveToNextLine();
 
             if (property.isExpanded)
             {
@@ -57,7 +57,7 @@ namespace UnityEditor.Localization.UI
                 if (!data.m_IsAccenter)
                 {
                     EditorGUI.PropertyField(position, data.substitutionMethod);
-                    position.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+                    position.MoveToNextLine();
                 }
 
                 var method = (CharacterSubstitutor.SubstitutionMethod)data.substitutionMethod.intValue;
@@ -70,11 +70,12 @@ namespace UnityEditor.Localization.UI
                     EditorGUI.BeginDisabledGroup(data.replacementList.arraySize <= 1);
                     EditorGUI.PropertyField(position, data.listMode);
                     EditorGUI.EndDisabledGroup();
-                    position.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+                    position.MoveToNextLine();
 
                     // Add typical characters button
+                    position.height = EditorGUI.GetPropertyHeight(data.replacementList, true);
                     EditorGUI.PropertyField(position, data.replacementList, true);
-                    position.y += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * (2 + data.replacementList.arraySize);
+                    position.MoveToNextLine();
 
                     if (s_DefferedAddTypicalCharacters != null)
                     {
@@ -87,6 +88,7 @@ namespace UnityEditor.Localization.UI
                         s_DefferedAddTypicalCharacters = null;
                     }
 
+                    position.height = EditorGUIUtility.singleLineHeight;
                     position.xMin += EditorGUIUtility.labelWidth;
                     if (EditorGUI.DropdownButton(position, Styles.addTypicalCharacterSet, FocusType.Keyboard))
                     {

@@ -37,9 +37,7 @@ Locale assets can be removed or added to Addressables by clicking the **Remove S
 
 ## Locale Selector
 
-The Locale Selector determines which Locale Unity should use when the application first starts or an active Locale is not selected. For example, you might want to use a default Locale, or attempt to use the Locale that the player is using on their device.
-
-By default, there are 4 Locale Selectors to choose from however, you can create custom selectors by implementing the *IStartupLocaleSelector* interface.
+The [Locale Selector](LocaleSelector.md) determines which Locale Unity should use when the application first starts or an active Locale is not selected. For example, you might want to use a default Locale, or attempt to use the Locale that the player is using on their device.
 
 The Localization Settings will query each selector in the list, starting at the top(index 0). If a selector returns null, then it queries the next, until it finds a valid Locale or it reaches the end of the list. This allows you to create fallback behaviors when Unity is selecting which Locale to use.
 
@@ -92,7 +90,7 @@ The parser is responsible for converting a Smart String into a set of format ite
 | **Alphanumeric Selectors** | When enabled Unity allows selectors to contain alphabetical selectors in the range a-z and A-Z.<br>For example:<br>`Some text {FormatItem}` |
 | **Allowed Selector Chars** | Contains a list of additional characters that a selector can contain to support additional selector syntaxes such as math. |
 | **Operators** | Contains a list of characters that come between selectors. This can be "." for dot-notation, [ ] for arrays or even math symbols. |
-| **Alternative Escaping** | Smart Strings are a replacement for strings. Therefore, curly braces are escaped the string.Format way. So if the desired output is {literal}, double the open and closing curly braces to be {{literal}} instead. This string.Format compatibility, however, causes problems when using SmartFormat's extended formatting capabilities, for example the following would not work: {0:{Persons:{Name}\|, }}.<br><br>The reason is the double curly braces at the end of the format string, which the parser will escape, leading to a missing closing brace exception.<br><br>This issue is solved by using an alternative escape character instead. When enabled and you wish to treat a double curly brace as literal it should be preceded by a backwards slash (\\). So the following would be treated as literal: "\\{literal\\}". |
+| **Alternative Escaping** | Smart Strings are a replacement for [string.Format](https://docs.microsoft.com/en-us/dotnet/api/system.string.format). Therefore, curly braces are escaped the string.Format way. So if the desired output is {literal}, double the open and closing curly braces to be {{literal}} instead. This string.Format compatibility, however, causes problems when using SmartFormat's extended formatting capabilities, for example the following would not work: {0:{Persons:{Name}\|, }}.<br><br>The reason is the double curly braces at the end of the format string, which the parser will escape, leading to a missing closing brace exception.<br><br>This issue is solved by using an alternative escape character instead. When enabled and you wish to treat a double curly brace as literal it should be preceded by a backwards slash (\\). So the following would be treated as literal: "\\{literal\\}". |
 | **Alternative Escape Char** | The character to use in conjunction with an opening or closing brace to indicate that it should be treated as a literal character and not a selector bracket. |
 
 ### Sources

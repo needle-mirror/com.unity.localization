@@ -267,6 +267,15 @@ public class SmartStringSamples
             new List<string> { "one", "two", "three", "four" }
             #endregion
         };
+
+        #region args-list-formatter-loc-string-example
+        // Text: "Use {0:list:{}|, |, and } to move".
+        var myLocalizedString = new LocalizedString("My Table", "My Entry");
+        myLocalizedString.Arguments = new object[] { new object[] { "w", "a", "s", "d" } };
+
+        // Outputs "Use w, a, s and d to move"
+        Debug.Log(myLocalizedString.GetLocalizedString(myLocalizedString));
+        #endregion
     }
 
     public static void PluralFormatterArguments()

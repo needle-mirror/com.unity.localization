@@ -70,7 +70,7 @@ namespace UnityEditor.Localization.PropertyVariants
                 }
             }
 
-            if (LocalizationSettings.SelectedLocale == null || Application.isPlaying)
+            if (Application.isPlaying || !LocalizationSettings.HasSettings || LocalizationSettings.SelectedLocale == null)
                 return modifications;
 
             // We want to create variant data in our GameObjectLocalizer however we also need to create Undo records for these changes.
@@ -159,6 +159,8 @@ namespace UnityEditor.Localization.PropertyVariants
                 trackedObject = TrackedObjectFactory.CreateTrackedObject(targetComponent);
                 if (trackedObject == null)
                 {
+                    Debug.LogWarning($"Could not find a TrackedObject for {targetComponent.GetType()}.");
+
                     // We just destroy the object here because a reverting the Undo group would trigger the Undo callbacks and break things such that use drag operations to make changes (slider, transform etc).
                     if (localizerAdded)
                         Object.DestroyImmediate(localizer);
@@ -181,7 +183,7 @@ namespace UnityEditor.Localization.PropertyVariants
                     return false;
                 }
 
-                trackedProperty = trackedObject.CreateCustomTrackedProperty(propertyPath) ?? TrackedObjectFactory.CreateTrackedProperty(targetComponent, propertyModification.currentValue);
+                trackedProperty = trackedObject.CreateCustomTrackedProperty(propertyPath) ?? TrackedObjectFactory.CreateTrackedProperty(targetComponent, propertyModification.currentValue.propertyPath);
                 if (trackedProperty == null)
                 {
                     // We just destroy the object here because reverting the Undo group would trigger the Undo callbacks and break things (dragging operations such as sliders, transform etc).

@@ -37,12 +37,17 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedProperties
         void SetValue(LocaleIdentifier localeIdentifier, T value);
     }
 
+    internal interface ITrackedPropertyRemoveVariant
+    {
+        void RemoveVariant(LocaleIdentifier localeIdentifier);
+    }
+
     /// <summary>
     /// Represents a property for a primitive data type.
     /// </summary>
     /// <typeparam name="TPrimitive">The primitive data type.</typeparam>
     [Serializable]
-    public class TrackedProperty<TPrimitive> : ITrackedPropertyValue<TPrimitive>, IStringProperty, ISerializationCallbackReceiver
+    public class TrackedProperty<TPrimitive> : ITrackedPropertyValue<TPrimitive>, IStringProperty, ISerializationCallbackReceiver, ITrackedPropertyRemoveVariant
     {
         [Serializable]
         internal class LocaleIdentifierValuePair

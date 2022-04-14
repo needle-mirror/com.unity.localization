@@ -12,7 +12,7 @@ namespace UnityEngine.Localization.Settings
     [Serializable]
     public class LocalesProvider : ILocalesProvider, IPreloadRequired, IReset
     {
-        List<Locale> m_Locales = new List<Locale>();
+        readonly List<Locale> m_Locales = new List<Locale>();
         AsyncOperationHandle? m_LoadOperation;
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace UnityEngine.Localization.Settings
         }
 
         /// <summary>
-        /// Attempt to retrieve a Locale using the identifier.
+        /// Attempt to retrieve a Locale or fallback Locale using the identifier.
         /// </summary>
         /// <param name="id"><see cref="LocaleIdentifier"/> to find.</param>
         /// <returns>If no Locale can be found then null is returned.</returns>
@@ -71,14 +71,14 @@ namespace UnityEngine.Localization.Settings
         }
 
         /// <summary>
-        /// Attempt to retrieve a Locale using a Code.
+        /// Attempt to retrieve a Locale or fallback Locale using a Code.
         /// </summary>
         /// <param name="code">If no Locale can be found then null is returned.</param>
         /// <returns></returns>
         public Locale GetLocale(string code) => GetLocale(new LocaleIdentifier(code));
 
         /// <summary>
-        /// Attempt to retrieve a Locale using a [SystemLanguage](https://docs.unity3d.com/ScriptReference/SystemLanguage.html).
+        /// Attempt to retrieve a Locale or fallback Locale using a [SystemLanguage](https://docs.unity3d.com/ScriptReference/SystemLanguage.html).
         /// </summary>
         /// <param name="systemLanguage"></param>
         /// <returns>If no Locale can be found then null is returned.</returns>
@@ -96,11 +96,17 @@ namespace UnityEngine.Localization.Settings
             var isPseudoLocale = locale is PseudoLocale;
             if (!isPseudoLocale)
             {
-                var foundLocale = GetLocale(locale.Identifier);
-                if (foundLocale != null && !(foundLocale is PseudoLocale))
+                // Check if the locale has already been added
+                foreach (var l in m_Locales)
                 {
-                    Debug.LogWarning($"Ignoring locale {locale}. A locale with the same Id has already been added: {locale.Identifier}");
-                    return;
+                    if (l is PseudoLocale)
+                        continue;
+
+                    if (l.Identifier == locale.Identifier)
+                    {
+                        Debug.LogWarning($"Ignoring locale {locale}. The locale {l} has the same Id `{locale.Identifier}`");
+                        return;
+                    }
                 }
             }
 

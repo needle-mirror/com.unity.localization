@@ -96,13 +96,9 @@ namespace UnityEngine.Localization.Settings
             var tableEntryOperation = GetTableEntryAsync(tableReference, tableEntryReference, locale, fallbackBehavior);
 
             var operation = GenericPool<LoadAssetOperation<TObject>>.Get();
-            operation.Init(tableEntryOperation);
+            operation.Init(tableEntryOperation, true);
             operation.Dependency = tableEntryOperation;
             var handle = AddressablesInterface.ResourceManager.StartOperation(operation, tableEntryOperation);
-
-            // We don't want to force users to have to manage the reference counting so by default we will release the operation for reuse once completed in the next frame
-            // If a user wants to hold onto it then they should call Acquire on the operation and later Release.
-            handle.CompletedTypeless += ReleaseNextFrame;
 
             return handle;
         }

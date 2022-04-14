@@ -40,6 +40,8 @@ namespace UnityEngine.Localization.Components
         [SerializeField]
         UnityEventString m_UpdateString = new UnityEventString();
 
+        LocalizedString.ChangeHandler m_ChangeHandler;
+
         /// <summary>
         /// References the <see cref="StringTable"/> and <see cref="StringTableEntry"/> of the localized string.
         /// </summary>
@@ -145,12 +147,16 @@ namespace UnityEngine.Localization.Components
                 if (Application.isPlaying)
                     Debug.LogWarningFormat("LocalizeStringEvent({0}) is using the deprecated Format Arguments field which will be removed in the future. Consider upgrading to use String Reference Local Variables instead.", name, this);
             }
-            StringReference.StringChanged += UpdateString;
+
+            if (m_ChangeHandler == null)
+                m_ChangeHandler = UpdateString;
+
+            StringReference.StringChanged += m_ChangeHandler;
         }
 
         internal virtual void ClearChangeHandler()
         {
-            StringReference.StringChanged -= UpdateString;
+            StringReference.StringChanged -= m_ChangeHandler;
         }
     }
 }

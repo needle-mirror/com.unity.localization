@@ -71,7 +71,7 @@ namespace UnityEditor.Localization.UI
         {
             if (m_TableProperties == null)
             {
-                m_TableProperties = new (ISelectable, Object, AssetTable)[m_StartIndex + m_SortedTables.Count];
+                m_TableProperties = new(ISelectable, Object, AssetTable)[m_StartIndex + m_SortedTables.Count];
 
                 // Get the shared data
                 m_SharedTableData = m_AssetTableCollection.SharedData;

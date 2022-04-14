@@ -14,10 +14,10 @@ namespace UnityEditor.Localization.Tests
         }
 
         [Test]
-        public void StringChanged_Remove_ThrowsException_WhenNullIsPassed()
+        public void StringChanged_RemoveNull_DoesNotThrowException()
         {
             LocalizedString locString = new LocalizedString();
-            Assert.Throws<ArgumentNullException>(() => locString.StringChanged -= null);
+            Assert.DoesNotThrow(() => locString.StringChanged -= null);
         }
     }
 }

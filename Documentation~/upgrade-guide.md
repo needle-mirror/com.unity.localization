@@ -1,5 +1,9 @@
 # Upgrade guides
 
+## Upgrade Guide to 1.3.0
+
+- `Locale.GetFallback` has been replaced with `Locale.GetFallbacks` in order to support multiple fallbacks per locale. This will now return a list of fallbacks which can then be attempted in order.
+
 ## Upgrade Guide to 1.1.0
 
 - `LocalizationEditorSettings.FindSimilarKey` has been deprecated. In Unity 2021.2 and above, you can use Unity Search as an alternative. See [TableEntrySearchData](xref:UnityEditor.Localization.Search.TableEntrySearchData) for further details.

@@ -41,6 +41,9 @@ namespace UnityEditor.Localization.UI
         /// </summary>
         public static void Show()
         {
+            if (!LocalizationSettings.HasSettings)
+                return;
+
             // Don't show if we have 0 locales and are using Addressables
             if (LocalizationEditorSettings.GetLocales().Count == 0 && LocalizationSettings.AvailableLocales is LocalesProvider)
                 return;

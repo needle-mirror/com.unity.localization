@@ -60,6 +60,48 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                 UpdateType = ApplyChangesMethod.Full;
         }
 
+        // Reusable class for when we need to wait for an async string operation to complete before we can apply it to a json value.
+        class DeferredJsonStringOperation
+        {
+            public JValue jsonValue;
+            public readonly Action<AsyncOperationHandle<string>> callback;
+
+            public DeferredJsonStringOperation()
+            {
+                callback = OnStringLoaded;
+            }
+
+            void OnStringLoaded(AsyncOperationHandle<string> asyncOperationHandle)
+            {
+                jsonValue.Value = asyncOperationHandle.Result;
+
+                // Clear
+                jsonValue = null;
+                GenericPool<DeferredJsonStringOperation>.Release(this);
+            }
+        }
+
+        // Reusable class for when we need to wait for an async object operation to complete before we can apply it to a json value.
+        class DeferredJsonObjectOperation
+        {
+            public JValue jsonValue;
+            public readonly Action<AsyncOperationHandle<Object>> callback;
+
+            public DeferredJsonObjectOperation()
+            {
+                callback = OnStringLoaded;
+            }
+
+            void OnStringLoaded(AsyncOperationHandle<Object> asyncOperationHandle)
+            {
+                jsonValue.Value = asyncOperationHandle.Result != null ? asyncOperationHandle.Result.GetInstanceID() : 0;
+                
+                // Clear
+                jsonValue = null;
+                GenericPool<DeferredJsonObjectOperation>.Release(this);
+            }
+        }
+
         public override AsyncOperationHandle ApplyLocale(Locale variantLocale, Locale defaultLocale)
         {
             if (Target == null)
@@ -83,6 +125,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
             var asyncOperations = ListPool<AsyncOperationHandle>.Get();
             var arraySizes = ListPool<ArraySizeTrackedProperty>.Get();
             var propertyChanged = false;
+            var defaultLocaleIdentifier = defaultLocale != null ? defaultLocale.Identifier : default;
 
             foreach (var property in TrackedProperties)
             {
@@ -103,7 +146,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                     }
                     case IStringProperty stringProperty:
                     {
-                        var value = stringProperty.GetValueAsString(variantLocale.Identifier, defaultLocale.Identifier);
+                        var value = stringProperty.GetValueAsString(variantLocale.Identifier, defaultLocaleIdentifier);
                         if (value != null)
                         {
                             var valueContainer = (JValue)GetPropertyFromPath(property.PropertyPath, jsonObject);
@@ -115,7 +158,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                     }
                     case ITrackedPropertyValue<Object> objectProperty:
                     {
-                        objectProperty.GetValue(variantLocale.Identifier, defaultLocale.Identifier, out var value);
+                        objectProperty.GetValue(variantLocale.Identifier, defaultLocaleIdentifier, out var value);
                         var jsonProperty = (JValue)GetPropertyFromPath(property.PropertyPath + ".instanceID", jsonObject);
                         jsonProperty.Value = value != null ? value.GetInstanceID() : 0;
                         propertyChanged = true;
@@ -123,6 +166,10 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                     }
                     case LocalizedStringProperty localizedStringProperty:
                     {
+                        // Ignore emptys
+                        if (localizedStringProperty.LocalizedString.IsEmpty)
+                            break;
+
                         localizedStringProperty.LocalizedString.LocaleOverride = variantLocale;
                         var stringOp = localizedStringProperty.LocalizedString.GetLocalizedStringAsync();
                         var jsonProperty = (JValue)GetPropertyFromPath(property.PropertyPath, jsonObject);
@@ -138,10 +185,9 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                         #endif
                         else
                         {
-                            stringOp.Completed += res =>
-                            {
-                                jsonProperty.Value = res.Result;
-                            };
+                            var asyncHandler = GenericPool<DeferredJsonStringOperation>.Get();
+                            asyncHandler.jsonValue = jsonProperty;
+                            stringOp.Completed += asyncHandler.callback;
                             asyncOperations.Add(stringOp);
                         }
                         propertyChanged = true;
@@ -149,6 +195,10 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                     }
                     case LocalizedAssetProperty localizedAssetProperty:
                     {
+                        // Ignore emptys
+                        if (localizedAssetProperty.LocalizedObject.IsEmpty)
+                            break;
+
                         localizedAssetProperty.LocalizedObject.LocaleOverride = variantLocale;
                         var assetOp = localizedAssetProperty.LocalizedObject.LoadAssetAsObjectAsync();
 
@@ -177,10 +227,9 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                         #endif
                         else
                         {
-                            assetOp.Completed += res =>
-                            {
-                                jsonProperty.Value = assetOp.Result != null ? assetOp.Result.GetInstanceID() : 0;
-                            };
+                            var asyncHandler = GenericPool<DeferredJsonObjectOperation>.Get();
+                            asyncHandler.jsonValue = jsonProperty;
+                            assetOp.Completed += asyncHandler.callback;
                             asyncOperations.Add(assetOp);
                         }
 
@@ -201,7 +250,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                 var operation = AddressablesInterface.ResourceManager.CreateGenericGroupOperation(asyncOperations, true);
                 operation.Completed += res =>
                 {
-                    ApplyArraySizes(arraySizes, jsonObject, variantLocale, defaultLocale);
+                    ApplyArraySizes(arraySizes, jsonObject, variantLocale.Identifier, defaultLocaleIdentifier);
                     ApplyJson(jsonObject);
 
                     ListPool<AsyncOperationHandle>.Release(asyncOperations);
@@ -212,7 +261,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
 
             if (propertyChanged)
             {
-                ApplyArraySizes(arraySizes, jsonObject, variantLocale, defaultLocale);
+                ApplyArraySizes(arraySizes, jsonObject, variantLocale.Identifier, defaultLocaleIdentifier);
                 ApplyJson(jsonObject);
             }
 
@@ -222,14 +271,14 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
             return default;
         }
 
-        void ApplyArraySizes(IEnumerable<ArraySizeTrackedProperty> arraySizes, JObject jsonObject, Locale variantLocale, Locale defaultLocale)
+        void ApplyArraySizes(IEnumerable<ArraySizeTrackedProperty> arraySizes, JObject jsonObject, LocaleIdentifier variantLocale, LocaleIdentifier defaultLocale)
         {
             // If we are modifying items in the array then we always store a default value, we assume it will always exist. If the item does not exist,
             // such as when the array was resized then we need to first apply the default value and then change the array size which may result in the item being removed.
             foreach (var property in arraySizes)
             {
                 var jsonContainer = (JArray)GetPropertyFromPath(property.PropertyPath, jsonObject);
-                if (!property.GetValue(variantLocale.Identifier, defaultLocale.Identifier, out var newSize)) continue;
+                if (!property.GetValue(variantLocale, defaultLocale, out var newSize)) continue;
 
                 if (jsonContainer.Count > newSize)
                 {

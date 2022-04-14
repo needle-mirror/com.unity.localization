@@ -244,10 +244,34 @@ public static class CsvExamples
 
     #endregion
 
+    #region bulk-simple-export
+
+    [MenuItem("Localization/CSV/Export All CSV Files")]
+    public static void ExportAllCsv()
+    {
+        // Get every String Table Collection
+        var stringTableCollections = LocalizationEditorSettings.GetStringTableCollections();
+
+        var path = EditorUtility.SaveFolderPanel("Export All String Table Collections - CSV", "", "");
+        if (string.IsNullOrEmpty(path))
+            return;
+
+        foreach (var collection in stringTableCollections)
+        {
+            var file = Path.Combine(path, collection.TableCollectionName + ".csv");
+            using (var stream = new StreamWriter(file, false, Encoding.UTF8))
+            {
+                Csv.Export(stream, collection);
+            }
+        }
+    }
+
+    #endregion
+
     #region bulk-export
 
     [MenuItem("Localization/CSV/Export All CSV Files(With Extensions)")]
-    public static void PullAllExtensions()
+    public static void ExportAllCsvExtensions()
     {
         // Get every String Table Collection
         var stringTableCollections = LocalizationEditorSettings.GetStringTableCollections();

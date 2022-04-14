@@ -4,7 +4,27 @@ using System.Globalization;
 namespace UnityEngine.Localization.Settings
 {
     /// <summary>
-    /// Attempts to determine the Locale to use from the system that is running the application.
+    /// Attempts to detect the locale of the device and find a match.
+    /// The System Locale Selector queries different APIs until it finds a matching locale or a suitable fallback locale.
+    /// ![The System Locale Selector queries different APIs until it finds a locale or a suitable fallback locale.](../manual/images/SystemLocaleSelectorOverview.dot.svg)
+    /// <list type="bullet">
+    /// <item>
+    ///     <term>iOS - Preferred Language. </term>
+    ///     <description>Unity queries the [iOS Preferred Language](https://developer.apple.com/news/?id=u2cfuj88).</description>
+    /// </item>
+    /// <item>
+    ///     <term>Android - Device Language. </term>
+    ///     <description>Unity queries the [Android getDefault](https://developer.android.com/reference/java/util/Locale#getDefault(java.util.Locale.Category)) value.</description>
+    /// </item>
+    /// <item>
+    ///     <term>System Culture. </term>
+    ///     <description>Unity uses the [CultureInfo.CurrentUICulture](https://docs.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo.currentuiculture) value.</description>
+    /// </item>
+    /// <item>
+    ///     <term>System Language. </term>
+    ///     <description>Unity uses the [SystemLanguage](https://docs.unity3d.com/ScriptReference/SystemLanguage.html) value as its final check.</description>
+    /// </item>
+    /// </list>
     /// </summary>
     [Serializable]
     public class SystemLocaleSelector : IStartupLocaleSelector

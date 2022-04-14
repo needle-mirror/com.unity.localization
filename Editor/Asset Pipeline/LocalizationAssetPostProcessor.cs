@@ -3,11 +3,26 @@ using UnityEngine;
 using System.Linq;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
+using UnityEditor.AddressableAssets.Settings;
 
 namespace UnityEditor.Localization
 {
+    #if !UNITY_2021_2_OR_NEWER
+    [InitializeOnLoad]
+    #endif
     class LocalizationAssetPostProcessor : AssetPostprocessor
     {
+        #if !UNITY_2022_1_OR_NEWER
+        static LocalizationAssetPostProcessor()
+        {
+            AddressablesAssetPostProcessor.OnPostProcess.Register(OnPostprocessAllAssets, 1000);
+        }
+
+        #else
+        // We need to make sure that we run after Addressables has processed its assets. (LOC-400)
+        [UnityEditor.Callbacks.RunAfterPackage("com.unity.addressables")]
+        #endif
+
         #pragma warning disable CA1801 // CA1801 Review unused parameters
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {

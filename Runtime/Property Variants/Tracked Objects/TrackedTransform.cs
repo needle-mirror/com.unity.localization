@@ -52,6 +52,10 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
             m_ScaleToApply = transform.localScale;
 
             // Iterate through the tracked properties and use the property handlers to apply changes.
+
+            var variantIdentifier = variantLocale.Identifier;
+            var fallbackIdentifier = defaultLocale != null ? defaultLocale.Identifier : default;
+
             foreach (var property in TrackedProperties)
             {
                 #if UNITY_EDITOR
@@ -59,7 +63,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                 #endif
 
                 var floatProperty = (FloatTrackedProperty)property;
-                if (floatProperty.GetValue(variantLocale.Identifier, defaultLocale.Identifier, out var val) &&
+                if (floatProperty.GetValue(variantIdentifier, fallbackIdentifier, out var val) &&
                     m_PropertyHandlers.TryGetValue(property.PropertyPath, out var handler))
                 {
                     handler(val);

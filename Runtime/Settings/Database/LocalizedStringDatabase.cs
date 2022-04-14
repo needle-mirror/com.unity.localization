@@ -98,7 +98,7 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings, params object[] arguments)
         {
-            return GetLocalizedStringAsync(GetDefaultTable(), tableEntryReference, arguments, locale, fallbackBehavior, null);
+            return GetLocalizedStringAsyncInternal(GetDefaultTable(), tableEntryReference, arguments, locale, fallbackBehavior, null);
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public string GetLocalizedString(TableEntryReference tableEntryReference, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings, params object[] arguments)
         {
-            return GetLocalizedStringAsync(GetDefaultTable(), tableEntryReference, arguments, locale, fallbackBehavior, null).WaitForCompletion();
+            return GetLocalizedString(GetDefaultTable(), tableEntryReference, arguments, locale, fallbackBehavior);
         }
 
         /// <summary>
@@ -132,7 +132,7 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference, IList<object> arguments, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings)
         {
-            return GetLocalizedStringAsync(GetDefaultTable(), tableEntryReference, arguments, locale, fallbackBehavior, null);
+            return GetLocalizedStringAsyncInternal(GetDefaultTable(), tableEntryReference, arguments, locale, fallbackBehavior, null);
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public string GetLocalizedString(TableEntryReference tableEntryReference, IList<object> arguments, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings)
         {
-            return GetLocalizedStringAsync(GetDefaultTable(), tableEntryReference, arguments, locale, fallbackBehavior, null).WaitForCompletion();
+            return GetLocalizedString(GetDefaultTable(), tableEntryReference, arguments, locale, fallbackBehavior);
         }
 
         /// <summary>
@@ -168,7 +168,7 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public virtual AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings, params object[] arguments)
         {
-            return GetLocalizedStringAsync(tableReference, tableEntryReference, arguments, locale, fallbackBehavior, null);
+            return GetLocalizedStringAsyncInternal(tableReference, tableEntryReference, arguments, locale, fallbackBehavior, null);
         }
 
         /// <summary>
@@ -186,7 +186,7 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public virtual string GetLocalizedString(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings, params object[] arguments)
         {
-            return GetLocalizedStringAsync(tableReference, tableEntryReference, arguments, locale, fallbackBehavior, null).WaitForCompletion();
+            return GetLocalizedString(tableReference, tableEntryReference, arguments, locale, fallbackBehavior);
         }
 
         /// <summary>
@@ -207,16 +207,17 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public virtual AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference, IList<object> arguments, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings, IVariableGroup localVariables = null)
         {
+            return GetLocalizedStringAsyncInternal(tableReference, tableEntryReference, arguments, locale, fallbackBehavior, localVariables, true);
+        }
+
+        internal virtual AsyncOperationHandle<string> GetLocalizedStringAsyncInternal(TableReference tableReference, TableEntryReference tableEntryReference, IList<object> arguments, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings, IVariableGroup localVariables = null, bool autoRelease = true)
+        {
             var tableEntryOperation = GetTableEntryAsync(tableReference, tableEntryReference, locale, fallbackBehavior);
 
             var operation = GenericPool<GetLocalizedStringOperation>.Get();
             operation.Dependency = tableEntryOperation;
-            operation.Init(tableEntryOperation, locale, this, tableReference, tableEntryReference, arguments, localVariables);
+            operation.Init(tableEntryOperation, locale, this, tableReference, tableEntryReference, arguments, localVariables, autoRelease);
             var handle = AddressablesInterface.ResourceManager.StartOperation(operation, tableEntryOperation);
-
-            // We don't want to force users to have to manage the reference counting so by default we will release the operation for reuse once completed in the next frame
-            // If a user wants to hold onto it then they should call Acquire on the operation and later Release.
-            handle.CompletedTypeless += ReleaseNextFrame;
 
             return handle;
         }
@@ -236,7 +237,13 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public virtual string GetLocalizedString(TableReference tableReference, TableEntryReference tableEntryReference, IList<object> arguments, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings)
         {
-            return GetLocalizedStringAsync(tableReference, tableEntryReference, arguments, locale, fallbackBehavior).WaitForCompletion();
+            var handle = GetLocalizedStringAsyncInternal(tableReference, tableEntryReference, arguments, locale, fallbackBehavior, null, false);
+            var result = handle.WaitForCompletion();
+
+            // We can now release the operation for immediate reuse, no need to wait for the next frame.
+            AddressablesInterface.Release(handle);
+
+            return result;
         }
 
         protected internal virtual string GenerateLocalizedString(StringTable table, StringTableEntry entry, TableReference tableReference, TableEntryReference tableEntryReference, Locale locale, IList<object> arguments)

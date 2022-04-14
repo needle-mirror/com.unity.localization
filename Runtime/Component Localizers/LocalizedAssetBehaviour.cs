@@ -23,6 +23,8 @@ namespace UnityEngine.Localization.Components
         [SerializeField]
         TReference m_LocalizedAssetReference = new TReference();
 
+        LocalizedAsset<TObject>.ChangeHandler m_ChangeHandler;
+
         /// <summary>
         /// Reference to the Table and Entry which will be used to identify the asset being localized.
         /// </summary>
@@ -45,14 +47,17 @@ namespace UnityEngine.Localization.Components
 
         void OnDestroy() => ClearChangeHandler();
 
-        void OnValidate()
+        void OnValidate() => AssetReference.ForceUpdate();
+
+        internal virtual void RegisterChangeHandler()
         {
-            AssetReference.ForceUpdate();
+            if (m_ChangeHandler == null)
+                m_ChangeHandler = UpdateAsset;
+
+            AssetReference.AssetChanged += m_ChangeHandler;
         }
 
-        internal virtual void RegisterChangeHandler() => AssetReference.AssetChanged += UpdateAsset;
-
-        internal virtual void ClearChangeHandler() => AssetReference.AssetChanged -= UpdateAsset;
+        internal virtual void ClearChangeHandler() => AssetReference.AssetChanged -= m_ChangeHandler;
 
         /// <summary>
         /// Called when <see cref="AssetReference"/> has been loaded. This will occur when the game first starts after

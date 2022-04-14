@@ -28,6 +28,11 @@
             "name": "com.unity.ugui",
             "expression": "1.0.0",
             "define": "PACKAGE_UGUI"
+        },
+        {
+            "name": "Unity",
+            "expression": "2020.3",
+            "define": "ENABLE_PROPERTY_VARIANTS"
         }
     ],
     "noEngineReferences": false

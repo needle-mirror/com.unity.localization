@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Serialization;
 
@@ -31,6 +32,10 @@ namespace UnityEngine.Localization.Tables
             /// </summary>
             Name
         }
+
+        // Cached values to reduce GC
+        static readonly Dictionary<Guid, string> s_GuidToStringCache = new Dictionary<Guid, string>();
+        static readonly Dictionary<string, Guid> s_StringToGuidCache = new Dictionary<string, Guid>();
 
         [SerializeField]
         [FormerlySerializedAs("m_TableName")]
@@ -246,7 +251,12 @@ namespace UnityEngine.Localization.Tables
         /// <returns></returns>
         internal static Guid GuidFromString(string value)
         {
-            return Guid.Parse(value.Substring(k_GuidTag.Length, value.Length - k_GuidTag.Length));
+            if (s_StringToGuidCache.TryGetValue(value, out var result))
+                return result;
+
+            var guid = Guid.Parse(value.Substring(k_GuidTag.Length, value.Length - k_GuidTag.Length));
+            s_StringToGuidCache[value] = guid;
+            return guid;
         }
 
         /// <summary>
@@ -256,7 +266,12 @@ namespace UnityEngine.Localization.Tables
         /// <returns></returns>
         internal static string StringFromGuid(Guid value)
         {
-            return value.ToString("N");
+            if (s_GuidToStringCache.TryGetValue(value, out var guid))
+                return guid.ToString();
+
+            var stringValue = value.ToString("N");
+            s_GuidToStringCache[value] = stringValue;
+            return stringValue;
         }
 
         /// <summary>

@@ -3,32 +3,28 @@ using System.Globalization;
 using System.Linq;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Localization;
 using UnityEngine.Localization.Pseudo;
 
 namespace UnityEditor.Localization.UI
 {
     [CustomEditor(typeof(PseudoLocale))]
-    class PseudoLocaleEditor : UnityEditor.Editor
+    class PseudoLocaleEditor : LocaleEditor
     {
         class Styles
         {
-            public static readonly GUIContent identifier = EditorGUIUtility.TrTextContent("Source Locale", "The locale the pseudo localized values will be generated from.");
             public static readonly GUIContent methods = EditorGUIUtility.TrTextContent("Pseudo-Localization Methods", "The pseudo-localization transformations that will be applied in order(top to bottom).");
             public static readonly GUIContent preview = EditorGUIUtility.TrTextContent("Pseudo-Localization Preview", "Preview the result of applying the pseudo-localization methods to a sample string.");
-            public static readonly GUIContent sortOrder = EditorGUIUtility.TrTextContent("Sort Order", "The order the Locales will appear in any sorted Lists. By default Locales are ordered by name however the Sort Order can be used to override this.");
+            public static readonly GUIContent sourceLocale = EditorGUIUtility.TrTextContent("Source Locale", "The source locale that will be used when loading the localized strings before they have pseudo-localization applied.");
         }
 
         const string k_PreviewTextPref = "Localization-Pseudo-PreviewText";
         const string k_PreviewTextExpandPref = "Localization-Pseudo-PreviewTextExpanded";
 
-        SerializedProperty m_Name;
-        SerializedProperty m_Identifier;
-        SerializedProperty m_Metadata;
         SerializedProperty m_Methods;
-        SerializedProperty m_SortOrder;
-
         ReorderableListExtended m_MethodsList;
         string m_PseudoPreviewText;
+        Locale m_SourceLocale;
 
         string PreviewText
         {
@@ -42,16 +38,14 @@ namespace UnityEditor.Localization.UI
             set => EditorPrefs.SetBool(k_PreviewTextExpandPref, value);
         }
 
-        void OnEnable()
+        protected override void OnEnable()
         {
-            m_Name = serializedObject.FindProperty("m_Name");
-            m_Identifier = serializedObject.FindProperty("m_Identifier");
-            m_Metadata = serializedObject.FindProperty("m_Metadata");
+            base.OnEnable();
             m_Methods = serializedObject.FindProperty("m_Methods");
-            m_SortOrder = serializedObject.FindProperty("m_SortOrder");
             m_MethodsList = new ReorderableListExtended(m_Methods.serializedObject, m_Methods);
             m_MethodsList.headerHeight = 2;
             m_MethodsList.onAddDropdownCallback = AddMethod;
+            m_SourceLocale = LocalizationEditorSettings.GetLocale(m_Code.stringValue);
             UpdatePreviewText();
         }
 
@@ -71,22 +65,25 @@ namespace UnityEditor.Localization.UI
             m_PseudoPreviewText += $"\n\nLength({originalText.LengthInTextElements}/{pseudoText.LengthInTextElements})";
         }
 
+        protected override void DoLocaleCodeField()
+        {
+            EditorGUI.BeginChangeCheck();
+            var locale = EditorGUILayout.ObjectField(Styles.sourceLocale, m_SourceLocale, typeof(Locale), false) as Locale;
+            if (EditorGUI.EndChangeCheck() && !(locale is PseudoLocale))
+            {
+                m_SourceLocale = locale;
+                m_Code.stringValue = locale != null ? locale.Identifier.Code : string.Empty;
+            }
+        }
+
         public override void OnInspectorGUI()
         {
+            base.OnInspectorGUI();
             if (serializedObject.UpdateIfRequiredOrScript())
-                m_PseudoPreviewText = null;
-
-            EditorGUILayout.PropertyField(m_Name);
-            EditorGUILayout.PropertyField(m_Identifier, Styles.identifier);
-
-            EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(m_SortOrder, Styles.sortOrder);
-            if (EditorGUI.EndChangeCheck())
             {
-                LocalizationEditorSettings.EditorEvents.RaiseLocaleSortOrderChanged(this, target as PseudoLocale);
+                m_PseudoPreviewText = null;
+                m_SourceLocale = LocalizationEditorSettings.GetLocale(m_Code.stringValue);
             }
-
-            EditorGUILayout.PropertyField(m_Metadata);
 
             m_Methods.isExpanded = EditorGUILayout.Foldout(m_Methods.isExpanded, Styles.methods, true);
             if (m_Methods.isExpanded)

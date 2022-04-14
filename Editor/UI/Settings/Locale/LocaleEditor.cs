@@ -23,12 +23,12 @@ namespace UnityEditor.Localization.UI
             public static readonly GUIContent emptyCultureInfo = new GUIContent("-");
         }
 
-        SerializedProperty m_Name;
-        SerializedProperty m_Code;
-        SerializedProperty m_FormatCultureCode;
-        SerializedProperty m_UseCustomFormatter;
-        SerializedProperty m_Metadata;
-        SerializedProperty m_SortOrder;
+        protected SerializedProperty m_Name;
+        protected SerializedProperty m_Code;
+        protected SerializedProperty m_FormatCultureCode;
+        protected SerializedProperty m_UseCustomFormatter;
+        protected SerializedProperty m_Metadata;
+        protected SerializedProperty m_SortOrder;
 
         GUIContent m_CultureInfoLabel;
         GUIContent m_FormatCultureInfoLabel;
@@ -36,7 +36,7 @@ namespace UnityEditor.Localization.UI
         GUIContent m_FormattingExampleCurrency;
         GUIContent m_FormattingExampleNumber;
 
-        void OnEnable()
+        protected virtual void OnEnable()
         {
             m_Name = serializedObject.FindProperty("m_LocaleName");
             m_Code = serializedObject.FindProperty("m_Identifier.m_Code");
@@ -54,13 +54,18 @@ namespace UnityEditor.Localization.UI
             UpdateCultureLabels();
         }
 
+        protected virtual void DoLocaleCodeField()
+        {
+            EditorGUILayout.PropertyField(m_Code, Styles.code);
+        }
+
         public override void OnInspectorGUI()
         {
             if (serializedObject.UpdateIfRequiredOrScript())
                 UpdateCultureLabels();
 
             EditorGUILayout.PropertyField(m_Name);
-            EditorGUILayout.PropertyField(m_Code, Styles.code);
+            DoLocaleCodeField();
             EditorGUILayout.LabelField(Styles.cultureInfo, m_CultureInfoLabel);
 
             EditorGUILayout.PropertyField(m_UseCustomFormatter);

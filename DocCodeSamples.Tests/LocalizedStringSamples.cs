@@ -341,6 +341,71 @@ public class LocalizedStringConstructor
     }
 }
 
+#region simple-monobehaviour1
+
+public class ExampleMonoBehaviour1 : MonoBehaviour
+{
+    public LocalizedString myLocalizedString = new LocalizedString("My Table", "My Entry");
+
+    public string TranslatedValue { get; private set; }
+
+    void Start()
+    {
+        // Register to get an update when the string is changed.
+        myLocalizedString.StringChanged += ValueChanged;
+    }
+
+    void ValueChanged(string value)
+    {
+        TranslatedValue = value;
+        Debug.Log("Value changed to: " + value);
+    }
+}
+
+#endregion
+
+#region simple-monobehaviour2
+
+public class ExampleMonoBehaviour2 : MonoBehaviour
+{
+    public LocalizedString myLocalizedString = new LocalizedString("My Table", "My Entry");
+
+    public string TranslatedValue => myLocalizedString.GetLocalizedString();
+
+    void OnGUI()
+    {
+        GUILayout.Label(TranslatedValue);
+    }
+}
+
+#endregion
+
+#region simple-scriptableobject
+
+[CreateAssetMenu()]
+public class GameQuest : ScriptableObject
+{
+    [SerializeField] LocalizedString questTitle = new LocalizedString("My Quests", "QUEST_1_TITLE");
+    [SerializeField] LocalizedString questDescription = new LocalizedString("My Quests", "QUEST_1_DESCRIPTION");
+    [SerializeField] LocalizedString success = new LocalizedString("My Quests", "QUEST_1_SUCCESS");
+    [SerializeField] LocalizedString failure = new LocalizedString("My Quests", "QUEST_1_FAILURE");
+
+    [SerializeField]  float rewardMoney = 100;
+
+    public string Title => questTitle.GetLocalizedString();
+    public string Description => questDescription.GetLocalizedString();
+    public string Failure => failure.GetLocalizedString();
+
+    // Return the success message with the reward money included.
+    // For example:
+    // "Congratulations, you saved the village! Please take this reward of {0:C} as a sign of appreciation"
+    // in English(GB) would become
+    // "Congratulations, you saved the village! Please take this reward of £100 as a sign of appreciation"
+    public string Success => success.GetLocalizedString(rewardMoney);
+}
+
+#endregion
+
 #region health-counter
 
 public class HealthCounterExample : MonoBehaviour

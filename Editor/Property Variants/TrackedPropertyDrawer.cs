@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Localization.PropertyVariants;
 using UnityEngine.Localization.PropertyVariants.TrackedProperties;
 using UnityEngine.Localization.Settings;
+using UnityEngine.Pool;
 
 namespace UnityEditor.Localization.PropertyVariants
 {
@@ -11,6 +12,8 @@ namespace UnityEditor.Localization.PropertyVariants
     [CustomPropertyDrawer(typeof(UnityObjectProperty), true)]
     class TrackedPropertyDrawer : PropertyDrawer
     {
+        static readonly GUIContent s_AddLabel = EditorGUIUtility.TrTextContent("Add Variant");
+
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             var path = property.FindPropertyRelative("m_PropertyPath");
@@ -23,36 +26,54 @@ namespace UnityEditor.Localization.PropertyVariants
             if (variants.isExpanded)
             {
                 EditorGUI.indentLevel++;
+
+                var variantsLookup = DictionaryPool<string, (int index, SerializedProperty value)>.Get();
                 for (int i = 0; i < variants.arraySize; ++i)
                 {
                     var item = variants.GetArrayElementAtIndex(i);
-
                     var code = item.FindPropertyRelative("localeIdentifier.m_Code");
-                    var locale = LocalizationEditorSettings.GetLocale(code.stringValue);
-                    var name = locale != null ? locale.LocaleName : code.stringValue;
+                    variantsLookup[code.stringValue] = (i, item.FindPropertyRelative("value"));
+                }
 
-                    var value = item.FindPropertyRelative("value");
-                    EditorGUI.BeginChangeCheck();
+                foreach (var locale in LocalizationEditorSettings.GetLocales())
+                {
                     var split = position.SplitHorizontalFixedWidthRight(17);
-                    EditorGUI.PropertyField(split.left, value, new GUIContent(name));
 
-                    if (EditorGUI.EndChangeCheck())
+                    if (variantsLookup.TryGetValue(locale.Identifier.Code, out var item))
                     {
-                        if (LocalizationSettings.SelectedLocale == null || LocalizationSettings.SelectedLocale != locale)
-                            break;
+                        EditorGUI.BeginChangeCheck();
+                        EditorGUI.PropertyField(split.left, item.value, new GUIContent(locale.LocaleName));
 
-                        if (property.serializedObject.targetObject is GameObjectLocalizer localizer)
-                            localizer.ApplyLocaleVariant(locale);
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            if (LocalizationSettings.SelectedLocale == null || LocalizationSettings.SelectedLocale != locale)
+                                break;
+
+                            if (property.serializedObject.targetObject is GameObjectLocalizer localizer)
+                                localizer.ApplyLocaleVariant(locale);
+                        }
+
+                        if (GUI.Button(split.right, GUIContent.none, "OL Minus"))
+                        {
+                            variants.DeleteArrayElementAtIndex(item.index);
+                            break; // Break as our list data is no longer valid now and will produce errors if we try and use it.
+                        }
                     }
-
-                    if (GUI.Button(split.right, GUIContent.none, "OL Minus"))
+                    else
                     {
-                        variants.DeleteArrayElementAtIndex(i);
+                        var buttonPos = EditorGUI.PrefixLabel(position, new GUIContent(locale.LocaleName));
+                        if (GUI.Button(buttonPos, s_AddLabel))
+                        {
+                            var element = variants.AddArrayElement();
+                            var code = element.FindPropertyRelative("localeIdentifier.m_Code");
+                            code.stringValue = locale.Identifier.Code;
+                        }
                     }
 
                     position.MoveToNextLine();
                 }
                 EditorGUI.indentLevel--;
+                DictionaryPool<string, (int index, SerializedProperty value)>.Release(variantsLookup);
             }
         }
 
@@ -61,7 +82,7 @@ namespace UnityEditor.Localization.PropertyVariants
             var height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
             var variants = property.FindPropertyRelative("m_VariantData");
             if (variants.isExpanded)
-                height += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * variants.arraySize;
+                height += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * LocalizationEditorSettings.GetLocales().Count;
             return height;
         }
     }

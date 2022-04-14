@@ -12,7 +12,7 @@ namespace UnityEngine.Localization
     /// <typeparam name="TTable">The type of Table.</typeparam>
     /// <typeparam name="TEntry">The type of entry that is part of the table.</typeparam>
     [Serializable]
-    public abstract class LocalizedTable<TTable, TEntry>
+    public abstract partial class LocalizedTable<TTable, TEntry>
         #if UNITY_EDITOR
         : ISerializationCallbackReceiver
         #endif
@@ -22,8 +22,8 @@ namespace UnityEngine.Localization
         [SerializeField]
         TableReference m_TableReference;
 
-        ChangeHandler m_ChangeHandler;
-        AsyncOperationHandle<TTable>? m_CurrentLoadingOperation;
+        CallbackArray<ChangeHandler> m_ChangeHandler;
+        Action<Locale> m_SelectedLocaleChanged;
 
         #if UNITY_EDITOR
         // This is so we can detect when a change is made via the inspector.
@@ -36,12 +36,12 @@ namespace UnityEngine.Localization
         protected abstract LocalizedDatabase<TTable, TEntry> Database { get; }
 
         /// <summary>
-        /// The current loading operation for the table when using <see cref="TableChanged"/> or null if one is not available.
+        /// The current loading operation for the table when using <see cref="TableChanged"/> or <c>default</c> if one is not available.
         /// </summary>
-        public AsyncOperationHandle<TTable>? CurrentLoadingOperation
+        public AsyncOperationHandle<TTable> CurrentLoadingOperationHandle
         {
-            get => m_CurrentLoadingOperation;
-            internal set => m_CurrentLoadingOperation = value;
+            get;
+            internal set;
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace UnityEngine.Localization
         /// - The <seealso cref="LocalizationSettings.SelectedLocale"/> changing.
         /// - The <see cref="TableReference"/> changing.
         ///
-        /// When the first <see cref="ChangeHandler"/> is added, a loading operation (see <see cref="CurrentLoadingOperation"/>) automatically starts.
+        /// When the first <see cref="ChangeHandler"/> is added, a loading operation (see <see cref="CurrentLoadingOperationHandle"/>) automatically starts.
         /// When the operation completes, the localized table is sent to the subscriber.
         /// If you add any additional subscribers added after loading has completed, they are also sent the latest localized table.
         /// This ensures that a subscriber will always have the correct localized value regardless of when it was added.
@@ -101,34 +101,37 @@ namespace UnityEngine.Localization
                 if (value == null)
                     throw new ArgumentNullException();
 
-                bool wasEmpty = m_ChangeHandler == null;
-                m_ChangeHandler += value;
+                m_ChangeHandler.Add(value);
 
-                if (wasEmpty)
+                if (m_ChangeHandler.Length == 1)
                 {
                     LocalizationSettings.ValidateSettingsExist();
-                    LocalizationSettings.SelectedLocaleChanged += HandleLocaleChange;
+                    LocalizationSettings.SelectedLocaleChanged += m_SelectedLocaleChanged;
                     ForceUpdate();
                 }
-                else if (CurrentLoadingOperation.HasValue && CurrentLoadingOperation.Value.IsDone)
+                else if (CurrentLoadingOperationHandle.IsValid() && CurrentLoadingOperationHandle.IsDone)
                 {
                     // Call the event with the latest value.
-                    value(m_CurrentLoadingOperation.Value.Result);
+                    value(CurrentLoadingOperationHandle.Result);
                 }
             }
             remove
             {
-                if (value == null)
-                    throw new ArgumentNullException();
-
-                m_ChangeHandler -= value;
-
-                if (m_ChangeHandler == null)
+                m_ChangeHandler.RemoveByMovingTail(value);
+                if (m_ChangeHandler.Length == 0)
                 {
-                    LocalizationSettings.SelectedLocaleChanged -= HandleLocaleChange;
+                    LocalizationSettings.SelectedLocaleChanged -= m_SelectedLocaleChanged;
                     ClearLoadingOperation();
                 }
             }
+        }
+
+        /// <summary>
+        /// Initializes and returns an empty instance of a <see cref="LocalizedTable{TTable, TEntry}"/>.
+        /// </summary>
+        public LocalizedTable()
+        {
+            m_SelectedLocaleChanged = HandleLocaleChange;
         }
 
         /// <summary>
@@ -157,10 +160,35 @@ namespace UnityEngine.Localization
         /// </summary>
         protected void ForceUpdate()
         {
-            if (m_ChangeHandler != null)
+            if (m_ChangeHandler.Length != 0)
             {
                 HandleLocaleChange(null);
             }
+        }
+
+        void InvokeChangeHandler(TTable value)
+        {
+            try
+            {
+                m_ChangeHandler.LockForChanges();
+                var len = m_ChangeHandler.Length;
+                if (len == 1)
+                {
+                    m_ChangeHandler.SingleDelegate(value);
+                }
+                else if (len > 1)
+                {
+                    var array = m_ChangeHandler.MultiDelegates;
+                    for (int i = 0; i < len; ++i)
+                        array[i](value);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+
+            m_ChangeHandler.UnlockForChanges();
         }
 
         void HandleLocaleChange(Locale _)
@@ -172,32 +200,32 @@ namespace UnityEngine.Localization
             if (IsEmpty)
                 return;
 
-            CurrentLoadingOperation = GetTableAsync();
-            if (CurrentLoadingOperation.Value.IsDone)
-                AutomaticLoadingCompleted(CurrentLoadingOperation.Value);
+            CurrentLoadingOperationHandle = GetTableAsync();
+            if (CurrentLoadingOperationHandle.IsDone)
+                AutomaticLoadingCompleted(CurrentLoadingOperationHandle);
             else
-                CurrentLoadingOperation.Value.Completed += AutomaticLoadingCompleted;
+                CurrentLoadingOperationHandle.Completed += AutomaticLoadingCompleted;
         }
 
         void AutomaticLoadingCompleted(AsyncOperationHandle<TTable> loadOperation)
         {
             if (loadOperation.Status != AsyncOperationStatus.Succeeded)
             {
-                CurrentLoadingOperation = null;
+                CurrentLoadingOperationHandle = default;
                 return;
             }
 
-            m_ChangeHandler(loadOperation.Result);
+            InvokeChangeHandler(loadOperation.Result);
         }
 
         void ClearLoadingOperation()
         {
-            if (CurrentLoadingOperation.HasValue)
+            if (CurrentLoadingOperationHandle.IsValid())
             {
                 // We should only call this if we are not done as its possible that the internal list is null if its not been used.
-                if (!CurrentLoadingOperation.Value.IsDone)
-                    CurrentLoadingOperation.Value.Completed -= AutomaticLoadingCompleted;
-                CurrentLoadingOperation = null;
+                if (!CurrentLoadingOperationHandle.IsDone)
+                    CurrentLoadingOperationHandle.Completed -= AutomaticLoadingCompleted;
+                CurrentLoadingOperationHandle = default;
             }
         }
 

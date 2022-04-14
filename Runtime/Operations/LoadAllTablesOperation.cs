@@ -1,42 +1,41 @@
 using System.Collections.Generic;
-using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-class LoadAllTablesOperation<TTable, TEntry> : WaitForCurrentOperationAsyncOperationBase<IList<TTable>>
-    where TTable : DetailedLocalizationTable<TEntry>
-    where TEntry : TableEntry
+namespace UnityEngine.Localization
 {
-    AsyncOperationHandle<IList<TTable>>? m_AllTablesOperation;
-    Locale m_locale;
-
-    public void Init(Locale locale)
+    class LoadAllTablesOperation<TTable, TEntry> : WaitForCurrentOperationAsyncOperationBase<IList<TTable>>
+        where TTable : DetailedLocalizationTable<TEntry>
+        where TEntry : TableEntry
     {
-        m_locale = locale;
-    }
+        AsyncOperationHandle<IList<TTable>> m_AllTablesOperation;
+        Locale m_Locale;
 
-    protected override void Execute()
-    {
-        var label = m_locale != null ? AddressHelper.FormatAssetLabel(m_locale.Identifier) : AddressHelper.FormatAssetLabel(LocalizationSettings.SelectedLocaleAsync.Result.Identifier);
-        m_AllTablesOperation = AddressablesInterface.LoadAssetsWithLabel<TTable>(label, null);
-        m_AllTablesOperation.Value.Completed += LoadingCompleted;
-        CurrentOperation = m_AllTablesOperation.Value;
-    }
-
-    void LoadingCompleted(AsyncOperationHandle<IList<TTable>> obj)
-    {
-        Complete(obj.Result, obj.Status == AsyncOperationStatus.Succeeded, obj.OperationException?.Message);
-    }
-
-    protected override void Destroy()
-    {
-        base.Destroy();
-
-        if (m_AllTablesOperation.HasValue)
+        public void Init(Locale locale)
         {
-            AddressablesInterface.SafeRelease(m_AllTablesOperation.Value);
-            m_AllTablesOperation = null;
+            m_Locale = locale;
+        }
+
+        protected override void Execute()
+        {
+            var label = m_Locale != null ? AddressHelper.FormatAssetLabel(m_Locale.Identifier) : AddressHelper.FormatAssetLabel(LocalizationSettings.SelectedLocaleAsync.Result.Identifier);
+            m_AllTablesOperation = AddressablesInterface.LoadAssetsWithLabel<TTable>(label, null);
+            m_AllTablesOperation.Completed += LoadingCompleted;
+            CurrentOperation = m_AllTablesOperation;
+        }
+
+        void LoadingCompleted(AsyncOperationHandle<IList<TTable>> obj)
+        {
+            Complete(obj.Result, obj.Status == AsyncOperationStatus.Succeeded, obj.OperationException?.Message);
+        }
+
+        protected override void Destroy()
+        {
+            base.Destroy();
+
+            AddressablesInterface.SafeRelease(m_AllTablesOperation);
+            m_AllTablesOperation = default;
         }
     }
 }

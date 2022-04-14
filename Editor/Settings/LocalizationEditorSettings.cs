@@ -304,7 +304,7 @@ namespace UnityEditor.Localization
         [Obsolete("FindSimilarKey will be removed in the future, please use Unity Search. See TableEntrySearchData class for further details.")]
         public static (StringTableCollection collection, SharedTableData.SharedTableEntry entry, int matchDistance) FindSimilarKey(string keyName)
         {
-            return Instance.FindSimilarKeyInternal(keyName);
+            throw new NotSupportedException("FindSimilarKey is obsolete. please use Unity Search instead.");
         }
 
         internal static void RefreshEditorPreview()
@@ -706,28 +706,6 @@ namespace UnityEditor.Localization
                 throw new AddressableEntryNotFoundException(table);
 
             return tableEntry.labels.Contains(LocalizationSettings.PreloadLabel);
-        }
-
-        internal virtual (StringTableCollection collection, SharedTableData.SharedTableEntry entry, int matchDistance) FindSimilarKeyInternal(string keyName)
-        {
-            // Check if we can find a matching key to the key name
-            var collections = GetStringTableCollections();
-
-            int currentMatchDistance = int.MaxValue;
-            SharedTableData.SharedTableEntry currentEntry = null;
-            StringTableCollection foundCollection = null;
-            foreach (var tableCollection in collections)
-            {
-                var keys = tableCollection.SharedData;
-                var foundKey = keys.FindSimilarKey(keyName, out int distance);
-                if (foundKey != null && distance < currentMatchDistance)
-                {
-                    currentMatchDistance = distance;
-                    currentEntry = foundKey;
-                    foundCollection = tableCollection;
-                }
-            }
-            return (foundCollection, currentEntry, currentMatchDistance);
         }
 
         void UndoRedoPerformed()

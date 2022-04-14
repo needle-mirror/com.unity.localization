@@ -55,6 +55,10 @@ namespace UnityEditor.Localization.Plugins.CSV
         /// This example shows how to export every <see cref="StringTableCollection"/> that contains a <see cref="CsvExtension"/>.
         /// <code source="../../../DocCodeSamples.Tests/CsvSamples.cs" region="bulk-export"/>
         /// </example>
+        /// <example>
+        /// This example shows how to export all <see cref="StringTableCollection"/> to multiple CSV files.
+        /// <code source="../../../DocCodeSamples.Tests/CsvSamples.cs" region="bulk-simple-export"/>
+        /// </example>
         public static void Export(TextWriter writer, StringTableCollection collection, IList<CsvColumns> columnMappings, ITaskReporter reporter = null)
         {
             if (writer == null)

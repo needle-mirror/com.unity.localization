@@ -9,7 +9,7 @@ namespace UnityEngine.Localization.Settings
     public class CommandLineLocaleSelector : IStartupLocaleSelector
     {
         [SerializeField]
-        string m_CommandLineArgument = "-language =";
+        string m_CommandLineArgument = "-language=";
 
         /// <summary>
         /// The command line argument used to assign the locale.

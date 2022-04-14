@@ -356,6 +356,7 @@ namespace UnityEngine.Localization.Tables
         /// <param name="text">The text to match against.</param>
         /// <param name="distance">The number of edits needed to turn <paramref name="text"/> into the returned <see cref="SharedTableEntry"/>, 0 being an exact match.</param>
         /// <returns>The <see cref="SharedTableEntry"/> that is the most similar to the text or null if one could not be found.</returns>
+        [Obsolete("FindSimilarKey will be removed in the future, please use Unity Search. See TableEntrySearchData class for further details.")]
         public SharedTableEntry FindSimilarKey(string text, out int distance)
         {
             SharedTableEntry foundEntry = null;

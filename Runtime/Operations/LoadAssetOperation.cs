@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -6,13 +7,20 @@ namespace UnityEngine.Localization
 {
     class LoadAssetOperation<TObject> : WaitForCurrentOperationAsyncOperationBase<TObject> where TObject : Object
     {
+        readonly Action<AsyncOperationHandle<TObject>> m_AssetLoadedAction;
         AsyncOperationHandle<LocalizedAssetDatabase.TableEntryResult> m_TableEntryOperation;
+        bool m_AutoRelease;
 
-        public void Init(AsyncOperationHandle<LocalizedAssetDatabase.TableEntryResult> loadTableEntryOperation)
+        public LoadAssetOperation()
+        {
+            m_AssetLoadedAction = AssetLoaded;
+        }
+
+        public void Init(AsyncOperationHandle<LocalizedAssetDatabase.TableEntryResult> loadTableEntryOperation, bool autoRelease)
         {
             m_TableEntryOperation = loadTableEntryOperation;
             AddressablesInterface.Acquire(m_TableEntryOperation);
-            CurrentOperation = null;
+            m_AutoRelease = autoRelease;
         }
 
         protected override void Execute()
@@ -37,7 +45,7 @@ namespace UnityEngine.Localization
             else
             {
                 CurrentOperation = loadAssetOperation;
-                loadAssetOperation.Completed += AssetLoaded;
+                loadAssetOperation.Completed += m_AssetLoadedAction;
             }
         }
 
@@ -53,6 +61,12 @@ namespace UnityEngine.Localization
         {
             Complete(result, success, errorMsg);
             AddressablesInterface.Release(m_TableEntryOperation);
+
+            if (m_AutoRelease && LocalizationSettings.Instance.IsPlaying)
+            {
+                // We need internal access for Handle here.
+                LocalizationBehaviour.ReleaseNextFrame(Handle);
+            }
         }
 
         protected override void Destroy()

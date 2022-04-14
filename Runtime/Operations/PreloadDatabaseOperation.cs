@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Localization.Settings;
@@ -12,6 +13,10 @@ namespace UnityEngine.Localization
         where TTable : DetailedLocalizationTable<TEntry>
         where TEntry : TableEntry
     {
+        readonly Action<AsyncOperationHandle<IList<IResourceLocation>>> m_LoadTablesAction;
+        readonly Action<AsyncOperationHandle<IList<TTable>>> m_LoadTableContentsAction;
+        readonly Action<AsyncOperationHandle> m_FinishPreloadingAction;
+
         LocalizedDatabase<TTable, TEntry> m_Database;
         AsyncOperationHandle<IList<IResourceLocation>> m_LoadResourcesOperation;
         AsyncOperationHandle<IList<TTable>> m_LoadTablesOperation;
@@ -23,11 +28,17 @@ namespace UnityEngine.Localization
 
         protected override string DebugName => $"Preload {m_Database.GetType()}";
 
+        public PreloadDatabaseOperation()
+        {
+            m_LoadTablesAction = LoadTables;
+            m_LoadTableContentsAction = LoadTableContents;
+            m_FinishPreloadingAction = FinishPreloading;
+        }
+
         public void Init(LocalizedDatabase<TTable, TEntry> database)
         {
             m_Database = database;
             m_PreloadTableContentsOperations.Clear();
-            CurrentOperation = null;
         }
 
         /// <summary>
@@ -65,7 +76,7 @@ namespace UnityEngine.Localization
             if (!m_LoadResourcesOperation.IsDone)
             {
                 CurrentOperation = m_LoadResourcesOperation;
-                m_LoadResourcesOperation.Completed += LoadTables;
+                m_LoadResourcesOperation.Completed += m_LoadTablesAction;
             }
             else
             {
@@ -94,7 +105,7 @@ namespace UnityEngine.Localization
             if (!m_LoadTablesOperation.IsDone)
             {
                 CurrentOperation = m_LoadTablesOperation;
-                m_LoadTablesOperation.Completed += LoadTableContents;
+                m_LoadTablesOperation.Completed += m_LoadTableContentsAction;
             }
             else
             {
@@ -165,7 +176,7 @@ namespace UnityEngine.Localization
             if (!groupOperation.IsDone)
             {
                 CurrentOperation = groupOperation;
-                groupOperation.CompletedTypeless += FinishPreloading;
+                groupOperation.CompletedTypeless += m_FinishPreloadingAction;
             }
             else
                 FinishPreloading(groupOperation);

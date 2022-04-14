@@ -16,13 +16,31 @@ namespace UnityEngine.Localization
     /// <summary>
     /// Provides a way to reference a <see cref="StringTableEntry"/> inside of a specific <see cref="StringTable"/> and request the localized string.
     /// </summary>
+    /// <example>
+    /// This example shows how to localize a [MonoBehaviour](https://docs.unity3d.com/ScriptReference/MonoBehaviour.html) so that it updates automatically when the active locale changes.
+    /// This example uses asynchronous loading to load the localized assets in the background.
+    /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="simple-monobehaviour1"/>
+    /// </example>
+    /// <example>
+    /// This example shows how to localize a [MonoBehaviour](https://docs.unity3d.com/ScriptReference/MonoBehaviour.html) immediately. 
+    /// This example uses synchronous loading, which may cause a pause when first loading the localized assets.
+    /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="simple-monobehaviour2"/>
+    /// </example>
+    /// <example>
+    /// This example shows how to localize a [ScriptableObject](https://docs.unity3d.com/ScriptReference/ScriptableObject.html) to represent a quest in a game.
+    /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="simple-scriptableobject"/>
+    /// </example>
+    /// <example>
+    /// This example shows how to use local variables to represent a health counter.
+    /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="health-counter"/>
+    /// </example>
     [Serializable]
     public partial class LocalizedString : LocalizedReference, IVariableGroup, IDictionary<string, IVariable>, IVariableValueChanged
     {
         [SerializeField]
         List<VariableNameValuePair> m_LocalVariables = new List<VariableNameValuePair>();
 
-        ChangeHandler m_ChangeHandler;
+        CallbackArray<ChangeHandler> m_ChangeHandler;
         string m_CurrentStringChangedValue;
 
         // Kept in sync with m_Variables so that users can make changes via the inspector without issues(duplicate/empty names etc).
@@ -30,6 +48,9 @@ namespace UnityEngine.Localization
 
         readonly List<IVariableValueChanged> m_UsedVariables = new List<IVariableValueChanged>();
         Action<IVariable> m_OnVariableChanged;
+        Action<Locale> m_SelectedLocaleChanged;
+        Action<AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult>> m_AutomaticLoadingCompleted;
+        Action<AsyncOperationHandle<LocalizedDatabase<StringTable, StringTableEntry>.TableEntryResult>> m_CompletedSourceValue;
         bool m_WaitingForVariablesEndUpdate;
 
         /// <inheritdoc/>
@@ -41,7 +62,7 @@ namespace UnityEngine.Localization
         {
             public static TempArgumentList Get() => GenericPool<TempArgumentList>.Get();
 
-            public void Release()
+            void Release()
             {
                 Clear();
                 GenericPool<TempArgumentList>.Release(this);
@@ -57,12 +78,12 @@ namespace UnityEngine.Localization
         public IList<object> Arguments { get; set; }
 
         /// <summary>
-        /// The current loading operation for the string when using <see cref="StringChanged"/> or null if one is not available.
+        /// The current loading operation for the string when using <see cref="StringChanged"/> or <c>default</c> if one is not available.
         /// A string may not be immediately available, such as when loading the <see cref="StringTable"/> asset, so all string operations are wrapped
         /// with an <see cref="AsyncOperationHandle"/>.
         /// See also <seealso cref="RefreshString"/>
         /// </summary>
-        public AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult>? CurrentLoadingOperation
+        public AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult> CurrentLoadingOperationHandle
         {
             get;
             internal set;
@@ -84,7 +105,7 @@ namespace UnityEngine.Localization
         /// <item><description>When <see cref="RefreshString"/> is called.</description></item>
         /// <item><description>The <see cref="TableReference"/> or <see cref="TableEntryReference"/> changing.</description></item>
         /// </list>
-        /// When the first <see cref="ChangeHandler"/> is added, a loading operation (see <see cref="CurrentLoadingOperation"/>) automatically starts.
+        /// When the first <see cref="ChangeHandler"/> is added, a loading operation (see <see cref="CurrentLoadingOperationHandle"/>) automatically starts.
         /// When the loading operation is completed, the localized string value is sent to the subscriber.
         /// If you add additional subscribers after loading has completed, they are also sent the latest localized string value.
         /// This ensures that a subscriber will always have the correct localized value regardless of when it was added.
@@ -100,19 +121,18 @@ namespace UnityEngine.Localization
                 if (value == null)
                     throw new ArgumentNullException();
 
-                bool wasEmpty = m_ChangeHandler == null;
-                m_ChangeHandler += value;
+                m_ChangeHandler.Add(value);
 
-                if (wasEmpty)
+                if (m_ChangeHandler.Length == 1)
                 {
                     LocalizationSettings.ValidateSettingsExist();
                     ForceUpdate();
 
                     // We subscribe after the first update as its possible that a SelectedLocaleChanged may be fired
                     // during ForceUpdate when using WaitForCompletion and we want to avoid this.
-                    LocalizationSettings.SelectedLocaleChanged += HandleLocaleChange;
+                    LocalizationSettings.SelectedLocaleChanged += m_SelectedLocaleChanged;
                 }
-                else if (CurrentLoadingOperation.HasValue && CurrentLoadingOperation.Value.IsDone)
+                else if (CurrentLoadingOperationHandle.IsValid() && CurrentLoadingOperationHandle.IsDone)
                 {
                     // Call the event with the latest value.
                     value(m_CurrentStringChangedValue);
@@ -120,14 +140,10 @@ namespace UnityEngine.Localization
             }
             remove
             {
-                if (value == null)
-                    throw new ArgumentNullException();
-
-                m_ChangeHandler -= value;
-
-                if (m_ChangeHandler == null)
+                m_ChangeHandler.RemoveByMovingTail(value);
+                if (m_ChangeHandler.Length == 0)
                 {
-                    LocalizationSettings.SelectedLocaleChanged -= HandleLocaleChange;
+                    LocalizationSettings.SelectedLocaleChanged -= m_SelectedLocaleChanged;
                     ClearLoadingOperation();
                 }
             }
@@ -136,12 +152,18 @@ namespace UnityEngine.Localization
         /// <summary>
         /// Returns <c>true</c> if <seealso cref="StringChanged"/> has any subscribers.
         /// </summary>
-        public bool HasChangeHandler => m_ChangeHandler != null;
+        public bool HasChangeHandler => m_ChangeHandler.Length != 0;
 
         /// <summary>
         /// Initializes and returns an empty instance of a <see cref="LocalizedString"/>.
         /// </summary>
-        public LocalizedString() {}
+        public LocalizedString()
+        {
+            m_SelectedLocaleChanged = HandleLocaleChange;
+            m_OnVariableChanged = OnVariableChanged;
+            m_AutomaticLoadingCompleted = AutomaticLoadingCompleted;
+            m_CompletedSourceValue = CompletedSourceValue;
+        }
 
         /// <summary>
         /// Initializes and returns an instance of a <see cref="LocalizedString"/>.
@@ -160,7 +182,7 @@ namespace UnityEngine.Localization
         /// Note: The performance benefits to using a Guid and Id are negligible.
         /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="localized-string-constructor-editor"/>
         /// </example>
-        public LocalizedString(TableReference tableReference, TableEntryReference entryReference)
+        public LocalizedString(TableReference tableReference, TableEntryReference entryReference) : this()
         {
             TableReference = tableReference;
             TableEntryReference = entryReference;
@@ -170,32 +192,35 @@ namespace UnityEngine.Localization
         /// Provides a way to force a refresh of the string when using <see cref="StringChanged"/>.
         /// </summary>
         /// <remarks>
-        /// <para>This will only force the refresh if there is currently no active <see cref="CurrentLoadingOperation"/>, if one is still being executed then it will be ignored and <c>false</c> will be returned.
+        /// <para>This will only force the refresh if there is currently no active <see cref="CurrentLoadingOperationHandle"/>, if one is still being executed then it will be ignored and <c>false</c> will be returned.
         /// If a string is not static and will change during game play, such as when using format arguments, then this can be used to force the string to update itself.</para>
         /// You may wish to call this if the values <b>inside</b> of the <see cref="Arguments"/> list have changed or you wish to force all <see cref="StringChanged"/> subscribers to update.
         /// Note if setting the <see cref="Arguments"/> with a new list value then you do not need to call this as it will be called by the <see cref="Arguments"/> set method automatically.
         /// </remarks>
-        /// <returns>Returns <c>true</c> if a new refresh could be requested or <c>false</c> if it could not, such as when <see cref="CurrentLoadingOperation"/> is still loading.</returns>
+        /// <returns>Returns <c>true</c> if a new refresh could be requested or <c>false</c> if it could not, such as when <see cref="CurrentLoadingOperationHandle"/> is still loading.</returns>
         /// <example>
         /// This example shows how the string can be refreshed, such as when showing dynamic values like the current time.
         /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="localized-string-smart"/>
         /// </example>
         public bool RefreshString()
         {
-            if (m_ChangeHandler == null || CurrentLoadingOperation == null)
+            if (m_ChangeHandler.Length == 0 || !CurrentLoadingOperationHandle.IsValid())
                 return false;
 
-            if (!CurrentLoadingOperation.Value.IsDone)
+            if (!CurrentLoadingOperationHandle.IsDone)
             {
                 #if !UNITY_WEBGL
                 if (WaitForCompletion)
-                    CurrentLoadingOperation.Value.WaitForCompletion();
+                { 
+                    CurrentLoadingOperationHandle.WaitForCompletion();
+                    return true;
+                }
                 else
                 #endif
                 return false;
             }
 
-            var entry = CurrentLoadingOperation.Value.Result.Entry;
+            var entry = CurrentLoadingOperationHandle.Result.Entry;
             var formatCache = entry?.GetOrCreateFormatCache();
             if (formatCache != null)
             {
@@ -203,7 +228,7 @@ namespace UnityEngine.Localization
                 formatCache.VariableTriggers.Clear();
             }
 
-            var translatedText = LocalizationSettings.StringDatabase.GenerateLocalizedString(CurrentLoadingOperation.Value.Result.Table, entry, TableReference, TableEntryReference, LocalizationSettings.SelectedLocale, Arguments);
+            var translatedText = LocalizationSettings.StringDatabase.GenerateLocalizedString(CurrentLoadingOperationHandle.Result.Table, entry, TableReference, TableEntryReference, LocalizationSettings.SelectedLocale, Arguments);
 
             if (formatCache != null)
             {
@@ -212,7 +237,7 @@ namespace UnityEngine.Localization
             }
 
             m_CurrentStringChangedValue = translatedText;
-            m_ChangeHandler(m_CurrentStringChangedValue);
+            InvokeChangeHandler(m_CurrentStringChangedValue);
             return true;
         }
 
@@ -364,12 +389,11 @@ namespace UnityEngine.Localization
                 throw new ArgumentNullException(nameof(variable));
 
             name = name.ReplaceWhiteSpaces("-");
-            if (m_VariableLookup.TryGetValue(name, out VariableNameValuePair value))
+            if (m_VariableLookup.TryGetValue(name, out var value))
             {
                 if (ReferenceEquals(value.variable, variable))
                     return;
-                else
-                    m_LocalVariables.Remove(value);
+                m_LocalVariables.Remove(value);
             }
 
             var v = new VariableNameValuePair { name = name, variable = variable };
@@ -515,8 +539,8 @@ namespace UnityEngine.Localization
         /// </summary>
         struct ChainedLocalVariablesGroup : IVariableGroup
         {
-            public IVariableGroup ParentGroup { get; set; }
-            public IVariableGroup Group { get; set; }
+            IVariableGroup ParentGroup { get; set; }
+            IVariableGroup Group { get; set; }
 
             public ChainedLocalVariablesGroup(IVariableGroup group, IVariableGroup parent)
             {
@@ -555,7 +579,7 @@ namespace UnityEngine.Localization
             var operation = LocalizationSettings.StringDatabase.GetTableEntryAsync(TableReference, TableEntryReference, locale, FallbackState);
             if (!operation.IsDone)
             {
-                operation.Completed += CompletedSourceValue;
+                operation.Completed += m_CompletedSourceValue;
                 return string.Empty;
             }
 
@@ -614,7 +638,7 @@ namespace UnityEngine.Localization
         /// <inheritdoc/>
         protected internal override void ForceUpdate()
         {
-            if (m_ChangeHandler != null)
+            if (m_ChangeHandler.Length != 0)
             {
                 HandleLocaleChange(null);
             }
@@ -624,9 +648,6 @@ namespace UnityEngine.Localization
 
         void UpdateVariableListeners(List<IVariableValueChanged> variables)
         {
-            if (m_OnVariableChanged == null)
-                m_OnVariableChanged = OnVariableChanged;
-
             // Unsubscribe from any old ones
             foreach (var gv in m_UsedVariables)
             {
@@ -671,6 +692,31 @@ namespace UnityEngine.Localization
             ValueChanged?.Invoke(this);
         }
 
+        void InvokeChangeHandler(string value)
+        {
+            try
+            {
+                m_ChangeHandler.LockForChanges();
+                var len = m_ChangeHandler.Length;
+                if (len == 1)
+                {
+                    m_ChangeHandler.SingleDelegate(value);
+                }
+                else if (len > 1)
+                {
+                    var array = m_ChangeHandler.MultiDelegates;
+                    for (int i = 0; i < len; ++i)
+                        array[i](value);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+
+            m_ChangeHandler.UnlockForChanges();
+        }
+
         void HandleLocaleChange(Locale _)
         {
             // Cancel any previous loading operations.
@@ -681,7 +727,7 @@ namespace UnityEngine.Localization
             m_CurrentTable = TableReference;
             m_CurrentTableEntry = TableEntryReference;
 
-            // Dont update if we have no selected Locale
+            // Don't update if we have no selected Locale
             if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode && LocaleOverride == null && LocalizationSettings.SelectedLocale == null)
                 return;
             #endif
@@ -691,56 +737,53 @@ namespace UnityEngine.Localization
                 #if UNITY_EDITOR
                 // If we are empty and playing or previewing then we should force an update.
                 if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
-                    m_ChangeHandler(null);
+                    InvokeChangeHandler(null);
                 #endif
                 return;
             }
 
-            CurrentLoadingOperation = LocalizationSettings.StringDatabase.GetTableEntryAsync(TableReference, TableEntryReference, LocaleOverride, FallbackState);
+            CurrentLoadingOperationHandle = LocalizationSettings.StringDatabase.GetTableEntryAsync(TableReference, TableEntryReference, LocaleOverride, FallbackState);
 
-            AddressablesInterface.Acquire(CurrentLoadingOperation.Value);
+            AddressablesInterface.Acquire(CurrentLoadingOperationHandle);
 
-            if (!CurrentLoadingOperation.Value.IsDone)
+            if (!CurrentLoadingOperationHandle.IsDone)
             {
                 #if !UNITY_WEBGL
                 if (WaitForCompletion)
                 {
-                    CurrentLoadingOperation.Value.WaitForCompletion();
+                    CurrentLoadingOperationHandle.WaitForCompletion();
                 }
                 else
                 #endif
                 {
-                    CurrentLoadingOperation.Value.Completed += AutomaticLoadingCompleted;
+                    CurrentLoadingOperationHandle.Completed += m_AutomaticLoadingCompleted;
                     return;
                 }
             }
 
-            AutomaticLoadingCompleted(CurrentLoadingOperation.Value);
+            AutomaticLoadingCompleted(CurrentLoadingOperationHandle);
         }
 
         void AutomaticLoadingCompleted(AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult> loadOperation)
         {
             if (loadOperation.Status != AsyncOperationStatus.Succeeded)
             {
-                CurrentLoadingOperation = null;
+                CurrentLoadingOperationHandle = default;
                 return;
             }
+
             RefreshString();
         }
 
         void ClearLoadingOperation()
         {
-            if (CurrentLoadingOperation.HasValue)
+            if (CurrentLoadingOperationHandle.IsValid())
             {
-                if (CurrentLoadingOperation.Value.IsValid())
-                {
-                    // We should only call this if we are not done as its possible that the internal list is null if its not been used.
-                    if (!CurrentLoadingOperation.Value.IsDone)
-                        CurrentLoadingOperation.Value.Completed -= AutomaticLoadingCompleted;
-                    AddressablesInterface.Release(CurrentLoadingOperation.Value);
-                }
-
-                CurrentLoadingOperation = null;
+                // We should only call this if we are not done as its possible that the internal list is null if its not been used.
+                if (!CurrentLoadingOperationHandle.IsDone)
+                    CurrentLoadingOperationHandle.Completed -= m_AutomaticLoadingCompleted;
+                AddressablesInterface.Release(CurrentLoadingOperationHandle);
+                CurrentLoadingOperationHandle = default;
             }
         }
 

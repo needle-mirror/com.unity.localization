@@ -64,6 +64,20 @@ The following diagram shows how the Property Variant System determines how to re
 
 ![Changing a Localized Property.](images/ChangingProperty.dot.svg)
 
+## Adding Tracked Properties through the Inspector
+
+The **Track Changes** option automatically adds and configures localized properties when you make changes in the scene. You can also manually add properties to be tracked and set the variant values without making changes in the scene, using the properties context menu in the Inspector.
+
+To display the context menu, right-click on the property label in the Inspector. The Inspector displays the following options, depending on the property configuration:
+
+- **Localize Property**: Adds a **GameObjectLocalizer** with a **Tracked Property** to enable tracking of the property. To override the property for a **Locale**, select **Add Variant**. When a Locale does not have a variant, the **Project Locale** variant is used.
+- **Remove Localized Property**: To stop tracking a property, use this option to remove it from the **GameObjectLocalizer**. If no other properties are being tracked, the **GameObjectLocalizer** is also removed.
+- **Remove Localized Property Variant**: If the **Active Locale** is set, this option removes any existing variant and causes the property to use the default value.
+
+![Inspector view after enabling the Font Size as a localized property variant.](images/GameObjectLocalizer_FontSize.png)
+
+_Inspector view after enabling the Font Size as a localized property variant._
+
 ## GameObject Localizer
 
 The GameObject Localizer component stores and applies all **Localized Property Variants** configurations for the [GameObject](https://docs.unity3d.com/Manual/GameObjects.html) it is attached to. This component is added automatically when a GameObject contains properties that are being tracked.

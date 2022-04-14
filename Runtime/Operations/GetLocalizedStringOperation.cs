@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.SmartFormat.PersistentVariables;
@@ -16,8 +17,9 @@ namespace UnityEngine.Localization
         Locale m_SelectedLocale;
         IList<object> m_Arguments;
         IVariableGroup m_LocalVariables;
+        bool m_AutoRelease;
 
-        public void Init(AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult> tableEntryOperation, Locale locale, LocalizedStringDatabase database, TableReference tableReference, TableEntryReference tableEntryReference, IList<object> arguments, IVariableGroup localVariables)
+        public void Init(AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult> tableEntryOperation, Locale locale, LocalizedStringDatabase database, TableReference tableReference, TableEntryReference tableEntryReference, IList<object> arguments, IVariableGroup localVariables, bool autoRelease)
         {
             m_TableEntryOperation = tableEntryOperation;
             m_SelectedLocale = locale;
@@ -27,6 +29,7 @@ namespace UnityEngine.Localization
             m_TableEntryReference = tableEntryReference;
             m_Arguments = arguments;
             m_LocalVariables = localVariables;
+            m_AutoRelease = autoRelease;
         }
 
         protected override void Execute()
@@ -36,7 +39,7 @@ namespace UnityEngine.Localization
                 m_SelectedLocale = LocalizationSettings.SelectedLocaleAsync.Result;
                 if (m_SelectedLocale == null)
                 {
-                    CompleteAndRelease(null, false, "SelectedLocale is null");
+                    CompleteAndRelease(null, false, "SelectedLocale is null. Could not get localized string.");
                     return;
                 }
             }
@@ -52,18 +55,31 @@ namespace UnityEngine.Localization
             if (formatCache != null)
                 formatCache.LocalVariables = m_LocalVariables;
 
-            var result = m_Database.GenerateLocalizedString(m_TableEntryOperation.Result.Table, entry, m_TableReference, m_TableEntryReference, m_SelectedLocale, m_Arguments);
+            try
+            {
+                var result = m_Database.GenerateLocalizedString(m_TableEntryOperation.Result.Table, entry, m_TableReference, m_TableEntryReference, m_SelectedLocale, m_Arguments);
 
-            if (formatCache != null)
-                formatCache.LocalVariables = null;
+                if (formatCache != null)
+                    formatCache.LocalVariables = null;
 
-            CompleteAndRelease(result, true, null);
+                CompleteAndRelease(result, true, null);
+            }
+            catch(Exception e)
+            {
+                CompleteAndRelease(null, false, e.Message);
+            }
         }
 
         public void CompleteAndRelease(string result, bool success, string errorMsg)
         {
             Complete(result, success, errorMsg);
             AddressablesInterface.SafeRelease(m_TableEntryOperation);
+
+            if (m_AutoRelease && LocalizationSettings.Instance.IsPlaying)
+            {
+                // We need internal access for Handle here.
+                LocalizationBehaviour.ReleaseNextFrame(Handle);
+            }
         }
 
         protected override void Destroy()

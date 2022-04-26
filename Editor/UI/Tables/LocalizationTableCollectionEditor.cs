@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Localization;
@@ -51,12 +50,17 @@ namespace UnityEditor.Localization.UI
             m_ExtensionsList.RequiredAttribute = target is StringTableCollection ? typeof(StringTableCollectionExtensionAttribute) : typeof(AssetTableCollectionExtensionAttribute);
             m_ExtensionsList.Header = Styles.extensions;
             m_ExtensionsList.NoItemMenuItem = Styles.noExtensions;
-            m_ExtensionsList.CreateNewInstance = (type) =>
+            m_ExtensionsList.CreateNewInstance = type =>
             {
                 var instance = Activator.CreateInstance(type) as CollectionExtension;
-                instance.TargetCollection = (target as LocalizationTableCollection);
-                instance.Initialize();
+                ((LocalizationTableCollection)target).AddExtension(instance);
                 return instance;
+            };
+            m_ExtensionsList.onRemoveCallback += list =>
+            {
+                var collection = m_Extensions.GetArrayElementAtIndex(list.index).serializedObject.targetObject as LocalizationTableCollection;
+                var extension = collection.Extensions[list.index];
+                collection.RemoveExtension(extension);
             };
 
             LocalizationEditorSettings.EditorEvents.TableAddedToCollection += OnTableModified;

@@ -86,5 +86,17 @@ namespace UnityEditor.Localization
         /// </summary>
         public event Action<LocalizationTableCollection, LocalizationTable> TableRemovedFromCollection;
         internal virtual void RaiseTableRemovedFromCollection(LocalizationTableCollection collection, LocalizationTable table) => TableRemovedFromCollection?.Invoke(collection, table);
+
+        /// <summary>
+        /// Event that is sent when a collection extension is added to a table collection in the project.
+        /// </summary>
+        public event Action<LocalizationTableCollection, CollectionExtension> ExtensionAddedToCollection;
+        internal virtual void RaiseExtensionAddedToCollection(LocalizationTableCollection collection, CollectionExtension collectionExtension) => ExtensionAddedToCollection?.Invoke(collection, collectionExtension);
+
+        /// <summary>
+        /// Event that is sent when a collection extension is removed from a table collection in the project.
+        /// </summary>
+        public event Action<LocalizationTableCollection, CollectionExtension> ExtensionRemovedFromCollection;
+        internal virtual void RaiseExtensionRemovedFromCollection(LocalizationTableCollection collection, CollectionExtension collectionExtension) => ExtensionRemovedFromCollection?.Invoke(collection, collectionExtension);
     }
 }

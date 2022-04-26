@@ -107,7 +107,7 @@ namespace UnityEditor.Localization
         /// <summary>
         /// Extensions attached to the collection. Extensions can be used to attach additional data or functionality to a collection.
         /// </summary>
-        public ReadOnlyCollection<CollectionExtension> Extensions
+        public virtual ReadOnlyCollection<CollectionExtension> Extensions
         {
             get
             {
@@ -120,7 +120,7 @@ namespace UnityEditor.Localization
         /// <summary>
         /// The name of this collection of Tables.
         /// </summary>
-        public string TableCollectionName { get => SharedData.TableCollectionName; set => SharedData.TableCollectionName = value; }
+        public virtual string TableCollectionName { get => SharedData.TableCollectionName; set => SharedData.TableCollectionName = value; }
 
         /// <summary>
         /// Reference to use to refer to this table collection.
@@ -414,16 +414,23 @@ namespace UnityEditor.Localization
             extension.TargetCollection = this;
             m_Extensions.Add(extension);
             extension.Initialize();
+            LocalizationEditorSettings.EditorEvents.RaiseExtensionAddedToCollection(this, extension);
         }
 
         /// <summary>
         /// Removes the extension from <see cref="Extensions"/>.
         /// </summary>
-        /// <param name="extension"></param>
+        /// <param name="extension">The extension to remove from the collection.</param>
+        /// <exception cref="ArgumentNullException">Thrown if the extension is null.</exception>
         public void RemoveExtension(CollectionExtension extension)
         {
+            if (extension == null)
+                throw new ArgumentNullException(nameof(extension));
+
             m_Extensions.Remove(extension);
+            extension.Destroy();
             extension.TargetCollection = null;
+            LocalizationEditorSettings.EditorEvents.RaiseExtensionRemovedFromCollection(this, extension);
         }
 
         internal void SaveChangesToDisk()

@@ -1,5 +1,3 @@
-#if PACKAGE_UGUI
-
 using System.Collections.Generic;
 using UnityEngine.Localization.Settings;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -93,5 +91,3 @@ namespace UnityEngine.Localization.Samples
         }
     }
 }
-
-#endif

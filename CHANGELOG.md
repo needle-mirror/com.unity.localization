@@ -2,7 +2,14 @@
 
 All notable changes to this package will be documented in this file.
 
-## [1.3.1] - 2022-04-14
+## [1.4.0-exp.1] - 2022-04-26
+
+- Fix `NullReferenceException` when creating a new table that takes name from renamed table ([LOC-550](https://issuetracker.unity3d.com/issues/nullreferenceexception-creating-a-table-that-takes-name-from-renamed-table)).
+- String Table entries will no longer try to use `String.Format` when using `GetLocalizedString` with non-null but empty arguments ([LOC-689](https://issuetracker.unity3d.com/issues/localization-formatexception-error-is-thrown-in-the-console-window-when-calling-getlocalizedstringasync-class)).
+- Improved `FormatException` error message when `String.Format` throws during `GetLocalizedString`.
+- Added `LocalizationEditorEvents.ExtensionAddedToCollection` & `LocalizationEditorEvents.ExtensionRemovedFromCollection`, which can be used to react to collection extension additions & removals. Added `CollectionExtension.Destroy()` which can be used to perform cleanup when a collection extension is removed.
+
+## [1.3.0] - 2022-04-14
 
 ### Added
 

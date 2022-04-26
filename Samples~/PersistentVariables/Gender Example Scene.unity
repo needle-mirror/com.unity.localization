@@ -404,7 +404,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 788038464}
-        m_TargetAssemblyTypeName: SetLocalVariable, Unity.Localization.Samples.PersistentVariables
+        m_TargetAssemblyTypeName: SetLocalVariable, Assembly-CSharp
         m_MethodName: SetNestedStringEntry
         m_Mode: 5
         m_Arguments:
@@ -664,7 +664,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 788038464}
-        m_TargetAssemblyTypeName: SetLocalVariable, Unity.Localization.Samples.PersistentVariables
+        m_TargetAssemblyTypeName: SetLocalVariable, Assembly-CSharp
         m_MethodName: SetNestedStringEntry
         m_Mode: 5
         m_Arguments:
@@ -1356,7 +1356,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 788038464}
-        m_TargetAssemblyTypeName: SetLocalVariable, Unity.Localization.Samples.PersistentVariables
+        m_TargetAssemblyTypeName: SetLocalVariable, Assembly-CSharp
         m_MethodName: SetNestedStringEntry
         m_Mode: 5
         m_Arguments:
@@ -1489,7 +1489,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 788038464}
-        m_TargetAssemblyTypeName: SetLocalVariable, Unity.Localization.Samples.PersistentVariables
+        m_TargetAssemblyTypeName: SetLocalVariable, Assembly-CSharp
         m_MethodName: SetNestedStringEntry
         m_Mode: 5
         m_Arguments:
@@ -1622,7 +1622,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 788038464}
-        m_TargetAssemblyTypeName: SetLocalVariable, Unity.Localization.Samples.PersistentVariables
+        m_TargetAssemblyTypeName: SetLocalVariable, Assembly-CSharp
         m_MethodName: SetNestedStringEntry
         m_Mode: 5
         m_Arguments:
@@ -2128,7 +2128,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 788038464}
-        m_TargetAssemblyTypeName: SetLocalVariable, Unity.Localization.Samples.PersistentVariables
+        m_TargetAssemblyTypeName: SetLocalVariable, Assembly-CSharp
         m_MethodName: SetNestedStringEntry
         m_Mode: 5
         m_Arguments:
@@ -2479,7 +2479,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 788038464}
-        m_TargetAssemblyTypeName: SetLocalVariable, Unity.Localization.Samples.PersistentVariables
+        m_TargetAssemblyTypeName: SetLocalVariable, Assembly-CSharp
         m_MethodName: SetNestedStringEntry
         m_Mode: 5
         m_Arguments:

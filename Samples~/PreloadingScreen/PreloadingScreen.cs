@@ -1,5 +1,3 @@
-#if PACKAGE_UGUI
-
 using System.Collections;
 using UnityEngine.Localization.Settings;
 using UnityEngine.UI;
@@ -76,5 +74,3 @@ namespace UnityEngine.Localization.Samples
         }
     }
 }
-
-#endif

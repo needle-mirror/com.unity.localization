@@ -25,5 +25,10 @@ namespace UnityEditor.Localization
         /// Called when the Extension is first added to the table collection.
         /// </summary>
         public virtual void Initialize() {}
+
+        /// <summary>
+        /// Called when the Extension is removed from the table collection.
+        /// </summary>
+        public virtual void Destroy() {}
     }
 }

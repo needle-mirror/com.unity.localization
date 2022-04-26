@@ -155,7 +155,7 @@ namespace UnityEditor.Localization
         /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="get-string-tables"/>
         /// </example>
         /// <returns></returns>
-        public static ReadOnlyCollection<StringTableCollection> GetStringTableCollections() => Instance.TableCollectionCache.StringTableCollections.AsReadOnly();
+        public static ReadOnlyCollection<StringTableCollection> GetStringTableCollections() => Instance.GetStringTableCollectionsInternal();
 
         /// <summary>
         /// Returns a <see cref="StringTableCollection"/> with the matching <see cref="TableReference"/>.
@@ -653,6 +653,8 @@ namespace UnityEditor.Localization
             m_ProjectLocales = foundLocales.AsReadOnly();
             m_ProjectPseudoLocales = foundPseudoLocales.AsReadOnly();
         }
+
+        internal virtual ReadOnlyCollection<StringTableCollection> GetStringTableCollectionsInternal() => Instance.TableCollectionCache.StringTableCollections.AsReadOnly();
 
         internal virtual Locale GetLocaleInternal(string code) => GetLocalesInternal().FirstOrDefault(loc => loc.Identifier.Code == code);
 

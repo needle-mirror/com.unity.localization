@@ -38,6 +38,6 @@ MonoBehaviour:
       data:
         m_Value: {fileID: 11400000, guid: b33659680abccdc4b85d1b4ad1689060, type: 2}
     00000002:
-      type: {class: WeaponDamageGroup, ns: UnityEngine.Localization.Samples, asm: Unity.Localization.Samples.PersistentVariables}
+      type: {class: WeaponDamageGroup, ns: UnityEngine.Localization.Samples, asm: Assembly-CSharp}
     00000003:
-      type: {class: CurrentTime, ns: UnityEngine.Localization.Samples, asm: Unity.Localization.Samples.PersistentVariables}
+      type: {class: CurrentTime, ns: UnityEngine.Localization.Samples, asm: Assembly-CSharp}

@@ -20,8 +20,8 @@ namespace UnityEditor.Localization.UI
             public GUIContent warningMessage;
             public float warningMessageHeight;
 
-            public bool CollectionSet = false;
-            public TCollection DeferredCollection;
+            public bool collectionSet = false;
+            public TCollection deferredCollection;
 
             public TCollection SelectedTableCollection
             {
@@ -113,19 +113,20 @@ namespace UnityEditor.Localization.UI
             var dropDownPosition = EditorGUI.PrefixLabel(position, label);
 
             // We defer setting so we can set it during the IMGUI call. This way ApplyModifiedProperties will detect the change.
-            if (data.CollectionSet)
+            if (data.collectionSet)
             {
-                data.SelectedTableCollection = data.DeferredCollection;
-                data.DeferredCollection = null;
-                data.CollectionSet = false;
+                data.SelectedTableCollection = data.deferredCollection;
+                data.deferredCollection = null;
+                data.collectionSet = false;
+                GUI.changed = true;
             }
 
             if (EditorGUI.DropdownButton(dropDownPosition, data.FieldLabel, FocusType.Passive))
             {
                 var treeSelection = new TableTreeView(typeof(TCollection) == typeof(StringTableCollection) ? typeof(StringTable) : typeof(AssetTable), collection =>
                 {
-                    data.DeferredCollection = collection as TCollection;
-                    data.CollectionSet = true;
+                    data.deferredCollection = collection as TCollection;
+                    data.collectionSet = true;
                 });
 
                 PopupWindow.Show(dropDownPosition, new TreeViewPopupWindow(treeSelection) { Width = dropDownPosition.width });

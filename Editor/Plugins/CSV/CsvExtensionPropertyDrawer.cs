@@ -83,7 +83,7 @@ namespace UnityEditor.Localization.Plugins.CSV
                 var stream = new StreamReader(fs);
                 var reporter = TaskReporter.CreateDefaultReporter();
                 reporter.Start("Importing " + path, string.Empty);
-                Csv.ImportInto(stream, collection, columns, true, reporter);
+                Csv.ImportInto(stream, collection, columns, true, reporter, true);
             }
         }
 
@@ -116,11 +116,12 @@ namespace UnityEditor.Localization.Plugins.CSV
                 var collection = target.TargetCollection as StringTableCollection;
 
                 var path = EditorUtility.SaveFilePanel("Export to CSV", MenuItems.PreviousDirectory, collection.TableCollectionName, "csv");
-                if (string.IsNullOrEmpty(path))
-                    return;
-
-                data.m_ConnectedFile.stringValue = path;
-                Export(path, collection, target.Columns);
+                if (!string.IsNullOrEmpty(path))
+                {
+                    data.m_ConnectedFile.stringValue = path;
+                    Export(path, collection, target.Columns);
+                }
+                GUIUtility.ExitGUI();
             }
 
             if (GUI.Button(buttonsRect.right, Styles.open))
@@ -129,11 +130,12 @@ namespace UnityEditor.Localization.Plugins.CSV
                 var collection = target.TargetCollection as StringTableCollection;
 
                 var path = EditorUtility.OpenFilePanel("Import CSV", MenuItems.PreviousDirectory, "csv");
-                if (string.IsNullOrEmpty(path))
-                    return;
-
-                data.m_ConnectedFile.stringValue = path;
-                Import(path, collection, target.Columns);
+                if (!string.IsNullOrEmpty(path))
+                {
+                    data.m_ConnectedFile.stringValue = path;
+                    Import(path, collection, target.Columns);
+                }
+                GUIUtility.ExitGUI();
             }
 
             if (!string.IsNullOrEmpty(data.m_ConnectedFile.stringValue))

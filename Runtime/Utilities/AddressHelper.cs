@@ -11,6 +11,11 @@ namespace UnityEngine.Localization
             return $"{tableName}{k_Separator}{localeId.Code}";
         }
 
+        public static string GetSharedTableAddress(string tableName)
+        {
+            return $"{tableName} Shared Data";
+        }
+
         public static string FormatAssetLabel(LocaleIdentifier localeIdentifier) => k_AssetLabelPrefix + localeIdentifier.Code;
 
         public static bool IsLocaleLabel(string label) => label.StartsWith(k_AssetLabelPrefix, System.StringComparison.InvariantCulture);

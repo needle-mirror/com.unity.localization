@@ -2,6 +2,23 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.3.2] - 2022-06-01
+
+### Changed
+
+- Changed CSV Extension "Open..." button so it performs a full import instead of a merge. ([LOC-540](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-540))
+- Disabled fix for "New localization assets created automatically and/or old assets are modified when loading project without Library folder ([LOC-400](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-400))" on Unity 2019.4 to 2021.3. This is due to a bug in Addressables (ADDR-2521). This fix will be re-enabled in the future. (LOC-704)
+- Updated dependency `com.unity.nuget.newtonsoft-json` to 2.0.2.
+
+### Fixed
+
+- Fixed `NullReferenceException` when creating a new table that takes name from renamed table. ([LOC-550](https://issuetracker.unity3d.com/issues/nullreferenceexception-creating-a-table-that-takes-name-from-renamed-table))
+- Fixed `GameObjectLocalizer` failing to apply local asset references in Unity versions before 2022.2. ([LOC-714](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-714))
+- Fixed `LocalizedStringTable` and `LocalizedAssetTable` property drawer not setting `GUI.changed` when the reference was changed. ([LOC-725](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-725))
+- Fixed Asset Tables being destroyed during preloading. ([LOC-727](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-727))
+- Improved `FormatException` error message when `String.Format` throws during `GetLocalizedString`.
+- String Table entries will no longer try to use `String.Format` when using `GetLocalizedString` with non-null but empty arguments. ([LOC-689](https://issuetracker.unity3d.com/issues/localization-formatexception-error-is-thrown-in-the-console-window-when-calling-getlocalizedstringasync-class))
+
 ## [1.3.1] - 2022-04-14
 
 ### Added

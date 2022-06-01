@@ -41,6 +41,8 @@ namespace UnityEditor.Localization.UI
             public GUIContent warningMessage;
             public float warningMessageHeight;
 
+            public (TCollection collection, SharedTableData.SharedTableEntry entry)? deferredSetReference;
+
             GUIContent m_FieldLabel;
             SharedTableData.SharedTableEntry m_SelectedEntry;
             TCollection m_SelectedTableCollection;
@@ -318,6 +320,15 @@ namespace UnityEditor.Localization.UI
             rowPosition.MoveToNextLine();
 
             EditorGUI.BeginProperty(foldoutRect, label, property);
+
+            if (data.deferredSetReference.HasValue)
+            {
+                data.SelectedTableCollection = data.deferredSetReference.Value.collection;
+                data.SelectedTableEntry = data.deferredSetReference.Value.entry;
+                data.deferredSetReference = null;
+                GUI.changed = true;
+            }
+
             property.isExpanded = EditorGUI.Foldout(foldoutRect, property.isExpanded, label, true);
             if (EditorGUI.DropdownButton(dropDownPosition, data.FieldLabel, FocusType.Passive))
             {
@@ -341,11 +352,7 @@ namespace UnityEditor.Localization.UI
         {
             var treeSelection = new TableEntryTreeView(data.assetType, (collection, entry) =>
             {
-                data.SelectedTableCollection = collection as TCollection;
-                data.SelectedTableEntry = entry;
-
-                // Will be called outside of OnGUI so we need to call ApplyModifiedProperties.
-                data.serializedObject.ApplyModifiedProperties();
+                data.deferredSetReference = (collection as TCollection, entry);
             });
 
             PopupWindow.Show(dropDownPosition, new TreeViewPopupWindow(treeSelection) { Width = dropDownPosition.width });

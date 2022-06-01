@@ -14,12 +14,13 @@ namespace UnityEngine.Localization
         where TEntry : TableEntry
     {
         readonly Action<AsyncOperationHandle<IList<IResourceLocation>>> m_LoadTablesAction;
-        readonly Action<AsyncOperationHandle<IList<TTable>>> m_LoadTableContentsAction;
+        readonly Action<AsyncOperationHandle<TTable>> m_LoadTableContentsAction;
         readonly Action<AsyncOperationHandle> m_FinishPreloadingAction;
+        readonly Action<AsyncOperationHandle<IList<AsyncOperationHandle>>> m_PreloadTablesCompletedAction;
 
         LocalizedDatabase<TTable, TEntry> m_Database;
         AsyncOperationHandle<IList<IResourceLocation>> m_LoadResourcesOperation;
-        AsyncOperationHandle<IList<TTable>> m_LoadTablesOperation;
+        readonly List<AsyncOperationHandle> m_LoadTablesOperations = new List<AsyncOperationHandle>();
         readonly List<AsyncOperationHandle> m_PreloadTableContentsOperations = new List<AsyncOperationHandle>();
         readonly List<string> m_ResourceLabels = new List<string>();
         float m_Progress;
@@ -33,11 +34,13 @@ namespace UnityEngine.Localization
             m_LoadTablesAction = LoadTables;
             m_LoadTableContentsAction = LoadTableContents;
             m_FinishPreloadingAction = FinishPreloading;
+            m_PreloadTablesCompletedAction = PreloadTablesCompleted;
         }
 
         public void Init(LocalizedDatabase<TTable, TEntry> database)
         {
             m_Database = database;
+            m_LoadTablesOperations.Clear();
             m_PreloadTableContentsOperations.Clear();
         }
 
@@ -73,14 +76,14 @@ namespace UnityEngine.Localization
             m_ResourceLabels.Add(LocalizationSettings.PreloadLabel);
             m_LoadResourcesOperation = AddressablesInterface.LoadResourceLocationsWithLabelsAsync(m_ResourceLabels, Addressables.MergeMode.Intersection, typeof(TTable));
 
-            if (!m_LoadResourcesOperation.IsDone)
+            if (m_LoadResourcesOperation.IsDone)
             {
-                CurrentOperation = m_LoadResourcesOperation;
-                m_LoadResourcesOperation.Completed += m_LoadTablesAction;
+                LoadTables(m_LoadResourcesOperation);
             }
             else
             {
-                LoadTables(m_LoadResourcesOperation);
+                CurrentOperation = m_LoadResourcesOperation;
+                m_LoadResourcesOperation.Completed += m_LoadTablesAction;
             }
         }
 
@@ -101,70 +104,70 @@ namespace UnityEngine.Localization
             }
 
             // Load the tables
-            m_LoadTablesOperation = AddressablesInterface.LoadAssetsFromLocations<TTable>(loadResourcesOperation.Result, TableLoaded);
-            if (!m_LoadTablesOperation.IsDone)
+            foreach (var resourceLocation in loadResourcesOperation.Result)
             {
-                CurrentOperation = m_LoadTablesOperation;
-                m_LoadTablesOperation.Completed += m_LoadTableContentsAction;
+                var tableOperation = AddressablesInterface.LoadTableFromLocation<TTable>(resourceLocation);
+                m_LoadTablesOperations.Add(tableOperation);
+
+                if (tableOperation.IsDone)
+                    LoadTableContents(tableOperation);
+                else
+                    tableOperation.Completed += m_LoadTableContentsAction;
+            }
+
+            var loadTablesOperation = Addressables.ResourceManager.CreateGenericGroupOperation(m_LoadTablesOperations, true);
+            if (loadTablesOperation.IsDone)
+            {
+                PreloadTablesCompleted(loadTablesOperation);
             }
             else
             {
-                LoadTableContents(m_LoadTablesOperation);
+                CurrentOperation = loadTablesOperation;
+                loadTablesOperation.Completed += m_PreloadTablesCompletedAction;
             }
         }
 
-        void TableLoaded(TTable table)
+        void LoadTableContents(AsyncOperationHandle<TTable> operation)
         {
-            // We only update the progress here.
-            m_Progress += 1.0f / m_LoadResourcesOperation.Result.Count;
-        }
+            // Update progress.
+            m_Progress += 1.0f / m_LoadTablesOperations.Count;
 
-        void LoadTableContents(AsyncOperationHandle<IList<TTable>> loadTablesOperation)
-        {
-            if (loadTablesOperation.Status != AsyncOperationStatus.Succeeded)
-            {
-                Complete(m_Database, false, "Failed to preload tables.");
+            if (operation.Result == null)
                 return;
-            }
 
-            // Iterate through the loaded tables, add them to our known tables and preload the actual table contents if required.
-            foreach (var table in loadTablesOperation.Result)
+            var table = operation.Result;
+            var tableCollectionName = table.TableCollectionName;
+
+            if (m_Database.TableOperations.TryGetValue((table.LocaleIdentifier, tableCollectionName), out var tableOp))
             {
-                var tableCollectionName = "";
-                try
+                // Remove the extra reference
+                AddressablesInterface.Release(operation);
+
+                // If the operation is still loading then we can leave it to continue, no need to register this operation.
+                if (tableOp.IsDone && !ReferenceEquals(tableOp.Result, table))
                 {
-                    tableCollectionName = table.TableCollectionName;
-                }
-                catch (System.Exception e)
-                {
-                    Debug.LogError($"Exception occured when loading table collection name: {e.Message}");
-                    Complete(m_Database, false, $"Failed to preload tables.");
+                    Debug.LogError($"A table with the same key `{tableCollectionName}` already exists. Something went wrong during preloading. Table {table} does not match {tableOp.Result}.");
                     return;
                 }
+            }
+            else
+            {
+                m_Database.RegisterTableOperation(operation, table.LocaleIdentifier, tableCollectionName);
+            }
 
-                if (m_Database.TableOperations.TryGetValue((table.LocaleIdentifier, tableCollectionName), out var tableOp))
+            if (table is IPreloadRequired preloadRequired)
+            {
+                var preloadOperation = preloadRequired.PreloadOperation;
+                if (!preloadOperation.IsDone)
                 {
-                    // If the operation is still loading then we can leave it to continue, no need to register this operation.
-                    if (tableOp.IsDone && !ReferenceEquals(tableOp.Result, table))
-                    {
-                        Debug.LogError($"A table with the same key `{tableCollectionName}` already exists. Something went wrong during preloading. Table {table} does not match {tableOp.Result}.");
-                        continue;
-                    }
-                }
-                else
-                {
-                    m_Database.RegisterTableOperation(AddressablesInterface.ResourceManager.CreateCompletedOperation(table, null), table.LocaleIdentifier, tableCollectionName);
-                }
-
-                if (table is IPreloadRequired preloadRequired)
-                {
-                    var preloadOperation = preloadRequired.PreloadOperation;
-                    if (!preloadOperation.IsDone)
-                    {
-                        m_PreloadTableContentsOperations.Add(preloadOperation);
-                    }
+                    m_PreloadTableContentsOperations.Add(preloadOperation);
                 }
             }
+        }
+
+        void PreloadTablesCompleted(AsyncOperationHandle<IList<AsyncOperationHandle>> obj)
+        {
+            AddressablesInterface.SafeRelease(m_LoadResourcesOperation);
 
             if (m_PreloadTableContentsOperations.Count == 0)
             {
@@ -173,20 +176,19 @@ namespace UnityEngine.Localization
             }
 
             var groupOperation = AddressablesInterface.ResourceManager.CreateGenericGroupOperation(m_PreloadTableContentsOperations);
-            if (!groupOperation.IsDone)
+            if (groupOperation.IsDone)
+            {
+                FinishPreloading(groupOperation);
+            }
+            else
             {
                 CurrentOperation = groupOperation;
                 groupOperation.CompletedTypeless += m_FinishPreloadingAction;
             }
-            else
-                FinishPreloading(groupOperation);
         }
 
         void FinishPreloading(AsyncOperationHandle op)
         {
-            AddressablesInterface.SafeRelease(m_LoadResourcesOperation);
-            AddressablesInterface.SafeRelease(m_LoadTablesOperation);
-
             m_Progress = 1;
             Complete(m_Database, op.Status == AsyncOperationStatus.Succeeded, null);
         }

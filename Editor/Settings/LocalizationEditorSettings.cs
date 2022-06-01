@@ -352,7 +352,7 @@ namespace UnityEditor.Localization
             var relativePath = PathHelper.MakePathRelative(assetDirectory);
             Directory.CreateDirectory(relativePath);
 
-            var sharedDataPath = Path.Combine(relativePath, tableName + " Shared Data.asset");
+            var sharedDataPath = Path.Combine(relativePath, AddressHelper.GetSharedTableAddress(tableName) + ".asset");
             var sharedTableData = ScriptableObject.CreateInstance<SharedTableData>();
             sharedTableData.TableCollectionName = tableName;
             CreateAsset(sharedTableData, sharedDataPath);

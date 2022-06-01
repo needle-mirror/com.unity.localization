@@ -10,11 +10,19 @@ namespace UnityEngine.Localization.Tests
         /// <summary>
         /// Save the current LocalizationSettings so that they can be restored after a test.
         /// </summary>
-        public static void SaveCurrentSettings()
+        public static LocalizationSettings SaveCurrentSettings()
         {
             Assert.IsNull(s_SavedSettings, "Expected there to be no saved settings.");
             s_SavedSettings = LocalizationSettings.GetInstanceDontCreateDefault();
+
+            // Force any uncompleted initialization to finish so it does not conflict with the test.
+            if (s_SavedSettings != null && s_SavedSettings.m_InitializingOperationHandle.IsValid() && !s_SavedSettings.m_InitializingOperationHandle.IsDone)
+            {
+                s_SavedSettings.m_InitializingOperationHandle.WaitForCompletion();
+            }
+
             LocalizationSettings.Instance = null;
+            return s_SavedSettings;
         }
 
         /// <summary>
@@ -26,7 +34,10 @@ namespace UnityEngine.Localization.Tests
             {
                 var instance = LocalizationSettings.GetInstanceDontCreateDefault();
                 if (instance != null)
+                {
+                    instance.ResetState(); // Free up any acquired handles.
                     Object.DestroyImmediate(instance);
+                }
             }
 
             LocalizationSettings.Instance = s_SavedSettings;

@@ -49,7 +49,7 @@ namespace UnityEngine.Localization.Settings
         [SerializeField]
         bool m_InitializeSynchronously;
 
-        AsyncOperationHandle<LocalizationSettings> m_InitializingOperationHandle;
+        internal AsyncOperationHandle<LocalizationSettings> m_InitializingOperationHandle;
         AsyncOperationHandle<Locale> m_SelectedLocaleAsync;
         Locale m_ProjectLocale;
         CallbackArray<Action<Locale>> m_SelectedLocaleChanged;

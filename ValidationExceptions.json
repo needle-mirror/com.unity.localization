@@ -2,8 +2,8 @@
     "ErrorExceptions": [
         {
             "ValidationTest": "API Validation",
-            "ExceptionMessage": "Breaking changes require a new major version.",
-            "PackageVersion": "1.3.0"
+            "ExceptionMessage": "Assembly \"Unity.ResourceManager\" no longer exists or is no longer included in build. This change requires a new major version.",
+            "PackageVersion": "1.3.2"
         }
     ],
     "WarningExceptions": []

@@ -177,16 +177,16 @@ namespace UnityEngine.Localization.Tables
             }
             else if (!string.IsNullOrEmpty(Data.Localized))
             {
-                if (args != null)
+                if (args != null && args.Count > 0)
                 {
                     try
                     {
                         translatedText = formatProvider == null ? string.Format(Data.Localized, args as object[] ?? args.ToArray()) : string.Format(formatProvider, Data.Localized, args as object[] ?? args.ToArray());
                     }
-                    catch (FormatException)
+                    catch (FormatException fe)
                     {
                         // Supplement with a better error message as its likely that the string was a Smart String.
-                        throw new FormatException($"Input string was not in the correct format for String.Format. Ensure that the string is marked as Smart if you intended to use Smart Format.\n`{Data.Localized}`");
+                        throw new FormatException($"Input string was not in the correct format for String.Format. Ensure that the string is marked as Smart if you intended to use Smart Format.\n`{Data.Localized}`\n{fe}", fe);
                     }
                 }
                 else

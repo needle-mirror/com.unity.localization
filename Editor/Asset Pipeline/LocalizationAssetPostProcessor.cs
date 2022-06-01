@@ -15,7 +15,8 @@ namespace UnityEditor.Localization
         #if !UNITY_2022_1_OR_NEWER
         static LocalizationAssetPostProcessor()
         {
-            AddressablesAssetPostProcessor.OnPostProcess.Register(OnPostprocessAllAssets, 1000);
+            // Disabled due to ADDR-2521 / LOC-704
+            //AddressablesAssetPostProcessor.OnPostProcess.Register(OnPostprocessAllAssets, 1000);
         }
 
         #else

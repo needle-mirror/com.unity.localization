@@ -6,6 +6,7 @@ using UnityEngine.Localization;
 using UnityEngine.Localization.PropertyVariants;
 using UnityEngine.Localization.Pseudo;
 using UnityEngine.Localization.Settings;
+using UnityEditor.Localization.UI.PropertyVariants;
 
 namespace UnityEditor.Localization.UI
 {
@@ -19,7 +20,11 @@ namespace UnityEditor.Localization.UI
 
         static void BeginProperty(Rect rect, SerializedProperty property)
         {
-            if (EditorApplication.isPlayingOrWillChangePlaymode || LocalizationSettings.SelectedLocaleAsync.IsDone && LocalizationSettings.SelectedLocaleAsync.Result == null)
+            if (!LocalizationSettings.HasSettings ||
+                EditorApplication.isPlayingOrWillChangePlaymode ||
+                GameObjectLocalizerEditor.CurrentTarget != null ||
+                !LocalizationSettings.SelectedLocaleAsync.IsValid() ||
+                LocalizationSettings.SelectedLocaleAsync.Result == null)
                 return;
 
             if (DrivenPropertyManagerInternalBridge.IsDriving(LocalizationPropertyDriver.instance, property.serializedObject.targetObject, property.propertyPath))

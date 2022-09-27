@@ -125,7 +125,16 @@ namespace UnityEditor.Localization.UI
                 menu.BringToFront();
                 s_GameViews.Add(menu);
             }
-            OnLanguageChanged(LocalizationSettings.SelectedLocale);
+
+            var localeOp = LocalizationSettings.SelectedLocaleAsync;
+            if (!localeOp.IsDone)
+            {
+                OnLanguageChanged(localeOp.Result);
+            }
+            else
+            {
+                localeOp.Completed += op => OnLanguageChanged(op.Result);
+            }
         }
 
         static List<Locale> GetChoices()

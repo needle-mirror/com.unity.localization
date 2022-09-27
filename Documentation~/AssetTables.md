@@ -14,9 +14,9 @@ When you create a new Asset Table Collection, Unity creates an Asset Table Colle
 
 ![Asset Table Collection inspector view.](images/AssetTableCollection_Inspector.png)
 
-Extensions are Editor only data that you can attach to a String Table. An Extension can contain additional data that you wish to associate with the String Tables, or it can add functionality such as an importer or exporter for a particular file format or service.
+Extensions are Editor only data that you can attach to a Table Collection. An Extension can contain additional data that you wish to associate with the collection, or it can add functionality such as an importer or exporter for a particular file format or service.
 
-To create custom Extensions, you can inherit from CollectionExtension and add the *AssetTableCollectionExtension* attribute.
+To create custom Extensions, you can inherit from [CollectionExtension](xref:UnityEditor.Localization.CollectionExtension) and add the [AssetTableCollectionExtensionAttribute](xref:UnityEditor.Localization.AssetTableCollectionExtensionAttribute).
 
 ## Preloading
 

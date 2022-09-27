@@ -10,6 +10,11 @@ namespace UnityEditor.Localization.UI.PropertyVariants
     {
         ReorderableListExtended m_TrackedObjectsList;
 
+        /// <summary>
+        /// Allows property drawers to know the current target being drawn.
+        /// </summary>
+        public static Object CurrentTarget { get; private set; }
+
         void OnEnable()
         {
             var trackedObjects = serializedObject.FindProperty("m_TrackedObjects");
@@ -31,11 +36,14 @@ namespace UnityEditor.Localization.UI.PropertyVariants
             var element = m_TrackedObjectsList.serializedProperty.GetArrayElementAtIndex(idx);
 
             var trackedObject = element.FindPropertyRelative("m_Target");
-            var icon = trackedObject.objectReferenceValue != null ? AssetPreview.GetMiniTypeThumbnail(trackedObject.objectReferenceValue.GetType()) : null;
+            CurrentTarget = trackedObject.objectReferenceValue;
+
+            var icon = trackedObject.objectReferenceValue != null ? AssetPreview.GetMiniTypeThumbnail(CurrentTarget.GetType()) : null;
             var label = new GUIContent(ManagedReferenceUtility.GetDisplayName(element.managedReferenceFullTypename).text, icon);
 
             rect.xMin += 8; // Prevent the foldout arrow(>) being drawn over the reorder icon(=) when showing LocalizationSettings in the inspector.
             EditorGUI.PropertyField(rect, element, label, true);
+            CurrentTarget = null;
         }
     }
 }

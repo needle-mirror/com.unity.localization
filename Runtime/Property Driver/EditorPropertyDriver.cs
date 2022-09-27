@@ -21,7 +21,7 @@ namespace UnityEngine.Localization
     /// <summary>
     /// Allows for making temporary changes to Components in a scene whilst previewing a Locale.
     /// Any changes made to a property that is marked as driven will be ignored when saving the scene
-    /// and reverted when the property is unregistered or <see cref="LocalizationSettings.SelectedLocale"/> is set to <c>null</c>.
+    /// and reverted when the property is unregistered or <see cref="LocalizationSettings.SelectedLocale"/> is set to <see langword="null"/>.
     /// </summary>
     public static class EditorPropertyDriver
     {
@@ -29,7 +29,7 @@ namespace UnityEngine.Localization
         /// Mark the property as Driven in the editor.
         /// When a property is marked as driven it is considered to be a temporary change, that is the new values applied to the property
         /// will be ignored and not saved into the scene. The value will revert back to its original value when <see cref="UnregisterProperty(Object, string)"/>
-        /// is called or <see cref="LocalizationSettings.SelectedLocale"/> is set to <c>null</c>.
+        /// is called or <see cref="LocalizationSettings.SelectedLocale"/> is set to <see langword="null"/>.
         /// Calling this method in play mode or a player build will do nothing.
         /// </summary>
         /// <example>

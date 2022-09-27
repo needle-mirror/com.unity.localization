@@ -4,7 +4,7 @@ using UnityEngine.Localization.Settings;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace UnityEngine.Localization
+namespace UnityEngine.Localization.Operations
 {
     /// <summary>
     /// Performs all initialization work for the LocalizationSettings.
@@ -17,6 +17,7 @@ namespace UnityEngine.Localization
         LocalizationSettings m_Settings;
         readonly List<AsyncOperationHandle> m_LoadDatabasesOperations = new List<AsyncOperationHandle>();
 
+        AsyncOperationHandle<IList<AsyncOperationHandle>> m_PreloadDatabasesOperation;
         int m_RemainingSteps;
         const int k_PreloadSteps = 3;
 
@@ -80,9 +81,9 @@ namespace UnityEngine.Localization
 
             if (m_LoadDatabasesOperations.Count > 0)
             {
-                var operation = AddressablesInterface.ResourceManager.CreateGenericGroupOperation(m_LoadDatabasesOperations, true);
-                CurrentOperation = operation;
-                operation.CompletedTypeless += m_FinishInitializingAction;
+                m_PreloadDatabasesOperation = AddressablesInterface.CreateGroupOperation(m_LoadDatabasesOperations);
+                CurrentOperation = m_PreloadDatabasesOperation;
+                m_PreloadDatabasesOperation.CompletedTypeless += m_FinishInitializingAction;
             }
             else
             {
@@ -106,6 +107,7 @@ namespace UnityEngine.Localization
 
         void FinishInitializing(bool success, string error)
         {
+            AddressablesInterface.ReleaseAndReset(ref m_PreloadDatabasesOperation);
             PostInitializeExtensions();
             Complete(m_Settings, success, error);
         }

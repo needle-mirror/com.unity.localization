@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 
 #region asynchronous
@@ -35,6 +36,43 @@ public class InitializationOperationExampleSync : MonoBehaviour
     {
         // Force initialization to complete synchronously.
         LocalizationSettings.InitializationOperation.WaitForCompletion();
+    }
+}
+#endregion
+
+#region selected-locale-changed
+
+public class SelectedLocaleChangedExample : MonoBehaviour
+{
+    Locale currentLocale;
+
+    void OnEnable()
+    {
+        LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
+    }
+
+    void OnDisable()
+    {
+        LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
+    }
+
+    IEnumerable Start()
+    {
+        // Get the initial selected locale value
+        var selectedLocale = LocalizationSettings.SelectedLocaleAsync;
+        yield return selectedLocale;
+        currentLocale = selectedLocale.Result;
+    }
+
+    void OnSelectedLocaleChanged(Locale locale)
+    {
+        currentLocale = locale;
+    }
+
+    void OnGUI()
+    {
+        if (currentLocale != null)
+            GUILayout.Label("The current locale is " + currentLocale.LocaleName);
     }
 }
 #endregion

@@ -36,7 +36,7 @@ namespace UnityEngine.Localization
         protected abstract LocalizedDatabase<TTable, TEntry> Database { get; }
 
         /// <summary>
-        /// The current loading operation for the table when using <see cref="TableChanged"/> or <c>default</c> if one is not available.
+        /// The current loading operation for the table when using <see cref="TableChanged"/> or <see langword="default"/> if one is not available.
         /// </summary>
         public AsyncOperationHandle<TTable> CurrentLoadingOperationHandle
         {

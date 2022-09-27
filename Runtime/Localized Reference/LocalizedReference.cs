@@ -92,7 +92,7 @@ namespace UnityEngine.Localization
 
         /// <summary>
         /// Provide a locale that can be used instead of <see cref="LocalizationSettings.SelectedLocale"/>.
-        /// A <c>null</c> value will revert to using <see cref="LocalizationSettings.SelectedLocale"/>.
+        /// A <see langword="null"/> value will revert to using <see cref="LocalizationSettings.SelectedLocale"/>.
         /// </summary>
         /// <example>
         /// This example shows how the <see cref="LocaleOverride"/> can be used in order to provide an alternative to <see cref="LocalizationSettings.SelectedLocale"/>.

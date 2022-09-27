@@ -17,7 +17,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedProperties
         /// </summary>
         /// <param name="localeIdentifier">The LocaleIdentifier to check for.</param>
         /// <param name="foundValue">The value found for the LocaleIdentifier.</param>
-        /// <returns><c>True</c> if a value was found and <c>false</c> if one was not.</returns>
+        /// <returns><see langword="true"/> if a value was found and <see langword="false"/> if one was not.</returns>
         bool GetValue(LocaleIdentifier localeIdentifier, out T foundValue);
 
         /// <summary>
@@ -26,7 +26,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedProperties
         /// <param name="localeIdentifier">The LocaleIdentifier to check for.</param>
         /// <param name="fallback">The LocaleIdentifier to fallback to if one could not be found for <paramref name="localeIdentifier"/>.</param>
         /// <param name="foundValue">The value found for the LocaleIdentifier or fallback.</param>
-        /// <returns><c>True</c> if a value was found and <c>false</c> if one was not.</returns>
+        /// <returns><see langword="true"/> if a value was found and <see langword="false"/> if one was not.</returns>
         bool GetValue(LocaleIdentifier localeIdentifier, LocaleIdentifier fallback, out T foundValue);
 
         /// <summary>

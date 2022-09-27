@@ -10,7 +10,7 @@ namespace UnityEditor.Localization.UI
     /// <summary>
     /// Displays all the asset tables for the project collated by type.
     /// </summary>
-    class ProjectTablesPopup : PopupField<LocalizationTableCollection>
+    class ProjectTablesPopup : PopupField<LocalizationTableCollection>, IDisposable
     {
         class NoTables : LocalizationTableCollection
         {
@@ -44,6 +44,11 @@ namespace UnityEditor.Localization.UI
         }
 
         ~ProjectTablesPopup()
+        {
+            ((IDisposable)this).Dispose();
+        }
+
+        void IDisposable.Dispose()
         {
             LocalizationEditorSettings.EditorEvents.CollectionAdded -= OnCollectionAdded;
             LocalizationEditorSettings.EditorEvents.CollectionRemoved -= OnCollectionRemoved;

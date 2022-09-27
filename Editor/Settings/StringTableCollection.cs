@@ -63,10 +63,10 @@ namespace UnityEditor.Localization
         /// Updates the collection entries with a <paramref name="sortedEntries"/> and optionally removes entries that are missing from the update.
         /// Used by various importers such as <see cref="Plugins.Google.GoogleSheets"/> and <see cref="Plugins.CSV.Csv"/>.
         /// </summary>
-        /// <param name="entriesToKeep">The entries that should not be removed if <paramref name="removeMissingEntries"/> is <c>true</c>.</param>
+        /// <param name="entriesToKeep">The entries that should not be removed if <paramref name="removeMissingEntries"/> is <see langword="true"/>.</param>
         /// <param name="sortedEntries">The new sorted entries.</param>
         /// <param name="removedEntriesLog">Optional log for reporting what entries were removed.</param>
-        /// <param name="removeMissingEntries">Should missing entries be removed? If <c>false</c> they will be placed at the end after the sorted entries.</param>
+        /// <param name="removeMissingEntries">Should missing entries be removed? If <see langword="false"/> they will be placed at the end after the sorted entries.</param>
         internal void MergeUpdatedEntries(HashSet<long> entriesToKeep, List<SharedTableEntry> sortedEntries, StringBuilder removedEntriesLog, bool removeMissingEntries)
         {
             // We either remove missing entries or add them to the end.

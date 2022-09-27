@@ -50,8 +50,8 @@ namespace UnityEngine.Localization.Metadata
         /// <summary>
         /// Determines if the table, entry or both should be overridden.
         /// </summary>
-        /// <param name="tableReference">The table to use or <c>default</c> if it is not overriden.</param>
-        /// <param name="tableEntryReference">The entry to use or <c>default</c> if it is not overriden.</param>
+        /// <param name="tableReference">The table to use or <see langword="default"/> if it is not overriden.</param>
+        /// <param name="tableEntryReference">The entry to use or <see langword="default"/> if it is not overriden.</param>
         /// <returns>Returns the fields that should be overridden.</returns>
         EntryOverrideType GetOverride(out TableReference tableReference, out TableEntryReference tableEntryReference);
     }
@@ -150,7 +150,7 @@ namespace UnityEngine.Localization.Metadata
         /// Removes the platform override for the chosen platform.
         /// </summary>
         /// <param name="platform">The platform to remove.</param>
-        /// <returns><c>true</c> if the platform was removed or <c>false</c> if no override was found.</returns>
+        /// <returns><see langword="true"/> if the platform was removed or <see langword="false"/> if no override was found.</returns>
         public bool RemovePlatformOverride(RuntimePlatform platform)
         {
             for (int i = 0; i < m_PlatformOverrides.Count; ++i)
@@ -167,8 +167,8 @@ namespace UnityEngine.Localization.Metadata
         /// <summary>
         /// Returns the <see cref="EntryOverrideType"/> for the platform the application is currently running on using [Application.platform](https://docs.unity3d.com/ScriptReference/Application-platform.html).
         /// </summary>
-        /// <param name="tableReference">The table to use or <c>default</c> if it is not overriden.</param>
-        /// <param name="tableEntryReference">The entry to use or <c>default</c> if it is not overriden.</param>
+        /// <param name="tableReference">The table to use or <see langword="default"/> if it is not overriden.</param>
+        /// <param name="tableEntryReference">The entry to use or <see langword="default"/> if it is not overriden.</param>
         /// <returns>Returns the fields that should be overridden.</returns>
         public EntryOverrideType GetOverride(out TableReference tableReference, out TableEntryReference tableEntryReference)
         {
@@ -193,8 +193,8 @@ namespace UnityEngine.Localization.Metadata
         /// <summary>
         /// Returns the <see cref="EntryOverrideType"/> for the platform.
         /// </summary>
-        /// <param name="tableReference">The table to use or <c>default</c> if it is not overriden.</param>
-        /// <param name="tableEntryReference">The entry to use or <c>default</c> if it is not overriden.</param>
+        /// <param name="tableReference">The table to use or <see langword="default"/> if it is not overriden.</param>
+        /// <param name="tableEntryReference">The entry to use or <see langword="default"/> if it is not overriden.</param>
         /// <param name="platform">The platform to return the override for.</param>
         /// <returns>Returns the fields that should be overridden.</returns>
         public EntryOverrideType GetOverride(out TableReference tableReference, out TableEntryReference tableEntryReference, RuntimePlatform platform)

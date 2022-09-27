@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
@@ -27,15 +28,24 @@ namespace UnityEditor.Localization
 
         readonly ResourceManager m_ResourceManager = new ResourceManager();
 
-        static TObject LoadAsset<TObject>(string guid) where TObject : class
+        // Addressables is only safe to use in playmode, any other time we use the asset database. (LOC-722)
+        internal bool UseAddressables => (LocalizationSettings.Instance.IsPlayingOverride.HasValue && LocalizationSettings.Instance.IsPlayingOverride.Value) || 
+                                        (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode && PlayModeState == PlayModeStateChange.EnteredPlayMode);
+
+        internal static PlayModeStateChange PlayModeState => EditorApplication.isPlaying ?
+            EditorApplication.isPlayingOrWillChangePlaymode ? PlayModeStateChange.EnteredPlayMode : PlayModeStateChange.ExitingPlayMode :
+            EditorApplication.isPlayingOrWillChangePlaymode ? PlayModeStateChange.ExitingEditMode : PlayModeStateChange.EnteredEditMode;
+
+        static TObject LoadAsset<TObject>(string address) where TObject : class
         {
-            var path = AssetDatabase.GUIDToAssetPath(guid);
+            var asset = AssetUtility.LoadAssetFromAddress(address, typeof(TObject)) as TObject;
+            if (asset != null)
+                return asset;
+
+            var path = AssetUtility.GetPathFromAddress(address);
             if (string.IsNullOrEmpty(path))
-            {
-                Debug.LogWarning($"Could not find an asset of type {typeof(TObject)} with the guid `{guid}`");
-                return null;
-            }
-            return AssetDatabase.LoadAssetAtPath(path, typeof(TObject)) as TObject;
+                Debug.LogWarning($"Could not find an asset of type {typeof(TObject)} with the guid `{address}` from `{path}`.");
+            return null;
         }
 
         internal override AsyncOperationHandle<IList<IResourceLocation>> LoadResourceLocationsWithLabelsAsyncInternal(IEnumerable labels, MergeMode mode, Type type = null)
@@ -48,7 +58,7 @@ namespace UnityEditor.Localization
 
         internal override AsyncOperationHandle<IList<IResourceLocation>> LoadTableLocationsAsyncInternal(string tableName, LocaleIdentifier id, Type type)
         {
-            if (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
+            if (UseAddressables)
                 return base.LoadTableLocationsAsyncInternal(tableName, id, type);
 
             LocalizationTable table = null;
@@ -90,14 +100,14 @@ namespace UnityEditor.Localization
 
         internal override AsyncOperationHandle<TObject> LoadAssetFromGUIDInternal<TObject>(string guid)
         {
-            if (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
+            if (UseAddressables)
                 return base.LoadAssetFromGUIDInternal<TObject>(guid);
             return m_ResourceManager.CreateCompletedOperation(LoadAsset<TObject>(guid), null);
         }
 
         internal override AsyncOperationHandle<TObject> LoadAssetFromNameInternal<TObject>(string name)
         {
-            if (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
+            if (UseAddressables)
                 return base.LoadAssetFromNameInternal<TObject>(name);
 
             var settings = LocalizationEditorSettings.Instance.GetAddressableAssetSettings(false);
@@ -125,7 +135,7 @@ namespace UnityEditor.Localization
 
         internal override AsyncOperationHandle<TObject> LoadTableFromLocationInternal<TObject>(IResourceLocation location)
         {
-            if (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
+            if (UseAddressables)
                 return base.LoadTableFromLocationInternal<TObject>(location);
 
             TObject table = null;
@@ -143,7 +153,7 @@ namespace UnityEditor.Localization
 
         internal override AsyncOperationHandle<IList<TObject>> LoadAssetsWithLabelInternal<TObject>(string label, Action<TObject> callback)
         {
-            if (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
+            if (UseAddressables)
                 return base.LoadAssetsWithLabelInternal(label, callback);
 
             IList<TObject> list = new List<TObject>();
@@ -171,6 +181,13 @@ namespace UnityEditor.Localization
                 }
             }
             return m_ResourceManager.CreateCompletedOperation(list, null);
+        }
+
+        internal override AsyncOperationHandle<IResourceLocator> InitializeAddressablesAsync()
+        {
+            if (UseAddressables)
+                return base.InitializeAddressablesAsync();
+            return default;
         }
     }
 }

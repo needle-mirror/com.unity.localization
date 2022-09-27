@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine.Localization.Operations;
 using UnityEngine.Localization.Tables;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -46,12 +47,52 @@ namespace UnityEngine.Localization.Settings
     }
 
     /// <summary>
+    /// Can be assigned to <see cref="LocalizedDatabase{TTable, TEntry}.TableProvider"/> to override the default table loading through Addressables in order to provide a custom table.
+    /// </summary>
+    /// <example>
+    /// This example demonstrates how to use the <see cref="ITableProvider"/> to provide a custom String Table without using the Addressables system.
+    /// This approach is particularly useful when you want to allow users to add third-party content, such as modding.
+    /// The localization data could be loaded from an external file and then converted into a table at runtime.
+    /// <code source="../../../DocCodeSamples.Tests/TableProviderSamples.cs" region="custom-table-provider"/>
+    /// <code source="../../../DocCodeSamples.Tests/TableProviderSamples.cs" region="set-provider-editor"/>
+    /// </example>
+    public interface ITableProvider
+    {
+        /// <summary>
+        /// Provides a way to return a custom table when when attempting to load from <see cref="LocalizedDatabase{TTable, TEntry}.GetTableAsync(TableReference, Locale)"/>.
+        /// </summary>
+        /// <param name="tableCollectionName"></param>
+        /// <param name="locale"></param>
+        /// <typeparam name="TTable"></typeparam>
+        /// <returns>A valid table or <see langword="default"/>, which will trigger the default table loading.</returns>
+        AsyncOperationHandle<TTable> ProvideTableAsync<TTable>(string tableCollectionName, Locale locale) where TTable : LocalizationTable;
+    }
+
+    /// <summary>
+    /// Gets a notification when a <see cref="StringTable"/> or <see cref="AssetTable"/> completes loading.
+    /// </summary>
+    /// <example>
+    /// This example demonstrates how to use the <see cref="ITablePostprocessor"/> to apply changes to a table after it has loaded but before it has been used.
+    /// This can be beneficial when you wish to modify or add entries to a table, such as when supporting third-party content, for example modding.
+    /// <code source="../../../DocCodeSamples.Tests/TablePatcherSamples.cs" region="custom-table-patcher"/>
+    /// <code source="../../../DocCodeSamples.Tests/TablePatcherSamples.cs" region="set-patcher-editor"/>
+    /// </example>
+    public interface ITablePostprocessor
+    {
+        /// <summary>
+        /// This could be used to patch a table with updated values.
+        /// </summary>
+        /// <param name="table">The loaded <see cref="StringTable"/> or <see cref="AssetTable"/>.</param>
+        void PostprocessTable(LocalizationTable table);
+    }
+
+    /// <summary>
     /// Provides common functionality for both string and asset table fetching.
     /// </summary>
     /// <typeparam name="TTable"></typeparam>
     /// <typeparam name="TEntry"></typeparam>
     [Serializable]
-    public abstract class LocalizedDatabase<TTable, TEntry> : IPreloadRequired, IReset
+    public abstract class LocalizedDatabase<TTable, TEntry> : IPreloadRequired, IReset, IDisposable
         where TTable : DetailedLocalizationTable<TEntry>
         where TEntry : TableEntry
     {
@@ -62,12 +103,12 @@ namespace UnityEngine.Localization.Settings
         public struct TableEntryResult
         {
             /// <summary>
-            /// The entry that was resolved or <c>null</c> if one could not be found.
+            /// The entry that was resolved or <see langword="null"/> if one could not be found.
             /// </summary>
             public TEntry Entry { get; }
 
             /// <summary>
-            /// The table the entry was extracted from. When <see cref="Entry"/> is <c>null</c>, this contains the last table that was tried.
+            /// The table the entry was extracted from. When <see cref="Entry"/> is <see langword="null"/>, this contains the last table that was tried.
             /// </summary>
             public TTable Table { get; }
 
@@ -88,7 +129,7 @@ namespace UnityEngine.Localization.Settings
             {
                 #if UNITY_EDITOR
                 // Don't preload in Editor preview
-                if (!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+                if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
                     return AddressablesInterface.ResourceManager.CreateCompletedOperation(this, null);
                 #endif
 
@@ -102,15 +143,17 @@ namespace UnityEngine.Localization.Settings
             }
         }
 
-        [SerializeField]
-        TableReference m_DefaultTableReference;
+        [SerializeField] TableReference m_DefaultTableReference;
+        [SerializeReference] ITableProvider m_CustomTableProvider;
+        [SerializeReference] ITablePostprocessor m_CustomTablePostprocessor;
+        [SerializeField] bool m_UseFallback;
 
-        [SerializeField]
-        bool m_UseFallback;
-
-        AsyncOperationHandle m_PreloadOperationHandle;
+        internal AsyncOperationHandle m_PreloadOperationHandle;
         Action<AsyncOperationHandle> m_ReleaseNextFrame;
-        Action<AsyncOperationHandle<TTable>> m_RegisterSharedTableOperation;
+
+        readonly Action<AsyncOperationHandle<TTable>> m_PatchTableContentsAction;
+        readonly Action<AsyncOperationHandle<TTable>> m_RegisterSharedTableAndGuidOperationAction;
+        readonly Action<AsyncOperationHandle<TTable>> m_RegisterCompletedTableOperationAction;
 
         internal Action<AsyncOperationHandle> ReleaseNextFrame => m_ReleaseNextFrame;
 
@@ -137,6 +180,38 @@ namespace UnityEngine.Localization.Settings
         }
 
         /// <summary>
+        /// Called when attempting to load a table, can be used to override the default table loading through Addressables in order to provide a custom table.
+        /// </summary>
+        /// <example>
+        /// This example demonstrates how to use the <see cref="ITableProvider"/> to provide a custom String Table without using the Addressables system.
+        /// This approach is particularly useful when you want to allow users to add third-party content, such as modding.
+        /// The localization data could be loaded from an external file and then converted into a table at runtime.
+        /// <code source="../../../DocCodeSamples.Tests/TableProviderSamples.cs" region="custom-table-provider"/>
+        /// <code source="../../../DocCodeSamples.Tests/TableProviderSamples.cs" region="set-provider-editor"/>
+        /// </example>
+        public ITableProvider TableProvider
+        {
+            get => m_CustomTableProvider;
+            set => m_CustomTableProvider = value;
+        }
+
+        /// <summary>
+        /// Gets a notification when a table completes loading.
+        /// This can be used to apply changes to a table at runtime, such as updating or creating new entries.
+        /// </summary>
+        /// <example>
+        /// This example demonstrates how to use the <see cref="ITablePostprocessor"/> to apply changes to a table after it has loaded but before it has been used.
+        /// This can be beneficial when you wish to modify or add entries to a table, such as when supporting third-party content, for example modding.
+        /// <code source="../../../DocCodeSamples.Tests/TablePatcherSamples.cs" region="custom-table-patcher"/>
+        /// <code source="../../../DocCodeSamples.Tests/TablePatcherSamples.cs" region="set-patcher-editor"/>
+        /// </example>
+        public ITablePostprocessor TablePostprocessor
+        {
+            get => m_CustomTablePostprocessor;
+            set => m_CustomTablePostprocessor = value;
+        }
+
+        /// <summary>
         /// Should the fallback Locale be used when a translation could not be found?.
         /// </summary>
         public bool UseFallback
@@ -150,8 +225,10 @@ namespace UnityEngine.Localization.Settings
         /// </summary>
         public LocalizedDatabase()
         {
+            m_PatchTableContentsAction = PatchTableContents;
+            m_RegisterSharedTableAndGuidOperationAction = RegisterSharedTableAndGuidOperation;
+            m_RegisterCompletedTableOperationAction = RegisterCompletedTableOperation;
             m_ReleaseNextFrame = LocalizationBehaviour.ReleaseNextFrame;
-            m_RegisterSharedTableOperation = RegisterSharedTableOperation;
         }
 
         internal TableReference GetDefaultTable()
@@ -162,43 +239,83 @@ namespace UnityEngine.Localization.Settings
             return m_DefaultTableReference;
         }
 
-        internal void RegisterTableOperation(AsyncOperationHandle<TTable> handle, LocaleIdentifier localeIdentifier, string tableName)
+        internal void RegisterCompletedTableOperation(AsyncOperationHandle<TTable> tableOperation)
         {
-            var localeAndName = (localeIdentifier, tableName);
-            if (!TableOperations.ContainsKey(localeAndName))
-                TableOperations[localeAndName] = handle;
+            if (!tableOperation.IsDone)
+            {
+                tableOperation.Completed += m_RegisterCompletedTableOperationAction;
+                return;
+            }
 
-            if (handle.IsDone)
-                RegisterSharedTableOperation(handle);
-            else
-                handle.Completed += m_RegisterSharedTableOperation;
+            var table = tableOperation.Result;
+            if (table == null)
+                return;
+
+            RegisterTableNameOperation(tableOperation, table.LocaleIdentifier, table.TableCollectionName);
+
+            // If the table is already present then RegisterTableNameOperation will release the operation which may cause it to become invalid.
+            if (tableOperation.IsValid())
+                RegisterSharedTableAndGuidOperation(tableOperation);
+        }
+
+        void RegisterTableNameOperation(AsyncOperationHandle<TTable> tableOperation, LocaleIdentifier localeIdentifier, string tableName)
+        {
+            var key = (localeIdentifier, tableName);
+            if (TableOperations.ContainsKey(key))
+            {
+                // Dont hold onto this.
+                return;
+            }
+
+            TableOperations[key] = tableOperation;
+
+            if (TablePostprocessor != null)
+            {
+                // Patch the table contents
+                if (tableOperation.IsDone)
+                    PatchTableContents(tableOperation);
+                else
+                    tableOperation.Completed += m_PatchTableContentsAction;
+            }
+        }
+
+        void RegisterSharedTableAndGuidOperation(AsyncOperationHandle<TTable> tableOperation)
+        {
+            if (!tableOperation.IsDone)
+            {
+                tableOperation.Completed += m_RegisterSharedTableAndGuidOperationAction;
+                return;
+            }
+
+            var table = tableOperation.Result;
+            if (table == null)
+                return;
+
+            // Register the shared table data Guid.
+            var tableNameGuid = table.SharedData.TableCollectionNameGuid;
+            if (!SharedTableDataOperations.ContainsKey(tableNameGuid))
+                SharedTableDataOperations[tableNameGuid] = AddressablesInterface.ResourceManager.CreateCompletedOperation(table.SharedData, null);
+
+            // Register the table via the locale identifier and guid.
+            var localeAndGuid = (table.LocaleIdentifier, TableReference.StringFromGuid(tableNameGuid));
+            if (!TableOperations.ContainsKey(localeAndGuid))
+            {
+                // We acquire when using the guid.
+                AddressablesInterface.Acquire(tableOperation);
+                TableOperations[localeAndGuid] = tableOperation;
+            }
         }
 
         void RegisterTablesOperation(AsyncOperationHandle<IList<TTable>> tablesOperation)
         {
             foreach (var table in tablesOperation.Result)
             {
-                RegisterTableOperation(AddressablesInterface.ResourceManager.CreateCompletedOperation(table, null), table.LocaleIdentifier, table.name);
-            }
-        }
-
-        void RegisterSharedTableOperation(AsyncOperationHandle<TTable> tableOperation)
-        {
-            if (tableOperation.Result == null)
-                return;
-
-            // Register the shared table data Guid
-            var sharedTableData = tableOperation.Result.SharedData;
-            var tableNameGuid = sharedTableData.TableCollectionNameGuid;
-            if (!SharedTableDataOperations.ContainsKey(tableNameGuid))
-                SharedTableDataOperations[tableNameGuid] = AddressablesInterface.ResourceManager.CreateCompletedOperation(sharedTableData, null);
-
-            // Register the table via the locale identifier and guid
-            var localeAndGuid = (tableOperation.Result.LocaleIdentifier, TableReference.StringFromGuid(tableNameGuid));
-            if (!TableOperations.ContainsKey(localeAndGuid))
-            {
-                AddressablesInterface.Acquire(tableOperation);
-                TableOperations[localeAndGuid] = tableOperation;
+                // If the table was already registered then we do nothing
+                if (!TableOperations.ContainsKey((table.LocaleIdentifier, table.TableCollectionName)))
+                {
+                    var tableHandle = AddressablesInterface.ResourceManager.CreateCompletedOperation(table, null);
+                    RegisterCompletedTableOperation(tableHandle);
+                }    
             }
         }
 
@@ -262,24 +379,22 @@ namespace UnityEngine.Localization.Settings
 
             if (useSelectedLocalePlaceholder || tableReference.ReferenceType == TableReference.Type.Guid)
             {
-                // Register the guid or placeholder operation for reuse.
-                if (!TableOperations.ContainsKey((localeId, tableIdString)))
-                {
+                // When using a Guid we increment the reference count.
+                // We do not increment for placeholders as we only ever have 1 reference for them, we dont share it between
+                // table name and guid, because the register operation will use the actual selected locale and not the placeholder.
+                // We treat the table name as default and do not increment for that one.
+                if (!useSelectedLocalePlaceholder)
                     AddressablesInterface.Acquire(handle);
-                    TableOperations[(localeId, tableIdString)] = handle;
-
-                    // Register the table operation later when we have a Locale and/or the table name. (LOC-172)
-                    if (handle.IsDone)
-                        operation.RegisterTableOperation(handle);
-                    else
-                        handle.Completed += operation.RegisterTableOperation;
-                }
+                TableOperations[(localeId, tableIdString)] = handle;
             }
             else
             {
                 // Register the table name and Guid
-                RegisterTableOperation(handle, localeId, tableIdString);
+                RegisterTableNameOperation(handle, localeId, tableIdString);
             }
+
+            // Register the table operation later. This will fully register everything including shared table data, table name and guid.
+            RegisterCompletedTableOperation(handle);
 
             return handle;
         }
@@ -348,6 +463,51 @@ namespace UnityEngine.Localization.Settings
         }
 
         /// <summary>
+        /// Releases all tables that are currently loaded in the database.
+        /// This will also release any references to the <see cref="SharedTableData"/> providing there are no other references to it, such as different Locale versions of the table that have been loaded.
+        /// </summary>
+        /// <param name="locale">The <see cref="Locale"/> to release tables for, when <see langword="null"/> all locales will be released.</param>
+        public void ReleaseAllTables(Locale locale = null)
+        {
+            using (HashSetPool<TTable>.Get(out var releasedTables))
+            {
+                foreach (var to in TableOperations.Values)
+                {
+                    if (!to.IsValid())
+                        continue;
+
+                    if (locale != null && to.Result.LocaleIdentifier != locale.Identifier)
+                        continue;
+
+                    // We may have multiple references to the table so we keep track in order to only call release once.
+                    if (to.Result != null && !releasedTables.Contains(to.Result))
+                    {
+                        ReleaseTableContents(to.Result);
+                        releasedTables.Add(to.Result);
+                    }
+                    AddressablesInterface.Release(to);
+                }
+            }
+
+            foreach (var shared in SharedTableDataOperations)
+            {
+                AddressablesInterface.SafeRelease(shared.Value);
+            }
+            SharedTableDataOperations.Clear();
+
+            if (m_PreloadOperationHandle.IsValid())
+            {
+                //Debug.Assert(m_PreloadOperationHandle.IsDone, "Disposing an incomplete preload operation");
+
+                if (m_PreloadOperationHandle.IsDone)
+                    AddressablesInterface.Release(m_PreloadOperationHandle);
+                m_PreloadOperationHandle = default;
+            }
+
+            TableOperations.Clear();
+        }
+
+        /// <summary>
         /// Releases all references to the table that matches the <paramref name="tableReference"/> and <paramref name="locale"/>.
         /// This will also release any references to the <see cref="SharedTableData"/> providing there are no other references to it, such as different Locale versions of the table that have been loaded.
         /// A table is released by calling <see cref="AddressableAssets.Addressables.Release"/> on it which decrements the ref-count.
@@ -355,7 +515,7 @@ namespace UnityEngine.Localization.Settings
         /// For more information, read the Addressables section [on when memory is cleared](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/MemoryManagement.html).
         /// </summary>
         /// <param name="tableReference">A reference to the table. A table reference can be either the name of the table or the table collection name Guid.</param>
-        /// <param name="locale">The Locale version of the table that should be unloaded. When <c>null</c> the <see cref="LocalizationSettings.SelectedLocale"/> will be used.</param>
+        /// <param name="locale">The Locale version of the table that should be unloaded. When <see langword="null"/> the <see cref="LocalizationSettings.SelectedLocale"/> will be used.</param>
         /// <example>
         /// This shows how to release a table but prevent it from being unloaded.
         /// <code source="../../../DocCodeSamples.Tests/LocalizedStringDatabaseSamples.cs" region="release-example"/>
@@ -552,27 +712,15 @@ namespace UnityEngine.Localization.Settings
         /// <param name="locale"></param>
         public virtual void OnLocaleChanged(Locale locale)
         {
-            using (HashSetPool<TTable>.Get(out var releasedTables))
-            {
-                foreach (var to in TableOperations.Values)
-                {
-                    if (!to.IsValid())
-                        continue;
+            ReleaseAllTables();
+        }
 
-                    // We may have multiple references to the table so we keep track in order to only call release once.
-                    if (to.Result != null && !releasedTables.Contains(to.Result))
-                    {
-                        ReleaseTableContents(to.Result);
-                        releasedTables.Add(to.Result);
-                    }
-                    AddressablesInterface.Release(to);
-                }
-            }
-
-            AddressablesInterface.SafeRelease(m_PreloadOperationHandle);
-            m_PreloadOperationHandle = default;
-
-            TableOperations.Clear();
+        void PatchTableContents(AsyncOperationHandle<TTable> tableOperation)
+        {
+            // This should only be called once, after the table has loaded. It gives users the opurtunity to patch a Localized table.
+            // For example you may want to read in some extra data from a csv file after the game has been built.
+            if (TablePostprocessor != null && tableOperation.Result != null)
+                TablePostprocessor.PostprocessTable(tableOperation.Result);
         }
 
         /// <summary>
@@ -580,7 +728,15 @@ namespace UnityEngine.Localization.Settings
         /// </summary>
         public void ResetState()
         {
-            OnLocaleChanged(null);
+            ReleaseAllTables();
+        }
+
+        /// <summary>
+        /// Calls <see cref="ReleaseAllTables(Locale)"/>..
+        /// </summary>
+        void IDisposable.Dispose()
+        {
+            ReleaseAllTables();
         }
     }
 }

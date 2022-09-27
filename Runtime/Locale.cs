@@ -39,7 +39,7 @@ namespace UnityEngine.Localization
         /// <summary>
         /// A [CultureInfo}(https://docs.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo) representation of the Locale.
         /// The <see cref="Code"/> is used to query for a valid [CultureInfo}(https://docs.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo).
-        /// If a value can not be determined from the <see cref="Code"/> then <c>null</c> will be returned.
+        /// If a value can not be determined from the <see cref="Code"/> then <see langword="null"/> will be returned.
         /// </summary>
         /// <example>
         /// This example shows how the CultureInfo can be retrieved after creating a LocaleIdentifier using a Code.
@@ -155,10 +155,11 @@ namespace UnityEngine.Localization
         /// <returns></returns>
         public bool Equals(LocaleIdentifier other)
         {
+            // Treat null and empty as the same
             if (string.IsNullOrEmpty(other.Code) && string.IsNullOrEmpty(Code))
                 return true;
 
-            return Code.Equals(other.Code, StringComparison.OrdinalIgnoreCase);
+            return string.Equals(Code, other.Code, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -172,7 +173,7 @@ namespace UnityEngine.Localization
 
         /// <summary>
         /// Compare to another <see cref="LocaleIdentifier"/>.
-        /// Performs a comparison against <c>CultureInfo.EnglishName</c> property.
+        /// Performs a comparison against [CultureInfo.EnglishName](https://docs.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo.englishname) property.
         /// </summary>
         /// <param name="other">Value to compare against.</param>
         /// <returns></returns>
@@ -273,16 +274,16 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// Returns the first fallback locale or <c>null</c> if one does not exist or it could not be found.
+        /// Returns the first fallback locale or <see langword="null"/> if one does not exist or it could not be found.
         /// </summary>
-        /// <returns>The fallback locale or <c>null</c>.</returns>
+        /// <returns>The fallback locale or <see langword="null"/>.</returns>
         [Obsolete("GetFallback is obsolete, please use GetFallbacks.")]
         public virtual Locale GetFallback() => GetFallbacks().GetEnumerator().Current;
 
         /// <summary>
         /// Returns the fallbacks in order or priority. If the locale does not contain any <see cref="FallbackLocale"/> metadata then the CultureInfo will be used to find a fallback.
         /// </summary>
-        /// <returns>The fallback locale or <c>null</c>.</returns>
+        /// <returns>The fallback locale or <see langword="null"/>.</returns>
         public IEnumerable<Locale> GetFallbacks()
         {
             if (Metadata == null)
@@ -327,7 +328,7 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// When <c>true</c>, <see cref="CustomFormatterCode"/> will be used for any culture sensitive formatting instead of <see cref="Identifier"/>.
+        /// When <see langword="true"/>, <see cref="CustomFormatterCode"/> will be used for any culture sensitive formatting instead of <see cref="Identifier"/>.
         /// </summary>
         public bool UseCustomFormatter
         {
@@ -356,7 +357,7 @@ namespace UnityEngine.Localization
 
         /// <summary>
         /// The Formatter that will be applied to any Smart Strings for this Locale.
-        /// By default, the <see cref="Identifier"/> <c>CultureInfo</c> will be used when <see cref="CustomFormatterCode"/> is not set.
+        /// By default, the <see cref="Identifier"/> [CultureInfo](https://docs.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo) will be used when <see cref="CustomFormatterCode"/> is not set.
         /// </summary>
         public virtual IFormatProvider Formatter
         {

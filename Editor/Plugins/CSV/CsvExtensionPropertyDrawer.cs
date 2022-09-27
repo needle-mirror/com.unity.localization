@@ -83,7 +83,7 @@ namespace UnityEditor.Localization.Plugins.CSV
                 var stream = new StreamReader(fs);
                 var reporter = TaskReporter.CreateDefaultReporter();
                 reporter.Start("Importing " + path, string.Empty);
-                Csv.ImportInto(stream, collection, columns, true, reporter);
+                Csv.ImportInto(stream, collection, columns, true, reporter, true);
             }
         }
 
@@ -116,11 +116,17 @@ namespace UnityEditor.Localization.Plugins.CSV
                 var collection = target.TargetCollection as StringTableCollection;
 
                 var path = EditorUtility.SaveFilePanel("Export to CSV", MenuItems.PreviousDirectory, collection.TableCollectionName, "csv");
-                if (string.IsNullOrEmpty(path))
-                    return;
+                path = PathHelper.MakePathRelative(path);
+                if (!string.IsNullOrEmpty(path))
+                {
+                    data.m_ConnectedFile.stringValue = path;
+                    Export(path, collection, target.Columns);
+                    MenuItems.PreviousDirectory = path;
+                }
 
-                data.m_ConnectedFile.stringValue = path;
-                Export(path, collection, target.Columns);
+                // We need to apply the changes here as we exit early (LOC-751).
+                data.m_ConnectedFile.serializedObject.ApplyModifiedProperties();
+                GUIUtility.ExitGUI();
             }
 
             if (GUI.Button(buttonsRect.right, Styles.open))
@@ -129,11 +135,18 @@ namespace UnityEditor.Localization.Plugins.CSV
                 var collection = target.TargetCollection as StringTableCollection;
 
                 var path = EditorUtility.OpenFilePanel("Import CSV", MenuItems.PreviousDirectory, "csv");
-                if (string.IsNullOrEmpty(path))
-                    return;
+                path = PathHelper.MakePathRelative(path);
+                if (!string.IsNullOrEmpty(path))
+                {
+                    data.m_ConnectedFile.stringValue = path;
+                    Import(path, collection, target.Columns);
+                    MenuItems.PreviousDirectory = path;
+                }
 
-                data.m_ConnectedFile.stringValue = path;
-                Import(path, collection, target.Columns);
+                // We need to apply the changes here as we exit early (LOC-751).
+                data.m_ConnectedFile.serializedObject.ApplyModifiedProperties();
+
+                GUIUtility.ExitGUI();
             }
 
             if (!string.IsNullOrEmpty(data.m_ConnectedFile.stringValue))

@@ -11,15 +11,16 @@ namespace UnityEditor.Localization.Plugins.CSV
 {
     static class MenuItems
     {
-        const string kPrefFile = "Localization-csv-file";
+        const string k_PrefFile = "Localization-csv-file";
 
         public static string PreviousDirectory
         {
             get
             {
-                var file = EditorPrefs.GetString(kPrefFile, "Assets/");
+                var file = EditorPrefs.GetString(k_PrefFile, "Assets/");
                 return Path.GetDirectoryName(file);
             }
+            set => EditorPrefs.SetString(k_PrefFile, value);
         }
 
         [MenuItem("CONTEXT/StringTableCollection/Export/CSV...")]
@@ -73,7 +74,7 @@ namespace UnityEditor.Localization.Plugins.CSV
             if (string.IsNullOrEmpty(path))
                 return;
 
-            EditorPrefs.SetString(kPrefFile, path);
+            PreviousDirectory = path;
 
             // Use FileShare.ReadWrite to avoid IOException: Sharing violation (LOC-348)
             using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite))
@@ -109,7 +110,7 @@ namespace UnityEditor.Localization.Plugins.CSV
             if (string.IsNullOrEmpty(path))
                 return;
 
-            EditorPrefs.SetString(kPrefFile, path);
+            PreviousDirectory = path;
 
             // Use FileShare.ReadWrite to avoid IOException: Sharing violation (LOC-348)
             using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
@@ -143,7 +144,7 @@ namespace UnityEditor.Localization.Plugins.CSV
             if (string.IsNullOrEmpty(path))
                 return;
 
-            EditorPrefs.SetString(kPrefFile, path);
+            PreviousDirectory = path;
 
             var collection = LocalizationEditorSettings.GetCollectionFromTable(table) as StringTableCollection;
             if (collection == null)

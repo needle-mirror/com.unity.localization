@@ -272,7 +272,7 @@ namespace UnityEditor.Localization.Plugins.Google
 
             using (var stream = new MemoryStream(System.Text.Encoding.ASCII.GetBytes(credentials)))
             {
-                var gcs = GoogleClientSecrets.Load(stream);
+                var gcs = GoogleClientSecrets.FromStream(stream);
                 return gcs.Secrets;
             }
         }

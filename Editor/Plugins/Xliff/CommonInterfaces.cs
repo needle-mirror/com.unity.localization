@@ -114,7 +114,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF.Common
         /// Returns the note for the requested index.
         /// </summary>
         /// <param name="index">The note index.</param>
-        /// <returns>The requested note or <c>null</c> if one does not exist.</returns>
+        /// <returns>The requested note or <see langword="null"/> if one does not exist.</returns>
         INote GetNote(int index);
 
         /// <summary>
@@ -195,7 +195,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF.Common
         /// Returns the translation unit for the selected index.
         /// </summary>
         /// <param name="index">The index of the translation unit to return.</param>
-        /// <returns>The translation unit or <c>null</c> if one does not exist for the selected index.</returns>
+        /// <returns>The translation unit or <see langword="null"/> if one does not exist for the selected index.</returns>
         ITranslationUnit GetTranslationUnit(int index);
 
         /// <summary>
@@ -247,7 +247,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF.Common
         /// Returns the group for the index.
         /// </summary>
         /// <param name="index">The index of the group to return.</param>
-        /// <returns>The requested group or <c>null</c> if one does not exist.</returns>
+        /// <returns>The requested group or <see langword="null"/> if one does not exist.</returns>
         IGroup GetGroup(int index);
 
         /// <summary>

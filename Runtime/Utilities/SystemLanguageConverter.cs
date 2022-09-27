@@ -53,6 +53,9 @@ namespace UnityEngine.Localization
                 case SystemLanguage.Turkish:            return "tr";
                 case SystemLanguage.Ukrainian:          return "uk";
                 case SystemLanguage.Vietnamese:         return "vi";
+#if UNITY_2022_2_OR_NEWER
+                case SystemLanguage.Hindi:              return "hi";
+#endif
                 default: return "";
             }
         }

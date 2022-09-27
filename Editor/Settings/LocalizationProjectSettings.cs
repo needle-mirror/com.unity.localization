@@ -17,7 +17,7 @@ namespace UnityEditor.Localization
 
         /// <summary>
         /// The <see cref="StringTableCollection"/> that new string properties are added to.
-        /// If <c>null</c>, the values will be stored locally inside a <see cref="UnityEngine.Localization.PropertyVariants.TrackedProperties.StringTrackedProperty"/>.
+        /// If <see langword="null"/>, the values will be stored locally inside a <see cref="UnityEngine.Localization.PropertyVariants.TrackedProperties.StringTrackedProperty"/>.
         /// </summary>
         public static LocalizedStringTable NewStringTable
         {
@@ -31,7 +31,7 @@ namespace UnityEditor.Localization
 
         /// <summary>
         /// The <see cref="AssetTableCollection"/> that new asset properties will use.
-        /// If <c>null</c>, the values will be stored locally inside a <see cref="UnityEngine.Localization.PropertyVariants.TrackedProperties.UnityObjectProperty"/>.
+        /// If <see langword="null"/>, the values will be stored locally inside a <see cref="UnityEngine.Localization.PropertyVariants.TrackedProperties.UnityObjectProperty"/>.
         /// </summary>
         public static LocalizedAssetTable NewAssetTable
         {

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using UnityEditor.AddressableAssets;
 using UnityEditor.Localization.Addressables;
 using UnityEditor.Localization.UI;
 using UnityEngine;
@@ -168,12 +169,32 @@ namespace UnityEditor.Localization
                 Undo.RecordObject(SharedData, "Change Table Collection Name");
 
             EditorUtility.SetDirty(SharedData);
-
+            var OldTableCollectionName = SharedData.TableCollectionName;
             SharedData.TableCollectionName = name;
             RefreshAddressables(createUndo);
+            RefreshAssetNames(OldTableCollectionName);
 
             if (createUndo)
                 Undo.CollapseUndoOperations(undoGroup);
+        }
+
+        void RefreshAssetNames(string OldTableCollectionName)
+        {
+            if (SharedData == null || SharedData.TableCollectionName == OldTableCollectionName)
+                return;
+
+            //Change Table Name
+            foreach (var table in m_Tables)
+            {
+                ObjectNames.SetNameSmart(table.asset, AddressHelper.GetTableAddress(table.asset.TableCollectionName, table.asset.LocaleIdentifier));
+            }
+
+            //change Localization TableCollection Name
+            ObjectNames.SetNameSmart(this, SharedData.TableCollectionName);
+
+            //change SharedData TableCollection name.
+            ObjectNames.SetNameSmart(SharedData, AddressHelper.GetSharedTableAddress(SharedData.TableCollectionName));
+            EditorUtility.SetDirty(SharedData);
         }
 
         /// <summary>
@@ -197,7 +218,7 @@ namespace UnityEditor.Localization
         public virtual bool IsPreloadTableFlagSet()
         {
             RemoveBrokenTables();
-            return m_Tables.TrueForAll(tbl => LocalizationEditorSettings.GetPreloadTableFlag(tbl.asset));
+            return m_Tables.Count > 0 && m_Tables.TrueForAll(tbl => LocalizationEditorSettings.GetPreloadTableFlag(tbl.asset));
         }
 
         /// <summary>

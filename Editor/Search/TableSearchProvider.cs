@@ -17,7 +17,7 @@ namespace UnityEditor.Localization.Search
     /// </summary>
     /// <example>
     /// This shows how to extract the search data after performing a search for string and asset tables.
-    /// <code source="../../DocCodeSamples.Tests/SearchSamples.cs"/>
+    /// <code source="../../DocCodeSamples.Tests/SearchSamples.cs" region="sample"/>
     /// </example>
     public class TableEntrySearchData
     {

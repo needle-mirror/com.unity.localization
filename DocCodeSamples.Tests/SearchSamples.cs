@@ -1,5 +1,7 @@
 #if ENABLE_SEARCH
 
+#region sample
+
 using System.Text;
 using UnityEditor;
 using UnityEditor.Localization.Search;
@@ -63,5 +65,7 @@ public static class SearchSamples
         PrintResults(search);
     }
 }
+
+#endregion
 
 #endif

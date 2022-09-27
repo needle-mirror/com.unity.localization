@@ -6,7 +6,7 @@ using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
 
-namespace UnityEngine.Localization
+namespace UnityEngine.Localization.Operations
 {
     class LoadTableOperation<TTable, TEntry> : WaitForCurrentOperationAsyncOperationBase<TTable>
         where TTable : DetailedLocalizationTable<TEntry>
@@ -15,6 +15,7 @@ namespace UnityEngine.Localization
         readonly Action<AsyncOperationHandle<SharedTableData>> m_LoadTableByGuidAction;
         readonly Action<AsyncOperationHandle<IList<IResourceLocation>>> m_LoadTableResourceAction;
         readonly Action<AsyncOperationHandle<TTable>> m_TableLoadedAction;
+        readonly Action<AsyncOperationHandle<TTable>> m_CustomTableLoadedAction;
 
         LocalizedDatabase<TTable, TEntry> m_Database;
         TableReference m_TableReference;
@@ -26,10 +27,10 @@ namespace UnityEngine.Localization
 
         public LoadTableOperation()
         {
-            RegisterTableOperation = RegisterTableOperationInternal;
             m_LoadTableByGuidAction = LoadTableByGuid;
             m_LoadTableResourceAction = LoadTableResource;
             m_TableLoadedAction = TableLoaded;
+            m_CustomTableLoadedAction = CustomTableLoaded;
         }
 
         public void Init(LocalizedDatabase<TTable, TEntry> database, TableReference tableReference, Locale locale)
@@ -87,10 +88,37 @@ namespace UnityEngine.Localization
         void FindTableByName(string collectionName)
         {
             m_CollectionName = collectionName;
+            if (!TryLoadWithTableProvider())
+                DefaultLoadTableByName();
+        }
 
+        bool TryLoadWithTableProvider()
+        {
+            // Check if the custom provider wants to provide this table
+            if (m_Database.TableProvider != null)
+            {
+                m_LoadTableOperation = m_Database.TableProvider.ProvideTableAsync<TTable>(m_CollectionName, m_SelectedLocale);
+                if (m_LoadTableOperation.IsValid())
+                {
+                    if (m_LoadTableOperation.IsDone)
+                    {
+                        CustomTableLoaded(m_LoadTableOperation);
+                    }
+                    else
+                    {
+                        m_LoadTableOperation.Completed += m_CustomTableLoadedAction;
+                        CurrentOperation = m_LoadTableOperation;
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        void DefaultLoadTableByName()
+        {
             // Check the table exists
             var tableResourceOp = AddressablesInterface.LoadTableLocationsAsync(m_CollectionName, m_SelectedLocale.Identifier, typeof(TTable));
-            AddressablesInterface.Acquire(tableResourceOp);
             if (tableResourceOp.IsDone)
             {
                 LoadTableResource(tableResourceOp);
@@ -125,23 +153,24 @@ namespace UnityEngine.Localization
             AddressablesInterface.Release(operationHandle);
         }
 
+        void CustomTableLoaded(AsyncOperationHandle<TTable> operationHandle)
+        {
+            if (operationHandle.Status == AsyncOperationStatus.Succeeded && operationHandle.Result != null)
+                Complete(operationHandle.Result, true, null);
+            else
+                DefaultLoadTableByName();
+        }
+
         void TableLoaded(AsyncOperationHandle<TTable> operationHandle)
         {
             Complete(operationHandle.Result, operationHandle.Status == AsyncOperationStatus.Succeeded, null);
-        }
-
-        void RegisterTableOperationInternal(AsyncOperationHandle<TTable> handle)
-        {
-            if (handle.Status == AsyncOperationStatus.Succeeded)
-                m_Database.RegisterTableOperation(handle, m_SelectedLocale.Identifier, m_CollectionName);
         }
 
         protected override void Destroy()
         {
             base.Destroy();
 
-            AddressablesInterface.SafeRelease(m_LoadTableOperation);
-            m_LoadTableOperation = default;
+            AddressablesInterface.ReleaseAndReset(ref m_LoadTableOperation);
 
             GenericPool<LoadTableOperation<TTable, TEntry>>.Release(this);
         }

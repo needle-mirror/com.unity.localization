@@ -6,7 +6,7 @@ using UnityEngine.Localization.Tables;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace UnityEngine.Localization
+namespace UnityEngine.Localization.Operations
 {
     class GetTableEntryOperation<TTable, TEntry> : WaitForCurrentOperationAsyncOperationBase<LocalizedDatabase<TTable, TEntry>.TableEntryResult>
         where TTable : DetailedLocalizationTable<TEntry>
@@ -181,7 +181,7 @@ namespace UnityEngine.Localization
                 }
             }
 
-            if (m_FallbackQueue.Count == 0) 
+            if (m_FallbackQueue.Count == 0)
                 return null;
 
             // Return the next fallback
@@ -189,7 +189,6 @@ namespace UnityEngine.Localization
             m_FallbackQueue.RemoveAt(0);
             return fb;
         }
-
 
         bool HandleFallback(AsyncOperationHandle<TTable> asyncOperation, TEntry entry)
         {

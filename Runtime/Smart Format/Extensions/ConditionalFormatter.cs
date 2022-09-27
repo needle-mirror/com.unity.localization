@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
 using UnityEngine.Localization.SmartFormat.Core.Parsing;
@@ -45,19 +44,16 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             if (parameters.Count == 1) return false; // There are no parameters found.
 
             // See if the value is a number:
-            var currentIsNumber =
-                current is byte || current is short || current is int || current is long
-                || current is float || current is double || current is decimal;
-            // An Enum is a number too:
-            if (currentIsNumber == false && current != null && current.GetType().GetTypeInfo().IsEnum)
-                currentIsNumber = true;
 
-            var currentNumber = currentIsNumber ? Convert.ToDecimal(current) : 0;
+            var currentIsConvertible = current is IConvertible &&
+                !(current is DateTime) && !(current is string) && !(current is bool); // We have special handling for these types
+
+            var currentNumber = currentIsConvertible ? Convert.ToDecimal(current) : 0;
 
             int paramIndex; // Determines which parameter to use for output
 
             // First, we'll see if we are using "complex conditions":
-            if (currentIsNumber)
+            if (currentIsConvertible)
             {
                 paramIndex = -1;
                 while (true)
@@ -92,7 +88,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             var paramCount = parameters.Count;
 
             // Determine the Current item's Type:
-            if (currentIsNumber)
+            if (currentIsConvertible)
             {
                 if (currentNumber < 0)
                     paramIndex = paramCount - 1;

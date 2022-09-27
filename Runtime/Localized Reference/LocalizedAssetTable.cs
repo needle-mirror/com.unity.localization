@@ -22,7 +22,7 @@ namespace UnityEngine.Localization
         /// Initializes and returns an instance of a <see cref="LocalizedAssetTable"/>.
         /// </summary>
         /// <param name="tableReference">Reference to the Asset Table Collection.
-        /// This can either be the name of the collection as a <c>string</c> or the Collection Guid as a [System.Guid](https://docs.microsoft.com/en-us/dotnet/api/system.guid).</param>
+        /// This can either be the name of the collection as a <see langword="string"/> or the Collection Guid as a [System.Guid](https://docs.microsoft.com/en-us/dotnet/api/system.guid).</param>
         public LocalizedAssetTable(TableReference tableReference) => TableReference = tableReference;
     }
 }

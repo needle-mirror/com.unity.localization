@@ -58,6 +58,18 @@ The **No Translation Found Format** field can be used to configure the string th
 
 The Project Locale identifies the default locale, such as the locale that the application was developed in. This property is primarily used by the [Localized Property Variants](LocalizedPropertyVariants.md) system.
 
+## Preload Behavior
+
+The Localization system can preload [String Tables](StringTable.md#preloading) or [Asset Tables](AssetTable.md#preloading) so they are available immediately when the Localization system initializes.
+The **Preload Behavior** options define which tables are preloaded:
+
+| **Option** | **Description** |
+| ---------- | --------------- |
+| **No Preloading** | No tables are preloaded. |
+| **Preload Selected Locale** | Only the tables from the currently selected Locale are preloaded.
+| **Preload Selected Locale And Fallbacks** | Tables from the currently selected Locale and all [fallback](Locale.md#fallbacks) locales are preloaded.
+| **PreloadAllLocales** | Preloads all tables from all locales. |
+
 ## Initialize Synchronously
 
 When the application starts or the selected Locale changes, the Localization system must initialize itself. Initialization involves loading the supported locales and preloading the string and asset tables. By default this is performed asynchronously and executes in the background while Unity is running. Enabling the **Initialize Synchronously** setting blocks the main thread until initialization is complete. This forces the localization initialization operation to complete immediately. The [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) method is used to force the operation to complete, note this is not supported on [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
@@ -78,7 +90,28 @@ The Settings section contains general settings to configure how to parse and for
 | --------- | --------------- |
 | **Format Error Action<br>Parse Error Action** | The error actions determine how Unity reacts when it encounters any errors during parsing(interpreting the string tokens) and formatting(converting parsed tokens into string values).<br><br>The following options are available:<ul><li>**ThrowError**: Throws an exception. This is the default value and recommended for debugging, so that formatting errors can be easily found.</li><li>**OutputErrorInResult**: Includes the error message in formatted string.</li><li>**Ignore**: Ignores errors and tries to output the data anyway.</li><li>**MaintainTokens**: Leaves invalid tokens unmodified in the text.</li></ul>To trace any formatting or parsing errors, subscribe to the corresponding events:<br>`Smart.Default.OnFormattingFailure`<br>`Smart.Default.Parser.OnParsingFailure`<br>These events fire for all errors and error action values. This lets you decide in your code how to deal with errors. |
 | **Case Sensitivity** | Determines whether placeholders are case-sensitive or not. |
-| **Convert Character String Literals** | Literal text is text that is not a placeholder and is not replaced. When enabled literal text is treated as a C# string and [escape sequences](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/strings/#string-escape-sequences) are converted, for example **\n** would become a new line and **\t** would be converted into a tab.
+| **Convert Character String Literals** | Literal text is text that is not a placeholder and is not replaced. When enabled literal text is treated as a C# string and [escape sequences](#escape-sequences) are converted, for example **\n** would become a new line and **\t** would be converted into a tab.
+
+#### Escape Sequences
+
+The following [escape sequences](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/strings/#string-escape-sequences) are supported when **Convert Character String Literals** is enabled:
+
+| **Escape sequence**     | **Character Name**                                     | **Unicode encoding** |
+| ----------------------- | ------------------------------------------------------ | -------------------- |
+| **\\`**                 | Single quote                                           | 0x0027 |
+| **\\"**                 | Double quote                                           | 0x0022 |
+| **\\\\**                | Backslash                                              | 0x0008 |
+| **\\0**                 | Form feed                                              | 0x000C |
+| **\\a**                 | Alert                                                  | 0x0007 |
+| **\\b**                 | Backspace                                              | 0x0008 |
+| **\\f**                 | Form feed                                              | 0x000C |
+| **\\n**                 | New line                                               | 0x000A |
+| **\\r**                 | Carriage return                                        | 0x000D |
+| **\\t**                 | Horizontal tab                                         | 0x0009 |
+| **\\v**                 | Vertical tab                                           | 0x000B |
+| **\\u**                 | Unicode escape sequence (UTF-16)                       | `\uHHHH` (range: 0000 - FFFF; example: `\u00E7` = "ç")
+| **\\{**                 | Left curly bracket. Requires **Alternative Escaping**. | 0x007B |
+| **\\}**                 | Right curly bracket. Requires **Alternative Escaping** | 0x007D |
 
 ### Parser
 

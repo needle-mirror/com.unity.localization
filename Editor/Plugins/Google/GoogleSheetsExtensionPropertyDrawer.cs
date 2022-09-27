@@ -175,6 +175,10 @@ namespace UnityEditor.Localization.Plugins.Google
                         var results = google.CreateSpreadsheet(PlayerSettings.productName, data.m_NewSheetName, data.Provider.NewSheetProperties, new ProgressBarReporter { ReportTaskSummaryInConsole = true });
                         data.m_SpreadSheetId.stringValue = results.spreadSheetId;
                         data.m_SheetId.intValue = results.sheetId;
+
+                        // Exit GUI to prevent erros due to GUI state changes. (LOC-698)
+                        data.m_SpreadSheetId.serializedObject.ApplyModifiedProperties();
+                        GUIUtility.ExitGUI();
                     }
                     position.MoveToNextLine();
                 }
@@ -218,6 +222,7 @@ namespace UnityEditor.Localization.Plugins.Google
                     EditorUtility.DisplayProgressBar("Add Sheet", string.Empty, 0);
                     var google = GetGoogleSheets(data);
                     data.m_SheetId.intValue = google.AddSheet(data.m_NewSheetName, data.Provider.NewSheetProperties);
+                    data.m_SheetId.serializedObject.ApplyModifiedProperties();
                 }
                 catch (Exception e)
                 {
@@ -226,6 +231,9 @@ namespace UnityEditor.Localization.Plugins.Google
                 finally
                 {
                     EditorUtility.ClearProgressBar();
+
+                    // Exit GUI to prevent erros due to GUI state changes. (LOC-698)
+                    GUIUtility.ExitGUI();
                 }
             }
 
@@ -307,6 +315,9 @@ namespace UnityEditor.Localization.Plugins.Google
                         var collection = target.TargetCollection as StringTableCollection;
                         data.pushTask = google.PushStringTableCollectionAsync(data.m_SheetId.intValue, collection, selectedCollection, TaskReporter.CreateDefaultReporter());
                         s_PushRequests.Add((collection, data.pushTask));
+
+                        // Exit GUI to prevent erros due to GUI state changes. (LOC-698)
+                        GUIUtility.ExitGUI();
                     }
                     if (GUI.Button(splitRow.right, Styles.pullSelected))
                     {
@@ -314,6 +325,9 @@ namespace UnityEditor.Localization.Plugins.Google
                         var target = property.GetActualObjectForSerializedProperty<GoogleSheetsExtension>(fieldInfo);
                         var selectedCollection = GetSelectedColumns(data.columnsList.index, property);
                         google.PullIntoStringTableCollection(data.m_SheetId.intValue, target.TargetCollection as StringTableCollection, selectedCollection, data.m_RemoveMissingPulledKeys.boolValue, TaskReporter.CreateDefaultReporter(), true);
+
+                        // Exit GUI to prevent erros due to GUI state changes. (LOC-698)
+                        GUIUtility.ExitGUI();
                     }
                 }
 
@@ -326,12 +340,18 @@ namespace UnityEditor.Localization.Plugins.Google
                     var collection = target.TargetCollection as StringTableCollection;
                     data.pushTask = google.PushStringTableCollectionAsync(data.m_SheetId.intValue, collection, target.Columns, TaskReporter.CreateDefaultReporter());
                     s_PushRequests.Add((collection, data.pushTask));
+
+                    // Exit GUI to prevent erros due to GUI state changes. (LOC-698)
+                    GUIUtility.ExitGUI();
                 }
                 if (GUI.Button(splitRow.right, Styles.pull))
                 {
                     var google = GetGoogleSheets(data);
                     var target = property.GetActualObjectForSerializedProperty<GoogleSheetsExtension>(fieldInfo);
                     google.PullIntoStringTableCollection(data.m_SheetId.intValue, target.TargetCollection as StringTableCollection, target.Columns, data.m_RemoveMissingPulledKeys.boolValue, TaskReporter.CreateDefaultReporter(), true);
+
+                    // Exit GUI to prevent erros due to GUI state changes. (LOC-698)
+                    GUIUtility.ExitGUI();
                 }
             }
         }

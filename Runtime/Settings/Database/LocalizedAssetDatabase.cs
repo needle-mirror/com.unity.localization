@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Localization.Operations;
 using UnityEngine.Localization.Tables;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;

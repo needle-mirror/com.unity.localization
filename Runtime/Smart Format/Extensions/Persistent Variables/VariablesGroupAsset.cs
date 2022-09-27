@@ -61,7 +61,7 @@ namespace UnityEngine.Localization.SmartFormat.PersistentVariables
         public ICollection<IVariable> Values => m_VariableLookup.Values.Select(s => s.variable).ToList();
 
         /// <summary>
-        /// Implemented as part of IDictionary but not used. Always returns <c>false</c>.
+        /// Implemented as part of IDictionary but not used. Always returns <see langword="false"/>.
         /// </summary>
         public bool IsReadOnly => false;
 
@@ -88,8 +88,8 @@ namespace UnityEngine.Localization.SmartFormat.PersistentVariables
         /// Gets the <see cref="IVariable"/> with the specified name.
         /// </summary>
         /// <param name="name">The name of the variable.</param>
-        /// <param name="value">The variable that was found or <c>default</c>.</param>
-        /// <returns><c>true</c> if a variable was found and <c>false</c> if one could not.</returns>
+        /// <param name="value">The variable that was found or <see langword="default"/>.</param>
+        /// <returns><see langword="true"/> if a variable was found and <see langword="false"/> if one could not.</returns>
         /// <example>
         /// This example shows how to get a variable named "my-float" from a <see cref="VariablesGroupAsset"/> named "global".
         /// <code source="../../../../DocCodeSamples.Tests/PersistentVariablesSamples.cs" region="try-get-add-global-variable"/>
@@ -140,7 +140,7 @@ namespace UnityEngine.Localization.SmartFormat.PersistentVariables
         /// Removes a variable with the specified name.
         /// </summary>
         /// <param name="name"></param>
-        /// <returns><c>true</c> if a variable with the specified name was removed, <c>false</c> if one was not.</returns>
+        /// <returns><see langword="true"/> if a variable with the specified name was removed, <see langword="false"/> if one was not.</returns>
         public bool Remove(string name)
         {
             if (m_VariableLookup.TryGetValue(name, out var v))
@@ -156,21 +156,21 @@ namespace UnityEngine.Localization.SmartFormat.PersistentVariables
         /// Removes a variable with the specified key.
         /// </summary>
         /// <param name="item">The item to be removed, only the Key field will be considered.</param>
-        /// <returns><c>true</c> if a variable with the specified name was removed, <c>false</c> if one was not.</returns>
+        /// <returns><see langword="true"/> if a variable with the specified name was removed, <see langword="false"/> if one was not.</returns>
         public bool Remove(KeyValuePair<string, IVariable> item) => Remove(item.Key);
 
         /// <summary>
-        /// Returns <c>true</c> if a variable with the specified name exists.
+        /// Returns <see langword="true"/> if a variable with the specified name exists.
         /// </summary>
         /// <param name="name">The variable name to check for.</param>
-        /// <returns><c>true</c> if a matching variable could be found or <c>false</c> if one could not.</returns>
+        /// <returns><see langword="true"/> if a matching variable could be found or <see langword="false"/> if one could not.</returns>
         public bool ContainsKey(string name) => m_VariableLookup.ContainsKey(name);
 
         /// <summary>
         /// <inheritdoc cref="ContainsKey(string)"/>
         /// </summary>
         /// <param name="item">The item to check for. Both the Key and Value must match.</param>
-        /// <returns><c>true</c> if a matching variable could be found or <c>false</c> if one could not.</returns>
+        /// <returns><see langword="true"/> if a matching variable could be found or <see langword="false"/> if one could not.</returns>
         public bool Contains(KeyValuePair<string, IVariable> item) => TryGetValue(item.Key, out var v) && v == item.Value;
 
         /// <summary>

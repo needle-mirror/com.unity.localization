@@ -6,7 +6,7 @@ using UnityEngine.Localization.Tables;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace UnityEngine.Localization
+namespace UnityEngine.Localization.Operations
 {
     class GetLocalizedStringOperation : WaitForCurrentOperationAsyncOperationBase<string>
     {
@@ -50,13 +50,13 @@ namespace UnityEngine.Localization
                 return;
             }
 
-            var entry = m_TableEntryOperation.Result.Entry;
-            var formatCache = entry?.GetOrCreateFormatCache();
-            if (formatCache != null)
-                formatCache.LocalVariables = m_LocalVariables;
-
             try
             {
+                var entry = m_TableEntryOperation.Result.Entry;
+                var formatCache = entry?.GetOrCreateFormatCache();
+                if (formatCache != null)
+                    formatCache.LocalVariables = m_LocalVariables;
+
                 var result = m_Database.GenerateLocalizedString(m_TableEntryOperation.Result.Table, entry, m_TableReference, m_TableEntryReference, m_SelectedLocale, m_Arguments);
 
                 if (formatCache != null)
@@ -64,7 +64,7 @@ namespace UnityEngine.Localization
 
                 CompleteAndRelease(result, true, null);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 CompleteAndRelease(null, false, e.Message);
             }

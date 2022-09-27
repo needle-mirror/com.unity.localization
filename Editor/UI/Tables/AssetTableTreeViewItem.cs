@@ -10,7 +10,7 @@ namespace UnityEditor.Localization.UI
 {
     class AssetTableTreeViewItem : GenericAssetTableTreeViewItem<AssetTable>
     {
-        static readonly Dictionary<string, Object> s_CachedAssets = new Dictionary<string, Object>();
+        static readonly Dictionary<(string, Type), Object> s_CachedAssets = new Dictionary<(string, Type), Object>();
 
         (ISelectable selected, Object value, AssetTable table)[] m_TableProperties;
         List<LocalizationTable> m_SortedTables;
@@ -32,18 +32,13 @@ namespace UnityEditor.Localization.UI
             set => base.displayName = value;
         }
 
-        static Object GetAssetFromCache(string guid)
+        static Object GetAssetFromCache(AssetTableEntry entry, Type type)
         {
-            if (s_CachedAssets.TryGetValue(guid, out var foundAsset))
+            if (s_CachedAssets.TryGetValue((entry.Address, type), out var foundAsset))
                 return foundAsset;
 
-            var path = AssetDatabase.GUIDToAssetPath(guid);
-            var asset = AssetDatabase.LoadAssetAtPath<Object>(path);
-            if (asset != null)
-            {
-                s_CachedAssets[guid] = asset;
-            }
-
+            var asset = AssetUtility.LoadAssetFromAddress(entry.Address, type);
+            s_CachedAssets[(entry.Address, type)] = asset;
             return asset;
         }
 
@@ -87,6 +82,8 @@ namespace UnityEditor.Localization.UI
 
         public void RefreshFields()
         {
+            UpdateType();
+            var type = AssetType;
             for (int i = 0; i < m_TableProperties.Length; ++i)
             {
                 var table = m_TableProperties[i].table;
@@ -94,15 +91,13 @@ namespace UnityEditor.Localization.UI
                     continue;
 
                 var entry = table.GetEntry(SharedEntry.Id);
-                var guid = entry?.Guid;
                 Object asset = null;
-                if (!string.IsNullOrEmpty(guid))
+                if (entry != null)
                 {
-                    asset = GetAssetFromCache(guid);
+                    asset = GetAssetFromCache(entry, type);
                 }
                 m_TableProperties[i].value = asset;
             }
-            UpdateType();
             UpdateSearchString();
         }
 

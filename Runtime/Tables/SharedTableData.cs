@@ -119,7 +119,7 @@ namespace UnityEngine.Localization.Tables
         public string TableCollectionName
         {
             get => m_TableCollectionName;
-            internal set => m_TableCollectionName = value;
+            set => m_TableCollectionName = value;
         }
 
         /// <summary>

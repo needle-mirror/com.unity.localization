@@ -1,7 +1,7 @@
 {
   "name": "com.unity.localization",
   "displayName": "Localization",
-  "version": "1.4.0-exp.1",
+  "version": "1.4.2",
   "unity": "2019.4",
   "description": "Use the Localization package to easily configure localization settings for your application.\n\nAdd support for multiple languages and regional variants, including:\n\n• String localization: Set different strings to display based on locale. Use the Smart Strings feature to add logic to automatically replace specific strings, such as placeholders and plurals.\n• Asset localization: Use a different asset (such as a texture, model, or audio file) based on a locale.\n• Pseudo-localization: Test how your project will adapt to different localizations at an early stage, before adding your translations.\n• Import and export localization data to XLIFF, CSV and Google Sheets.\n\nAdd localization to your projects using the Localization package to help make your applications more accessible to a wider audience.",
   "keywords": [
@@ -10,19 +10,19 @@
     "language"
   ],
   "dependencies": {
-    "com.unity.addressables": "1.19.19",
-    "com.unity.nuget.newtonsoft-json": "2.0.0"
+    "com.unity.addressables": "1.20.5",
+    "com.unity.nuget.newtonsoft-json": "3.0.2"
+  },
+  "relatedPackages": {
+    "com.unity.localization.tests": "1.4.2"
+  },
+  "upmCi": {
+    "footprint": "864131977829e6e812e95f2415d58e5cd5f569db"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.localization.git",
     "type": "git",
-    "revision": "0bb3bd35b3e55d5db215dc555bab5039e09df7f9"
-  },
-  "upm": {
-    "changelog": "- Fix `NullReferenceException` when creating a new table that takes name from renamed table ([LOC-550](https://issuetracker.unity3d.com/issues/nullreferenceexception-creating-a-table-that-takes-name-from-renamed-table)).\n- String Table entries will no longer try to use `String.Format` when using `GetLocalizedString` with non-null but empty arguments ([LOC-689](https://issuetracker.unity3d.com/issues/localization-formatexception-error-is-thrown-in-the-console-window-when-calling-getlocalizedstringasync-class)).\n- Improved `FormatException` error message when `String.Format` throws during `GetLocalizedString`.\n- Added `LocalizationEditorEvents.ExtensionAddedToCollection` & `LocalizationEditorEvents.ExtensionRemovedFromCollection`, which can be used to react to collection extension additions & removals. Added `CollectionExtension.Destroy()` which can be used to perform cleanup when a collection extension is removed."
-  },
-  "upmCi": {
-    "footprint": "b0c6f53818e12cfea7ed65f6038f38ba55126e29"
+    "revision": "2b38d5ec90613bae905a441552a28f4b94dc601d"
   },
   "samples": [
     {
@@ -43,16 +43,25 @@
     {
       "displayName": "Language Selection Menu (UGUI)",
       "description": "This sample shows how to implement a simple language selection menu using a UGUI Dropdown.",
+      "dependencies": {
+        "com.unity.ugui": "1.0.0"
+      },
       "path": "Samples~/LocaleMenuUGUI"
     },
     {
       "displayName": "Smart Strings - Persistent Variables",
       "description": "These samples show how Persistent Variables can be used in Smart Strings and how custom variables can be created.",
+      "dependencies": {
+        "com.unity.ugui": "1.0.0"
+      },
       "path": "Samples~/PersistentVariables"
     },
     {
       "displayName": "Preloading Screen",
       "description": "Preloading is a way to ensure that chosen Localization data is immediately available and does not require additional loading. This sample shows how to implement a loading screen to wait for preloading to complete.",
+      "dependencies": {
+        "com.unity.ugui": "1.0.0"
+      },
       "path": "Samples~/PreloadingScreen"
     }
   ]

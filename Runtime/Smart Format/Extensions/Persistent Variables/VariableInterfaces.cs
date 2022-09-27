@@ -12,8 +12,8 @@ namespace UnityEngine.Localization.SmartFormat.PersistentVariables
         /// Gets the variable with the matching key if one exists.
         /// </summary>
         /// <param name="key">The variable key or name to match.</param>
-        /// <param name="value">The found variable or <c>null</c> if one could not be found.</param>
-        /// <returns><c>true</c> if a variable cound be found or <c>false</c> if one could not.</returns>
+        /// <param name="value">The found variable or <see langword="null"/> if one could not be found.</param>
+        /// <returns><see langword="true"/> if a variable cound be found or <see langword="false"/> if one could not.</returns>
         bool TryGetValue(string key, out IVariable value);
     }
 

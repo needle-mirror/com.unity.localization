@@ -52,7 +52,7 @@ namespace UnityEngine.Localization.PropertyVariants
 
         Locale m_CurrentLocale;
 
-        internal AsyncOperationHandle? CurrentOperation
+        internal AsyncOperationHandle CurrentOperation
         {
             get;
             private set;
@@ -75,6 +75,8 @@ namespace UnityEngine.Localization.PropertyVariants
 
         void OnDisable()
         {
+            AddressablesInterface.SafeRelease(CurrentOperation);
+            CurrentOperation = default;
             LocalizationSettings.SelectedLocaleChanged -= SelectedLocaleChanged;
         }
 
@@ -105,7 +107,7 @@ namespace UnityEngine.Localization.PropertyVariants
         public List<TrackedObject> TrackedObjects => m_TrackedObjects;
 
         /// <summary>
-        ///  Returns the <see cref="TrackedObjects"/> for the target component or creates a new instance if <paramref name="create"/> is set to <c>true</c>.
+        ///  Returns the <see cref="TrackedObjects"/> for the target component or creates a new instance if <paramref name="create"/> is set to <see langword="true"/>.
         /// </summary>
         /// <typeparam name="T">The Type of TrackedObject that should be found or added.</typeparam>
         /// <param name="target">The Target Object to track.</param>
@@ -137,11 +139,11 @@ namespace UnityEngine.Localization.PropertyVariants
         }
 
         /// <summary>
-        /// Returns the <see cref="TrackedObjects"/> for the target component or <c>null</c> if one does not exist.
+        /// Returns the <see cref="TrackedObjects"/> for the target component or <see langword="null"/> if one does not exist.
         /// See <seealso cref="GetTrackedObject{T}"/> for a version that will create a new TrackedObject if one does not already exist.
         /// </summary>
         /// <param name="target">The target object to search for.</param>
-        /// <returns>The <see cref="TrackedObjects"/> or <c>null</c> if one could not be found.</returns>
+        /// <returns>The <see cref="TrackedObjects"/> or <see langword="null"/> if one could not be found.</returns>
         public TrackedObject GetTrackedObject(Object target)
         {
             if (target == null)
@@ -159,7 +161,7 @@ namespace UnityEngine.Localization.PropertyVariants
         /// Apply all variants for the selected <see cref="Locale"/> to this GameObject.
         /// </summary>
         /// <param name="locale">The <see cref="Locale"/> to apply to the GameObject.</param>
-        /// <returns>A handle to any loading operations or <c>default</c> if the operation was immediate.</returns>
+        /// <returns>A handle to any loading operations or <see langword="default"/> if the operation was immediate.</returns>
         public AsyncOperationHandle ApplyLocaleVariant(Locale locale) => ApplyLocaleVariant(locale, LocalizationSettings.ProjectLocale);
 
         /// <summary>
@@ -168,15 +170,15 @@ namespace UnityEngine.Localization.PropertyVariants
         /// </summary>
         /// <param name="locale">The <see cref="Locale"/> to apply to the GameObject.</param>
         /// <param name="fallback">The fallback <see cref="Locale"/> to use when a value does not exist for <paramref name="locale"/>.</param>
-        /// <returns>A handle to any loading operations or <c>default</c> if the operation was immediate.</returns>
+        /// <returns>A handle to any loading operations or <see langword="default"/> if the operation was immediate.</returns>
         public AsyncOperationHandle ApplyLocaleVariant(Locale locale, Locale fallback)
         {
-            if (CurrentOperation.HasValue)
+            if (CurrentOperation.IsValid())
             {
-                if (!CurrentOperation.Value.IsDone)
+                if (!CurrentOperation.IsDone)
                     Debug.LogWarning("Attempting to Apply Variant when the previous operation has not yet completed.", this);
-                AddressablesInterface.Release(CurrentOperation.Value);
-                CurrentOperation = null;
+                AddressablesInterface.Release(CurrentOperation);
+                CurrentOperation = default;
             }
 
             var asyncOperations = ListPool<AsyncOperationHandle>.Get();
@@ -197,18 +199,13 @@ namespace UnityEngine.Localization.PropertyVariants
                 AddressablesInterface.Acquire(asyncOperations[0]);
                 CurrentOperation = asyncOperations[0];
                 ListPool<AsyncOperationHandle>.Release(asyncOperations);
-                return CurrentOperation.Value;
+                return CurrentOperation;
             }
 
             if (asyncOperations.Count > 1)
             {
-                // We need to acquire the operations or CreateGenericGroupOperation will release them when it is released.
-                foreach (var asyncOperationHandle in asyncOperations)
-                {
-                    AddressablesInterface.Acquire(asyncOperationHandle);
-                }
-                CurrentOperation = AddressablesInterface.ResourceManager.CreateGenericGroupOperation(asyncOperations);
-                return CurrentOperation.Value;
+                CurrentOperation = AddressablesInterface.CreateGroupOperation(asyncOperations);
+                return CurrentOperation;
             }
 
             ListPool<AsyncOperationHandle>.Release(asyncOperations);

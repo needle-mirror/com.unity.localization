@@ -11,7 +11,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedProperties
         /// Returns the value for the LocaleIdentifier as a string representation.
         /// </summary>
         /// <param name="localeIdentifier">The LocaleIdentifier whose variant should be returned.</param>
-        /// <returns>The variants value a string or <c>null</c> if an override does not exist for the LocaleIdentifier.</returns>
+        /// <returns>The variants value a string or <see langword="null"/> if an override does not exist for the LocaleIdentifier.</returns>
         string GetValueAsString(LocaleIdentifier localeIdentifier);
 
         /// <summary>
@@ -19,7 +19,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedProperties
         /// </summary>
         /// <param name="localeIdentifier">The LocaleIdentifier whose variant should be returned.</param>
         /// <param name="fallback">If no variant exists for the LocaleIdentifier then the fallback will be used.</param>
-        /// <returns>The variant or fallback value a string or <c>null</c> if an override could not be found.</returns>
+        /// <returns>The variant or fallback value a string or <see langword="null"/> if an override could not be found.</returns>
         string GetValueAsString(LocaleIdentifier localeIdentifier, LocaleIdentifier fallback);
 
         /// <summary>

@@ -73,8 +73,6 @@ First, you need to create an Asset Table. To do this, open the **Localization Ta
 The Localization system allows you to work directly with scene components and will record any changes made directly to a component for the currently active Locale. To do this you will need to first set up the project. Open the **Localization Scene Controls** window (menu: **Window > Asset Management > Localization Scene Controls**).
 Set the **Asset Table** field to the table collection that was just created. Any asset changes made now are recorded into the selected Asset Table.
 
-The Localization system allows you to work directly with scene components. It records any changes you make directly to a component for the currently active locale. To do this you will need to first set up the project. Open the **Localization Scene Controls** window (menu: **Window > Asset Management > Localization Scene Controls**).
-
 1. In the Asset Table field select your table collection.
 2. Any asset changes you make now are recorded into the selected Asset Table.
 

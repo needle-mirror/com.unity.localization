@@ -40,7 +40,7 @@ namespace UnityEditor.Localization
             set => s_Instance = value;
         }
 
-        internal virtual LocalizationTableCollectionCache TableCollectionCache { get; } = new LocalizationTableCollectionCache();
+        internal virtual LocalizationTableCollectionCache TableCollectionCache { get; set; } = new LocalizationTableCollectionCache();
 
         /// <summary>
         /// The <see cref="LocalizationSettings"/> used for this project and available in the player and editor.
@@ -61,8 +61,8 @@ namespace UnityEditor.Localization
         }
 
         /// <summary>
-        /// When <c>true</c> the advanced Unity Search picker will be used when selecting <see cref="LocalizedString"/> table entries.
-        /// When <c>false</c> the tree view picker will be used.
+        /// When <see langword="true"/> the advanced Unity Search picker will be used when selecting <see cref="LocalizedString"/> table entries.
+        /// When <see langword="false"/> the tree view picker will be used.
         /// </summary>
         public static bool UseLocalizedStringSearchPicker
         {
@@ -71,8 +71,8 @@ namespace UnityEditor.Localization
         }
 
         /// <summary>
-        /// When <c>true</c> the advanced Unity Search picker will be used when selecting <see cref="LocalizedAsset{TObject}"/> table entries.
-        /// When <c>false</c> the tree view picker will be used.
+        /// When <see langword="true"/> the advanced Unity Search picker will be used when selecting <see cref="LocalizedAsset{TObject}"/> table entries.
+        /// When <see langword="false"/> the tree view picker will be used.
         /// </summary>
         public static bool UseLocalizedAssetSearchPicker
         {
@@ -273,7 +273,7 @@ namespace UnityEditor.Localization
         /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="set-preload-flag"/>
         /// </example>
         /// <param name="table">The table to mark as preload.</param>
-        /// <param name="preload"><c>true</c> ifd the table should be preloaded or <c>false</c> if it should be loaded on demand.</param>
+        /// <param name="preload"><see langword="true"/> ifd the table should be preloaded or <see langword="false"/> if it should be loaded on demand.</param>
         /// <param name="createUndo">Should an Undo record be created?</param>
         public static void SetPreloadTableFlag(LocalizationTable table, bool preload, bool createUndo = false)
         {
@@ -281,14 +281,14 @@ namespace UnityEditor.Localization
         }
 
         /// <summary>
-        /// Returns <c>true</c> if the table is marked for preloading.
+        /// Returns <see langword="true"/> if the table is marked for preloading.
         /// </summary>
         /// <example>
         /// This example shows how to query if a table is marked as preload.
         /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="get-preload-flag"/>
         /// </example>
         /// <param name="table">The table to query.</param>
-        /// <returns><c>true</c> if preloading is enable otherwise <c>false</c>.</returns>
+        /// <returns><see langword="true"/> if preloading is enable otherwise <see langword="false"/>.</returns>
         public static bool GetPreloadTableFlag(LocalizationTable table)
         {
             // TODO: We could just use the instance id so we dont need to load the whole table
@@ -352,7 +352,7 @@ namespace UnityEditor.Localization
             var relativePath = PathHelper.MakePathRelative(assetDirectory);
             Directory.CreateDirectory(relativePath);
 
-            var sharedDataPath = Path.Combine(relativePath, tableName + " Shared Data.asset");
+            var sharedDataPath = Path.Combine(relativePath, AddressHelper.GetSharedTableAddress(tableName) + ".asset");
             var sharedTableData = ScriptableObject.CreateInstance<SharedTableData>();
             sharedTableData.TableCollectionName = tableName;
             CreateAsset(sharedTableData, sharedDataPath);
@@ -721,13 +721,13 @@ namespace UnityEditor.Localization
             AssetDatabase.CreateAsset(asset, path);
         }
 
-        internal virtual string GetAssetGuid(int instanceId)
+        internal string GetAssetGuid(int instanceId)
         {
             Debug.Assert(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(instanceId, out string guid, out long _), "Failed to extract the asset Guid");
             return guid;
         }
 
-        internal virtual string GetAssetGuid(Object asset)
+        internal string GetAssetGuid(Object asset)
         {
             Debug.Assert(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out string guid, out long _), "Failed to extract the asset Guid", asset);
             return guid;

@@ -3,7 +3,7 @@ using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace UnityEngine.Localization
+namespace UnityEngine.Localization.Operations
 {
     class LoadAllTablesOperation<TTable, TEntry> : WaitForCurrentOperationAsyncOperationBase<IList<TTable>>
         where TTable : DetailedLocalizationTable<TEntry>
@@ -34,7 +34,7 @@ namespace UnityEngine.Localization
         {
             base.Destroy();
 
-            AddressablesInterface.SafeRelease(m_AllTablesOperation);
+            AddressablesInterface.ReleaseAndReset(ref m_AllTablesOperation);
             m_AllTablesOperation = default;
         }
     }

@@ -137,7 +137,7 @@ namespace UnityEngine.Localization.Tables
         /// Formatting will use SmartFormat is <see cref="IsSmart"/> is true else it will default to String.Format.
         /// </summary>
         /// <param name="formatProvider">Custom format provider used with String.Format and smart strings.
-        /// If formatProvider is <c>null</c>, RemoveFromTable uses the <see cref="LocalizationTable.LocaleIdentifier"/>'s <see cref="Locale.Formatter"/>.</param>
+        /// If formatProvider is <see langword="null"/>, RemoveFromTable uses the <see cref="LocalizationTable.LocaleIdentifier"/>'s <see cref="Locale.Formatter"/>.</param>
         /// <param name="args">Arguments that will be applied to Smart Format or <c>String.Format.</c></param>
         /// <returns></returns>
         public string GetLocalizedString(IFormatProvider formatProvider, IList<object> args) => GetLocalizedString(formatProvider, args, LocalizationSettings.SelectedLocaleAsync.Result as PseudoLocale);
@@ -147,7 +147,7 @@ namespace UnityEngine.Localization.Tables
         /// Formatting will use SmartFormat is <see cref="IsSmart"/> is true else it will default to String.Format.
         /// </summary>
         /// <param name="formatProvider">Custom format provider used with String.Format and smart strings.
-        /// If formatProvider is <c>null</c>, RemoveFromTable uses the <see cref="LocalizationTable.LocaleIdentifier"/>'s <see cref="Locale.Formatter"/>.</param>
+        /// If formatProvider is <see langword="null"/>, RemoveFromTable uses the <see cref="LocalizationTable.LocaleIdentifier"/>'s <see cref="Locale.Formatter"/>.</param>
         /// <param name="args">Arguments that are be applied to Smart Format or <c>String.Format.</c></param>
         /// <param name="pseudoLocale">Optional <see cref="PseudoLocale"/> that will be applied to the final string.</param>
         /// <returns></returns>
@@ -166,7 +166,8 @@ namespace UnityEngine.Localization.Tables
                     var localVariables = m_FormatCache?.LocalVariables;
                     m_FormatCache = null;
                     m_FormatCache = GetOrCreateFormatCache();
-                    m_FormatCache.LocalVariables = localVariables;
+                    if (m_FormatCache != null)
+                        m_FormatCache.LocalVariables = localVariables;
                 }
                 #endif
 
@@ -177,16 +178,16 @@ namespace UnityEngine.Localization.Tables
             }
             else if (!string.IsNullOrEmpty(Data.Localized))
             {
-                if (args != null)
+                if (args != null && args.Count > 0)
                 {
                     try
                     {
                         translatedText = formatProvider == null ? string.Format(Data.Localized, args as object[] ?? args.ToArray()) : string.Format(formatProvider, Data.Localized, args as object[] ?? args.ToArray());
                     }
-                    catch (FormatException)
+                    catch (FormatException fe)
                     {
                         // Supplement with a better error message as its likely that the string was a Smart String.
-                        throw new FormatException($"Input string was not in the correct format for String.Format. Ensure that the string is marked as Smart if you intended to use Smart Format.\n`{Data.Localized}`");
+                        throw new FormatException($"Input string was not in the correct format for String.Format. Ensure that the string is marked as Smart if you intended to use Smart Format.\n`{Data.Localized}`\n{fe}", fe);
                     }
                 }
                 else

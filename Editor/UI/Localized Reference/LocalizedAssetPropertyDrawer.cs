@@ -59,11 +59,7 @@ namespace UnityEditor.Localization.UI
                 if (table != null)
                 {
                     var tableEntry = table.GetEntry(data.SelectedTableEntry.Id);
-                    Object asset = null;
-                    if (tableEntry != null && !tableEntry.IsEmpty)
-                    {
-                        asset = AssetDatabase.LoadAssetAtPath<Object>(AssetDatabase.GUIDToAssetPath(tableEntry.Guid));
-                    }
+                    var asset = AssetUtility.LoadAssetFromAddress(tableEntry?.Address, tableEntry?.GetExpectedType());
 
                     EditorGUI.BeginChangeCheck();
                     var newAsset = EditorGUI.ObjectField(rowPosition, locale.Identifier.ToString(), asset, data.assetType, false);

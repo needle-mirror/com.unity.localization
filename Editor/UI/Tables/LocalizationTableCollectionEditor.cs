@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
@@ -31,8 +32,8 @@ namespace UnityEditor.Localization.UI
         SerializedProperty m_SharedTableData;
         SerializedProperty m_Group;
         SerializedProperty m_Extensions;
-        List<LocalizationTable> m_LooseTables = new List<LocalizationTable>();
-        List<Locale> m_MissingTables = new List<Locale>();
+        internal List<LocalizationTable> m_LooseTables = new List<LocalizationTable>();
+        internal List<(Locale locale, bool tableExists)> m_MissingTables = new List<(Locale, bool)>();
         ReorderableListExtended m_ExtensionsList;
         bool m_ShowLooseTables = true;
         bool m_ShowMissingTables = true;
@@ -98,7 +99,10 @@ namespace UnityEditor.Localization.UI
             foreach (var locale in projectLocales)
             {
                 if (!m_Collection.ContainsTable(locale.Identifier))
-                    m_MissingTables.Add(locale);
+                {
+                    var tableExists = m_LooseTables.Any(t => ReferenceEquals(m_Collection.SharedData, t.SharedData) && t.LocaleIdentifier == locale.Identifier);
+                    m_MissingTables.Add((locale, tableExists));
+                }
             }
 
             Repaint();
@@ -181,21 +185,19 @@ namespace UnityEditor.Localization.UI
                     EditorGUI.indentLevel++;
                     for (int i = 0; i < m_MissingTables.Count; ++i)
                     {
+                        var (locale, tableExists) = m_MissingTables[i];
+
                         EditorGUILayout.BeginHorizontal();
-                        var tableName = AddressHelper.GetTableAddress(m_Collection.SharedData.TableCollectionName, m_MissingTables[i].Identifier);
-                        var assetGUID = AssetDatabase.FindAssets(tableName, null);
-                        var path = assetGUID.Length > 0 ? AssetDatabase.GUIDToAssetPath(assetGUID[0]) : null;
-                        var isExist = path != null;
-                        using (new EditorGUI.DisabledScope(isExist))
+                        using (new EditorGUI.DisabledScope(tableExists))
                         {
-                            if (GUILayout.Button(m_MissingTables[i].name, EditorStyles.label))
+                            if (GUILayout.Button(locale.name, EditorStyles.label))
                             {
-                                EditorGUIUtility.PingObject(m_MissingTables[i]);
+                                EditorGUIUtility.PingObject(locale);
                             }
 
                             if (GUILayout.Button(Styles.createTable, GUILayout.Width(60)))
                             {
-                                m_Collection.AddNewTable(m_MissingTables[i].Identifier);
+                                m_Collection.AddNewTable(locale.Identifier);
                                 GUIUtility.ExitGUI();
                             }
                         }

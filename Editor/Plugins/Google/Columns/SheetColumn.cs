@@ -41,7 +41,7 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
         /// </summary>
         /// <param name="cellValue">The value in the cell for the column.</param>
         /// <param name="cellNote">The value in the notes field for the column.</param>
-        /// <returns>The entry for the current row or <c>null</c> if one could not be found.</returns>
+        /// <returns>The entry for the current row or <see langword="null"/> if one could not be found.</returns>
         SharedTableData.SharedTableEntry PullKey(string cellValue, string cellNote);
     }
 
@@ -116,8 +116,8 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
         /// Called to update the <see cref="StringTableCollection"/> using the provided cell data.
         /// </summary>
         /// <param name="keyEntry">The entry being updated for this cell.</param>
-        /// <param name="cellValue">The cell value or <c>null</c> if <see cref="PushFields"/> does not contain the flag <see cref="PushFields.Value"/>.</param>
-        /// <param name="cellNote">The cell note or <c>null</c> if <see cref="PushFields"/> does not contain the flag <see cref="PushFields.Note"/>.</param>
+        /// <param name="cellValue">The cell value or <see langword="null"/> if <see cref="PushFields"/> does not contain the flag <see cref="PushFields.Value"/>.</param>
+        /// <param name="cellNote">The cell note or <see langword="null"/> if <see cref="PushFields"/> does not contain the flag <see cref="PushFields.Note"/>.</param>
         public abstract void PullCellData(SharedTableData.SharedTableEntry keyEntry, string cellValue, string cellNote);
 
         /// <summary>

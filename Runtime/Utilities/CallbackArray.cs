@@ -107,11 +107,10 @@ namespace UnityEngine.Localization
                 {
                     m_SingleDelegate = null;
                     m_Length = 0;
-                }    
+                }
             }
             else
             {
-
                 for (int i = 0; i < m_Length; ++i)
                 {
                     // m_MultipleDelegates[i] == callback creates GC
@@ -161,6 +160,13 @@ namespace UnityEngine.Localization
 
                 m_MutatedDuringCallback = true;
             }
+        }
+
+        public void Clear()
+        {
+            m_SingleDelegate = null;
+            m_MultipleDelegates = null;
+            m_Length = 0;
         }
     }
 }

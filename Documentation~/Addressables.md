@@ -9,10 +9,11 @@ You can place Assets into different Addressable groups based on criteria such as
 To configure the group rules, create an [Addressable Group Rules](xref:UnityEditor.Localization.Addressables.AddressableGroupRules) asset (**Assets > Create > Localization > Addressable Group Rules**).
 Some examples of different rule sets are:
 
-- Using a single group for all assets
-- Creating a group for each Locale and a group for shared assets
-- Creating Groups for each asset type (String Tables, Textures, Audio)
-- Creating Region groups to collate assets from similar regions (Europe, Asia, Latin America)
+- Using a single group for all assets.
+- Creating a group for each Locale and a group for shared assets.
+- Creating Groups for each asset type (String Tables, Textures, Audio).
+- Creating Region groups to collate assets from similar regions (Europe, Asia, Latin America).
+- Using a group for each game, when a project contains multiple games.
 
 ![A default rule set.](images/AddressableGroupRules.png)
 

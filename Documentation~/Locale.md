@@ -18,10 +18,50 @@ Locales wrap the .Net [CultureInfo](https://docs.microsoft.com/en-us/dotnet/api/
 
 ## Fallbacks
 
-When the Localization system can not find a localized asset or string for a particular Locale, it can attempt to fallback to another Locale and use the localized value from that.
-For example, a game may have a regional language such as French(Canadian) that only implements a subset of the game’s text, and then falls back to French(France) for the remainder. You can also use this to fallback to completely different Locales, such as when a game may only be partially translated and it is better to show the text in the game's default language rather than not at all.
+When the Localization system can't find a localized asset or string for a particular Locale, it attempts to fall back to another Locale and use the localized value from that.
+For example, a game may have a regional language such as French(Canadian) that only implements a subset of the game’s text, and then falls back to French(France) for the remainder. You can also use this to fall back to completely different Locales, such as when a game may only be partially translated and it is better to show the text in the game's default language rather than not at all.
 
 To configure a Locale fallback, add the [Fallback Locale](xref:UnityEngine.Localization.Metadata.FallbackLocale) metadata to a Locale.
 
 ![Example of a French Locale configured to fallback to English.](images/FallbackMetadata.png)
 _Example of a French Locale configured to fallback to English_
+
+This example shows how Unity determines what order to evaluate fallbacks when a Locale contains multiple fallbacks:
+
+| **Locale**   | **Fallbacks**      |
+| ------------ | ------------------ |
+| **Locale A** | Locale B, Locale C |
+| **Locale B** | Locale D, Locale E |
+| **Locale C** |                    |
+| **Locale D** | Locale F           |
+| **Locale E** | Locale F           |
+| **Locale F** |                    |
+
+The following steps explain the process when Locale A is the selected Locale and the Localization system needs to find a fallback:
+
+1. A list of fallback locales is generated, **Locale B** and **Locale C** are added to it.
+
+    > Fallback List: [**Locale B**, Locale C]
+
+2. **Locale B** is evaluated and does not contain a localized value. The fallbacks for Locale B are added to the Fallbacks list (**Locale D** and **Locale E**). The next item in the list (**Locale C**) is evaluated.
+
+    > Fallback List: [~~Locale B~~, **Locale C**, Locale D, Locale E]
+
+3. **Locale C** is evaluated and does not contain a localized value. **Locale C** does not have any fallbacks so no new items are added to the Fallbacks list. The next item in the list (**Locale D**) is evaluated.
+
+    > Fallback List: [~~Locale B~~, ~~Locale C~~, **Locale D**, Locale E]
+
+    > [!NOTE]
+    > When a Locale contains no fallbacks, the Localization system tries to find one using the Culture Info.
+
+4. **Locale D** is evaluated and does not contain a localized value. The fallback **Locale F** is added to the Fallbacks list. The next item in the list (**Locale E**) is evaluated.
+
+    > Fallback List: [~~Locale B~~, ~~Locale C~~, ~~Locale D~~, **Locale E**, Locale F]
+
+5. **Locale E** is evaluated and does not contain a localized value. The fallback **Locale F** is already in the Fallbacks list and so it is ignored. The last item in the list (**Locale F**) is evaluated.
+
+    > Fallback List: [~~Locale B~~, ~~Locale C~~, ~~Locale D~~, ~~Locale E~~, **Locale F**]
+
+The following diagram shows the order in which the fallbacks are evaluated (red solid line) and the fallback relationship between the Locales (blue dashed line):
+
+![Fallback order. The dashed blue line is the fallback relationship and the solid red line is the order the fallbacks will be evaluated.](images/FallbackOrder.dot.svg)

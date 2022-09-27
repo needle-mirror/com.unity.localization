@@ -7,6 +7,9 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
 {
+    /// <summary>
+    /// Tracks and applies variant changes to a [Transform](https://docs.unity3d.com/ScriptReference/Transform.html).
+    /// </summary>
     [Serializable]
     [DisplayName("Transform")]
     [CustomTrackedObject(typeof(Transform), false)]

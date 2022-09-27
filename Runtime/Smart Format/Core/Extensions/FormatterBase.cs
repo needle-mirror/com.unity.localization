@@ -20,7 +20,7 @@ namespace UnityEngine.Localization.SmartFormat.Core.Extensions
         }
 
         /// <summary>
-        /// Default names to use when <see cref="Names"/> is <c>null</c>.
+        /// Default names to use when <see cref="Names"/> is <see langword="null"/>.
         /// </summary>
         public abstract string[] DefaultNames { get; }
 

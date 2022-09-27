@@ -64,10 +64,10 @@ MonoBehaviour:
       data:
         m_Entries: 007062c69b0300000070a2a90af0000000706298420401000070e23631040100
     00000001:
-      type: {class: ItemGender, ns: , asm: Assembly-CSharp}
+      type: {class: ItemGender, ns: , asm: Unity.Localization.Samples.PersistentVariables}
       data:
         gender: 2
     00000002:
-      type: {class: ItemGender, ns: , asm: Assembly-CSharp}
+      type: {class: ItemGender, ns: , asm: Unity.Localization.Samples.PersistentVariables}
       data:
         gender: 1

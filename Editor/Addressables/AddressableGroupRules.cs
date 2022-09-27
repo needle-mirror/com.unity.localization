@@ -11,6 +11,10 @@ namespace UnityEditor.Localization.Addressables
     /// <summary>
     /// Provides support for configuring rule sets to determine the <see cref="AddressableAssetGroup"/>s that localized assets should be added to.
     /// </summary>
+    /// <example>
+    /// This example places all English assets into a local group and all other languages into a remote group which could then be downloaded after the game is released.
+    /// <code source="../../DocCodeSamples.Tests/GroupResolverExample.cs"/>
+    /// </example>
     public class AddressableGroupRules : ScriptableObject
     {
         const string k_ConfigName = "com.unity.localization.addressable-group-rules";

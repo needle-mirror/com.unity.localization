@@ -63,15 +63,14 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             // We can format numbers, and IEnumerables. For IEnumerables we look at the number of items
             // in the collection: this means the user can e.g. use the same parameter for both plural and list, for example
             // 'Smart.Format("The following {0:plural:person is|people are} impressed: {0:list:{}|, |, and}", new[] { "bob", "alice" });'
-            if (current is byte || current is short || current is int || current is long
-                || current is float || current is double || current is decimal
-                || current is ushort || current is uint || current is ulong)
-                value = Convert.ToDecimal(current);
+            if (current is IConvertible convertible &&
+                // Supporting these breaks tests and changes the default behaviour
+                !(current is DateTime) && !(current is string) && !(current is bool) && !(current is Enum))
+                value = convertible.ToDecimal(null);
             else if (current is IEnumerable<object> objects)
                 value = objects.Count();
             else
                 return false;
-
 
             // Get the plural rule:
             var pluralRule = GetPluralRule(formattingInfo);
@@ -118,7 +117,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
             // If the AvailableLocales requires preloading and it is not ready then we can not get the SelectedLocale and must skip this step.
             Locale selectedLocale = null;
             var localeOp = LocalizationSettings.SelectedLocaleAsync;
-            if (localeOp.IsDone)
+            if (localeOp.IsValid() && localeOp.IsDone)
             {
                 selectedLocale = localeOp.Result;
             }
@@ -184,7 +183,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         }
 
         /// <summary>
-        /// Returns the formatter when <paramref name="formatType"/> is <see cref="CustomPluralRuleProvider"/>, otherwise returns <c>null</c>.
+        /// Returns the formatter when <paramref name="formatType"/> is <see cref="CustomPluralRuleProvider"/>, otherwise returns <see langword="null"/>.
         /// </summary>
         /// <param name="formatType"></param>
         /// <returns></returns>

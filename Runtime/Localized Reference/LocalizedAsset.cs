@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Localization.Operations;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 using UnityEngine.Pool;
@@ -19,6 +20,12 @@ namespace UnityEngine.Localization
     /// </summary>
     [Serializable]
     public class LocalizedGameObject : LocalizedAsset<GameObject> {}
+
+    /// <summary>
+    /// Provides a specialized <see cref="LocalizedAsset{TObject}"/> which can be used to localize a [Mesh](https://docs.unity3d.com/ScriptReference/Mesh.html).
+    /// </summary>
+    [Serializable]
+    public class LocalizedMesh : LocalizedAsset<Mesh> {}
 
     /// <summary>
     /// Provides a specialized <see cref="LocalizedAsset{TObject}"/> which can be used to localize [Materials](https://docs.unity3d.com/ScriptReference/Material.html).
@@ -46,14 +53,14 @@ namespace UnityEngine.Localization
 
     #if PACKAGE_TMP || PACKAGE_DOCS_GENERATION
     /// <summary>
-    /// Provides a <see cref="LocalizedAsset{TObject}"/> which you can use to localize a TextMeshPro <see cref="TMPro.TMP_FontAsset"/>.
+    /// Provides a <see cref="LocalizedAsset{TObject}"/> which you can use to localize a TextMeshPro [TMPro.TMP_FontAsset](https://docs.unity3d.com/Packages/com.unity.textmeshpro@latest?subfolder=/api/TMPro.TMP_FontAsset)/>.
     /// </summary>
     [Serializable]
     public class LocalizedTmpFont : LocalizedAsset<TMPro.TMP_FontAsset> {}
     #endif
 
     /// <summary>
-    /// Provides a <see cref="LocalizedAsset{TObject}"/> which you can use to localize a <see cref="Font"/>.
+    /// Provides a <see cref="LocalizedAsset{TObject}"/> which you can use to localize a [Font](https://docs.unity3d.com/ScriptReference/Font.html)/>.
     /// </summary>
     [Serializable]
     public class LocalizedFont : LocalizedAsset<Font> {}
@@ -68,6 +75,22 @@ namespace UnityEngine.Localization
         /// </summary>
         /// <returns></returns>
         public abstract AsyncOperationHandle<Object> LoadAssetAsObjectAsync();
+
+        /// <summary>
+        /// Overrides the asset's default type. This loads a type from <see cref="AssetTable"/> with the <see cref="TableReference"/> and the
+        /// the asset that matches<see cref= "TableEntryReference" />.
+        /// This helps to filter sub-assets when trying to load them and they share a common type among other sub-assets with the same name.
+        /// <br/>For example, an asset could have the following structure:
+        /// <br/>Main Asset [GameObject]
+        /// <br/>- Sub Asset[GameObject]
+        /// <br/>- Sub Asset[Mesh]
+        /// If you were using a <see cref="LocalizedObject"/>, calling<see cref="LoadAsset"/> or<see cref="LoadAssetAsObjectAsync"/> to load
+        /// "Main Asset/Sub Asset" would return the first matching asset. In this case, this would be the GameObject version.
+        /// With this method, you could provide the type Mesh to filter out the GameObject version and return the Mesh.
+        /// </summary>
+        /// <typeparam name="TObject">The type to use instead of the default.</typeparam>
+        /// <returns>Returns the loading operation for the request.</returns>
+        public abstract AsyncOperationHandle<TObject> LoadAssetAsync<TObject>() where TObject : Object;
     }
 
     /// <summary>
@@ -80,7 +103,7 @@ namespace UnityEngine.Localization
     /// <code source="../../DocCodeSamples.Tests/LocalizedAssetSamples.cs" region="localized-prefab"/>
     /// </example>
     [Serializable]
-    public partial class LocalizedAsset<TObject> : LocalizedAssetBase where TObject : Object
+    public partial class LocalizedAsset<TObject> : LocalizedAssetBase, IDisposable where TObject : Object
     {
         CallbackArray<ChangeHandler> m_ChangeHandler;
         Action<Locale> m_SelectedLocaleChanged;
@@ -109,7 +132,7 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// The current loading operation for the asset when using <see cref="AssetChanged"/>. This is <c>default</c> if a loading operation is not available.
+        /// The current loading operation for the asset when using <see cref="AssetChanged"/>. This is <see langword="default"/> if a loading operation is not available.
         /// </summary>
         public AsyncOperationHandle<TObject> CurrentLoadingOperationHandle
         {
@@ -171,7 +194,7 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// Returns <c>true</c> if <seealso cref="AssetChanged"/> has any subscribers.
+        /// Returns <see langword="true"/> if <seealso cref="AssetChanged"/> has any subscribers.
         /// </summary>
         public bool HasChangeHandler => m_ChangeHandler.Length != 0;
 
@@ -197,10 +220,13 @@ namespace UnityEngine.Localization
         /// This example shows how <see cref="LoadAssetAsync"/> can be used to request a sprite asset when the <see cref="LocalizationSettings.SelectedLocale"/> changes.
         /// <code source="../../DocCodeSamples.Tests/LocalizedAssetSamples.cs" region="localized-sprite"/>
         /// </example>
-        public AsyncOperationHandle<TObject> LoadAssetAsync()
+        public AsyncOperationHandle<TObject> LoadAssetAsync() => LoadAssetAsync<TObject>();
+
+        /// <inheritdoc/>
+        public override AsyncOperationHandle<T> LoadAssetAsync<T>()
         {
             LocalizationSettings.ValidateSettingsExist("Can not Load Asset.");
-            return LocalizationSettings.AssetDatabase.GetLocalizedAssetAsync<TObject>(TableReference, TableEntryReference, locale: LocaleOverride);
+            return LocalizationSettings.AssetDatabase.GetLocalizedAssetAsync<T>(TableReference, TableEntryReference, locale: LocaleOverride);
         }
 
         class ConvertToObjectOperation : WaitForCurrentOperationAsyncOperationBase<Object>
@@ -362,6 +388,25 @@ namespace UnityEngine.Localization
         protected override void Reset()
         {
             ClearLoadingOperation();
+        }
+
+        /// <summary>
+        /// Removes and releases internal references to Addressable assets.
+        /// </summary>
+        ~LocalizedAsset()
+        {
+            ClearLoadingOperation();
+        }
+
+        /// <summary>
+        /// Removes and releases internal references to Addressable assets.
+        /// </summary>
+        void IDisposable.Dispose()
+        {
+            m_ChangeHandler.Clear();
+            LocalizationSettings.SelectedLocaleChanged -= m_SelectedLocaleChanged;
+            ClearLoadingOperation();
+            GC.SuppressFinalize(this);
         }
     }
 }

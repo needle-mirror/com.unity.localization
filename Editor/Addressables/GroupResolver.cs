@@ -13,6 +13,10 @@ namespace UnityEditor.Localization.Addressables
     /// <summary>
     /// Provides support for placing assets into different <see cref="AddressableAssetGroup"/>s.
     /// </summary>
+    /// <example>
+    /// This example places all English assets into a local group and all other languages into a remote group which could then be downloaded after the game is released.
+    /// <code source="../../DocCodeSamples.Tests/GroupResolverExample.cs"/>
+    /// </example>
     [Serializable]
     public class GroupResolver
     {
@@ -40,7 +44,7 @@ namespace UnityEditor.Localization.Addressables
         public AddressableAssetGroup SharedGroup { get => m_SharedGroup; set => m_SharedGroup = value; }
 
         /// <summary>
-        /// The name to use when generating a new <see cref="AddressableAssetGroup"/> for a <see cref="LocaleIdentifier"/>.
+        /// The name to use when generating a new <see cref="AddressableAssetGroup"/> for a <see cref="Locale"/>.
         /// </summary>
         public string LocaleGroupNamePattern { get => m_LocaleGroupNamePattern; set => m_LocaleGroupNamePattern = value; }
 
@@ -90,7 +94,7 @@ namespace UnityEditor.Localization.Addressables
         /// Add a group for the <see cref="LocaleIdentifier"/>. If a Group is already assigned it will be replaced with the new group.
         /// </summary>
         /// <param name="identifier">The Locale Id to use for the selected group.</param>
-        /// <param name="group">The group to add for the selected Locale Id, must not be <c>null</c>.</param>
+        /// <param name="group">The group to add for the selected Locale Id, must not be <see langword="null"/>.</param>
         public void AddLocaleGroup(LocaleIdentifier identifier, AddressableAssetGroup group)
         {
             if (group == null)
@@ -110,11 +114,11 @@ namespace UnityEditor.Localization.Addressables
         /// Removes the group for the chosen Locale Id.
         /// </summary>
         /// <param name="identifier">The Locale Id to be removed.</param>
-        /// <returns>Returns <c>true</c> if an item was removed.</returns>
+        /// <returns>Returns <see langword="true"/> if an item was removed.</returns>
         public bool RemoveLocaleGroup(LocaleIdentifier identifier) => m_LocaleGroups.RemoveAll(g => g.localeIdentifier == identifier) > 0;
 
         /// <summary>
-        /// Returns the active group assigned to the <see cref="LocaleIdentifier"/> or <c>null</c> if one has not been assigned.
+        /// Returns the active group assigned to the <see cref="LocaleIdentifier"/> or <see langword="null"/> if one has not been assigned.
         /// </summary>
         /// <param name="identifier">The Locale Id to search for.</param>
         /// <returns></returns>

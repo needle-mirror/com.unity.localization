@@ -71,6 +71,9 @@ namespace UnityEngine.Localization.Tables
         {
             get
             {
+                if (!LocalizationSettings.HasSettings)
+                    return null;
+
                 if (ReferenceType == Type.Guid)
                 {
                     #if UNITY_EDITOR

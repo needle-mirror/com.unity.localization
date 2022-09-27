@@ -5,7 +5,7 @@ using UnityEngine.Localization.Tables;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace UnityEngine.Localization
+namespace UnityEngine.Localization.Operations
 {
     class PreloadTablesOperation<TTable, TEntry> : WaitForCurrentOperationAsyncOperationBase<LocalizedDatabase<TTable, TEntry>>
         where TTable : DetailedLocalizationTable<TEntry>
@@ -15,15 +15,21 @@ namespace UnityEngine.Localization
         readonly List<AsyncOperationHandle<TTable>> m_LoadTables = new List<AsyncOperationHandle<TTable>>();
         readonly List<AsyncOperationHandle> m_LoadTablesOperation = new List<AsyncOperationHandle>();
         readonly List<AsyncOperationHandle> m_PreloadTablesOperations = new List<AsyncOperationHandle>();
-        readonly Action<AsyncOperationHandle> m_LoadTableContentsAction;
+        readonly Action<AsyncOperationHandle<IList<AsyncOperationHandle>>> m_LoadTableContentsAction;
         readonly Action<AsyncOperationHandle> m_FinishPreloadingAction;
 
+        AsyncOperationHandle<IList<AsyncOperationHandle>> m_LoadTablesOperationHandle;
+        AsyncOperationHandle<IList<AsyncOperationHandle>> m_PreloadTablesContentsHandle;
         IList<TableReference> m_TableReferences;
         Locale m_SelectedLocale;
 
         public PreloadTablesOperation()
         {
-            m_LoadTableContentsAction = a => LoadTableContents();
+            m_LoadTableContentsAction = a =>
+            {
+                LoadTableContents();
+                AddressablesInterface.Release(a);
+            };
             m_FinishPreloadingAction = FinishPreloading;
         }
 
@@ -54,11 +60,11 @@ namespace UnityEngine.Localization
 
             if (m_LoadTablesOperation.Count > 0)
             {
-                var loadTablesOperationHandle = AddressablesInterface.ResourceManager.CreateGenericGroupOperation(m_LoadTablesOperation);
-                if (!loadTablesOperationHandle.IsDone)
+                m_LoadTablesOperationHandle = AddressablesInterface.CreateGroupOperation(m_LoadTablesOperation);
+                if (!m_LoadTablesOperationHandle.IsDone)
                 {
-                    CurrentOperation = loadTablesOperationHandle;
-                    loadTablesOperationHandle.CompletedTypeless += m_LoadTableContentsAction;
+                    CurrentOperation = m_LoadTablesOperationHandle;
+                    m_LoadTablesOperationHandle.Completed += m_LoadTableContentsAction;
                     return;
                 }
             }
@@ -89,15 +95,15 @@ namespace UnityEngine.Localization
                 return;
             }
 
-            var preloadTablesContents = AddressablesInterface.ResourceManager.CreateGenericGroupOperation(m_PreloadTablesOperations);
-            if (!preloadTablesContents.IsDone)
+            m_PreloadTablesContentsHandle = AddressablesInterface.CreateGroupOperation(m_PreloadTablesOperations);
+            if (!m_PreloadTablesContentsHandle.IsDone)
             {
-                CurrentOperation = preloadTablesContents;
-                preloadTablesContents.CompletedTypeless += m_FinishPreloadingAction;
+                CurrentOperation = m_PreloadTablesContentsHandle;
+                m_PreloadTablesContentsHandle.CompletedTypeless += m_FinishPreloadingAction;
             }
             else
             {
-                FinishPreloading(preloadTablesContents);
+                FinishPreloading(m_PreloadTablesContentsHandle);
             }
         }
 
@@ -109,6 +115,9 @@ namespace UnityEngine.Localization
         protected override void Destroy()
         {
             base.Destroy();
+            AddressablesInterface.ReleaseAndReset(ref m_LoadTablesOperationHandle);
+            AddressablesInterface.ReleaseAndReset(ref m_PreloadTablesContentsHandle);
+
             m_LoadTables.Clear();
             m_LoadTablesOperation.Clear();
             m_PreloadTablesOperations.Clear();

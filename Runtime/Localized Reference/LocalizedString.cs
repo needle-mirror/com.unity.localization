@@ -22,7 +22,7 @@ namespace UnityEngine.Localization
     /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="simple-monobehaviour1"/>
     /// </example>
     /// <example>
-    /// This example shows how to localize a [MonoBehaviour](https://docs.unity3d.com/ScriptReference/MonoBehaviour.html) immediately. 
+    /// This example shows how to localize a [MonoBehaviour](https://docs.unity3d.com/ScriptReference/MonoBehaviour.html) immediately.
     /// This example uses synchronous loading, which may cause a pause when first loading the localized assets.
     /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="simple-monobehaviour2"/>
     /// </example>
@@ -35,7 +35,7 @@ namespace UnityEngine.Localization
     /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="health-counter"/>
     /// </example>
     [Serializable]
-    public partial class LocalizedString : LocalizedReference, IVariableGroup, IDictionary<string, IVariable>, IVariableValueChanged
+    public partial class LocalizedString : LocalizedReference, IVariableGroup, IDictionary<string, IVariable>, IVariableValueChanged, IDisposable
     {
         [SerializeField]
         List<VariableNameValuePair> m_LocalVariables = new List<VariableNameValuePair>();
@@ -78,7 +78,7 @@ namespace UnityEngine.Localization
         public IList<object> Arguments { get; set; }
 
         /// <summary>
-        /// The current loading operation for the string when using <see cref="StringChanged"/> or <c>default</c> if one is not available.
+        /// The current loading operation for the string when using <see cref="StringChanged"/> or <see langword="default"/> if one is not available.
         /// A string may not be immediately available, such as when loading the <see cref="StringTable"/> asset, so all string operations are wrapped
         /// with an <see cref="AsyncOperationHandle"/>.
         /// See also <seealso cref="RefreshString"/>
@@ -150,7 +150,7 @@ namespace UnityEngine.Localization
         }
 
         /// <summary>
-        /// Returns <c>true</c> if <seealso cref="StringChanged"/> has any subscribers.
+        /// Returns <see langword="true"/> if <seealso cref="StringChanged"/> has any subscribers.
         /// </summary>
         public bool HasChangeHandler => m_ChangeHandler.Length != 0;
 
@@ -169,9 +169,9 @@ namespace UnityEngine.Localization
         /// Initializes and returns an instance of a <see cref="LocalizedString"/>.
         /// </summary>
         /// <param name="tableReference">Reference to the String Table Collection.
-        /// This can either be the name of the collection as a <c>string</c> or the Collection Guid as a [System.Guid](https://docs.microsoft.com/en-us/dotnet/api/system.guid).</param>
+        /// This can either be the name of the collection as a <see langword="string"/> or the Collection Guid as a [System.Guid](https://docs.microsoft.com/en-us/dotnet/api/system.guid).</param>
         /// <param name="entryReference">Reference to the String Table Collection entry.
-        /// This can either be the name of the Key as a <c>string</c> or the <c>long</c> Key Id.</param>
+        /// This can either be the name of the Key as a <see langword="string"/> or the <see langword="long"/> Key Id.</param>
         /// <example>
         /// This example shows the different ways to construct a LocalizedString.
         /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="localized-string-constructor"/>
@@ -192,12 +192,11 @@ namespace UnityEngine.Localization
         /// Provides a way to force a refresh of the string when using <see cref="StringChanged"/>.
         /// </summary>
         /// <remarks>
-        /// <para>This will only force the refresh if there is currently no active <see cref="CurrentLoadingOperationHandle"/>, if one is still being executed then it will be ignored and <c>false</c> will be returned.
+        /// <para>This will only force the refresh if there is currently no active <see cref="CurrentLoadingOperationHandle"/>, if one is still being executed then it will be ignored and <see langword="false"/> will be returned.
         /// If a string is not static and will change during game play, such as when using format arguments, then this can be used to force the string to update itself.</para>
         /// You may wish to call this if the values <b>inside</b> of the <see cref="Arguments"/> list have changed or you wish to force all <see cref="StringChanged"/> subscribers to update.
-        /// Note if setting the <see cref="Arguments"/> with a new list value then you do not need to call this as it will be called by the <see cref="Arguments"/> set method automatically.
         /// </remarks>
-        /// <returns>Returns <c>true</c> if a new refresh could be requested or <c>false</c> if it could not, such as when <see cref="CurrentLoadingOperationHandle"/> is still loading.</returns>
+        /// <returns>Returns <see langword="true"/> if a new refresh could be requested or <see langword="false"/> if it could not, such as when <see cref="CurrentLoadingOperationHandle"/> is still loading.</returns>
         /// <example>
         /// This example shows how the string can be refreshed, such as when showing dynamic values like the current time.
         /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="localized-string-smart"/>
@@ -211,7 +210,7 @@ namespace UnityEngine.Localization
             {
                 #if !UNITY_WEBGL
                 if (WaitForCompletion)
-                { 
+                {
                     CurrentLoadingOperationHandle.WaitForCompletion();
                     return true;
                 }
@@ -270,14 +269,14 @@ namespace UnityEngine.Localization
         /// Please note that [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on
         /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
         /// </summary>
-        /// <returns>The localized string for the <see cref="LocalizationSettings.SelectedLocale"/> or <see cref="LocalizedReference.LocaleOverride"/> if it is not <c>null</c>.</returns>
+        /// <returns>The localized string for the <see cref="LocalizationSettings.SelectedLocale"/> or <see cref="LocalizedReference.LocaleOverride"/> if it is not <see langword="null"/>.</returns>
         public string GetLocalizedString() => GetLocalizedStringAsync().WaitForCompletion();
 
         /// <summary>
         /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and
         /// the translated string that matches <see cref="TableEntryReference"/>.
         /// </summary>
-        /// <param name="arguments">The arguments to pass into the Smart String formatter or <c>String.Format</c>.</param>
+        /// <param name="arguments">The arguments to pass into the Smart String formatter or [String.Format](https://docs.microsoft.com/en-us/dotnet/api/system.string.format).</param>
         /// <returns>Returns the loading operation for the request.</returns>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(params object[] arguments) => GetLocalizedStringAsync((IList<object>)arguments);
 
@@ -288,23 +287,23 @@ namespace UnityEngine.Localization
         /// Please note that [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on
         /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl).
         /// </summary>
-        /// <param name="arguments">The arguments to pass into the Smart String formatter or <c>String.Format</c>.</param>
-        /// <returns>The localized string for the <see cref="LocalizationSettings.SelectedLocale"/> or <see cref="LocalizedReference.LocaleOverride"/> if it is not <c>null</c>.</returns>
+        /// <param name="arguments">The arguments to pass into the Smart String formatter or [String.Format](https://docs.microsoft.com/en-us/dotnet/api/system.string.format).</param>
+        /// <returns>The localized string for the <see cref="LocalizationSettings.SelectedLocale"/> or <see cref="LocalizedReference.LocaleOverride"/> if it is not <see langword="null"/>.</returns>
         public string GetLocalizedString(params object[] arguments) => GetLocalizedStringAsync((IList<object>)arguments).WaitForCompletion();
 
         /// <summary>
         /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and
         /// the translated string that matches <see cref="TableEntryReference"/>.
         /// </summary>
-        /// <param name="arguments">The arguments to pass into the Smart String formatter or <c>String.Format</c>.</param>
-        /// <returns>The localized string for the <see cref="LocalizationSettings.SelectedLocale"/> or <see cref="LocalizedReference.LocaleOverride"/> if it is not <c>null</c>.</returns>
+        /// <param name="arguments">The arguments to pass into the Smart String formatter or [String.Format](https://docs.microsoft.com/en-us/dotnet/api/system.string.format).</param>
+        /// <returns>The localized string for the <see cref="LocalizationSettings.SelectedLocale"/> or <see cref="LocalizedReference.LocaleOverride"/> if it is not <see langword="null"/>.</returns>
         public string GetLocalizedString(IList<object> arguments) => GetLocalizedStringAsync(arguments).WaitForCompletion();
 
         /// <summary>
         /// Provides a translated string from a <see cref="StringTable"/> with the <see cref="TableReference"/> and
         /// the translated string that matches <see cref="TableEntryReference"/>.
         /// </summary>
-        /// <param name="arguments">The arguments to pass into the Smart String formatter or <c>String.Format</c>.</param>
+        /// <param name="arguments">The arguments to pass into the Smart String formatter or [String.Format](https://docs.microsoft.com/en-us/dotnet/api/system.string.format).</param>
         /// <returns>Returns the loading operation for the request.</returns>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(IList<object> arguments)
         {
@@ -328,7 +327,7 @@ namespace UnityEngine.Localization
         public ICollection<IVariable> Values => m_VariableLookup.Values.Select(s => s.variable).ToList();
 
         /// <summary>
-        /// Implemented as part of the IDictionary interface but not actually used. Will always return <c>false</c>.
+        /// Implemented as part of the IDictionary interface but not actually used. Will always return <see langword="false"/>.
         /// </summary>
         public bool IsReadOnly => false;
 
@@ -352,8 +351,8 @@ namespace UnityEngine.Localization
         /// Gets the <see cref="IVariable"/> with the specified name.
         /// </summary>
         /// <param name="name">The name of the variable.</param>
-        /// <param name="value">The variable that was found or <c>default</c>.</param>
-        /// <returns><c>true</c> if a variable was found and <c>false</c> if one could not.</returns>
+        /// <param name="value">The variable that was found or <see langword="default"/>.</param>
+        /// <returns><see langword="true"/> if a variable was found and <see langword="false"/> if one could not.</returns>
         /// <example>
         /// This example shows how to get and add a local variable using TryGetValue.
         /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="try-get-variable"/>
@@ -411,7 +410,7 @@ namespace UnityEngine.Localization
         /// Removes a local variable with the specified name.
         /// </summary>
         /// <param name="name">The name of the variable to be removed.</param>
-        /// <returns><c>true</c> if a variable with the specified name was removed, <c>false</c> if one was not.</returns>
+        /// <returns><see langword="true"/> if a variable with the specified name was removed, <see langword="false"/> if one was not.</returns>
         /// <example>
         /// This example shows how to remove a local variable.
         /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="remove-variable"/>
@@ -431,21 +430,21 @@ namespace UnityEngine.Localization
         /// Removes a local variable with the specified key.
         /// </summary>
         /// <param name="item">The item to be removed, only the Key field will be considered.</param>
-        /// <returns><c>true</c> if a variable with the specified name was removed, <c>false</c> if one was not.</returns>
+        /// <returns><see langword="true"/> if a variable with the specified name was removed, <see langword="false"/> if one was not.</returns>
         public bool Remove(KeyValuePair<string, IVariable> item) => Remove(item.Key);
 
         /// <summary>
-        /// Returns <c>true</c> if a local variable with the specified name exists.
+        /// Returns <see langword="true"/> if a local variable with the specified name exists.
         /// </summary>
         /// <param name="name">The variable name to check for.</param>
-        /// <returns><c>true</c> if a matching variable could be found or <c>false</c> if one could not.</returns>
+        /// <returns><see langword="true"/> if a matching variable could be found or <see langword="false"/> if one could not.</returns>
         public bool ContainsKey(string name) => m_VariableLookup.ContainsKey(name);
 
         /// <summary>
         /// <inheritdoc cref="ContainsKey(string)"/>
         /// </summary>
         /// <param name="item">The item to check for. Both the Key and Value must match.</param>
-        /// <returns><c>true</c> if a matching variable could be found or <c>false</c> if one could not.</returns>
+        /// <returns><see langword="true"/> if a matching variable could be found or <see langword="false"/> if one could not.</returns>
         public bool Contains(KeyValuePair<string, IVariable> item) => TryGetValue(item.Key, out var v) && v == item.Value;
 
         /// <summary>
@@ -743,7 +742,6 @@ namespace UnityEngine.Localization
             }
 
             CurrentLoadingOperationHandle = LocalizationSettings.StringDatabase.GetTableEntryAsync(TableReference, TableEntryReference, LocaleOverride, FallbackState);
-
             AddressablesInterface.Acquire(CurrentLoadingOperationHandle);
 
             if (!CurrentLoadingOperationHandle.IsDone)
@@ -802,6 +800,25 @@ namespace UnityEngine.Localization
                     m_VariableLookup[v.name] = v;
                 }
             }
+        }
+
+        /// <summary>
+        /// Removes and releases internal references to Addressable assets.
+        /// </summary>
+        ~LocalizedString()
+        {
+            ClearLoadingOperation();
+        }
+
+        /// <summary>
+        /// Removes and releases internal references to Addressable assets.
+        /// </summary>
+        void IDisposable.Dispose()
+        {
+            m_ChangeHandler.Clear();
+            ClearLoadingOperation();
+            LocalizationSettings.SelectedLocaleChanged -= m_SelectedLocaleChanged;
+            GC.SuppressFinalize(this);
         }
     }
 }

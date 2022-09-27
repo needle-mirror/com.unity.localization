@@ -119,6 +119,10 @@ namespace UnityEditor.Localization
             if (aaSettings == null)
                 return;
 
+            var path = AssetDatabase.GetAssetPath(asset);
+            if (AssetUtility.IsBuiltInResource(path))
+                throw new ArgumentException($"Builtin resources are not supported. Can not add {asset} from {path}.", nameof(asset));
+
             using (new UndoScope("Add asset to table", createUndo))
             {
                 if (createUndo)
@@ -142,7 +146,11 @@ namespace UnityEditor.Localization
                 {
                     entry = AddressableGroupRules.AddAssetToGroup(asset, new[] {table.LocaleIdentifier}, aaSettings, createUndo);
                     entry.SetLabel(entryLabel, true, true);
-                    entry.address = LocalizationEditorSettings.Instance.FindUniqueAssetAddress(asset.name);
+
+                    var mainAsset = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GetAssetPath(asset));
+                    if (mainAsset == null)
+                        mainAsset = asset;
+                    entry.address = LocalizationEditorSettings.Instance.FindUniqueAssetAddress(mainAsset.name);
                 }
                 else
                 {
@@ -157,6 +165,9 @@ namespace UnityEditor.Localization
 
                 EditorUtility.SetDirty(table);
                 EditorUtility.SetDirty(table.SharedData);
+
+                if (AssetDatabase.IsSubAsset(asset))
+                    assetGuid = AssetAddress.FormatAddress(assetGuid, asset.name);
 
                 tableEntry = table.AddEntryFromReference(entryReference, assetGuid);
                 SetEntryAssetType(tableEntry.KeyId, asset.GetType(), table.LocaleIdentifier.Code);
@@ -180,7 +191,7 @@ namespace UnityEditor.Localization
                     return;
 
                 var removedAssetGuid = tableEntry.Guid;
-                tableEntry.Guid = string.Empty;
+                tableEntry.Address = string.Empty;
 
                 var aaSettings = LocalizationEditorSettings.Instance.GetAddressableAssetSettings(false);
                 if (aaSettings == null)
@@ -251,7 +262,7 @@ namespace UnityEditor.Localization
         /// however this can be used to override it so it always expects this asset type instead of reverting back to Object when the last asset is removed.
         /// </summary>
         /// <param name="tableEntry">The entry to set the asset type for.</param>
-        /// <param name="assetType">The asset type to expect for this entry. To reset the override and allow the Editor to control the type pass <c>null</c> or <c>typeof(Object)</c>.</param>
+        /// <param name="assetType">The asset type to expect for this entry. To reset the override and allow the Editor to control the type pass <see langword="null"/> or <c>typeof(Object)</c>.</param>
         public void SetEntryAssetType(TableEntryReference tableEntry, Type assetType)
         {
             if (assetType == null || assetType == typeof(Object))
@@ -416,7 +427,7 @@ namespace UnityEditor.Localization
                     var tableEntry = table.Values.ElementAt(i);
 
                     // Remove the asset from Addressables
-                    if (!string.IsNullOrEmpty(tableEntry.Guid))
+                    if (!tableEntry.IsEmpty)
                     {
                         RemoveAssetFromTable(table, tableEntry.KeyId);
                     }

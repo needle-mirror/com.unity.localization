@@ -55,7 +55,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         public int Count => m_Groups.Count;
 
         /// <summary>
-        /// Implmented as part of IDictionary but not used. Will always return <c>false</c>.
+        /// Implmented as part of IDictionary but not used. Will always return <see langword="false"/>.
         /// </summary>
         public bool IsReadOnly => false;
 
@@ -136,11 +136,11 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         }
 
         /// <summary>
-        /// Returns <c>true</c> if a global variable group could be found with a matching name, or <c>false</c> if one could not.
+        /// Returns <see langword="true"/> if a global variable group could be found with a matching name, or <see langword="false"/> if one could not.
         /// </summary>
         /// <param name="name">The name of the global variable group to find.</param>
-        /// <param name="value">The found global variable group or <c>null</c> if one could not be found with a matching name.</param>
-        /// <returns><c>true</c> if a group could be found or <c>false</c> if one could not.</returns>
+        /// <param name="value">The found global variable group or <see langword="null"/> if one could not be found with a matching name.</param>
+        /// <returns><see langword="true"/> if a group could be found or <see langword="false"/> if one could not.</returns>
         public bool TryGetValue(string name, out VariablesGroupAsset value)
         {
             if (m_GroupLookup.TryGetValue(name, out var v))
@@ -157,8 +157,8 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         /// </summary>
         /// <param name="name">The name of the group to add.</param>
         /// <param name="group">The group to add.</param>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="group"/> is <c>null</c>.</exception>
-        /// <exception cref="ArgumentException">Thrown if <paramref name="name"/> is <c>null</c> or empty.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="group"/> is <see langword="null"/>.</exception>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="name"/> is <see langword="null"/> or empty.</exception>
         public void Add(string name, VariablesGroupAsset group)
         {
             if (string.IsNullOrEmpty(name))
@@ -179,7 +179,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         /// Removes the group with the matching name.
         /// </summary>
         /// <param name="name">The name of the group to remove.</param>
-        /// <returns><c>true</c> if a group with a matching name was found and removed, or <c>false</c> if one was not.</returns>
+        /// <returns><see langword="true"/> if a group with a matching name was found and removed, or <see langword="false"/> if one was not.</returns>
         public bool Remove(string name)
         {
             if (m_GroupLookup.TryGetValue(name, out var v))
@@ -204,10 +204,10 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
         }
 
         /// <summary>
-        /// Returns <c>true</c> if a global variable group is found with the same name.
+        /// Returns <see langword="true"/> if a global variable group is found with the same name.
         /// </summary>
         /// <param name="name">The name of the global variable group to check for.</param>
-        /// <returns><c>true</c> if a group with the name is found or <c>false</c> if one is not.</returns>
+        /// <returns><see langword="true"/> if a group with the name is found or <see langword="false"/> if one is not.</returns>
         public bool ContainsKey(string name) => m_GroupLookup.ContainsKey(name);
 
         /// <inheritdoc cref="ContainsKey(string)"/>

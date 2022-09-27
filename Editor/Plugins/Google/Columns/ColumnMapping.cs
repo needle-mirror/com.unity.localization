@@ -104,11 +104,13 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
                 Func<SheetColumn> createLocaleFunc = () => new LocaleColumn { LocaleIdentifier = locale.Identifier };
                 Func<SheetColumn> createCommentFunc = () => new LocaleCommentColumn { LocaleIdentifier = locale.Identifier };
                 nameMap[locale.name] = createLocaleFunc;
+                nameMap[locale.LocaleName] = createLocaleFunc;
                 nameMap[locale.Identifier.ToString()] = createLocaleFunc;
                 nameMap[locale.Identifier.Code] = createLocaleFunc;
 
                 // Comment
                 nameMap[locale.name + " Comments"] = createCommentFunc;
+                nameMap[locale.LocaleName + " Comments"] = createCommentFunc;
                 nameMap[locale.Identifier.ToString() + " Comments"] = createCommentFunc;
                 nameMap[locale.Identifier.Code + " Comments"] = createCommentFunc;
             }

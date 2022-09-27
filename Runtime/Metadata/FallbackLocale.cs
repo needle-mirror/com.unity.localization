@@ -5,6 +5,7 @@ namespace UnityEngine.Localization.Metadata
     /// <summary>
     /// Provides fallback data with regards to a Locale.
     /// For example you may want some regions to fall back to a default version, such as English(en_uk) may fall back to English(en).
+    /// For details on how Unity evaluates the fallbacks see [Locale Fallbacks](../manual/Locale.html#fallbacks).
     /// </summary>
     [Metadata(AllowedTypes = MetadataType.Locale)]
     [Serializable]

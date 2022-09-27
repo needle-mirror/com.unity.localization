@@ -229,17 +229,10 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
 
             var itemFormat = parameters[0];
 
-            // Spacer
-            if (parameters.Count >= 1)
-                formattingInfo.Write(parameters[0], null);
-
-            // Last spacer
-            if (parameters.Count >= 3)
-                formattingInfo.Write(parameters[2], null);
-
-            // Two spacer
-            if (parameters.Count >= 4)
-                formattingInfo.Write(parameters[3], null);
+            for (int i = 0; i < Math.Min(parameters.Count, 4); i++)
+            {
+                formattingInfo.Write(parameters[i], null);
+            }
 
             if (!itemFormat.HasNested)
             {

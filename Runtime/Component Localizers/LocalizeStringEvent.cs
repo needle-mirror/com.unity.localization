@@ -9,7 +9,7 @@ namespace UnityEngine.Localization.Components
     /// Component that can be used to Localize a string.
     /// Provides an update event <see cref="UpdateString(string)"/> that can be used to automatically update the string
     /// when the <see cref="LocalizationSettings.SelectedLocale"/> or <see cref="StringReference"/> changes.
-    /// Allows for configuring optional arguments that will be used by **Smart Format** or <c>String.Format</c>.
+    /// Allows for configuring optional arguments that will be used by **Smart Format** or [String.Format](https://docs.microsoft.com/en-us/dotnet/api/system.string.format).
     /// </summary>
     /// <example>
     /// This example shows how a Localized String Event can be dynamically updated with a different localized string or new formatting data.

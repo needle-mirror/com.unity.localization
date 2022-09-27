@@ -8,8 +8,21 @@ using UnityEngine.Pool;
 
 namespace UnityEditor.Localization.PropertyVariants
 {
-    [CustomPropertyDrawer(typeof(TrackedProperty<>), true)]
+    [CustomPropertyDrawer(typeof(ArraySizeTrackedProperty))]
+    [CustomPropertyDrawer(typeof(BoolTrackedProperty))]
+    [CustomPropertyDrawer(typeof(ByteTrackedProperty))]
+    [CustomPropertyDrawer(typeof(CharTrackedProperty))]
+    [CustomPropertyDrawer(typeof(DoubleTrackedProperty))]
+    [CustomPropertyDrawer(typeof(FloatTrackedProperty))]
+    [CustomPropertyDrawer(typeof(IntTrackedProperty))]
+    [CustomPropertyDrawer(typeof(LongTrackedProperty))]
+    [CustomPropertyDrawer(typeof(SByteTrackedProperty))]
+    [CustomPropertyDrawer(typeof(ShortTrackedProperty))]
+    [CustomPropertyDrawer(typeof(StringTrackedProperty))]
+    [CustomPropertyDrawer(typeof(UIntTrackedProperty))]
+    [CustomPropertyDrawer(typeof(ULongTrackedProperty))]
     [CustomPropertyDrawer(typeof(UnityObjectProperty), true)]
+    [CustomPropertyDrawer(typeof(UShortTrackedProperty))]
     class TrackedPropertyDrawer : PropertyDrawer
     {
         static readonly GUIContent s_AddLabel = EditorGUIUtility.TrTextContent("Add Variant");
@@ -42,7 +55,7 @@ namespace UnityEditor.Localization.PropertyVariants
                     if (variantsLookup.TryGetValue(locale.Identifier.Code, out var item))
                     {
                         EditorGUI.BeginChangeCheck();
-                        EditorGUI.PropertyField(split.left, item.value, new GUIContent(locale.LocaleName));
+                        DrawValueField(split.left, item.value, new GUIContent(locale.LocaleName), path.stringValue);
 
                         if (EditorGUI.EndChangeCheck())
                         {
@@ -75,6 +88,11 @@ namespace UnityEditor.Localization.PropertyVariants
                 EditorGUI.indentLevel--;
                 DictionaryPool<string, (int index, SerializedProperty value)>.Release(variantsLookup);
             }
+        }
+
+        protected virtual void DrawValueField(Rect position, SerializedProperty value, GUIContent label, string propertyPath)
+        {
+            EditorGUI.PropertyField(position, value, label);
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)

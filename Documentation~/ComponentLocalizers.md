@@ -27,7 +27,15 @@ public class LocalizeSpriteBehaviour : LocalizedAssetEvent<Sprite>
 
 ## Automatic Setup
 
-Some Unity components allow you to add an automatic Component Localizer to them. These components have a **Localize** option in their context menus. When you select this, Unity adds a new Component Localizer and hook its events up to the target component. If you use String Component Localizers, Unity also selects the table and key that most closely matches the text.
+Some Unity components allow you to add an automatic Component Localizer to them. These components have a **Localize** option in their context menus. When you select this, Unity adds a new Component Localizer and hook its events up to the target component.
+
+The following components support automatic setup:
+
+- [Text](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/script-Text.html)
+- [RawImage](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/script-RawImage.html)
+- [Image](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/script-Image.html)
+- [Text - TextMeshPro](https://docs.unity3d.com/Packages/com.unity.textmeshpro@4.0/manual/TMPObjectUIText.html)
+- [AudioSource](https://docs.unity3d.com/Manual/class-AudioSource.html)
 
 ![Localize Component menu.](images/Component_LocalizeMenu.png)
 

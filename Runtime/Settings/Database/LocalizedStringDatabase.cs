@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine.Localization.Operations;
 using UnityEngine.Localization.Pseudo;
 using UnityEngine.Localization.SmartFormat;
 using UnityEngine.Localization.SmartFormat.PersistentVariables;
@@ -17,6 +18,21 @@ namespace UnityEngine.Localization.Settings
     {
         [SerializeField]
         MissingTranslationBehavior m_MissingTranslationState = MissingTranslationBehavior.ShowMissingTranslationMessage;
+
+        /// <summary>
+        /// <param name="key"></param>
+        /// <param name="keyId"></param>
+        /// <param name="tableReference"></param>
+        /// <param name="table"></param>
+        /// <param name="locale"></param>
+        /// <param name="noTranslationFoundMessage"></param>
+        /// </summary>
+        public delegate void MissingTranslation(string key, long keyId, TableReference tableReference, StringTable table, Locale locale, string noTranslationFoundMessage);
+
+        /// <summary>
+        /// Event is sent when a Table does not have a translation for a specified Locale.
+        /// </summary>
+        public event MissingTranslation TranslationNotFound;
 
         const string k_DefaultNoTranslationMessage = "No translation found for '{key}' in {table.TableCollectionName}";
 
@@ -320,7 +336,7 @@ namespace UnityEngine.Localization.Settings
                 table = GetUntranslatedTextTempTable(tableReference);
             }
 
-            if (MissingTranslationState != 0)
+            if (MissingTranslationState != 0 || TranslationNotFound != null)
             {
                 using (DictionaryPool<string, object>.Get(out var dict))
                 {
@@ -330,6 +346,7 @@ namespace UnityEngine.Localization.Settings
                     dict["locale"] = locale;
 
                     var message = m_SmartFormat.Format(string.IsNullOrEmpty(NoTranslationFoundMessage) ? k_DefaultNoTranslationMessage : NoTranslationFoundMessage, dict);
+                    TranslationNotFound?.Invoke(key, keyId, tableReference, table, locale, message);
 
                     if (MissingTranslationState.HasFlag(MissingTranslationBehavior.PrintWarning))
                     {

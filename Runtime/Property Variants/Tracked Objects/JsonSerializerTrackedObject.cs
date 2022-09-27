@@ -89,13 +89,13 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
 
             public DeferredJsonObjectOperation()
             {
-                callback = OnStringLoaded;
+                callback = OnAssetLoaded;
             }
 
-            void OnStringLoaded(AsyncOperationHandle<Object> asyncOperationHandle)
+            void OnAssetLoaded(AsyncOperationHandle<Object> asyncOperationHandle)
             {
                 jsonValue.Value = asyncOperationHandle.Result != null ? asyncOperationHandle.Result.GetInstanceID() : 0;
-                
+
                 // Clear
                 jsonValue = null;
                 GenericPool<DeferredJsonObjectOperation>.Release(this);
@@ -126,6 +126,16 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
             var arraySizes = ListPool<ArraySizeTrackedProperty>.Get();
             var propertyChanged = false;
             var defaultLocaleIdentifier = defaultLocale != null ? defaultLocale.Identifier : default;
+
+            // In the Editor the instanceID field is used however in the player a different
+            // serialization path is taken and instanceID ends up getting mapped from m_FileID.
+            // https://unity.slack.com/archives/C9SQHJGN6/p1623329879079600
+            // This is now fixed in 2022.2.0a1 - 1342327
+            #if UNITY_EDITOR || UNITY_2022_2_OR_NEWER
+            const string instanceIdField = ".instanceID";
+            #else
+            const string instanceIdField = ".m_FileID";
+            #endif
 
             foreach (var property in TrackedProperties)
             {
@@ -159,7 +169,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                     case ITrackedPropertyValue<Object> objectProperty:
                     {
                         objectProperty.GetValue(variantLocale.Identifier, defaultLocaleIdentifier, out var value);
-                        var jsonProperty = (JValue)GetPropertyFromPath(property.PropertyPath + ".instanceID", jsonObject);
+                        var jsonProperty = (JValue)GetPropertyFromPath(property.PropertyPath + instanceIdField, jsonObject);
                         jsonProperty.Value = value != null ? value.GetInstanceID() : 0;
                         propertyChanged = true;
                         break;
@@ -176,11 +186,13 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                         if (stringOp.IsDone)
                         {
                             jsonProperty.Value = stringOp.Result;
+                            AddressablesInterface.Release(stringOp);
                         }
                         #if !UNITY_WEBGL // WebGL does not support WaitForCompletion
                         else if (localizedStringProperty.LocalizedString.WaitForCompletion)
                         {
                             jsonProperty.Value = stringOp.WaitForCompletion();
+                            AddressablesInterface.Release(stringOp);
                         }
                         #endif
                         else
@@ -202,27 +214,20 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                         localizedAssetProperty.LocalizedObject.LocaleOverride = variantLocale;
                         var assetOp = localizedAssetProperty.LocalizedObject.LoadAssetAsObjectAsync();
 
-                        // In the Editor the instanceID field is used however in the player a different
-                        // serialization path is taken and instanceID ends up getting mapped from m_FileID.
-                        // https://unity.slack.com/archives/C9SQHJGN6/p1623329879079600
-                        // This is now fixed in 2022.2.0a1 - 1342327
-                        #if UNITY_EDITOR || UNITY_2022_2_OR_NEWER
-                        const string instanceIdField = ".instanceID";
-                        #else
-                        const string instanceIdField = ".m_FileID";
-                        #endif
-
                         var jsonProperty = (JValue)GetPropertyFromPath(property.PropertyPath + instanceIdField, jsonObject);
                         if (assetOp.IsDone)
                         {
                             var result = assetOp.Result;
                             jsonProperty.Value = result != null ? result.GetInstanceID() : 0;
+                            AddressablesInterface.Release(assetOp);
+                            
                         }
                         #if !UNITY_WEBGL // WebGL does not support WaitForCompletion
                         else if (localizedAssetProperty.LocalizedObject.WaitForCompletion)
                         {
                             var result = assetOp.WaitForCompletion();
                             jsonProperty.Value = result != null ? result.GetInstanceID() : 0;
+                            AddressablesInterface.Release(assetOp);
                         }
                         #endif
                         else
@@ -241,20 +246,18 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
 
             if (asyncOperations.Count > 0)
             {
-                // We need to acquire the operations or CreateGenericGroupOperation will release them when it is released.
-                foreach (var asyncOperationHandle in asyncOperations)
-                {
-                    AddressablesInterface.Acquire(asyncOperationHandle);
-                }
-
-                var operation = AddressablesInterface.ResourceManager.CreateGenericGroupOperation(asyncOperations, true);
+                var operation = AddressablesInterface.CreateGroupOperation(asyncOperations);
                 operation.Completed += res =>
                 {
                     ApplyArraySizes(arraySizes, jsonObject, variantLocale.Identifier, defaultLocaleIdentifier);
                     ApplyJson(jsonObject);
 
+                    foreach (var op in res.Result)
+                        AddressablesInterface.Release(op);
+
                     ListPool<AsyncOperationHandle>.Release(asyncOperations);
                     ListPool<ArraySizeTrackedProperty>.Release(arraySizes);
+                    AddressablesInterface.Release(res);
                 };
                 return operation;
             }

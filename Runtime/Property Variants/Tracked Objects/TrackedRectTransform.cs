@@ -7,7 +7,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
 {
     /// <summary>
-    /// Tracks and applies variant changes to a RectTransform.
+    /// Tracks and applies variant changes to a [RectTransform](https://docs.unity3d.com/ScriptReference/RectTransform.html).
     /// </summary>
     /// <example>
     /// This shows how to configure a <see cref="GameObjectLocalizer"/> to apply changes to a RectTransform for the x, y and width properties.

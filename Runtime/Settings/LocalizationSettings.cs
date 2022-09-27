@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Localization.Metadata;
+using UnityEngine.Localization.Operations;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
@@ -11,13 +12,16 @@ namespace UnityEngine.Localization.Settings
     /// The localization settings is the core component to the localization system.
     /// It provides the entry point to all player based localization features.
     /// </summary>
-    public class LocalizationSettings : ScriptableObject, IReset
+    public class LocalizationSettings : ScriptableObject, IReset, IDisposable
     {
         /// <summary>
         /// The name to use when retrieving the LocalizationSettings from CustomObject API.
         /// </summary>
         internal const string ConfigName = "com.unity.localization.settings";
         internal const string ConfigEditorLocale = "com.unity.localization-edit-locale";
+
+        // Used when faking an empty project
+        internal const string IgnoreSettings = "IgnoreSettings";
 
         internal const string LocaleLabel = "Locale";
         internal const string PreloadLabel = "Preload";
@@ -47,9 +51,12 @@ namespace UnityEngine.Localization.Settings
         internal LocaleIdentifier m_ProjectLocaleIdentifier = "en";
 
         [SerializeField]
+        PreloadBehavior m_PreloadBehavior = PreloadBehavior.PreloadSelectedLocale;
+
+        [SerializeField]
         bool m_InitializeSynchronously;
 
-        AsyncOperationHandle<LocalizationSettings> m_InitializingOperationHandle;
+        internal AsyncOperationHandle<LocalizationSettings> m_InitializingOperationHandle;
         AsyncOperationHandle<Locale> m_SelectedLocaleAsync;
         Locale m_ProjectLocale;
         CallbackArray<Action<Locale>> m_SelectedLocaleChanged;
@@ -61,7 +68,7 @@ namespace UnityEngine.Localization.Settings
         /// This will be called after <see cref="InitializationOperation"/> is completed so any preloading operations will be finished.
         /// </summary>
         /// <summary>
-        /// Returns <c>true</c> if <seealso cref="OnSelectedLocaleChanged"/> has any subscribers.
+        /// Returns <see langword="true"/> if <seealso cref="OnSelectedLocaleChanged"/> has any subscribers.
         /// </summary>
         internal bool HasSelectedLocaleChangedSubscribers => m_SelectedLocaleChanged.Length != 0;
 
@@ -79,21 +86,22 @@ namespace UnityEngine.Localization.Settings
         /// Indicates if there is a LocalizationSettings present. If one is not found then it will attempt to find one however
         /// unlike <see cref="Instance"/> it will not create a default, if one can not be found.
         /// </summary>
-        /// <value><c>true</c> if has settings; otherwise, <c>false</c>.</value>
+        /// <value><see langword="true"/> if has settings; otherwise, <see langword="false"/>.</value>
         public static bool HasSettings
         {
             get
             {
-                if (s_Instance == null)
+                // Use ReferenceEquals so we dont get false positives when using MoQ
+                if (ReferenceEquals(s_Instance, null))
                     s_Instance = GetInstanceDontCreateDefault();
-                return s_Instance != null;
+                return !ReferenceEquals(s_Instance, null);
             }
         }
 
         /// <summary>
         /// The localization system may not be immediately ready. Loading Locales, preloading assets etc.
         /// This operation can be used to check when the system is ready. You can yield on this in a coroutine to wait.
-        /// If <see cref="InitializeSynchronously"/> is <c>true</c> then this operation will complete synchronously the first time it is called.
+        /// If <see cref="InitializeSynchronously"/> is <see langword="true"/> then this operation will complete synchronously the first time it is called.
         /// Uses [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) to force the loading to complete synchronously.
         /// Please note that [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) is not supported on
         /// [WebGL](https://docs.unity3d.com/Packages/com.unity.addressables@latest/index.html?subfolder=/manual/SynchronousAddressables.html#webgl) and <see cref="InitializeSynchronously"/>
@@ -121,7 +129,8 @@ namespace UnityEngine.Localization.Settings
         {
             get
             {
-                if (s_Instance == null)
+                // Use ReferenceEquals so we dont get false positives when using MoQ
+                if (ReferenceEquals(s_Instance, null))
                     s_Instance = GetOrCreateSettings();
                 return s_Instance;
             }
@@ -188,6 +197,10 @@ namespace UnityEngine.Localization.Settings
         /// <summary>
         /// Event that is sent when the <see cref="SelectedLocale"/> is changed.
         /// </summary>
+        /// <example>
+        /// This shows how to keep track of the current selected <see cref="Locale"/>.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationSettingsSamples.cs" region="selected-locale-changed"/>
+        /// </example>
         public static event Action<Locale> SelectedLocaleChanged
         {
             add => Instance.OnSelectedLocaleChanged += value;
@@ -225,16 +238,30 @@ namespace UnityEngine.Localization.Settings
             set => Instance.m_InitializeSynchronously = value;
         }
 
+        /// <summary>
+        /// Determines which tables, that have been marked as preload, will be loaded during the preloading step.
+        /// </summary>
+        public static PreloadBehavior PreloadBehavior
+        {
+            get => Instance.m_PreloadBehavior;
+            set => Instance.m_PreloadBehavior = value;
+        }
+
         void OnEnable()
         {
+            #if UNITY_EDITOR
+            UnityEditor.EditorApplication.playModeStateChanged += EditorApplication_playModeStateChanged;
+
+            if (UnityEditor.SessionState.GetBool(IgnoreSettings, false))
+            {
+                return;
+            }
+            #endif
+
             if (s_Instance == null)
             {
                 s_Instance = this;
             }
-
-            #if UNITY_EDITOR
-            UnityEditor.EditorApplication.playModeStateChanged += EditorApplication_playModeStateChanged;
-            #endif
         }
 
         #if UNITY_EDITOR
@@ -277,7 +304,10 @@ namespace UnityEngine.Localization.Settings
             {
                 var operation = GenericPool<InitializationOperation>.Get();
                 operation.Init(this);
-                m_InitializingOperationHandle = AddressablesInterface.ResourceManager.StartOperation(operation, default);
+
+                // We need to depend on InitializeAsync to workaround an issue (LOC-823)
+                m_InitializingOperationHandle = AddressablesInterface.ResourceManager.StartOperation(operation, AddressablesInterface.Instance.InitializeAddressablesAsync());
+
                 #if !UNITY_WEBGL // WebGL does not support WaitForCompletion
                 if (!m_InitializingOperationHandle.IsDone && m_InitializeSynchronously && IsPlaying)
                     m_InitializingOperationHandle.WaitForCompletion();
@@ -472,7 +502,7 @@ namespace UnityEngine.Localization.Settings
         {
             foreach (var sel in m_StartupSelectors)
             {
-                var locale = sel.GetStartupLocale(m_AvailableLocales);
+                var locale = sel.GetStartupLocale(GetAvailableLocales());
                 if (locale != null)
                 {
                     return locale;
@@ -607,12 +637,40 @@ namespace UnityEngine.Localization.Settings
         }
 
         /// <summary>
+        /// Releases all Addressables assetss.
+        /// </summary>
+        void IDisposable.Dispose()
+        {
+            if (m_InitializingOperationHandle.IsValid())
+            {
+                if (!m_InitializingOperationHandle.IsDone)
+                    m_InitializingOperationHandle.WaitForCompletion();
+                AddressablesInterface.Release(m_InitializingOperationHandle);
+            }
+
+            if (m_SelectedLocaleAsync.IsValid())
+            {
+                Debug.Assert(m_SelectedLocaleAsync.IsDone, "Disposing an incomplete locale operation");
+                AddressablesInterface.Release(m_SelectedLocaleAsync);
+            }
+
+            m_InitializingOperationHandle = default;
+            m_SelectedLocaleAsync = default;
+            (m_AvailableLocales as IDisposable)?.Dispose();
+            (m_AssetDatabase as IDisposable)?.Dispose();
+            (m_StringDatabase as IDisposable)?.Dispose();
+
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
         /// Returns the singleton of the LocalizationSettings but does not create a default one if no active settings are found.
         /// </summary>
         /// <returns></returns>
         public static LocalizationSettings GetInstanceDontCreateDefault()
         {
-            if (s_Instance != null)
+            // Use ReferenceEquals so we dont get false positives when using MoQ
+            if (!ReferenceEquals(s_Instance, null))
                 return s_Instance;
 
             LocalizationSettings settings;
@@ -627,7 +685,9 @@ namespace UnityEngine.Localization.Settings
         static LocalizationSettings GetOrCreateSettings()
         {
             var settings = GetInstanceDontCreateDefault();
-            if (settings == null)
+
+            // Use ReferenceEquals so we dont get false positives when using MoQ
+            if (ReferenceEquals(settings, null))
             {
                 Debug.LogWarning("Could not find localization settings. Default will be used.");
 

@@ -1,5 +1,9 @@
 # Upgrade guides
 
+## Upgrade Guide to 1.4.2
+
+- This version improves sub-asset support. A new rule has been added to the **Asset Table Addressables Analyzer** that checks if sub-assets are referenced by name and offers to upgrade them. This will help avoid the wrong asset being returned when referencing an asset that contains multiple sub-assets.
+
 ## Upgrade Guide to 1.3.0
 
 - `Locale.GetFallback` has been replaced with `Locale.GetFallbacks` in order to support multiple fallbacks per locale. This will now return a list of fallbacks which can then be attempted in order.

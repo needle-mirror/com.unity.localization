@@ -2,6 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.AddressableAssets;
+using UnityEngine.AddressableAssets.ResourceLocators;
+using UnityEngine.Localization.Operations;
+using UnityEngine.Pool;
 using UnityEngine.ResourceManagement;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
@@ -44,6 +47,29 @@ namespace UnityEngine.Localization
                 Instance.ReleaseInternal(handle);
         }
 
+        public static void ReleaseAndReset<TObject>(ref AsyncOperationHandle<TObject> handle)
+        {
+            if (handle.IsValid())
+            {
+                Instance.ReleaseInternal(handle);
+                handle = default;
+            }
+        }
+
+        public static AsyncOperationHandle<IList<AsyncOperationHandle>> CreateGroupOperation(List<AsyncOperationHandle> asyncOperations)
+        {
+            // The Group operation will call Release on all the handles when it is finished however it never calls acquire on them.
+            // We want to have control over when the operation is released so we aquire here in order to prevent an overall change in reference count.
+            foreach(var op in asyncOperations)
+            {
+                Acquire(op);
+            }
+
+            var go = GenericPool<LocalizationGroupOperation>.Get();
+            go.Init(asyncOperations);
+            return ResourceManager.StartOperation(go, default);
+        }
+
         public static AsyncOperationHandle<IList<IResourceLocation>> LoadResourceLocationsWithLabelsAsync(IEnumerable labels, Addressables.MergeMode mode, Type type = null) => Instance.LoadResourceLocationsWithLabelsAsyncInternal(labels, mode, type);
         public static AsyncOperationHandle<IList<IResourceLocation>> LoadTableLocationsAsync(string tableName, LocaleIdentifier id, Type type) => Instance.LoadTableLocationsAsyncInternal(tableName, id, type);
         public static AsyncOperationHandle<IList<TObject>> LoadAssetsFromLocations<TObject>(IList<IResourceLocation> locations, Action<TObject> callback) => Instance.LoadAssetsFromLocationsInternal(locations, callback);
@@ -61,5 +87,7 @@ namespace UnityEngine.Localization
         internal virtual AsyncOperationHandle<TObject> LoadAssetFromNameInternal<TObject>(string name) where TObject : class => Addressables.LoadAssetAsync<TObject>(name);
         internal virtual AsyncOperationHandle<TObject> LoadTableFromLocationInternal<TObject>(IResourceLocation location) where TObject : class => Addressables.LoadAssetAsync<TObject>(location);
         internal virtual AsyncOperationHandle<IList<TObject>> LoadAssetsWithLabelInternal<TObject>(string label, Action<TObject> callback) where TObject : class => Addressables.LoadAssetsAsync(label, callback);
+
+        internal virtual AsyncOperationHandle<IResourceLocator> InitializeAddressablesAsync() => Addressables.InitializeAsync();
     }
 }

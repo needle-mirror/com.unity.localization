@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace UnityEngine.Localization
+namespace UnityEngine.Localization.Operations
 {
     /// <summary>
     /// Extended version of <seealso cref="AsyncOperationBase{TObject}"/> which includes generic <seealso cref="InvokeWaitForCompletion"/> support.

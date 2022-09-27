@@ -33,7 +33,7 @@ A solution in this case might be to change Exit Game to Quit, which is likely to
 ## Further Reading
 
 - [W3: Text size in translation](https://www.w3.org/International/articles/article-text-size)
-- [Gamasutra: Pseudo-Localization A Must in Video Gaming](https://www.gamasutra.com/blogs/IGDALocalizationSIG/20180504/317560/PseudoLocalization__A_Must_in_Video_Gaming.php)
+- [Game Developer: Pseudo-Localization A Must in Video Gaming](https://www.gamedeveloper.com/programming/pseudo-localization-a-must-in-video-gaming)
 - [Minimizing Human Error in Localization](https://www.slideshare.net/AdolfoGomezUrda/minimizing-human-error-in-localization-58860416?next_slideshow=1)
 - [Pseudolocalization to Catch i18n Errors Early](https://opensource.googleblog.com/2011/06/pseudolocalization-to-catch-i18n-errors.html)
 

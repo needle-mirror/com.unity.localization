@@ -16,6 +16,7 @@ The Localized Property Variants system supports the following:
 - All [MonoBehaviour](https://docs.unity3d.com/Manual/class-MonoBehaviour.html) or derived classes including Unity [Text](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/script-Text.html) and [TextMeshPro](https://docs.unity3d.com/Manual/com.unity.textmeshpro.html) components.
 - [Transform](https://docs.unity3d.com/Manual/class-Transform.html)
 - [RectTransform](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/class-RectTransform.html)
+- [MeshFilter](https://docs.unity3d.com/ScriptReference/MeshFilter.html)
 
 Additional components can be supported with custom classes. See [Custom Tracked Objects](#custom-tracked-objects) for further details.
 

@@ -15,8 +15,8 @@ namespace UnityEngine.Localization
         /// with an <see cref="AsyncOperationHandle"/>.
         /// See also <seealso cref="RefreshString"/>
         /// </summary>
-        [Obsolete("CurrentLoadingOperation is deprecated, use CurrentLoadingOperationHandle instead.")]
-        public AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult>? CurrentLoadingOperation => CurrentLoadingOperationHandle.IsValid() ? CurrentLoadingOperationHandle : default;
+        [Obsolete("CurrentLoadingOperation is deprecated, use CurrentLoadingOperationHandle instead.", true)]
+        public AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult>? CurrentLoadingOperation => throw new NotSupportedException("CurrentLoadingOperation is obsolete. Please use CurrentLoadingOperationHandle instead.");
 
         [Obsolete("RegisterChangeHandler is obsolete. Please use the StringChanged event instead.", true)]
         public void RegisterChangeHandler(ChangeHandler handler)

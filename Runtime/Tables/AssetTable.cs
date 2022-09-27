@@ -12,17 +12,62 @@ namespace UnityEngine.Localization.Tables
     /// </summary>
     public class AssetTableEntry : TableEntry
     {
-        internal AsyncOperationHandle? AsyncOperation { get; set; }
+        internal AsyncOperationHandle<Object[]> PreloadAsyncOperation { get; set; }
+        internal AsyncOperationHandle AsyncOperation { get; set; }
+
+        string m_GuidCache;
+        string m_SubAssetNameCache;
 
         /// <summary>
-        /// The asset Guid, used to load the asset by the Addressables system.
+        /// The address used to load the asset from Addressables. Contains the <see cref="Guid"/> and the optional <see cref="SubAssetName"/> in the form <c>Guid[SubAssetName]</c>.
         /// </summary>
-        public string Guid { get => Data.Localized; set => Data.Localized = value; }
+        public string Address
+        {
+            get => Data.Localized;
+            set
+            {
+                Data.Localized = value;
+                m_GuidCache = null;
+                m_SubAssetNameCache = null;
+            }
+        }
 
         /// <summary>
-        /// Does this entry contain any data? Checks if <see cref="Guid"/> is empty.
+        /// The asset Guid.
         /// </summary>
-        public bool IsEmpty => string.IsNullOrEmpty(Guid);
+        public string Guid
+        {
+            get
+            {
+                if (m_GuidCache == null)
+                    m_GuidCache = AssetAddress.GetGuid(Address);
+                return m_GuidCache;
+            }
+            set => Address = value;
+        }
+
+        /// <summary>
+        /// The name of the sub-asset if one is used; otherwise <see langword="null"/>.
+        /// </summary>
+        public string SubAssetName
+        {
+            get
+            {
+                if (m_SubAssetNameCache == null)
+                    m_SubAssetNameCache = AssetAddress.GetSubAssetName(Address);
+                return m_SubAssetNameCache;
+            }
+        }
+
+        /// <summary>
+        /// Does this entry contain any data? Checks if <see cref="Address"/> is empty.
+        /// </summary>
+        public bool IsEmpty => string.IsNullOrEmpty(Address);
+
+        /// <summary>
+        /// Does the <see cref="Address"/> reference a sub-asset?
+        /// </summary>
+        public bool IsSubAsset => AssetAddress.IsSubAsset(Address);
 
         internal AssetTableEntry()
         {
@@ -37,7 +82,7 @@ namespace UnityEngine.Localization.Tables
             var assetTable = Table as AssetTable;
             if (assetTable == null)
             {
-                Debug.LogWarning($"Failed to remove {nameof(AssetTableEntry)} with id {KeyId} and asset guid `{Guid}` as it does not belong to a table.");
+                Debug.LogWarning($"Failed to remove {nameof(AssetTableEntry)} with id {KeyId} and address `{Address}` as it does not belong to a table.");
             }
             else
             {
@@ -45,12 +90,28 @@ namespace UnityEngine.Localization.Tables
             }
         }
 
+        internal Type GetExpectedType()
+        {
+            var sharedTableData = Table.SharedData;
+            foreach (var md in sharedTableData.Metadata.MetadataEntries)
+            {
+                if (md is AssetTypeMetadata at)
+                {
+                    if (at.Contains(KeyId))
+                    {
+                        return at.Type;
+                    }
+                }
+            }
+            return typeof(Object);
+        }
+
         /// <summary>
         /// Provides support for overriding the localized asset for the Entry. Note this is only temporary and will not persist in the Editor or if the table is reloaded.
         /// This allows for a table to be updated in the player.
         /// </summary>
         /// <typeparam name="T">The type to store the asset as locally.</typeparam>
-        /// <param name="asset">The asset reference to use instead of <see cref="Guid"/>.</param>
+        /// <param name="asset">The asset reference to use instead of <see cref="Address"/>.</param>
         /// <example>
         /// This example shows how you can update the AssetTable entry values when the Locale is changed.
         /// <code source="../../DocCodeSamples.Tests/LocalizedAssetSamples.cs" region="override-asset-entry-1"/>
@@ -61,8 +122,7 @@ namespace UnityEngine.Localization.Tables
         /// </example>
         public void SetAssetOverride<T>(T asset) where T : Object
         {
-            if (AsyncOperation.HasValue)
-                AddressablesInterface.Release(AsyncOperation.Value);
+            AddressablesInterface.SafeRelease(AsyncOperation);
             AsyncOperation = AddressablesInterface.ResourceManager.CreateCompletedOperation(asset, null);
         }
     }
@@ -72,7 +132,7 @@ namespace UnityEngine.Localization.Tables
     /// </summary>
     public class AssetTable : DetailedLocalizationTable<AssetTableEntry>, IPreloadRequired
     {
-        AsyncOperationHandle? m_PreloadOperationHandle;
+        AsyncOperationHandle m_PreloadOperationHandle;
 
         ResourceManager ResourceManager => AddressablesInterface.ResourceManager;
 
@@ -86,11 +146,11 @@ namespace UnityEngine.Localization.Tables
         {
             get
             {
-                if (m_PreloadOperationHandle == null)
+                if (!m_PreloadOperationHandle.IsValid())
                 {
                     m_PreloadOperationHandle = PreloadAssets();
                 }
-                return m_PreloadOperationHandle.Value;
+                return m_PreloadOperationHandle;
             }
         }
 
@@ -107,20 +167,21 @@ namespace UnityEngine.Localization.Tables
                 // Preload all
                 foreach (var entry in Values)
                 {
-                    if (!entry.IsEmpty && !entry.AsyncOperation.HasValue)
+                    if (!entry.IsEmpty && !entry.PreloadAsyncOperation.IsValid())
                     {
                         // We have to preload the asset as an array so that we get all sub objects. The reason for this is that some assets,
                         // such as Sprite can contain multiple sub objects and if we load it as Object then we may get the wrong one.
                         // For example, if we load a Sprite as an Object and it has the same name as its Texture asset then it will load as a Texture,
                         // not Sprite. So if we load as an array we get both, we can then pick the one we need later based on the type passed into GetAssetAsync. (LOC-143)
-                        entry.AsyncOperation = AddressablesInterface.LoadAssetFromGUID<Object[]>(entry.Guid);
-                        ResourceManager.Acquire(entry.AsyncOperation.Value);
-                        handleList.Add(entry.AsyncOperation.Value);
+                        // We can not rely on the sub-asset name when loading as Object as its common to have sub-assets with the same name
+                        // but different types, e.g GameObject and Mesh.
+                        entry.PreloadAsyncOperation = AddressablesInterface.LoadAssetFromGUID<Object[]>(entry.Guid);
+                        handleList.Add(entry.PreloadAsyncOperation);
                     }
                 }
                 if (handleList.Count > 0)
                 {
-                    return ResourceManager.CreateGenericGroupOperation(handleList);
+                    return AddressablesInterface.CreateGroupOperation(handleList);
                 }
                 else
                 {
@@ -152,56 +213,66 @@ namespace UnityEngine.Localization.Tables
 
         internal AsyncOperationHandle<TObject> GetAssetAsync<TObject>(AssetTableEntry entry) where TObject : Object
         {
-            if (!entry.AsyncOperation.HasValue)
+            if (entry.AsyncOperation.IsValid())
+            {
+                try
+                {
+                    return entry.AsyncOperation.Convert<TObject>();
+                }
+                catch (InvalidCastException)
+                {
+                    // Release the old operation
+                    AddressablesInterface.Release(entry.AsyncOperation);
+                    entry.AsyncOperation = default;
+                }
+            }
+
+            if (entry.IsEmpty)
             {
                 // Empty entries are treated as null.
-                if (string.IsNullOrEmpty(entry.Guid))
-                    entry.AsyncOperation = ResourceManager.CreateCompletedOperation<TObject>(null, null);
-                else
-                    entry.AsyncOperation = AddressablesInterface.LoadAssetFromGUID<TObject>(entry.Guid);
+                var emptyOperation = ResourceManager.CreateCompletedOperation<TObject>(null, null);
+                entry.AsyncOperation = emptyOperation;
+                return emptyOperation;
             }
 
-            var operation = entry.AsyncOperation.Value;
-
-            try
+            // Do we have preload data?
+            if (entry.PreloadAsyncOperation.IsValid())
             {
-                return operation.Convert<TObject>();
-            }
-            catch (InvalidCastException)
-            {
-                // If we preloaded then the operation will be of type AsyncOperationHandle<Object[]> however we now
-                // need to extract the asset and convert to AsyncOperationHandle<TObject>.
-
-                if (operation.IsDone)
+                // If we preloaded then the operation will have a collection of assets/sub-assets.
+                // We need to extract the asset and convert to AsyncOperationHandle<TObject>.
+                if (!entry.PreloadAsyncOperation.IsDone)
                 {
-                    if (operation.Status != AsyncOperationStatus.Succeeded)
-                    {
-                        return ResourceManager.CreateCompletedOperation<TObject>(null, operation.OperationException.Message);
-                    }
-
-                    // Extract the asset from the array of preloaded sub objects.
-                    if (operation.Result is Object[] subObjects)
-                    {
-                        foreach (var obj in subObjects)
-                        {
-                            if (obj is TObject target)
-                            {
-                                var convertedCompletedOperation = ResourceManager.CreateCompletedOperation(target, null);
-                                entry.AsyncOperation = convertedCompletedOperation;
-                                AddressablesInterface.Release(operation); // Release the old operation
-                                return convertedCompletedOperation;
-                            }
-                        }
-                    }
-                    throw new InvalidCastException($"Could not convert asset of type {operation.Result.GetType().Name} to {typeof(TObject).Name}.");
+                    // Wait for the operation to complete before attempting again
+                    var convertedOperation = ResourceManager.CreateChainOperation(entry.PreloadAsyncOperation, (op) => GetAssetAsync<TObject>(entry));
+                    entry.AsyncOperation = convertedOperation;
+                    return convertedOperation;
                 }
 
-                // Wait for the operation to complete before attempting again
-                var convertedOperation = ResourceManager.CreateChainOperation(operation, (op) => GetAssetAsync<TObject>(entry));
-                entry.AsyncOperation = convertedOperation;
-                AddressablesInterface.Release(operation); // Release the old operation
-                return convertedOperation;
+                if (entry.PreloadAsyncOperation.Status != AsyncOperationStatus.Succeeded)
+                {
+                    return ResourceManager.CreateCompletedOperation<TObject>(null, entry.PreloadAsyncOperation.OperationException.Message);
+                }
+
+                // Extract the asset from the array of preloaded sub objects.
+                foreach (var obj in entry.PreloadAsyncOperation.Result)
+                {
+                    bool isSubAsset = entry.IsSubAsset;
+                    if (obj is TObject target)
+                    {
+                        // Check the sub-asset name
+                        if (isSubAsset && entry.SubAssetName != obj.name)
+                            continue;
+
+                        var convertedCompletedOperation = ResourceManager.CreateCompletedOperation(target, null);
+                        entry.AsyncOperation = convertedCompletedOperation;
+                        return convertedCompletedOperation;
+                    }
+                }
             }
+
+            var operation = AddressablesInterface.LoadAssetFromGUID<TObject>(entry.Address);
+            entry.AsyncOperation = operation;
+            return operation;
         }
 
         /// <summary>
@@ -210,24 +281,20 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         public void ReleaseAssets()
         {
-            if (m_PreloadOperationHandle.HasValue)
+            if (m_PreloadOperationHandle.IsValid())
             {
-                AddressablesInterface.SafeRelease(m_PreloadOperationHandle.Value);
-                m_PreloadOperationHandle = null;
+                AddressablesInterface.Release(m_PreloadOperationHandle);
+                m_PreloadOperationHandle = default;
             }
 
             foreach (var entry in Values)
             {
-                if (entry.AsyncOperation.HasValue)
-                {
-                    AddressablesInterface.SafeRelease(entry.AsyncOperation.Value);
-                    entry.AsyncOperation = null;
-                }
+                ReleaseAsset(entry);
             }
         }
 
         /// <summary>
-        /// Release an asset for a single entry that have been preloaded  or cached
+        /// Release an asset for a single entry that has been preloaded or cached
         /// </summary>
         /// <param name="entry">A reference to the entry in the table.</param>
         public void ReleaseAsset(AssetTableEntry entry)
@@ -235,16 +302,16 @@ namespace UnityEngine.Localization.Tables
             if (entry == null)
                 return;
 
-            if (m_PreloadOperationHandle.HasValue)
+            if (entry.PreloadAsyncOperation.IsValid())
             {
-                AddressablesInterface.SafeRelease(m_PreloadOperationHandle.Value);
-                m_PreloadOperationHandle = null;
+                AddressablesInterface.Release(entry.PreloadAsyncOperation);
+                entry.PreloadAsyncOperation = default;
             }
 
-            if (entry.AsyncOperation.HasValue)
+            if (entry.AsyncOperation.IsValid())
             {
-                AddressablesInterface.SafeRelease(entry.AsyncOperation.Value);
-                entry.AsyncOperation = null;
+                AddressablesInterface.Release(entry.AsyncOperation);
+                entry.AsyncOperation = default;
             }
         }
 
@@ -272,7 +339,7 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         void OnEnable()
         {
-            m_PreloadOperationHandle = null;
+            m_PreloadOperationHandle = default;
         }
 
         #endif

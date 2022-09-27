@@ -10,10 +10,10 @@ namespace UnityEngine.Localization.Settings
     /// Responsible for providing the list of locales that are currently available to this application.
     /// </summary>
     [Serializable]
-    public class LocalesProvider : ILocalesProvider, IPreloadRequired, IReset
+    public class LocalesProvider : ILocalesProvider, IPreloadRequired, IReset, IDisposable
     {
         readonly List<Locale> m_Locales = new List<Locale>();
-        AsyncOperationHandle? m_LoadOperation;
+        AsyncOperationHandle m_LoadOperation;
 
         /// <summary>
         /// The list of all supported locales.
@@ -22,10 +22,10 @@ namespace UnityEngine.Localization.Settings
         {
             get
             {
-                if (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode && m_LoadOperation == null && !LocalizationSettings.InitializationOperation.IsDone)
+                if (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode && !PreloadOperation.IsDone)
                 {
                     #if !UNITY_WEBGL // WebGL does not support WaitForCompletion
-                    LocalizationSettings.InitializationOperation.WaitForCompletion();
+                    PreloadOperation.WaitForCompletion();
                     #else
                     Debug.LogError("Locales PreloadOperation has not been initialized, can not return the available locales.");
                     #endif
@@ -42,13 +42,13 @@ namespace UnityEngine.Localization.Settings
         {
             get
             {
-                if (m_LoadOperation == null)
+                if (!m_LoadOperation.IsValid())
                 {
                     m_Locales.Clear();
                     m_LoadOperation = AddressablesInterface.LoadAssetsWithLabel<Locale>(LocalizationSettings.LocaleLabel, AddLocale);
                 }
 
-                return m_LoadOperation.Value;
+                return m_LoadOperation;
             }
         }
 
@@ -161,7 +161,25 @@ namespace UnityEngine.Localization.Settings
         public void ResetState()
         {
             m_Locales.Clear();
-            m_LoadOperation = null;
+            m_LoadOperation = default;
+        }
+
+        /// <summary>
+        /// Removes and releases internal references to Addressable assets.
+        /// </summary>
+        ~LocalesProvider()
+        {
+            AddressablesInterface.SafeRelease(m_LoadOperation);
+        }
+
+        /// <summary>
+        /// Removes and releases internal references to Addressable assets.
+        /// </summary>
+        void IDisposable.Dispose()
+        {
+            m_Locales.Clear();
+            AddressablesInterface.SafeRelease(m_LoadOperation);
+            GC.SuppressFinalize(this);
         }
     }
 }

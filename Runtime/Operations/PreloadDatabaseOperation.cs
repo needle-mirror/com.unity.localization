@@ -1,194 +1,135 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine.AddressableAssets;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using UnityEngine.ResourceManagement.ResourceLocations;
 
-namespace UnityEngine.Localization
+namespace UnityEngine.Localization.Operations
 {
     class PreloadDatabaseOperation<TTable, TEntry> : WaitForCurrentOperationAsyncOperationBase<LocalizedDatabase<TTable, TEntry>>
         where TTable : DetailedLocalizationTable<TEntry>
         where TEntry : TableEntry
     {
-        readonly Action<AsyncOperationHandle<IList<IResourceLocation>>> m_LoadTablesAction;
-        readonly Action<AsyncOperationHandle<IList<TTable>>> m_LoadTableContentsAction;
-        readonly Action<AsyncOperationHandle> m_FinishPreloadingAction;
+        readonly Action<AsyncOperationHandle> m_CompleteOperation;
+        readonly Action<AsyncOperationHandle<IList<AsyncOperationHandle>>> m_CompleteGenericGroup;
 
         LocalizedDatabase<TTable, TEntry> m_Database;
-        AsyncOperationHandle<IList<IResourceLocation>> m_LoadResourcesOperation;
-        AsyncOperationHandle<IList<TTable>> m_LoadTablesOperation;
-        readonly List<AsyncOperationHandle> m_PreloadTableContentsOperations = new List<AsyncOperationHandle>();
-        readonly List<string> m_ResourceLabels = new List<string>();
-        float m_Progress;
 
-        protected override float Progress => m_Progress;
+        protected override float Progress => CurrentOperation.IsValid() ? CurrentOperation.PercentComplete : base.Progress;
 
         protected override string DebugName => $"Preload {m_Database.GetType()}";
 
         public PreloadDatabaseOperation()
         {
-            m_LoadTablesAction = LoadTables;
-            m_LoadTableContentsAction = LoadTableContents;
-            m_FinishPreloadingAction = FinishPreloading;
+            m_CompleteOperation = CompleteOperation;
+            m_CompleteGenericGroup = CompleteGenericGroup;
         }
 
         public void Init(LocalizedDatabase<TTable, TEntry> database)
         {
             m_Database = database;
-            m_PreloadTableContentsOperations.Clear();
         }
 
-        /// <summary>
-        /// Preloads a LocalizedDatabase.
-        /// The following steps are performed for a full preload:
-        ///     1 - BeginPreloading: Load preload resources - these are the tables that are marked with the preload tag.
-        ///     2 - LoadTables: Load the tables using the resources, if any exist
-        ///     3 - LoadTableContents: Preload the tables contents, if a table implements IPreloadRequired
-        /// </summary>
         protected override void Execute()
         {
-            BeginPreloading();
+            var selectedLocale = LocalizationSettings.SelectedLocaleAsync;
+            if (selectedLocale.Result == null)
+            {
+                Complete(m_Database, true, null);
+                return;
+            }
+
+            switch (LocalizationSettings.PreloadBehavior)
+            {
+                case PreloadBehavior.NoPreloading:
+                    Complete(m_Database, true, null);
+                    break;
+
+                case PreloadBehavior.PreloadSelectedLocale:
+                    var preloadHandle = PreloadLocale(selectedLocale.Result);
+                    if (preloadHandle.IsDone)
+                    {
+                        Complete(m_Database, true, null);
+                    }
+                    else
+                    {
+                        preloadHandle.Completed += m_CompleteOperation;
+                        CurrentOperation = preloadHandle;
+                    }
+                    break;
+
+                case PreloadBehavior.PreloadSelectedLocaleAndFallbacks:
+                    using (HashSetPool<Locale>.Get(out var locales))
+                    {
+                        locales.Add(selectedLocale.Result);
+                        GetAllFallbackLocales(selectedLocale.Result, locales);
+                        PreloadLocales(locales);
+                    }
+                    break;
+
+                case PreloadBehavior.PreloadAllLocales:
+                    PreloadLocales(LocalizationSettings.AvailableLocales.Locales);
+                    break;
+            }
         }
 
         /// <summary>
-        /// We need to check if there are any resources to preload. If we call Load when there is nothing to load an error will be thrown.
+        /// Recursively collects all fallback locales.
         /// </summary>
-        /// <returns></returns>
-        void BeginPreloading()
+        /// <param name="current"></param>
+        /// <param name="locales"></param>
+        void GetAllFallbackLocales(Locale current, HashSet<Locale> locales)
         {
-            var selectedLocale = LocalizationSettings.SelectedLocale;
-            if (selectedLocale == null)
+            foreach (var locale in current.GetFallbacks())
             {
-                Complete(m_Database, true, null);
-                return;
-            }
-
-            m_Progress = 0;
-            var localeLabel = AddressHelper.FormatAssetLabel(selectedLocale.Identifier);
-            m_ResourceLabels.Clear();
-            m_ResourceLabels.Add(localeLabel);
-            m_ResourceLabels.Add(LocalizationSettings.PreloadLabel);
-            m_LoadResourcesOperation = AddressablesInterface.LoadResourceLocationsWithLabelsAsync(m_ResourceLabels, Addressables.MergeMode.Intersection, typeof(TTable));
-
-            if (!m_LoadResourcesOperation.IsDone)
-            {
-                CurrentOperation = m_LoadResourcesOperation;
-                m_LoadResourcesOperation.Completed += m_LoadTablesAction;
-            }
-            else
-            {
-                LoadTables(m_LoadResourcesOperation);
+                locales.Add(locale);
+                GetAllFallbackLocales(locale, locales);
             }
         }
 
-        void LoadTables(AsyncOperationHandle<IList<IResourceLocation>> loadResourcesOperation)
+        AsyncOperationHandle PreloadLocale(Locale locale)
         {
-            if (loadResourcesOperation.Status != AsyncOperationStatus.Succeeded)
-            {
-                Complete(m_Database, false, "Failed to locate preload tables.");
-                return;
-            }
-
-            // Do we need to preload any tables?
-            if (loadResourcesOperation.Result.Count == 0)
-            {
-                m_Progress = 1;
-                Complete(m_Database, true, null);
-                return;
-            }
-
-            // Load the tables
-            m_LoadTablesOperation = AddressablesInterface.LoadAssetsFromLocations<TTable>(loadResourcesOperation.Result, TableLoaded);
-            if (!m_LoadTablesOperation.IsDone)
-            {
-                CurrentOperation = m_LoadTablesOperation;
-                m_LoadTablesOperation.Completed += m_LoadTableContentsAction;
-            }
-            else
-            {
-                LoadTableContents(m_LoadTablesOperation);
-            }
+            var operation = GenericPool<PreloadLocaleOperation<TTable, TEntry>>.Get();
+            operation.Init(m_Database, locale);
+            return AddressablesInterface.ResourceManager.StartOperation(operation, default);
         }
 
-        void TableLoaded(TTable table)
+        void PreloadLocales(ICollection<Locale> locales)
         {
-            // We only update the progress here.
-            m_Progress += 1.0f / m_LoadResourcesOperation.Result.Count;
-        }
-
-        void LoadTableContents(AsyncOperationHandle<IList<TTable>> loadTablesOperation)
-        {
-            if (loadTablesOperation.Status != AsyncOperationStatus.Succeeded)
+            // CreateGenericGroupOperation creates a copy of the list so its safe for us to return it to the pool.
+            using (ListPool<AsyncOperationHandle>.Get(out var preloadHandles))
             {
-                Complete(m_Database, false, "Failed to preload tables.");
-                return;
-            }
-
-            // Iterate through the loaded tables, add them to our known tables and preload the actual table contents if required.
-            foreach (var table in loadTablesOperation.Result)
-            {
-                var tableCollectionName = "";
-                try
+                foreach (var locale in locales)
                 {
-                    tableCollectionName = table.TableCollectionName;
-                }
-                catch (System.Exception e)
-                {
-                    Debug.LogError($"Exception occured when loading table collection name: {e.Message}");
-                    Complete(m_Database, false, $"Failed to preload tables.");
-                    return;
+                    var preloadHandle = PreloadLocale(locale);
+                    if (!preloadHandle.IsDone)
+                        preloadHandles.Add(preloadHandle);
                 }
 
-                if (m_Database.TableOperations.TryGetValue((table.LocaleIdentifier, tableCollectionName), out var tableOp))
+                if (preloadHandles.Count > 0)
                 {
-                    // If the operation is still loading then we can leave it to continue, no need to register this operation.
-                    if (tableOp.IsDone && !ReferenceEquals(tableOp.Result, table))
-                    {
-                        Debug.LogError($"A table with the same key `{tableCollectionName}` already exists. Something went wrong during preloading. Table {table} does not match {tableOp.Result}.");
-                        continue;
-                    }
+                    var operation = AddressablesInterface.CreateGroupOperation(preloadHandles);
+                    operation.Completed += m_CompleteGenericGroup;
+                    CurrentOperation = operation;
                 }
                 else
                 {
-                    m_Database.RegisterTableOperation(AddressablesInterface.ResourceManager.CreateCompletedOperation(table, null), table.LocaleIdentifier, tableCollectionName);
-                }
-
-                if (table is IPreloadRequired preloadRequired)
-                {
-                    var preloadOperation = preloadRequired.PreloadOperation;
-                    if (!preloadOperation.IsDone)
-                    {
-                        m_PreloadTableContentsOperations.Add(preloadOperation);
-                    }
+                    Complete(m_Database, true, null);
                 }
             }
-
-            if (m_PreloadTableContentsOperations.Count == 0)
-            {
-                Complete(m_Database, true, null);
-                return;
-            }
-
-            var groupOperation = AddressablesInterface.ResourceManager.CreateGenericGroupOperation(m_PreloadTableContentsOperations);
-            if (!groupOperation.IsDone)
-            {
-                CurrentOperation = groupOperation;
-                groupOperation.CompletedTypeless += m_FinishPreloadingAction;
-            }
-            else
-                FinishPreloading(groupOperation);
         }
 
-        void FinishPreloading(AsyncOperationHandle op)
+        void CompleteOperation(AsyncOperationHandle operationHandle)
         {
-            AddressablesInterface.SafeRelease(m_LoadResourcesOperation);
-            AddressablesInterface.SafeRelease(m_LoadTablesOperation);
+            AddressablesInterface.Release(operationHandle);
+            Complete(m_Database, true, null);
+        }
 
-            m_Progress = 1;
-            Complete(m_Database, op.Status == AsyncOperationStatus.Succeeded, null);
+        void CompleteGenericGroup(AsyncOperationHandle<IList<AsyncOperationHandle>> operationHandle)
+        {
+            AddressablesInterface.Release(operationHandle);
+            Complete(m_Database, true, null);
         }
 
         protected override void Destroy()

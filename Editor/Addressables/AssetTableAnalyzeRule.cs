@@ -88,7 +88,7 @@ namespace UnityEditor.Localization.Addressables
                     continue;
 
                 var path  = AssetDatabase.GUIDToAssetPath(assetTableEntry.Guid);
-                var entry = settings.FindAssetEntry(assetTableEntry.LocalizedValue);
+                var entry = settings.FindAssetEntry(assetTableEntry.Guid);
                 if (entry == null)
                 {
                     var asset = AssetDatabase.LoadAssetAtPath<Object>(path);
@@ -96,7 +96,7 @@ namespace UnityEditor.Localization.Addressables
                     {
                         Results.Add(new AnalyzeResultWithFixAction
                         {
-                            resultName = $"{label}:Asset Is Missing:{assetTableEntry.Guid} {path}",
+                            resultName = $"{label}:Asset Is Missing:{assetTableEntry.Address} {path}",
                             severity = MessageType.Info,
                         });
                     }
@@ -111,12 +111,57 @@ namespace UnityEditor.Localization.Addressables
                     }
                     continue;
                 }
+                else if (assetTableEntry.IsSubAsset)
+                {
+                    // Check sub-asset exists
+                    bool foundSubAsset = false;
+                    foreach (var subAsset in AssetDatabase.LoadAllAssetRepresentationsAtPath(path))
+                    {
+                        if (subAsset.name == assetTableEntry.SubAssetName)
+                        {
+                            foundSubAsset = true;
+                            break;
+                        }
+                    }
+
+                    if (!foundSubAsset)
+                    {
+                        Results.Add(new AnalyzeResultWithFixAction
+                        {
+                            resultName = $"{label}:Sub-Asset {assetTableEntry.SubAssetName} Is Missing:{assetTableEntry.Guid} {path}",
+                            severity = MessageType.Error,
+                        });
+                    }
+                }
+                else
+                {
+                    // Upgrade potential sub-assets
+                    var mainAssetType = AssetDatabase.GetMainAssetTypeAtPath(path);
+                    var assetType = assetTableCollection.GetEntryAssetType(assetTableEntry.KeyId);
+
+                    if (!assetType.IsAssignableFrom(mainAssetType))
+                    {
+                        foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(path))
+                        {
+                            if (asset.GetType().IsAssignableFrom(assetType))
+                            {
+                                var subAsset = asset;
+                                Results.Add(new AnalyzeResultWithFixAction
+                                {
+                                    resultName = $"{label}:Main Asset {mainAssetType} does not match expected type {assetType}. A sub-asset name {assetTableEntry.SubAssetName} Is Missing:{assetTableEntry.Guid} {path}",
+                                    severity = MessageType.Warning,
+                                    FixAction = () => assetTableCollection.AddAssetToTable(table, assetTableEntry.KeyId, subAsset)
+                                });
+                            }
+                        }
+                    }
+                }
 
                 // Record the locale but check the label at the end once we have done all tables
-                if (!m_AssetDependencies.TryGetValue(assetTableEntry.LocalizedValue, out var hashSet))
+                if (!m_AssetDependencies.TryGetValue(assetTableEntry.Guid, out var hashSet))
                 {
                     hashSet = new HashSet<LocaleIdentifier>();
-                    m_AssetDependencies[assetTableEntry.LocalizedValue] = hashSet;
+                    m_AssetDependencies[assetTableEntry.Guid] = hashSet;
                 }
 
                 hashSet.Add(table.LocaleIdentifier);

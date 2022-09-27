@@ -16,7 +16,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedProperties
         /// Checks if the property contains an overriden value for the LocaleIdentifier.
         /// </summary>
         /// <param name="localeIdentifier">The LocaleIdentifier to check.</param>
-        /// <returns><c>True</c> if the property contains a variant or <c>false</c> if it does not.</returns>
+        /// <returns><see langword="true"/> if the property contains a variant or <see langword="false"/> if it does not.</returns>
         bool HasVariant(LocaleIdentifier localeIdentifier);
     }
 }

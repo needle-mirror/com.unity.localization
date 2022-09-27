@@ -8,7 +8,8 @@
         "Unity.Localization.Editor",
         "Unity.ResourceManager",
         "Unity.Addressables",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "Unity.Addressables.Editor"
     ],
     "includePlatforms": [
         "Editor"

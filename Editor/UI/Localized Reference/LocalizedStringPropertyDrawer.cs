@@ -68,8 +68,8 @@ namespace UnityEditor.Localization.UI
 
                         foreach (var locale in projectLocales)
                         {
-                            var table = SelectedTableCollection.Tables.FirstOrDefault(tbl => tbl.asset?.LocaleIdentifier == locale.Identifier);
-                            m_SmartFormatFields.Add(new LocaleField(expandedSessionKey + locale) { Locale = locale, SmartEditor = CreateSmartFormatFieldForTable(table.asset) });
+                            var table = SelectedTableCollection.GetTable(locale.Identifier);
+                            m_SmartFormatFields.Add(new LocaleField(expandedSessionKey + locale) { Locale = locale, SmartEditor = CreateSmartFormatFieldForTable(table) });
                         }
                     }
                     return m_SmartFormatFields;

@@ -6,7 +6,7 @@ namespace UnityEngine.Localization
 {
     class LocalizationBehaviour : ComponentSingleton<LocalizationBehaviour>
     {
-        Queue<(int frame, AsyncOperationHandle handle)> m_ReleaseQueue = new Queue<(int, AsyncOperationHandle)> ();
+        Queue<(int frame, AsyncOperationHandle handle)> m_ReleaseQueue = new Queue<(int, AsyncOperationHandle)>();
 
         protected override string GetGameObjectName() => "Localization Resource Manager";
 
@@ -26,7 +26,7 @@ namespace UnityEngine.Localization
         void LateUpdate()
         {
             var currentFrame = Time.frameCount;
-            while(m_ReleaseQueue.Count > 0 && m_ReleaseQueue.Peek().frame < currentFrame)
+            while (m_ReleaseQueue.Count > 0 && m_ReleaseQueue.Peek().frame < currentFrame)
             {
                 var item = m_ReleaseQueue.Dequeue();
                 AddressablesInterface.SafeRelease(item.handle);
@@ -34,6 +34,15 @@ namespace UnityEngine.Localization
 
             if (m_ReleaseQueue.Count == 0)
                 enabled = false;
+        }
+
+        public static void ForceRelease()
+        {
+            foreach(var r in Instance.m_ReleaseQueue)
+            {
+                AddressablesInterface.SafeRelease(r.handle);
+            }
+            Instance.m_ReleaseQueue.Clear();
         }
     }
 }

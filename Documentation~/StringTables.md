@@ -17,9 +17,9 @@ You can use the String Table Collection Editor to configure the Editor and playe
 
 ![String Table Collection inspector view.](images/StringTableCollection_Inspector.png)
 
-Extensions are Editor only data that you can attach to a String Table. An extension can contain additional data that you wish to associate with the String Tables, or it can add functionality such as an importer or exporter for a particular file format or service.
+Extensions are Editor only data that you can attach to a Table Collection. An extension can contain additional data that you wish to associate with the collection, or it can add functionality such as an importer or exporter for a particular file format or service.
 
-To create custom Extensions, you can inherit from *CollectionExtension* and add the *AssetTableCollectionExtension attribute*.
+To create custom Extensions, you can inherit from [CollectionExtension](xref:UnityEditor.Localization.CollectionExtension) and add the [StringTableCollectionExtensionAttribute](xref:UnityEditor.Localization.StringTableCollectionExtensionAttribute).
 
 ## Preloading
 
@@ -50,7 +50,7 @@ Unity can determine the **Character Sets** for **String Tables** by examining th
 
 For example, the **Character Set** for the [Smart String](Smart/SmartStrings.md) `You have {count:plural:an Apple|{} apples}!` would be ` !AYaehlnopsuv`.
 
-You can export a **Character Set** file from the context menu of the String Table window, the String Table Collection window, or the Localization Tables window. A **Character Set** can also be generated through script by calling [GenerateCharacterSet](xref:UnityEditor.Localization.StringTableCollection.GenerateCharacterSet).
+You can export a **Character Set** file from the context menu of the String Table window, the String Table Collection window, or the Localization Tables window. A **Character Set** can also be generated through script by calling [GenerateCharacterSet](xref:UnityEditor.Localization.StringTableCollection.GenerateCharacterSet(UnityEngine.Localization.LocaleIdentifier[])).
 
 The type of export depends on where you run the export from:
 

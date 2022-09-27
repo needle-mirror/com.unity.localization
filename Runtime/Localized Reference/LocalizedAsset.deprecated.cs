@@ -8,10 +8,10 @@ namespace UnityEngine.Localization
     public partial class LocalizedAsset<TObject> : LocalizedAssetBase where TObject : Object
     {
         /// <summary>
-        /// The current loading operation for the asset when using <see cref="AssetChanged"/>. This is <c>null</c> if a loading operation is not available.
+        /// The current loading operation for the asset when using <see cref="AssetChanged"/>. This is <see langword="null"/> if a loading operation is not available.
         /// </summary>
-        [Obsolete("CurrentLoadingOperation is deprecated, use CurrentLoadingOperationHandle instead.")]
-        public AsyncOperationHandle<TObject>? CurrentLoadingOperation => CurrentLoadingOperationHandle.IsValid() ? CurrentLoadingOperationHandle : default;
+        [Obsolete("CurrentLoadingOperation is deprecated, use CurrentLoadingOperationHandle instead.", true)]
+        public AsyncOperationHandle<TObject>? CurrentLoadingOperation => throw new NotSupportedException("CurrentLoadingOperation is obsolete. Please use CurrentLoadingOperationHandle instead.");
 
         [Obsolete("RegisterChangeHandler is obsolete. Please use the AssetChanged event instead.", true)]
         public void RegisterChangeHandler(ChangeHandler handler)

@@ -23,10 +23,11 @@ You can combine options using the pipe symbol (|), for example (less|week).)The 
 | **less** | Displays "less than 1 (unit)" when the TimeSpan is smaller than the minimum range. |
 | **noless** | Displays "0 (units)" when the TimeSpan is smaller than the minimum range. |
 
-**Note**: When no options are provided, the default options that are used are: 
-(**noabbr|less|auto|seconds|days**)
+> [!NOTE]
+> When no options are provided, the default options that are used are: (**noabbr|less|auto|seconds|days**)
 
-**Note**: The time values are not localized and are only available in English.
+> [!NOTE]
+> The time values are not localized and are only available in English.
 
 | **Example Smart String** | **Arguments**                                                                        | **Result**                            |
 |--------------------------|--------------------------------------------------------------------------------------|---------------------------------------|

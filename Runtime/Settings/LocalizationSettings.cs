@@ -470,6 +470,14 @@ namespace UnityEngine.Localization.Settings
             m_SelectedLocaleChanged.UnlockForChanges();
         }
 
+        #if UNITY_EDITOR
+        internal static string EditorLocaleCode
+        {
+            get => UnityEditor.EditorPrefs.GetString(ConfigEditorLocale, string.Empty);
+            set => UnityEditor.EditorPrefs.SetString(ConfigEditorLocale, value);
+        }
+        #endif
+
         Locale SelectActiveLocale()
         {
             if (m_AvailableLocales == null)
@@ -487,8 +495,7 @@ namespace UnityEngine.Localization.Settings
             #if UNITY_EDITOR
             if (!IsPlayingOrWillChangePlaymode)
             {
-                var code = UnityEditor.SessionState.GetString(ConfigEditorLocale, string.Empty);
-                return m_AvailableLocales.GetLocale(code);
+                return m_AvailableLocales.GetLocale(EditorLocaleCode);
             }
             #endif
 
@@ -568,7 +575,7 @@ namespace UnityEngine.Localization.Settings
                 if (!IsPlayingOrWillChangePlaymode)
                 {
                     var code = locale == null ? string.Empty : locale.Identifier.Code;
-                    UnityEditor.SessionState.SetString(ConfigEditorLocale, code);
+                    EditorLocaleCode = code;
                 }
                 #endif
 

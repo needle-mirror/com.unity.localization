@@ -18,6 +18,8 @@ Use the placeholder index to access the current index of the list being iterated
 ## Localized String Example
 
 This example shows how to pass a list as an argument to a LocalizedString.
-Note: The list must be one of the arguments, in this example it is argument 0.
+
+> [!NOTE]
+> The list must be one of the arguments, in this example it is argument 0.
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-list-formatter-loc-string-example)]

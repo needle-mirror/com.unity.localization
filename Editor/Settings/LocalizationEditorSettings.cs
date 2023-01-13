@@ -656,7 +656,7 @@ namespace UnityEditor.Localization
 
         internal virtual ReadOnlyCollection<StringTableCollection> GetStringTableCollectionsInternal() => Instance.TableCollectionCache.StringTableCollections.AsReadOnly();
 
-        internal virtual Locale GetLocaleInternal(string code) => GetLocalesInternal().FirstOrDefault(loc => loc.Identifier.Code == code);
+        Locale GetLocaleInternal(string code) => GetLocalesInternal()?.FirstOrDefault(loc => loc.Identifier.Code == code);
 
         void SortLocales()
         {

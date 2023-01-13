@@ -4,7 +4,7 @@ using UnityEngine.Localization.Tables;
 namespace UnityEngine.Localization.Metadata
 {
     /// <summary>
-    /// Used to indicate if the assets within an <see cref="AssetTable"/> should all be preloaded when the table is loaded or should be loaded on demand(default).
+    /// Used when an <see cref="AssetTable"/> is marked as [preload](../manual/AssetTables.html#preloading) to indicate if the assets within should all be preloaded when the table is loaded or should be loaded on demand.
     /// If no <see cref="PreloadAssetTableMetadata"/> is attached to a <see cref="AssetTable"/> then the default behavior is <see cref="PreloadBehaviour.PreloadAll"/>.
     /// </summary>
     [Metadata(AllowedTypes = MetadataType.AssetTable | MetadataType.SharedTableData, MenuItem = "Preload Assets")]
@@ -25,11 +25,6 @@ namespace UnityEngine.Localization.Metadata
             /// Preload all assets in the table.
             /// </summary>
             PreloadAll,
-
-            /// <summary>
-            /// Preload only the assets that have <see cref="PreloadAssetTableMetadata"/> metadata.
-            /// </summary>
-            //PreloadSelected,
         }
 
         [SerializeField]

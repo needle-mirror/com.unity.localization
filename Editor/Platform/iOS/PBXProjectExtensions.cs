@@ -92,7 +92,7 @@ namespace UnityEditor.Localization.Platform.iOS
             s_GuidListAdd = s_GUIDList.GetMethod("AddGUID");
             s_GUIDListContains = s_GUIDList.GetMethod("Contains");
             s_FileRefDataCreateFromFile = fileRefData.GetMethod("CreateFromFile", BindingFlags.Static | BindingFlags.Public);
-            s_PBXBuildFileDataCreateFromFile = s_PBXBuildFileDat.GetMethod("CreateFromFile", BindingFlags.Static | BindingFlags.Public);
+            s_PBXBuildFileDataCreateFromFile = s_PBXBuildFileDat.GetMethod("CreateFromFile", BindingFlags.Static | BindingFlags.Public, null, new Type[] { typeof(string), typeof(bool), typeof(string) }, null);
             s_ProjectBuildFilesAdd = typeof(PBXProject).GetMethod("BuildFilesAdd", pv);
             s_ProjectFileRefsAdd = typeof(PBXProject).GetMethod("FileRefsAdd", pv);
             s_ProjectBuildFilesGetForSourceFile = typeof(PBXProject).GetMethod("BuildFilesGetForSourceFile", pv);

@@ -3,7 +3,8 @@
 The [Reflection source](xref:UnityEngine.Localization.SmartFormat.Extensions.ReflectionSource) is used to select using [.Net Reflection](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/reflection). Named placeholders are evaluated against the current object.
 The Reflection Source can be used to extract an object from a property, field or method.
 
-**Note**: When using a method, the method must be parameterless and not return void.
+> [!NOTE]
+> When using a method, the method must be parameterless and not return void.
 
 | **Example Smart String**                                  | **Arguments**                                                                                                                                                       | **Result**                                                                            |
 |-----------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------|

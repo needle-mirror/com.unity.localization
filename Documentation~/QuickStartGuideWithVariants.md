@@ -1,6 +1,7 @@
 # Quick Start Guide
 
-**Note: This guide requires Unity 2020.3 and above.**
+> [!NOTE]
+> This guide requires Unity 2020.3 and above.
 
 This page explains how to set up a simple project with localized assets and strings. This covers the following steps:
 
@@ -199,7 +200,7 @@ English, French and Spanish languages all use two plural forms in our example an
 
 To add a UI Text element to the Scene, go to **GameObject > UI > Text**.
 
-1. Right-click the Text component and select the **Localize** option. Unity adds a Localize String component and automatically configures it for the GameObject it is attached to. If the Text component contains a string value that is also in a String Table, then Unity automatically assigns this during the setup. If it does not, you can assign a value using the String Reference field dropdown. Assign the entry you previously created to the **String Reference**.
+1. Right-click the Text component and select the **Localize** option. Unity adds a Localize String Event component and automatically configures it for the GameObject it is attached to. If the Text component contains a string value that is also in a String Table, then Unity automatically assigns this during the setup. If it does not, you can assign a value using the String Reference field dropdown. Assign the entry you previously created to the **String Reference**.
 2. Add the **Apples** component to the same GameObject as the Text.
 3. Press the Add (+) button in the **Local Variables** field, select **Object Reference** and drag the **Apples** Component into the **Object Reference** slot. Name the variable **apple-component**.
 

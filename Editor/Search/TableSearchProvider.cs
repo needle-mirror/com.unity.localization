@@ -3,6 +3,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEditor.Localization.Bridge;
 using UnityEditor.Search;
@@ -282,8 +283,8 @@ namespace UnityEditor.Localization.Search
 
         IEnumerator FetchItems(SearchContext sc, List<SearchItem> items, SearchProvider provider)
         {
-            // Only show results when our provider is being used, not for general searches.
-            if (sc.filterId != filterId || string.IsNullOrEmpty(sc.searchQuery))
+            // Only show results when our provider is being used when there are multiple providers.
+            if (sc.providers.Count() != 1 && sc.filterId != filterId)
                 yield break;
 
             var query = QueryEngine.Parse(sc.searchQuery);

@@ -126,6 +126,11 @@ namespace UnityEngine.Localization.Tables
                 if (md is TShared shared)
                 {
                     tag = shared;
+
+                    // If we already have the tag then there is nothing we need to do. (LOC-779)
+                    if (tag.IsRegistered(this))
+                        return;
+
                     break;
                 }
             }
@@ -151,6 +156,10 @@ namespace UnityEngine.Localization.Tables
             {
                 Table.AddMetadata(md);
             }
+
+            // If we already have the tag then there is nothing we need to do.
+            if (md.IsRegistered(this))
+                return;
 
             md.Register(this);
             AddMetadata(md);
@@ -189,19 +198,29 @@ namespace UnityEngine.Localization.Tables
             var tableMetada = Table.MetadataEntries;
             var entryMetadata = Data.Metadata.MetadataEntries;
 
-            for (int i = 0; i < tableMetada.Count; ++i)
+            // We check both the entry and table metadata as we had some bugs in the past that caused them to go out of sync. (LOC-779)
+
+            // Check entry
+            for (int i = entryMetadata.Count - 1; i >= 0; --i)
             {
-                var tag = tableMetada[i] as TShared;
-                if (tag != null)
+                if (entryMetadata[i] is TShared tag)
                 {
                     tag.Unregister(this);
-                    entryMetadata.Remove(tag);
+                    entryMetadata.RemoveAt(i);
+                }
+            }
+
+            // Check table 
+            for (int i = tableMetada.Count - 1; i >= 0; --i)
+            {
+                if (tableMetada[i] is TShared tag)
+                {
+                    tag.Unregister(this);
 
                     // Remove the shared data if it is no longer used
                     if (tag.Count == 0)
                     {
                         tableMetada.RemoveAt(i);
-                        i--;
                     }
                 }
             }

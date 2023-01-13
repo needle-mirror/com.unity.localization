@@ -51,7 +51,7 @@ namespace UnityEngine.Localization.Settings
 
         /// <summary>
         /// The message to display when a string can not be localized.
-        /// This is a Smart String which has access to the following named placeholders:
+        /// This is a [Smart String](../manual/Smart/SmartStrings.html) which has access to the following named placeholders:
         /// <list type="table">
         /// <listheader>
         ///     <term>Placeholder</term>
@@ -112,6 +112,14 @@ namespace UnityEngine.Localization.Settings
         /// <param name="fallbackBehavior">A Enum which determines if a Fallback should be used when no value could be found for the Locale.</param>
         /// <param name="arguments">Arguments passed to SmartFormat or String.Format.</param>
         /// <returns></returns>
+        /// <example>
+        /// This example shows how to get a localized string from the <see cref="LocalizedDatabase{TTable, TEntry}.DefaultTable"/> of a custom locale (not the currently selected locale) and use WaitForCompletion to force it to complete.
+        /// <code source="../../../DocCodeSamples.Tests/LocalizedStringDatabaseSamples.cs" region="get-string-custom-locale-async"/>
+        /// </example>
+        /// <example>
+        /// This example shows how to get a localized string from the <see cref="LocalizedDatabase{TTable, TEntry}.DefaultTable"/> of a custom locale (not the currently selected locale) and use a coroutine to wait for it to complete.
+        /// <code source="../../../DocCodeSamples.Tests/LocalizedStringDatabaseSamples.cs" region="get-string-coroutine-async"/>
+        /// </example>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings, params object[] arguments)
         {
             return GetLocalizedStringAsyncInternal(GetDefaultTable(), tableEntryReference, arguments, locale, fallbackBehavior, null);
@@ -146,6 +154,10 @@ namespace UnityEngine.Localization.Settings
         /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
         /// <param name="fallbackBehavior">A Enum which determines if a Fallback should be used when no value could be found for the Locale.</param>
         /// <returns></returns>
+        /// <example>
+        /// This example shows how to get a localized string from the <see cref="LocalizedDatabase{TTable, TEntry}.DefaultTable"/> and use the Completed event to display it.
+        /// <code source="../../../DocCodeSamples.Tests/LocalizedStringDatabaseSamples.cs" region="get-string-async"/>
+        /// </example>
         public AsyncOperationHandle<string> GetLocalizedStringAsync(TableEntryReference tableEntryReference, IList<object> arguments, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings)
         {
             return GetLocalizedStringAsyncInternal(GetDefaultTable(), tableEntryReference, arguments, locale, fallbackBehavior, null);
@@ -162,6 +174,10 @@ namespace UnityEngine.Localization.Settings
         /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
         /// <param name="fallbackBehavior">A Enum which determines if a Fallback should be used when no value could be found for the Locale.</param>
         /// <returns></returns>
+        /// <example>
+        /// This example shows how to get a localized string from the <see cref="LocalizedDatabase{TTable, TEntry}.DefaultTable"/> which uses formatting arguments and use the Completed event to display it.
+        /// <code source="../../../DocCodeSamples.Tests/LocalizedStringDatabaseSamples.cs" region="get-string-argument-async"/>
+        /// </example>
         public string GetLocalizedString(TableEntryReference tableEntryReference, IList<object> arguments, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings)
         {
             return GetLocalizedString(GetDefaultTable(), tableEntryReference, arguments, locale, fallbackBehavior);
@@ -182,6 +198,10 @@ namespace UnityEngine.Localization.Settings
         /// <param name="fallbackBehavior">A Enum which determines if a Fallback should be used when no value could be found for the Locale.</param>
         /// <param name="arguments">Arguments passed to SmartFormat or String.Format.</param>
         /// <returns></returns>
+        /// <example>
+        /// This example shows how to get a localized string from a specified table and entry.
+        /// <code source="../../../DocCodeSamples.Tests/LocalizedStringDatabaseSamples.cs" region="get-string-async-2"/>
+        /// </example>
         public virtual AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings, params object[] arguments)
         {
             return GetLocalizedStringAsyncInternal(tableReference, tableEntryReference, arguments, locale, fallbackBehavior, null);
@@ -200,6 +220,10 @@ namespace UnityEngine.Localization.Settings
         /// <param name="fallbackBehavior">A Enum which determines if a Fallback should be used when no value could be found for the Locale.</param>
         /// <param name="arguments">Arguments passed to SmartFormat or String.Format.</param>
         /// <returns></returns>
+        /// <example>
+        /// This example shows how to get a localized string from a specified table and entry.
+        /// <code source="../../../DocCodeSamples.Tests/LocalizedStringDatabaseSamples.cs" region="get-string"/>
+        /// </example>
         public virtual string GetLocalizedString(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings, params object[] arguments)
         {
             return GetLocalizedString(tableReference, tableEntryReference, arguments, locale, fallbackBehavior);
@@ -221,6 +245,10 @@ namespace UnityEngine.Localization.Settings
         /// <param name="fallbackBehavior">A Enum which determines if a Fallback should be used when no value could be found for the Locale.</param>
         /// <param name="localVariables">Optional <see cref="IVariableGroup"/> which can be used to add additional named variables.</param>
         /// <returns></returns>
+        /// <example>
+        /// This example shows how to get a localized string which uses [Smart String](../manual/Smart/SmartStrings.html) for formatting.
+        /// <code source="../../../DocCodeSamples.Tests/LocalizedStringDatabaseSamples.cs" region="get-string-smart-argument-async"/>
+        /// </example>
         public virtual AsyncOperationHandle<string> GetLocalizedStringAsync(TableReference tableReference, TableEntryReference tableEntryReference, IList<object> arguments, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings, IVariableGroup localVariables = null)
         {
             return GetLocalizedStringAsyncInternal(tableReference, tableEntryReference, arguments, locale, fallbackBehavior, localVariables, true);
@@ -251,6 +279,10 @@ namespace UnityEngine.Localization.Settings
         /// <param name="locale">The <see cref="Locale"/> to use instead of the default <see cref="LocalizationSettings.SelectedLocale"/></param>
         /// <param name="fallbackBehavior">A Enum which determines if a Fallback should be used when no value could be found for the Locale.</param>
         /// <returns></returns>
+        /// <example>
+        /// This example shows how to get a localized string which uses [Smart String](../manual/Smart/SmartStrings.html) for formatting.
+        /// <code source="../../../DocCodeSamples.Tests/LocalizedStringDatabaseSamples.cs" region="get-string-smart-argument"/>
+        /// </example>
         public virtual string GetLocalizedString(TableReference tableReference, TableEntryReference tableEntryReference, IList<object> arguments, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings)
         {
             var handle = GetLocalizedStringAsyncInternal(tableReference, tableEntryReference, arguments, locale, fallbackBehavior, null, false);

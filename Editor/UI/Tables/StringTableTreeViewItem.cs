@@ -121,12 +121,11 @@ namespace UnityEditor.Localization.UI
             {
                 sb.Clear();
 
-                sb.AppendLine(SharedEntry.Id.ToString());
-                sb.AppendLine(SharedEntry.Key);
+                sb.Append(SharedEntry.Id.ToString());
+                sb.Append(SharedEntry.Key);
 
-                for (int i = m_StartIndex; i < m_SortedTables.Count; ++i)
+                foreach (StringTable st in m_SortedTables)
                 {
-                    var st = (StringTable)m_SortedTables[i];
                     var entry = st.GetEntry(KeyId);
                     if (entry != null)
                         sb.Append(entry.LocalizedValue);

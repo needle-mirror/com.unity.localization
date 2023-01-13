@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Localization;
@@ -79,6 +80,55 @@ public class SmartStringColumn : LocaleMetadataColumn<SmartFormatTag>
     {
         value = "x"; // We mark here with an x but it could be anything.
         note = null;
+    }
+}
+
+#endregion
+
+#region global-smart-string-column
+
+[Serializable]
+public class GlobalSmartStringColumn : SheetColumn
+{
+    public override PushFields PushFields => PushFields.Value;
+
+    StringTableCollection m_TableCollection;
+
+    public override void PullBegin(StringTableCollection collection)
+    {
+        m_TableCollection = collection;
+    }
+
+    public override void PullCellData(SharedTableData.SharedTableEntry keyEntry, string cellValue, string cellNote)
+    {
+        bool enableSmartString = !string.IsNullOrEmpty(cellValue);
+
+        // Go through all the entries
+        foreach (var table in m_TableCollection.StringTables)
+        {
+            var entry = table.GetEntry(keyEntry.Id);
+            if (entry != null)
+                entry.IsSmart = enableSmartString;
+        }
+    }
+
+    public override void PushBegin(StringTableCollection collection)
+    {
+        m_TableCollection = collection;
+    }
+
+    public override void PushCellData(SharedTableData.SharedTableEntry keyEntry, IList<StringTableEntry> tableEntries, out string value, out string note)
+    {
+        // Use the first table as our source of truth
+        var entry = m_TableCollection.StringTables[0].GetEntry(keyEntry.Id);
+        value = entry != null && entry.IsSmart ? "x" : string.Empty;
+        note = null;
+    }
+
+    public override void PushHeader(StringTableCollection collection, out string header, out string headerNote)
+    {
+        header = "Smart String";
+        headerNote = null;
     }
 }
 

@@ -1,7 +1,7 @@
 {
   "name": "com.unity.localization",
   "displayName": "Localization",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "unity": "2019.4",
   "description": "Use the Localization package to easily configure localization settings for your application.\n\nAdd support for multiple languages and regional variants, including:\n\n• String localization: Set different strings to display based on locale. Use the Smart Strings feature to add logic to automatically replace specific strings, such as placeholders and plurals.\n• Asset localization: Use a different asset (such as a texture, model, or audio file) based on a locale.\n• Pseudo-localization: Test how your project will adapt to different localizations at an early stage, before adding your translations.\n• Import and export localization data to XLIFF, CSV and Google Sheets.\n\nAdd localization to your projects using the Localization package to help make your applications more accessible to a wider audience.",
   "keywords": [
@@ -14,15 +14,19 @@
     "com.unity.nuget.newtonsoft-json": "3.0.2"
   },
   "relatedPackages": {
-    "com.unity.localization.tests": "1.4.2"
+    "com.unity.localization.tests": "1.4.3"
+  },
+  "_upm": {
+    "changelog": "### Fixed\n\n- An empty search string will now show all entries in the `LocalizedAsset` and `LocalizedString` popup instead of nothing. ([LOC-785](https://issuetracker.unity3d.com/issues/localization-string-value-search-returns-0-string-tables-when-no-characters-are-given-to-search-by))\n- Default IOS localized fields are no longer set to empty strings. We now use the project locale values as the defaults. (LOC-804)\n- Fixed `AmbiguousMatchException` when building to IOS. ([LOC-855](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-855))\n- Fixed Tag & Shared metadata being duplicated on an entry when they were added multiple times. For example, setting `StringTableEntry.IsSmart` to `true` when it was already `true` would cause 2 `SmartFormatTag` to be added to the metadata. ([LOC-779](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-779))\n- Fixed the Table Editor search not checking the first 2 string table columns. ([LOC-820](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-820))\n- The Active Editor Locale will now persist between Editor sessions. ([LOC-787](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-787))\n- The Table Editor will no longer draw alternating background bars in the remaining space. (LOC-842)"
   },
   "upmCi": {
-    "footprint": "864131977829e6e812e95f2415d58e5cd5f569db"
+    "footprint": "559ca08343c1ebcb1aa436e4231f95c9172717a1"
   },
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.localization@1.4/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.localization.git",
     "type": "git",
-    "revision": "2b38d5ec90613bae905a441552a28f4b94dc601d"
+    "revision": "9d247b9126f7bb60fc4e424bda5472c1778f14c5"
   },
   "samples": [
     {

@@ -295,7 +295,7 @@ namespace UnityEditor.Localization.UI
             }
 
             var provider = new StringTableSearchProvider();
-            var context = UnityEditor.Search.SearchService.CreateContext(provider, provider.filterId);
+            var context = UnityEditor.Search.SearchService.CreateContext(provider);
             var picker = new LocalizedReferencePicker<StringTableCollection>(context, "string table entry", data, this);
             picker.Show();
         }

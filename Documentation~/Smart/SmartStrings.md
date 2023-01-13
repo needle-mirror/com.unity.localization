@@ -42,10 +42,11 @@ For example, if the argument passed is a reference to the script attached to the
 `The name of the GameObject is {gameObject.name}.`
 
 Multiple sources can be used on a single format item.
-For example: `The name of the GameObject is {1:gameObject.name}`
-The Smart String would first use the Default Source to extract the argument at index 1, the reflection source would then process the extracted value.
+For example: `The name of the GameObject is {1.gameObject.name}`
+The Smart String would first use the [Default Source](Default-Source.md) to extract the argument at index 1, the [Reflection Source](Reflection-Source.md) would then process the extracted value.
 
-**Note**: When an argument index is not provided, the argument at index 0 is always used.
+> [!NOTE]
+> When no index value is included, the argument at index 0 is used by default.
 
 Sources are evaluated starting with the first item and working through them until a source can handle the selector. The order of the sources can result in different strings.
 
@@ -60,8 +61,6 @@ It is important to consider the order of the sources and avoid using named place
 
 Selector syntax is  similar to C# [interpolated strings](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/tokens/interpolated); you can use selectors to filter each subset of data to get to the desired object using dot notation.
 In the example below, slider and value are both selectors. The slider selector evaluates the argument passed into the Smart String at index 0. The value Selector then evaluates the results of the previous Selector.
-
-**Note**: When no index value is included, the argument at index 0 is used by default.
 
 For example the string could be used with a [UI Slider](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/script-Slider.html) reference to extract the slider’s current value and use that as the source value.
 
@@ -129,7 +128,7 @@ In most cases using an explicit formatter is preferred because it avoids conflic
 
 You can also create [custom formatters](Creating-a-Custom-Formatter.md) by inheriting from the [FormatterBase](xref:UnityEngine.Localization.SmartFormat.Core.Extensions.FormatterBase) class.
 
-Some formatters require additional options to be provided, inside of brackets. For example the options provided in `{0:choose(1,2,3):one|two|three}` would be 1,2,3. The choose formatter would then use them to determine which literal text to use from one, two or three.
+Some formatters require additional options to be provided, inside of brackets. For example the options provided in `{0:choose(1|2|3):one|two|three}` would be 1,2,3. The choose formatter would then use them to determine which literal text to use from one, two or three.
 
 #### Localized control formatting
 

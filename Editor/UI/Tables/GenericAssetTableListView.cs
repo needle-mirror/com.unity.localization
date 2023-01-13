@@ -249,10 +249,11 @@ namespace UnityEditor.Localization.UI
 
         protected override bool CanMultiSelect(TreeViewItem item) => false; // Disable multi select
 
+        protected abstract IReadOnlyCollection<T1> GetCollectionTables();
+
         protected virtual void InitializeColumns()
         {
             showBorder = true;
-            showAlternatingRowBackgrounds = true;
             var keys = TableCollection.SharedData;
 
             var columns = new List<MultiColumnHeaderState.Column>
@@ -262,20 +263,20 @@ namespace UnityEditor.Localization.UI
             };
 
             var localesWithNoMatchingTable = ListPool<Locale>.Get();
-            var projectTables = ListPool<LazyLoadReference<LocalizationTable>>.Get();
-            projectTables.AddRange(TableCollection.Tables);
+            var projectTables = ListPool<T1>.Get();
+            projectTables.AddRange(GetCollectionTables());
             m_SortedTables.Clear();
 
             // Add the tables in the order of Locales so Locale sorting order is respected.
             foreach (var locale in LocalizationEditorSettings.GetLocales())
             {
-                var matchingTableIdx = projectTables.FindIndex(tbl => tbl.asset?.LocaleIdentifier.Code == locale.Identifier.Code);
+                var matchingTableIdx = projectTables.FindIndex(tbl => tbl?.LocaleIdentifier.Code == locale.Identifier.Code);
                 if (matchingTableIdx != -1)
                 {
                     var table = projectTables[matchingTableIdx];
-                    m_SortedTables.Add(table.asset);
+                    m_SortedTables.Add(table);
                     projectTables.RemoveAt(matchingTableIdx);
-                    columns.Add(new TableColumn<T1>(TableCollection, table.asset, locale));
+                    columns.Add(new TableColumn<T1>(TableCollection, table, locale));
                 }
                 else
                 {
@@ -285,10 +286,10 @@ namespace UnityEditor.Localization.UI
 
             // We need to add the remaining tables that do not have any Locales.
             for (int i = 0; i < projectTables.Count; ++i)
-                m_SortedTables.Add(projectTables[i].asset);
+                m_SortedTables.Add(projectTables[i]);
 
             // Tables with missing Locales
-            projectTables.ForEach(tbl => columns.Add(new TableColumn<T1>(TableCollection, tbl.asset, null)));
+            projectTables.ForEach(tbl => columns.Add(new TableColumn<T1>(TableCollection, tbl, null)));
 
             // Locales with no matching tables
             localesWithNoMatchingTable.ForEach(l => columns.Add(new MissingTableColumn(l)));
@@ -299,10 +300,10 @@ namespace UnityEditor.Localization.UI
             multiColumnHeader.ResizeToFit();
 
             ListPool<Locale>.Release(localesWithNoMatchingTable);
-            ListPool<LazyLoadReference<LocalizationTable>>.Release(projectTables);
+            ListPool<T1>.Release(projectTables);
         }
 
-        protected virtual T2 CreateTreeViewItem(int index, SharedTableData.SharedTableEntry entry)
+        internal protected virtual T2 CreateTreeViewItem(int index, SharedTableData.SharedTableEntry entry)
         {
             var item = new T2() { id = index, SharedEntry = entry };
             item.Initialize(TableCollection, k_TableStartIndex, m_SortedTables);
@@ -430,6 +431,11 @@ namespace UnityEditor.Localization.UI
 
         protected override void RowGUI(RowGUIArgs args)
         {
+            if (Event.current.rawType == EventType.Repaint && args.item.id != k_AddItemId && args.row % 2 == 0)
+            {
+                DefaultStyles.backgroundEven.Draw(args.rowRect, m_TotalPagesLabel, false, false, false, false);
+            }
+
             for (int i = 0; i < args.GetNumVisibleColumns(); ++i)
             {
                 var cellRect = args.GetCellRect(i);

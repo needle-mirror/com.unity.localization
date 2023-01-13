@@ -2,6 +2,18 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.4.3] - 2023-01-13
+
+### Fixed
+
+- An empty search string will now show all entries in the `LocalizedAsset` and `LocalizedString` popup instead of nothing. ([LOC-785](https://issuetracker.unity3d.com/issues/localization-string-value-search-returns-0-string-tables-when-no-characters-are-given-to-search-by))
+- Default IOS localized fields are no longer set to empty strings. We now use the project locale values as the defaults. (LOC-804)
+- Fixed `AmbiguousMatchException` when building to IOS. ([LOC-855](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-855))
+- Fixed Tag & Shared metadata being duplicated on an entry when they were added multiple times. For example, setting `StringTableEntry.IsSmart` to `true` when it was already `true` would cause 2 `SmartFormatTag` to be added to the metadata. ([LOC-779](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-779))
+- Fixed the Table Editor search not checking the first 2 string table columns. ([LOC-820](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-820))
+- The Active Editor Locale will now persist between Editor sessions. ([LOC-787](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-787))
+- The Table Editor will no longer draw alternating background bars in the remaining space. (LOC-842)
+
 ## [1.4.2] - 2022-09-27
 
 ### Added

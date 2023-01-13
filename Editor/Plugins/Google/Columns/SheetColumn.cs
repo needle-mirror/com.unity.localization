@@ -48,6 +48,11 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
     /// <summary>
     /// Represents a single Google sheet column with its value and note field.
     /// </summary>
+    /// <example>
+    /// This is an example of how to synchronize the <see cref="StringTableEntry.IsSmart"/> property.
+    /// Any value in the column causes all values to be marked as smart; leaving the field empty indicates they should not be smart.
+    /// <code source="../../../../DocCodeSamples.Tests/GoogleSheetsSamples.cs" region="global-smart-string-column"/>
+    /// </example>
     [Serializable]
     public abstract class SheetColumn
     {

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.Localization.Tables;
@@ -27,6 +28,8 @@ namespace UnityEditor.Localization.UI
             });
             base.UndoRedoPerformed();
         }
+
+        protected override IReadOnlyCollection<AssetTable> GetCollectionTables() => (TableCollection as AssetTableCollection).AssetTables;
 
         protected override float GetCustomRowHeight(int row, TreeViewItem item)
         {

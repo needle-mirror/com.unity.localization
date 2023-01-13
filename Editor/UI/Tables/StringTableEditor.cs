@@ -36,7 +36,6 @@ namespace UnityEditor.Localization.UI
             {
                 m_StringTableListView = new StringTableListView(TableCollection);
                 m_StringTableListView.Initialize();
-                m_StringTableListView.Reload();
 
                 m_StringTableListView.SelectedForEditing += TableListViewOnSelectedForEditing;
             }

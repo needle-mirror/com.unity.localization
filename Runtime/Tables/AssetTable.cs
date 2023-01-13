@@ -276,7 +276,7 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Releases all assets that have been preloaded or cached resets the preload state so it can be performed again.
+        /// Releases all assets that have been preloaded or cached and resets the preload state so it can be performed again.
         /// Note: This is called automatically by <see cref="LocalizedAssetDatabase"/> when the <see cref="LocalizationSettings.SelectedLocale"/> is changed.
         /// </summary>
         public void ReleaseAssets()
@@ -294,7 +294,7 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Release an asset for a single entry that has been preloaded or cached
+        /// Release an asset for a single entry that has been preloaded or cached.
         /// </summary>
         /// <param name="entry">A reference to the entry in the table.</param>
         public void ReleaseAsset(AssetTableEntry entry)
@@ -319,6 +319,11 @@ namespace UnityEngine.Localization.Tables
         /// Release an asset for a single entry that have been preloaded  or cached
         /// </summary>
         /// <param name="entry">A reference to the entry in the table.</param>
+        /// <example>
+        /// In this example the Audio Clip is only used by this script and can be unloaded after the clip has finished playing.
+        /// By using ReleaseAsset we can tell the localization system to release its handle to the asset and allow it to be unloaded from memory.
+        /// <code source="../../DocCodeSamples.Tests/ReleaseAssetExample.cs" region="release-asset-example"/>
+        /// </example>
         public void ReleaseAsset(TableEntryReference entry)
         {
             ReleaseAsset(GetEntryFromReference(entry));

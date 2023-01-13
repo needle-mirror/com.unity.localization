@@ -89,6 +89,22 @@ namespace UnityEditor.Localization.Platform.iOS
                 project.AddLocaleVariantFile(k_InfoFile, code, relativePath);
             }
 
+            // Defaults
+            var projectLocale = LocalizationSettings.ProjectLocale;
+            if (projectLocale != null)
+            {
+                WriteDefaultLocalizedValue("CFBundleName", projectLocale, appInfo.ShortName, plistDocument);
+                WriteDefaultLocalizedValue("CFBundleDisplayName", projectLocale, appInfo.DisplayName, plistDocument);
+                WriteDefaultLocalizedValue("NSCameraUsageDescription", projectLocale, appInfo.CameraUsageDescription, plistDocument);
+                WriteDefaultLocalizedValue("NSMicrophoneUsageDescription", projectLocale, appInfo.MicrophoneUsageDescription, plistDocument);
+                WriteDefaultLocalizedValue("NSLocationWhenInUseUsageDescription", projectLocale, appInfo.LocationUsageDescription, plistDocument);
+                WriteDefaultLocalizedValue("NSUserTrackingUsageDescription", projectLocale, appInfo.UserTrackingUsageDescription, plistDocument);
+            }
+            else
+            {
+                Debug.LogWarning("Project Locale was not configured. Can not set default IOS localized values. Configure the project locale through the Localization Settings.");
+            }
+
             plistDocument.WriteToFile(plistPath);
             project.WriteToFile(pbxPath);
         }
@@ -139,8 +155,17 @@ namespace UnityEditor.Localization.Platform.iOS
 
             Debug.Assert(!entry.IsSmart, $"Localized App Values ({valueName}) do not support Smart Strings - {localizedString}");
             stream.WriteLine($"\"{valueName}\" = \"{entry.LocalizedValue}\";");
+        }
 
-            plistDocument.root.SetString(valueName, string.Empty);
+        static void WriteDefaultLocalizedValue(string valueName, Locale locale, LocalizedString localizedString, PlistDocument plistDocument)
+        {
+            if (localizedString.IsEmpty)
+                return;
+
+            var tableCollection = LocalizationEditorSettings.GetStringTableCollection(localizedString.TableReference);
+            var table = tableCollection?.GetTable(locale.Identifier) as StringTable;
+            var entry = table?.GetEntryFromReference(localizedString.TableEntryReference);
+            plistDocument.root.SetString(valueName, entry?.LocalizedValue);
         }
     }
 }

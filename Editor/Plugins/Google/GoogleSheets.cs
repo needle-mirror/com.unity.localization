@@ -9,7 +9,6 @@ using UnityEditor.Localization.Plugins.Google.Columns;
 using UnityEditor.Localization.Reporting;
 using UnityEngine;
 using UnityEngine.Localization.Metadata;
-using UnityEngine.Localization.Tables;
 using static Google.Apis.Sheets.v4.SpreadsheetsResource;
 using static UnityEngine.Localization.Tables.SharedTableData;
 using Data = Google.Apis.Sheets.v4.Data;

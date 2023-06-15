@@ -12,3 +12,7 @@ The Reflection Source can be used to extract an object from a property, field or
 | You can call methods to modify values such as {0.ToUpper} | [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-reflection-2)]                                                                                    | You can call methods to modify values such as HELLO WORLD                             |
 | My name is {Name} and I am {Age} years old.               | [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-reflection-3a)] [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-reflection-3b)] | My name is Juan Pérez and I am 39 years old.                                          |
 | Mr {name.ToCharArray.0} {surname}                         | [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-reflection-4)]                                                                                    | Mr Y Taro                                                                             |
+
+The following example shows how the `Person` instance could be provided as an argument.
+
+[!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-reflection-5)]

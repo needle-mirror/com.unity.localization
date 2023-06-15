@@ -11,6 +11,57 @@ using UnityEngine.Localization;
 using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Tables;
 
+#region setup-extension
+
+public static class SetupExtensionSample
+{
+    [MenuItem("CONTEXT/StringTableCollection/Add Configured Google Sheet Extension")]
+    public static void AddAndConfigureExtension(MenuCommand command)
+    {
+        var collection = command.context as StringTableCollection;
+
+        // Get or add a new GoogleSheetsExtension.
+        var googleExtension = collection.Extensions.FirstOrDefault(e => e is GoogleSheetsExtension) as GoogleSheetsExtension;
+        if (googleExtension == null)
+        {
+            googleExtension = new GoogleSheetsExtension();
+            collection.AddExtension(googleExtension);
+        }
+
+        // Clear old data.
+        googleExtension.Columns.Clear();
+
+        // We need configure what each column will contain in the sheet
+        var columnMappings = new List<SheetColumn>
+        {
+            // Column A will contain the Key
+            new KeyColumn { Column = "A" },
+
+            // Column B will contain any shared comments. These are Comment Metadata in the Shared category.
+            new KeyCommentColumn { Column = "B" },
+
+            // Column C will contain the English Locale and any comments that are just for this Locale.
+            new LocaleColumn { Column = "C", LocaleIdentifier = "en", IncludeComments = true },
+        };
+
+        // Assign the columns to the extension
+        googleExtension.Columns.AddRange(columnMappings);
+
+        // Assign our Google Sheets service asset
+        const string pathToYourAsset = "Assets/Google Sheets Service.asset"; //The path to your SheetsServiceProvider asset. See docs for further info.
+        var sheetsServiceProvider = AssetDatabase.LoadAssetAtPath<SheetsServiceProvider>(pathToYourAsset);
+        googleExtension.SheetsServiceProvider = sheetsServiceProvider;
+
+        googleExtension.SpreadsheetId = "My spread sheet id"; // We need to provide the Spreadsheet id. This can be found in the url. See docs for further info.
+        googleExtension.SheetId = 123456; // This is the id of the sheet in the Google Spreadsheet. it will be in the url after `gid=`.
+
+        // Mark the collection dirty so that the changes are saved
+        EditorUtility.SetDirty(collection);
+    }
+}
+
+#endregion
+
 #region locale-metadata-column
 
 [Serializable]
@@ -239,7 +290,7 @@ public class GoogleSheetsExamples
 
         // CreateDefaultMapping will create a KeyColumn and a LocaleColumn for each Locale in the project.
         var columnMappings = ColumnMapping.CreateDefaultMapping();
-        int mySheetId = 123456; // This it the id of the sheet in the Google Spreadsheet. it will be in the url after `gid=`.
+        int mySheetId = 123456; // This is the id of the sheet in the Google Spreadsheet. it will be in the url after `gid=`.
 
         // Now send the update. We can pass in an optional ProgressBarReporter so that we can see updates in the Editor.
         googleSheets.PushStringTableCollection(mySheetId, tableCollection, columnMappings, new ProgressBarReporter());

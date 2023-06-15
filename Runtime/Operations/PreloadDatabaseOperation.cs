@@ -50,7 +50,7 @@ namespace UnityEngine.Localization.Operations
                     var preloadHandle = PreloadLocale(selectedLocale.Result);
                     if (preloadHandle.IsDone)
                     {
-                        Complete(m_Database, true, null);
+                        m_CompleteOperation(preloadHandle);
                     }
                     else
                     {

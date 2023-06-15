@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization.Plugins.Google.Columns
@@ -48,6 +47,10 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
         public override void PullCellData(SharedTableData.SharedTableEntry keyEntry, string cellValue, string cellNote) {}
 
         /// <inheritdoc/>
+        /// <remarks>
+        /// The <see cref="SharedTableData.SharedTableEntry"/> is resolved in the following way:
+        /// ![](../manual/images/scripting/GoogleKeyColumn_PullKey.dot.svg)
+        /// </remarks>
         public SharedTableData.SharedTableEntry PullKey(string cellValue, string cellNote)
         {
             if (!string.IsNullOrEmpty(cellNote) && long.TryParse(cellNote, out var keyId))

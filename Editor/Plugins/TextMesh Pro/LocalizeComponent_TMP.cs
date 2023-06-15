@@ -1,4 +1,4 @@
-#if PACKAGE_TMP
+#if PACKAGE_TMP || (UNITY_2023_2_OR_NEWER && PACKAGE_UGUI)
 
 using TMPro;
 using UnityEngine;

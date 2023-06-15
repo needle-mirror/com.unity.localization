@@ -287,7 +287,12 @@ namespace UnityEditor.Localization.Search
             if (sc.providers.Count() != 1 && sc.filterId != filterId)
                 yield break;
 
-            var query = QueryEngine.Parse(sc.searchQuery);
+            var query =
+            #if UNITY_2022_2_OR_NEWER
+            QueryEngine.ParseQuery(sc.searchQuery);
+            #else
+            QueryEngine.Parse(sc.searchQuery);
+            #endif
             if (!query.valid)
                 yield break;
 

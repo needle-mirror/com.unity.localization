@@ -456,6 +456,39 @@ namespace UnityEngine.Localization.Tables
         {
             if (m_TableEntries.TryGetValue(keyId, out var item))
             {
+                // We also need to remove any references to this entry in shared metadata.
+                for (int i = 0; i < MetadataEntries.Count; ++i)
+                {
+                    var metadataEntry = MetadataEntries[i];
+                    if (metadataEntry is SharedTableEntryMetadata sharedMetadata)
+                    {
+                        sharedMetadata.Unregister(item);
+
+                        // Remove the shared data if it is no longer used
+                        if (sharedMetadata.Count == 0)
+                        {
+                            MetadataEntries.RemoveAt(i);
+                            i--;
+                        }
+                    }
+                }
+
+                for (int i = 0; i < SharedData?.Metadata.MetadataEntries.Count; i++)
+                {
+                    var metadata = SharedData.Metadata.MetadataEntries[i];
+                    if (metadata is SharedTableCollectionMetadata sharedMetadata)
+                    {
+                        sharedMetadata.RemoveEntry(keyId, LocaleIdentifier.Code);
+
+                        // Remove the shared data if it is no longer used
+                        if (sharedMetadata.IsEmpty)
+                        {
+                            SharedData.Metadata.MetadataEntries.RemoveAt(i);
+                            i--;
+                        }
+                    }
+                }
+
                 item.Data.Id = SharedTableData.EmptyId;
                 item.Table = null;
                 return m_TableEntries.Remove(keyId);

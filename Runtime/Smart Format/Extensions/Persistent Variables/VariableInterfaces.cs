@@ -27,6 +27,10 @@ namespace UnityEngine.Localization.SmartFormat.PersistentVariables
     /// This shows how to create a custom variable to represent a Date and Time.
     /// <code source="../../../../DocCodeSamples.Tests/PersistentVariablesSamples.cs" region="custom-date-time-example"/>
     /// </example>
+    /// <example>
+    /// This shows how to create a custom variable to represent a list of localized strings.
+    /// <code source="../../../../DocCodeSamples.Tests/PersistentVariablesSamples.cs" region="custom-list-loc-strings"/>
+    /// </example>
     public interface IVariable
     {
         /// <summary>

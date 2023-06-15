@@ -112,6 +112,38 @@ public class LocalizedPrefabExample : MonoBehaviour
 
 #endif
 
+#region localized-scriptable-object
+
+[CreateAssetMenu]
+public class MyScriptableObject : ScriptableObject
+{
+    public string someStringValue;
+}
+
+[Serializable]
+public class LocalizedMyScriptableObject : LocalizedAsset<MyScriptableObject> { }
+
+public class Example : MonoBehaviour
+{
+    public LocalizedMyScriptableObject localizedScriptableObject;
+
+    void OnEnable()
+    {
+        localizedScriptableObject.AssetChanged += OnAssetChanged;
+    }
+
+    void OnDisable()
+    {
+        localizedScriptableObject.AssetChanged -= OnAssetChanged;
+    }
+
+    void OnAssetChanged(MyScriptableObject value)
+    {
+        Debug.Log(value.someStringValue);
+    }
+}
+#endregion
+
 #region override-asset-entry-1
 
 public class UpdateAssetTableExample : MonoBehaviour

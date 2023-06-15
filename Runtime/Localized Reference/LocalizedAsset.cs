@@ -51,7 +51,7 @@ namespace UnityEngine.Localization
     [Serializable]
     public class LocalizedTexture : LocalizedAsset<Texture> {}
 
-    #if PACKAGE_TMP || PACKAGE_DOCS_GENERATION
+    #if PACKAGE_TMP || (UNITY_2023_2_OR_NEWER && PACKAGE_UGUI) || PACKAGE_DOCS_GENERATION
     /// <summary>
     /// Provides a <see cref="LocalizedAsset{TObject}"/> which you can use to localize a TextMeshPro [TMPro.TMP_FontAsset](https://docs.unity3d.com/Packages/com.unity.textmeshpro@latest?subfolder=/api/TMPro.TMP_FontAsset)/>.
     /// </summary>
@@ -101,6 +101,10 @@ namespace UnityEngine.Localization
     /// This example shows how a <see cref="LocalizedAsset{TObject}"/> can be used to localize a [Prefabs](https://docs.unity3d.com/Manual/Prefabs.html).
     /// See also <seealso cref="LocalizedGameObject"/> and <seealso cref="Components.LocalizedGameObjectEvent"/>.
     /// <code source="../../DocCodeSamples.Tests/LocalizedAssetSamples.cs" region="localized-prefab"/>
+    /// </example>
+    /// <example>
+    /// This example shows how a <see cref="LocalizedAsset{TObject}"/> can be used to localize a [ScriptableObject](https://docs.unity3d.com/ScriptReference/ScriptableObject.html).
+    /// <code source="../../DocCodeSamples.Tests/LocalizedAssetSamples.cs" region="localized-scriptable-object"/>
     /// </example>
     [Serializable]
     public partial class LocalizedAsset<TObject> : LocalizedAssetBase, IDisposable where TObject : Object

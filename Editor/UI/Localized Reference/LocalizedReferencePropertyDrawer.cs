@@ -432,12 +432,18 @@ namespace UnityEditor.Localization.UI
         {
             // Entry name
             EditorGUI.BeginChangeCheck();
-            rowPosition.height = EditorStyles.textField.CalcHeight(new GUIContent(data.SelectedTableEntry?.Key), rowPosition.width);
-            var newName = EditorGUI.TextField(rowPosition, data.entryNameLabel, data.SelectedTableEntry?.Key);
+            var textAreaPosition = EditorGUI.PrefixLabel(rowPosition, data.entryNameLabel);
+            rowPosition.height = textAreaPosition.height = EditorStyles.textArea.CalcHeight(new GUIContent(data.SelectedTableEntry?.Key), textAreaPosition.width);
+
+            // Fix indent issue with TextArea
+            EditorGUI.indentLevel--;
+            var newName = EditorGUI.TextArea(textAreaPosition, data.SelectedTableEntry?.Key);
+            EditorGUI.indentLevel++;
+
             rowPosition.MoveToNextLine();
             if (EditorGUI.EndChangeCheck() && data.SelectedTableCollection != null)
             {
-                // Prevent renaming to a new that is already taken.
+                // Prevent renaming to a name that is already taken.
                 var sharedData = data.SelectedTableCollection.SharedData;
                 var entry = sharedData.GetEntry(newName);
 
@@ -481,7 +487,7 @@ namespace UnityEditor.Localization.UI
                 if (data.SelectedTableEntry != null)
                 {
                     // Entry name
-                    height += EditorStyles.textField.CalcHeight(new GUIContent(data.SelectedTableEntry?.Key), EditorGUIUtility.currentViewWidth) + EditorGUIUtility.standardVerticalSpacing;
+                    height += EditorStyles.textArea.CalcHeight(new GUIContent(data.SelectedTableEntry?.Key), EditorGUIUtility.currentViewWidth) + EditorGUIUtility.standardVerticalSpacing;
                 }
             }
             return height;

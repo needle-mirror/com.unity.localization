@@ -32,6 +32,10 @@ namespace UnityEngine.Localization.Settings
         /// <summary>
         /// Event is sent when a Table does not have a translation for a specified Locale.
         /// </summary>
+        /// <example>
+        /// This example shows how to listen for missing translation event notifications.
+        /// <code source="../../../DocCodeSamples.Tests/LocalizedStringDatabaseSamples.cs" region="translation-not-found"/>
+        /// </example>
         public event MissingTranslation TranslationNotFound;
 
         const string k_DefaultNoTranslationMessage = "No translation found for '{key}' in {table.TableCollectionName}";

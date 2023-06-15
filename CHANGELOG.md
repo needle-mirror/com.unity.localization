@@ -2,6 +2,28 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.4.4] - 2023-06-15
+
+### Changed
+
+- Added support for TMP now being part of the UGUI package in 2023.2.
+- Updated obsolete Unity Search API `QueryEngine.Parse` to now use `QueryEngine.ParseQuery` on Unity 2022.2+.
+- Updated to Addressables `1.21.8`. (LOC-704)
+- Updated to use the Editor XCODE public API when using 2023.1 and above.
+
+### Fixed
+
+- Added multi-line edit support to `name` field in `LocalizedString` and `LocalizedAsset` property drawers. (LOC-875)
+- Fixed an error in the device simulator when the project contained no locales. (LOC-888)
+- Fixed device simulator Localization menu not showing in 2021.1 and above.
+- Fixed preload locale operation not being released when it was completed instantly.
+- Fixed tables returned by `GetAllTables` sometimes being released and destroyed. ([LOC-882](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-882))
+- Fixed the "Expected to have a current operation to wait on" error when initializing localization before Addressables initialization during a WaitForCompletion call. ([LOC-929](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-929))
+- Fixed the **Google Sheet Service Provider** - **Application Name** losing its value after asset creation. ([LOC-864](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-864))
+- Improved WaitForCompletion code so that it can handle failed dependencies and won't get stuck in an infinite loop. ([LOC-929](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-929))
+- Reenabled code that ensures localization processes assets after Addressables. This was disabled in 1.3.1. (LOC-704)
+- Removing an entry from a table will now update the shared metadata. ([LOC-870](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-870))
+
 ## [1.4.3] - 2023-01-13
 
 ### Fixed

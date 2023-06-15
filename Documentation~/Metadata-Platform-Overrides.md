@@ -53,7 +53,7 @@ The Entry Override is evaluated during the Get Table Entry phase:
 
 ![The Entry Override is evaluated during the Get Table Entry operation.](images/GetEntry.dot.svg)
 
-To create a custom override implement the `IEntryOverride` interface.
+To create a custom override implement the [IEntryOverride](xref:UnityEngine.Localization.Metadata.IEntryOverride) interface.
 The following example shows how to create an override that will only be applied on a chosen day of the week.
 
 [!code-cs[continent-sample]](../DocCodeSamples.Tests/PlatformOverrideExamples.cs#custom-entry-override)]

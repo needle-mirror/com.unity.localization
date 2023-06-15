@@ -31,13 +31,19 @@ namespace UnityEngine.Localization.Operations
                 {
                     Dependency.WaitForCompletion();
 
+                    if (Dependency.Status == AsyncOperationStatus.Failed)
+                    {
+                        Complete(default, false, $"Dependency `{Handle.DebugName}` failed to complete.");
+                        return true;
+                    }
+
                     // Its possible that an operation will complete instantly once all dependencies have finished so we return and start again.
                     return false;
                 }
 
                 if (!CurrentOperation.IsValid())
                 {
-                    Complete(default, false, "Expected to have a current operation to wait on. Can not complete.");
+                    Complete(default, false, $"Expected to have a current operation to wait on. Can not complete {ToString()}.");
                     return true;
                 }
 

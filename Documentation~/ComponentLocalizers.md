@@ -14,16 +14,9 @@ LocalizeAssetEvent can localize a Unity asset, such as a Texture or Audio clip. 
 
 ![Localize Texture Editor.](images/Component_LocalizeTexture.png)
 
-This example shows how support could be added for the Sprite asset.
+This example shows how support could be added for the Font asset.
 
-```C#
-using System;
-using UnityEngine.Events;
-
-public class LocalizeSpriteBehaviour : LocalizedAssetEvent<Sprite>
-{
-}
-```
+[!code-cs[source-order](../DocCodeSamples.Tests/LocalizedFontComponent.cs#sample-code)]
 
 ## Automatic Setup
 

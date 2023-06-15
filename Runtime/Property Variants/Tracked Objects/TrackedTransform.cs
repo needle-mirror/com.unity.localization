@@ -37,6 +37,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
             handlers["m_LocalScale.z"] = val => m_ScaleToApply.z = val;
         }
 
+        // Note: m_RootOrder has been removed in 2023 and may be backported in the future. (LOC-917)
         public override bool CanTrackProperty(string propertyPath) => !(propertyPath.StartsWith("m_LocalEulerAnglesHint") || propertyPath == "m_RootOrder");
 
         public override AsyncOperationHandle ApplyLocale(Locale variantLocale, Locale defaultLocale)

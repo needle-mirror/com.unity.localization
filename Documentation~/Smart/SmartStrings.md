@@ -138,3 +138,8 @@ Information on locale formatting is available in the Locale inspector.
 
 ![Locale Inspector window for an English locale. The Formatting Culture Info field is highlighted to show formatting for currency, date/time and numbers.](../images/LocaleFormattingCultureEnglish.png)
 ![Locale Inspector window for a Spanish locale. The Formatting Culture Info field is highlighted to show formatting for currency, date/time and numbers.](../images/LocaleFormattingCultureSpanish.png)
+
+| **Example** | **Result**                                      |
+|-------------|-------------------------------------------------|
+| **English:** The value is {0:N} | The value is 123,456,789.12 |
+| **Spanish:** The value is {0:N} | The value is 123.456.789.12 |

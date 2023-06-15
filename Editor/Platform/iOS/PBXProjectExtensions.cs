@@ -1,4 +1,4 @@
-#if UNITY_IOS || UNITY_IPHONE
+#if (UNITY_IOS || UNITY_IPHONE) && !UNITY_2023_1_OR_NEWER
 using System;
 using System.Collections;
 using System.Reflection;

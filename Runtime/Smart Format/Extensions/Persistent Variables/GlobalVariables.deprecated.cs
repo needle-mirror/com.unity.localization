@@ -4,15 +4,15 @@ using UnityEngine.Localization.SmartFormat.PersistentVariables;
 namespace UnityEngine.Localization.SmartFormat.GlobalVariables
 {
     /// <inheritdoc/>
-    [Obsolete("Please use UnityEngine.Localization.SmartFormat.PersistentVariables.IVariableGroup instead (UnityUpgradable) -> UnityEngine.Localization.SmartFormat.PersistentVariables.IVariableGroup")]
+    [Obsolete("Please use UnityEngine.Localization.SmartFormat.PersistentVariables.IVariableGroup instead.")]
     public interface IVariableGroup : PersistentVariables.IVariableGroup {}
 
     /// <inheritdoc/>
-    [Obsolete("Please use UnityEngine.Localization.SmartFormat.PersistentVariables.IVariable instead (UnityUpgradable) -> UnityEngine.Localization.SmartFormat.PersistentVariables.IVariable")]
+    [Obsolete("Please use UnityEngine.Localization.SmartFormat.PersistentVariables.IVariable instead.")]
     public interface IGlobalVariable : IVariable {}
 
     /// <inheritdoc/>
-    [Obsolete("Please use UnityEngine.Localization.SmartFormat.PersistentVariables.IVariableValueChanged instead (UnityUpgradable) -> UnityEngine.Localization.SmartFormat.PersistentVariables.IVariableValueChanged")]
+    [Obsolete("Please use UnityEngine.Localization.SmartFormat.PersistentVariables.IVariableValueChanged instead.")]
     public interface IGlobalVariableValueChanged : IVariableValueChanged {}
 
     /// <inheritdoc/>
@@ -27,7 +27,7 @@ namespace UnityEngine.Localization.SmartFormat.GlobalVariables
 
     /// <inheritdoc/>
     [Serializable]
-    [Obsolete("Please use UnityEngine.Localization.SmartFormat.PersistentVariables.Variable instead (UnityUpgradable) -> UnityEngine.Localization.SmartFormat.PersistentVariables.Variable<T>")]
+    [Obsolete("Please use UnityEngine.Localization.SmartFormat.PersistentVariables.Variable instead.")]
     public class GlobalVariable<T> : Variable<T> {}
 
     /// <inheritdoc/>

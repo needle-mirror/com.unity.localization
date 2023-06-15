@@ -10,10 +10,12 @@ namespace UnityEngine.Localization.Operations
         where TEntry : TableEntry
     {
         AsyncOperationHandle<IList<TTable>> m_AllTablesOperation;
+        LocalizedDatabase<TTable, TEntry> m_Database;
         Locale m_Locale;
 
-        public void Init(Locale locale)
+        public void Init(LocalizedDatabase<TTable, TEntry> database, Locale locale)
         {
+            m_Database = database;
             m_Locale = locale;
         }
 
@@ -27,6 +29,19 @@ namespace UnityEngine.Localization.Operations
 
         void LoadingCompleted(AsyncOperationHandle<IList<TTable>> obj)
         {
+            // Cache the loading operations so we can release on a per asset basis.
+            if (obj.Result != null)
+            {
+                foreach (var table in obj.Result)
+                {
+                    if (table == null)
+                        continue;
+
+                    var tableOp = m_Database.GetTableAsync(table.TableCollectionName, m_Locale);
+                    Debug.Assert(tableOp.IsDone);
+                }
+            }
+
             Complete(obj.Result, obj.Status == AsyncOperationStatus.Succeeded, obj.OperationException?.Message);
         }
 

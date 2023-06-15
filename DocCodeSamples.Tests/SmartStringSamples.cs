@@ -190,6 +190,15 @@ public class SmartStringSamples
             new { name = "Yamada", surname = "Taro" }
             #endregion
         };
+
+        #region args-reflection-5
+        var myLocalizedString = new LocalizedString("My Table", "My Entry");
+
+        var person = new Person { Name = "Michael Scott", Age = 40 };
+        myLocalizedString.Arguments = new object[] { person };
+
+        Debug.Log(myLocalizedString.GetLocalizedString());
+        #endregion
     }
 
     public static void TupleSourceArguments()

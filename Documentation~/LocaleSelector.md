@@ -40,4 +40,4 @@ The Specific Locale Selector selects a specified locale. You can use this to ens
 
 ## Player Pref Locale Selector
 
-The Player Pref Locale Selector uses Unity's [PlayerPrefs](https://docs.unity3d.com/ScriptReference/PlayerPrefs.html) to store and retrieve the selected locale between game sessions. This lets Unity ensure that if the player changes the game language, the next time they start the game it uses the same language they selected previously.
+The Player Pref Locale Selector uses Unity's [PlayerPrefs](https://docs.unity3d.com/ScriptReference/PlayerPrefs.html) to store and retrieve the selected locale between game sessions, enabling the game to remember the language preference of the player across different sessions. The selected locale code is stored as a string using [PlayerPrefs.SetString](https://docs.unity3d.com/ScriptReference/PlayerPrefs.SetString.html), which allows Unity to guarantee that the next time the player launches the game, it will use the same language they previously chose.

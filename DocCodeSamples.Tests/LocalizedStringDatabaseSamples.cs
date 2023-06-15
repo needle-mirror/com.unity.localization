@@ -168,4 +168,17 @@ public class GetLocalizedStringExamples
         Debug.Log(localizedString);
         #endregion
     }
+
+    #region translation-not-found
+
+    public void SubscribeToTranslationNotFound()
+    {
+        LocalizationSettings.StringDatabase.TranslationNotFound += StringDatabase_TranslationNotFound;
+    }
+
+    void StringDatabase_TranslationNotFound(string key, long keyId, TableReference tableReference, StringTable table, UnityEngine.Localization.Locale locale, string noTranslationFoundMessage)
+    {
+        Debug.Log($"Translation Not Found for {key} in {table?.TableCollectionName} for {locale}");
+    }
+    #endregion
 }

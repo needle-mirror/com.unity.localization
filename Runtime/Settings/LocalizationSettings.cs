@@ -306,7 +306,8 @@ namespace UnityEngine.Localization.Settings
                 operation.Init(this);
 
                 // We need to depend on InitializeAsync to workaround an issue (LOC-823)
-                m_InitializingOperationHandle = AddressablesInterface.ResourceManager.StartOperation(operation, AddressablesInterface.Instance.InitializeAddressablesAsync());
+                operation.Dependency = AddressablesInterface.Instance.InitializeAddressablesAsync();
+                m_InitializingOperationHandle = AddressablesInterface.ResourceManager.StartOperation(operation, operation.Dependency);
 
                 #if !UNITY_WEBGL // WebGL does not support WaitForCompletion
                 if (!m_InitializingOperationHandle.IsDone && m_InitializeSynchronously && IsPlaying)

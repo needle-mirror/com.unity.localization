@@ -53,7 +53,7 @@ namespace UnityEditor.Localization.Plugins.Google
     /// </example>
     [CreateAssetMenu(fileName = "Google Sheets Service", menuName = "Localization/Google Sheets Service")]
     [HelpURL("https://developers.google.com/sheets/api/guides/authorizing#AboutAuthorization")]
-    public partial class SheetsServiceProvider : ScriptableObject, IGoogleSheetsService
+    public partial class SheetsServiceProvider : ScriptableObject, IGoogleSheetsService, ISerializationCallbackReceiver
     {
         [SerializeField]
         string m_ApiKey;
@@ -135,12 +135,6 @@ namespace UnityEditor.Localization.Plugins.Google
         {
             get => m_NewSheetProperties;
             set => m_NewSheetProperties = value;
-        }
-
-        internal void OnEnable()
-        {
-            if (string.IsNullOrEmpty(ApplicationName))
-                ApplicationName = PlayerSettings.productName;
         }
 
         /// <summary>
@@ -275,6 +269,16 @@ namespace UnityEditor.Localization.Plugins.Google
                 var gcs = GoogleClientSecrets.FromStream(stream);
                 return gcs.Secrets;
             }
+        }
+
+        void ISerializationCallbackReceiver.OnBeforeSerialize()
+        {
+            if (string.IsNullOrEmpty(m_ApplicationName))
+                m_ApplicationName = PlayerSettings.productName;
+        }
+
+        void ISerializationCallbackReceiver.OnAfterDeserialize()
+        {
         }
     }
 }

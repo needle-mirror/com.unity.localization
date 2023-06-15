@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 using UnityEngine;
 using UnityEngine.Localization;
@@ -117,6 +119,20 @@ public class DateTimeVariable : IVariable
             // Ignore issues about incorrect values.
         }
         return new DateTime();
+    }
+}
+#endregion
+
+#region custom-list-loc-strings
+
+[Serializable]
+public class LocalizedStringList : IVariable
+{
+    public List<LocalizedString> localizeds = new List<LocalizedString>();
+
+    public object GetSourceValue(ISelectorInfo selector)
+    {
+        return localizeds.Select(l => l.GetLocalizedString()).ToList();
     }
 }
 #endregion

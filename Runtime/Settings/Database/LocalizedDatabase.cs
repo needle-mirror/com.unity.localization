@@ -306,19 +306,6 @@ namespace UnityEngine.Localization.Settings
             }
         }
 
-        void RegisterTablesOperation(AsyncOperationHandle<IList<TTable>> tablesOperation)
-        {
-            foreach (var table in tablesOperation.Result)
-            {
-                // If the table was already registered then we do nothing
-                if (!TableOperations.ContainsKey((table.LocaleIdentifier, table.TableCollectionName)))
-                {
-                    var tableHandle = AddressablesInterface.ResourceManager.CreateCompletedOperation(table, null);
-                    RegisterCompletedTableOperation(tableHandle);
-                }    
-            }
-        }
-
         /// <summary>
         /// Returns the Default table.
         /// This method is asynchronous and may not have an immediate result.
@@ -610,13 +597,9 @@ namespace UnityEngine.Localization.Settings
         public virtual AsyncOperationHandle<IList<TTable>> GetAllTables(Locale locale = null)
         {
             var operation = GenericPool<LoadAllTablesOperation<TTable, TEntry>>.Get();
-            operation.Init(locale);
+            operation.Init(this, locale);
             operation.Dependency = LocalizationSettings.InitializationOperation;
             var handle = AddressablesInterface.ResourceManager.StartOperation(operation, LocalizationSettings.InitializationOperation);
-            if (handle.IsDone)
-                RegisterTablesOperation(handle);
-            else
-                handle.Completed += RegisterTablesOperation;
 
             if (LocalizationSettings.Instance.IsPlaying)
                 handle.CompletedTypeless += ReleaseNextFrame;

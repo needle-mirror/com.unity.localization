@@ -9,6 +9,10 @@ namespace UnityEditor.Localization.Plugins.Google
     /// Provides an editor interface to <see cref="GoogleSheets"/>.
     /// </summary>
     /// <example>
+    /// This example adds and configures a <see cref="GoogleSheetsExtension"/> to a <see cref="StringTableCollection"/>.
+    /// <code source="../../../DocCodeSamples.Tests/GoogleSheetsSamples.cs" region="setup-extension"/>
+    /// </example>
+    /// <example>
     /// This example uses the data that was configured in the <see cref="GoogleSheetsExtension"/> to perform a Push.
     /// <code source="../../../DocCodeSamples.Tests/GoogleSheetsSamples.cs" region="push-with-extension"/>
     /// </example>

@@ -112,6 +112,7 @@ namespace UnityEngine.Localization
         CallbackArray<ChangeHandler> m_ChangeHandler;
         Action<Locale> m_SelectedLocaleChanged;
         Action<AsyncOperationHandle<TObject>> m_AutomaticLoadingCompleted;
+        AsyncOperationHandle<TObject> m_PreviousLoadingOperation;
 
         /// <summary>
         /// Delegate used by <see cref="AssetChanged"/>.
@@ -297,20 +298,21 @@ namespace UnityEngine.Localization
 
         void HandleLocaleChange(Locale _)
         {
-            // Cancel any previous loading operations.
-            ClearLoadingOperation();
-
             #if UNITY_EDITOR
             m_CurrentTable = TableReference;
             m_CurrentTableEntry = TableEntryReference;
 
             // Dont update if we have no selected Locale
             if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode && LocaleOverride == null && LocalizationSettings.SelectedLocale == null)
+            {
+                ClearLoadingOperation();
                 return;
+            }
             #endif
 
             if (IsEmpty)
             {
+                ClearLoadingOperation();
                 #if UNITY_EDITOR
                 // If we are empty and playing or previewing then we should force an update.
                 if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
@@ -319,6 +321,9 @@ namespace UnityEngine.Localization
                 return;
             }
 
+
+            // Track the previous loading operation so we can release it when the new one completes (LOC-976).
+            m_PreviousLoadingOperation = CurrentLoadingOperationHandle;
             CurrentLoadingOperationHandle = LoadAssetAsync();
             AddressablesInterface.Acquire(CurrentLoadingOperationHandle);
 
@@ -349,6 +354,7 @@ namespace UnityEngine.Localization
             }
 
             InvokeChangeHandler(loadOperation.Result);
+            ClearPreviousLoadingOperation();
         }
 
         void InvokeChangeHandler(TObject value)
@@ -378,13 +384,24 @@ namespace UnityEngine.Localization
 
         internal void ClearLoadingOperation()
         {
-            if (CurrentLoadingOperationHandle.IsValid())
+            ClearLoadingOperation(CurrentLoadingOperationHandle);
+            CurrentLoadingOperationHandle = default;
+        }
+
+        void ClearPreviousLoadingOperation()
+        {
+            ClearLoadingOperation(m_PreviousLoadingOperation);
+            m_PreviousLoadingOperation = default;
+        }
+
+        void ClearLoadingOperation(AsyncOperationHandle<TObject> operationHandle)
+        {
+            if (operationHandle.IsValid())
             {
                 // We should only call this if we are not done as its possible that the internal list is null if its not been used.
-                if (!CurrentLoadingOperationHandle.IsDone)
-                    CurrentLoadingOperationHandle.Completed -= m_AutomaticLoadingCompleted;
-                AddressablesInterface.Release(CurrentLoadingOperationHandle);
-                CurrentLoadingOperationHandle = default;
+                if (!operationHandle.IsDone)
+                    operationHandle.Completed -= m_AutomaticLoadingCompleted;
+                AddressablesInterface.Release(operationHandle);
             }
         }
 

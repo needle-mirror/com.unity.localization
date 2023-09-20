@@ -101,14 +101,7 @@ namespace UnityEngine.Localization.Tables
         public bool HasTagMetadata<TShared>() where TShared : SharedTableEntryMetadata
         {
             var tag = Table.GetMetadata<TShared>();
-            if (tag != null)
-            {
-                if (tag.IsRegistered(this))
-                {
-                    return true;
-                }
-            }
-            return false;
+            return tag?.IsRegistered(this) == true;
         }
 
         /// <summary>

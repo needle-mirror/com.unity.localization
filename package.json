@@ -1,7 +1,7 @@
 {
   "name": "com.unity.localization",
   "displayName": "Localization",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "unity": "2019.4",
   "description": "Use the Localization package to easily configure localization settings for your application.\n\nAdd support for multiple languages and regional variants, including:\n\n• String localization: Set different strings to display based on locale. Use the Smart Strings feature to add logic to automatically replace specific strings, such as placeholders and plurals.\n• Asset localization: Use a different asset (such as a texture, model, or audio file) based on a locale.\n• Pseudo-localization: Test how your project will adapt to different localizations at an early stage, before adding your translations.\n• Import and export localization data to XLIFF, CSV and Google Sheets.\n\nAdd localization to your projects using the Localization package to help make your applications more accessible to a wider audience.",
   "keywords": [
@@ -14,19 +14,19 @@
     "com.unity.nuget.newtonsoft-json": "3.0.2"
   },
   "relatedPackages": {
-    "com.unity.localization.tests": "1.4.4"
+    "com.unity.localization.tests": "1.4.5"
   },
   "_upm": {
-    "changelog": "### Changed\n\n- Added support for TMP now being part of the UGUI package in 2023.2.\n- Updated obsolete Unity Search API `QueryEngine.Parse` to now use `QueryEngine.ParseQuery` on Unity 2022.2+.\n- Updated to Addressables `1.21.8`. (LOC-704)\n- Updated to use the Editor XCODE public API when using 2023.1 and above.\n\n### Fixed\n\n- Added multi-line edit support to `name` field in `LocalizedString` and `LocalizedAsset` property drawers. (LOC-875)\n- Fixed an error in the device simulator when the project contained no locales. (LOC-888)\n- Fixed device simulator Localization menu not showing in 2021.1 and above.\n- Fixed preload locale operation not being released when it was completed instantly.\n- Fixed tables returned by `GetAllTables` sometimes being released and destroyed. ([LOC-882](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-882))\n- Fixed the \"Expected to have a current operation to wait on\" error when initializing localization before Addressables initialization during a WaitForCompletion call. ([LOC-929](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-929))\n- Fixed the **Google Sheet Service Provider** - **Application Name** losing its value after asset creation. ([LOC-864](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-864))\n- Improved WaitForCompletion code so that it can handle failed dependencies and won't get stuck in an infinite loop. ([LOC-929](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-929))\n- Reenabled code that ensures localization processes assets after Addressables. This was disabled in 1.3.1. (LOC-704)\n- Removing an entry from a table will now update the shared metadata. ([LOC-870](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-870))"
+    "changelog": "### Fixed\n\n- Added handling of null `StringReference`/`AssetReference` reference to `LocalizedAssetBehaviour` and `LocalizedStringEvent`. ([LOC-945](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-942))\n- Fixed \"Objects are trying to be loaded during a domain backup\" error occurring on empty `TableReferences` during serialization. ([LOC-969](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-969))\n- Fixed `StringTableEntry.IsSmart` from not detecting if the entry was marked smart when its local `SmartFormatTag` metadata was missing but it was still registered in the `SmartFormatTag`. ([LOC-966](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-966))\n- Fixed an issue that would cause sprites/textures to flicker when the locale was changed. This was due to us unloading the previous locale's assets before the new ones were available. The `LocalizedAsset` now holds onto the asset handle until its new one has finished loading. ([LOC-976](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-976))\n- Fixed compilation errors when using Addressables 2.0.0.\n- Fixed Create Table window controls being hidden when a large number of locales were in the project,. (LOC-913)"
   },
   "upmCi": {
-    "footprint": "b059899f6c66792babfd6a85d6bffdc7c7f0a3b8"
+    "footprint": "a14f948ac13b38e788b9cf0d3206a42635ebf0e1"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.localization@1.4/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.localization.git",
     "type": "git",
-    "revision": "f9df00c379edc31205069621cc1ce397339052f2"
+    "revision": "a4890be557c52504bb1c494b8b425c4c4efb61ad"
   },
   "samples": [
     {

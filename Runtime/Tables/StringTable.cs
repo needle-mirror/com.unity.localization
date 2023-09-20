@@ -51,11 +51,7 @@ namespace UnityEngine.Localization.Tables
         /// </summary>
         public bool IsSmart
         {
-            get
-            {
-                // TODO: Cache value
-                return Data.Metadata.GetMetadata<SmartFormatTag>() != null;
-            }
+            get => HasTagMetadata<SmartFormatTag>() || Data.Metadata.GetMetadata<SmartFormatTag>() != null;
             set
             {
                 if (value)

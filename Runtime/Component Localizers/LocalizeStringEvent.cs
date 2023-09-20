@@ -74,7 +74,7 @@ namespace UnityEngine.Localization.Components
         /// </summary>
         public void RefreshString()
         {
-            StringReference.RefreshString();
+            StringReference?.RefreshString();
         }
 
         /// <summary>
@@ -83,6 +83,8 @@ namespace UnityEngine.Localization.Components
         /// <param name="tableReference">A reference to the table that will be set to StringReference of a LocalizeString</param>
         public void SetTable(string tableReference)
         {
+            if (StringReference == null)
+                StringReference = new LocalizedString();
             StringReference.TableReference = tableReference;
         }
 
@@ -92,6 +94,8 @@ namespace UnityEngine.Localization.Components
         /// <param name="entryName">A reference to the entry in the table that will be set to StringReference of a LocalizeString</param>
         public void SetEntry(string entryName)
         {
+            if (StringReference == null)
+                StringReference = new LocalizedString();
             StringReference.TableEntryReference = entryName;
         }
 
@@ -116,7 +120,7 @@ namespace UnityEngine.Localization.Components
             #if UNITY_EDITOR
             if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
             {
-                if (StringReference.IsEmpty)
+                if (StringReference == null || StringReference.IsEmpty)
                 {
                     Editor_UnregisterKnownDrivenProperties(OnUpdateString);
                     return;
@@ -140,6 +144,9 @@ namespace UnityEngine.Localization.Components
 
         internal virtual void RegisterChangeHandler()
         {
+            if (StringReference == null)
+                return;
+
             if (m_FormatArguments.Count > 0)
             {
                 StringReference.Arguments = m_FormatArguments.ToArray();
@@ -156,7 +163,8 @@ namespace UnityEngine.Localization.Components
 
         internal virtual void ClearChangeHandler()
         {
-            StringReference.StringChanged -= m_ChangeHandler;
+            if (StringReference != null)
+                StringReference.StringChanged -= m_ChangeHandler;
         }
     }
 }

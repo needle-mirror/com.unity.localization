@@ -15,7 +15,7 @@ namespace UnityEngine.Localization.Operations
             if (IsDone || Result == null)
                 return true;
 
-            // Using a for loop[ instead!
+            // Using a for loop instead!
             for (int i = 0; i < Result.Count; ++i)
             {
                 Result[i].WaitForCompletion();

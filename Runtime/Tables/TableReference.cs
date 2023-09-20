@@ -71,7 +71,7 @@ namespace UnityEngine.Localization.Tables
         {
             get
             {
-                if (!LocalizationSettings.HasSettings)
+                if (ReferenceType == Type.Empty || !LocalizationSettings.HasSettings)
                     return null;
 
                 if (ReferenceType == Type.Guid)
@@ -183,9 +183,15 @@ namespace UnityEngine.Localization.Tables
 
         internal string GetSerializedString()
         {
-            if (ReferenceType == Type.Guid)
-                return $"{k_GuidTag}{StringFromGuid(TableCollectionNameGuid)}";
-            return TableCollectionName;
+            switch (ReferenceType)
+            {
+                case Type.Guid:
+                    return $"{k_GuidTag}{StringFromGuid(TableCollectionNameGuid)}";
+                case Type.Name:
+                    return TableCollectionName;
+                default:
+                    return string.Empty;
+            }
         }
 
         /// <summary>

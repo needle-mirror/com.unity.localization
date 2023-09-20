@@ -174,5 +174,7 @@ namespace UnityEngine.Localization.Operations
 
             GenericPool<LoadTableOperation<TTable, TEntry>>.Release(this);
         }
+
+        public override string ToString() => $"{GetType().Name}, Selected Locale: {m_SelectedLocale}, Table: {m_TableReference}";
     }
 }

@@ -2,6 +2,17 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.4.5] - 2023-09-20
+
+### Fixed
+
+- Added handling of null `StringReference`/`AssetReference` reference to `LocalizedAssetBehaviour` and `LocalizedStringEvent`. ([LOC-945](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-942))
+- Fixed "Objects are trying to be loaded during a domain backup" error occurring on empty `TableReferences` during serialization. ([LOC-969](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-969))
+- Fixed `StringTableEntry.IsSmart` from not detecting if the entry was marked smart when its local `SmartFormatTag` metadata was missing but it was still registered in the `SmartFormatTag`. ([LOC-966](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-966))
+- Fixed an issue that would cause sprites/textures to flicker when the locale was changed. This was due to us unloading the previous locale's assets before the new ones were available. The `LocalizedAsset` now holds onto the asset handle until its new one has finished loading. ([LOC-976](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-976))
+- Fixed compilation errors when using Addressables 2.0.0.
+- Fixed Create Table window controls being hidden when a large number of locales were in the project,. (LOC-913)
+
 ## [1.4.4] - 2023-06-15
 
 ### Changed

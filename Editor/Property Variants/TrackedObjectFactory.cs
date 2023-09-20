@@ -42,11 +42,12 @@ namespace UnityEditor.Localization.PropertyVariants
             };
         }
 
-        public static TrackedObject CreateTrackedObject(Object target)
-        {
-            var trackedObjectTypes = TypeCache.GetTypesWithAttribute<CustomTrackedObjectAttribute>();
+        public static TrackedObject CreateTrackedObject(Object target) => CreateTrackedObject(target, TypeCache.GetTypesWithAttribute<CustomTrackedObjectAttribute>());
 
+        internal static TrackedObject CreateTrackedObject(Object target, IList<Type> trackedObjectTypes)
+        {
             Type foundType = null;
+            CustomTrackedObjectAttribute foundAttribute = null;
             var typeToMatch = target.GetType();
             foreach (var typ in trackedObjectTypes)
             {
@@ -60,12 +61,20 @@ namespace UnityEditor.Localization.PropertyVariants
                 if (attr.ObjectType == typeToMatch)
                 {
                     foundType = typ;
+                    foundAttribute = attr;
                     break;
                 }
+
                 if (attr.SupportsInheritedTypes && attr.ObjectType.IsAssignableFrom(typeToMatch))
                 {
-                    // We could have a priority value here to allow for overriding CustomTrackedObjects.
+                    // Is this version more suitable than the last? We want the version that is closest to the target type.
+                    if (foundAttribute?.ObjectType.IsAssignableFrom(attr.ObjectType) == false)
+                    {
+                        continue;
+                    }
+
                     foundType = typ;
+                    foundAttribute = attr;
                 }
             }
 

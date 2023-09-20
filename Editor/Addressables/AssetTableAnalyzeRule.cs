@@ -1,3 +1,5 @@
+#if ADDRESSABLES_V1
+
 using System.Collections.Generic;
 using UnityEditor.AddressableAssets.Build;
 using UnityEditor.AddressableAssets.Settings;
@@ -169,3 +171,5 @@ namespace UnityEditor.Localization.Addressables
         }
     }
 }
+
+#endif

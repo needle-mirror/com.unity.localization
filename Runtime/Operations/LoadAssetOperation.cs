@@ -9,6 +9,7 @@ namespace UnityEngine.Localization.Operations
     {
         readonly Action<AsyncOperationHandle<TObject>> m_AssetLoadedAction;
         AsyncOperationHandle<LocalizedAssetDatabase.TableEntryResult> m_TableEntryOperation;
+        AsyncOperationHandle<TObject> m_LoadAssetOperation;
         bool m_AutoRelease;
 
         public LoadAssetOperation()
@@ -39,13 +40,14 @@ namespace UnityEngine.Localization.Operations
                 return;
             }
 
-            var loadAssetOperation = m_TableEntryOperation.Result.Table.GetAssetAsync<TObject>(m_TableEntryOperation.Result.Entry);
-            if (loadAssetOperation.IsDone)
-                AssetLoaded(loadAssetOperation);
+            m_LoadAssetOperation = m_TableEntryOperation.Result.Table.GetAssetAsync<TObject>(m_TableEntryOperation.Result.Entry);
+            AddressablesInterface.Acquire(m_LoadAssetOperation);
+            if (m_LoadAssetOperation.IsDone)
+                AssetLoaded(m_LoadAssetOperation);
             else
             {
-                CurrentOperation = loadAssetOperation;
-                loadAssetOperation.Completed += m_AssetLoadedAction;
+                CurrentOperation = m_LoadAssetOperation;
+                m_LoadAssetOperation.Completed += m_AssetLoadedAction;
             }
         }
 
@@ -71,6 +73,7 @@ namespace UnityEngine.Localization.Operations
 
         protected override void Destroy()
         {
+            AddressablesInterface.ReleaseAndReset(ref m_LoadAssetOperation);
             base.Destroy();
             GenericPool<LoadAssetOperation<TObject>>.Release(this);
         }

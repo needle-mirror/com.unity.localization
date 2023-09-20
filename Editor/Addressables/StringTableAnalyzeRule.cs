@@ -1,3 +1,5 @@
+#if ADDRESSABLES_V1
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -197,3 +199,5 @@ namespace UnityEditor.Localization.Addressables
         protected virtual void CheckContents(TTable table, string label, AddressableAssetSettings settings, LocalizationTableCollection collection) {}
     }
 }
+
+#endif

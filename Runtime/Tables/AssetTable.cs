@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.Localization.Metadata;
+using UnityEngine.Localization.Operations;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement;
@@ -235,42 +236,9 @@ namespace UnityEngine.Localization.Tables
                 return emptyOperation;
             }
 
-            // Do we have preload data?
-            if (entry.PreloadAsyncOperation.IsValid())
-            {
-                // If we preloaded then the operation will have a collection of assets/sub-assets.
-                // We need to extract the asset and convert to AsyncOperationHandle<TObject>.
-                if (!entry.PreloadAsyncOperation.IsDone)
-                {
-                    // Wait for the operation to complete before attempting again
-                    var convertedOperation = ResourceManager.CreateChainOperation(entry.PreloadAsyncOperation, (op) => GetAssetAsync<TObject>(entry));
-                    entry.AsyncOperation = convertedOperation;
-                    return convertedOperation;
-                }
-
-                if (entry.PreloadAsyncOperation.Status != AsyncOperationStatus.Succeeded)
-                {
-                    return ResourceManager.CreateCompletedOperation<TObject>(null, entry.PreloadAsyncOperation.OperationException.Message);
-                }
-
-                // Extract the asset from the array of preloaded sub objects.
-                foreach (var obj in entry.PreloadAsyncOperation.Result)
-                {
-                    bool isSubAsset = entry.IsSubAsset;
-                    if (obj is TObject target)
-                    {
-                        // Check the sub-asset name
-                        if (isSubAsset && entry.SubAssetName != obj.name)
-                            continue;
-
-                        var convertedCompletedOperation = ResourceManager.CreateCompletedOperation(target, null);
-                        entry.AsyncOperation = convertedCompletedOperation;
-                        return convertedCompletedOperation;
-                    }
-                }
-            }
-
-            var operation = AddressablesInterface.LoadAssetFromGUID<TObject>(entry.Address);
+            var subAssetOperation = GenericPool<LoadSubAssetOperation<TObject>>.Get();
+            subAssetOperation.Init(entry.PreloadAsyncOperation, entry.Address, entry.IsSubAsset, entry.SubAssetName);
+            var operation = ResourceManager.StartOperation(subAssetOperation, entry.PreloadAsyncOperation);
             entry.AsyncOperation = operation;
             return operation;
         }

@@ -47,17 +47,24 @@ namespace UnityEngine.Localization.Components
 
         void OnDestroy() => ClearChangeHandler();
 
-        void OnValidate() => AssetReference.ForceUpdate();
+        void OnValidate() => AssetReference?.ForceUpdate();
 
         internal virtual void RegisterChangeHandler()
         {
+            if (AssetReference == null)
+                return;
+
             if (m_ChangeHandler == null)
                 m_ChangeHandler = UpdateAsset;
 
             AssetReference.AssetChanged += m_ChangeHandler;
         }
 
-        internal virtual void ClearChangeHandler() => AssetReference.AssetChanged -= m_ChangeHandler;
+        internal virtual void ClearChangeHandler()
+        {
+            if (AssetReference != null)
+                AssetReference.AssetChanged -= m_ChangeHandler;
+        }
 
         /// <summary>
         /// Called when <see cref="AssetReference"/> has been loaded. This will occur when the game first starts after

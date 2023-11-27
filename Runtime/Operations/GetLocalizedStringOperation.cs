@@ -19,6 +19,9 @@ namespace UnityEngine.Localization.Operations
         IVariableGroup m_LocalVariables;
         bool m_AutoRelease;
 
+        public static readonly ObjectPool<GetLocalizedStringOperation> Pool = new ObjectPool<GetLocalizedStringOperation>(
+            () => new GetLocalizedStringOperation(), collectionCheck:false);
+
         public void Init(AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult> tableEntryOperation, Locale locale, LocalizedStringDatabase database, TableReference tableReference, TableEntryReference tableEntryReference, IList<object> arguments, IVariableGroup localVariables, bool autoRelease)
         {
             m_TableEntryOperation = tableEntryOperation;
@@ -85,7 +88,7 @@ namespace UnityEngine.Localization.Operations
         protected override void Destroy()
         {
             base.Destroy();
-            GenericPool<GetLocalizedStringOperation>.Release(this);
+            Pool.Release(this);
         }
 
         public override string ToString() => $"{GetType().Name}, Locale: {m_SelectedLocale}, Table: {m_TableReference}, Entry: {m_TableEntryReference}";

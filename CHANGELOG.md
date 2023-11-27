@@ -2,6 +2,40 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.5.0-pre.2] - 2023-11-27
+
+### Fixed
+
+- Added back in removed API for `ProjectLocalePopupField` and `LocalizationTablesWindow` to avoid making breaking changes to API.
+
+## [1.5.0-pre.1] - 2023-11-21
+
+### Added
+
+- Added `AsynchronousBehavior` to string and asset database. These can be used to set a global `WaitForCompletion` flag instead of having to set it on every `LocalizedAsset` and `LocalizedString`.
+- Added `LocalizationImportMenuAttribute`, `LocalizationExportMenuAttribute` and `LocalizationEntryMenuAttribute`. These can be used to add custom menu items to the Localization Tables window.
+- Added support for UI Toolkit data bindings. Localized strings and assets can now be added as data bindings to UI Toolkit elements. See docs for more details.
+
+### Changed
+
+- Improved performance of localization object pools and releasing.
+- The Localization Tables window has had several UX improvements made. (LOC-214)
+
+### Deprecated
+
+- `ProjectLocalePopupField` and `XliffVersionPopup` `UxmlFactory` and `UxmlTraits` are now obsolete when using Unity 2023.2 and above.
+
+### Fixed
+
+- Added `IDisposable` support to property drawers. This will cleanup resources and reduce the subscribers to editor events helping performance when entering playmode. Note, this also requires the Editor changes that add `IDisposable` support to property drawers.
+- Fixed `GetAllTables` `WaitForCompletion` never finishing when run outside of playmode. ([LOC-1011](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1011))
+- Fixed `LocalizationSettings` not initializing in the player until the first request was made. ([LOC-975](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-975))
+- Fixed `NullReferenceException` when calling GetAllTables outside of playmode and no editor locale was selected. ([LOC-1011](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1011))
+- Fixed exception being thrown from `WaitForCurrentOperationAsyncOperationBase ` when the dependency became invalid after `WaitForCompletion` was called on it. We now fail the operation instead. ([LOC-992](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-992))
+- Fixed the TableReference field losing its value when `OnAfterDeserialize` was called multiple times.
+Fixed the layout of the localized reference field dropdown and buttons. ([LOC-985](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-985))
+- Initialization operation will now wait for any asynchronous bundle unloading to complete before beginning initialization. This fixes the error "Table does not have a SharedTableData". ([LOC-1021](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1021))
+
 ## [1.4.5] - 2023-09-20
 
 ### Fixed

@@ -43,16 +43,28 @@ The Localization Settings will query each selector in the list, starting at the 
 
 ## Asset Database
 
-The Asset Database is responsible for retrieving the various Asset Tables and subsequent Assets, this involves querying and loading through the Addressable Assets system.
-The **Default Table** field can be used to set a default Asset Table name, this can then be used when loading assets and not providing an explicit table name.
+The Asset Database retrieves Asset Tables and their associated Assets by querying and loading through the Addressable Assets system.
+
+The following table describes the properties of the **Asset Database**:
+
+| **Property** | **Description** |
+| --- | --- |
+| **Default Table** | The default table name to use when loading assets. |
+| **Asynchronous Behaviour** | The asynchronous behaviour to use when loading assets. Uses [WaitForCompletion](https://docs.unity3d.com/Packages/com.unity.addressables@latest?subfolder=/api/UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.html#UnityEngine_ResourceManagement_AsyncOperations_AsyncOperationHandle_WaitForCompletion) to force the localization system to complete asynchronous operations immediately.|
+| **Use Fallback** | Whether to use a fallback locale when a localized value cannot be found in the selected locale. |
 
 ## String Database
 
-The String Database is responsible for retrieving the various String Tables and subsequent localized strings.
+The String Database retrieves the various String Tables and subsequent localized strings.
 
-The **Default Table** field can be used to set a default String Table name, this can then be used when loading strings and not providing an explicit table name.
+The following table describes the properties of the **String Database**:
 
-The **No Translation Found Format** field can be used to configure the string that should be returned for non-localized values.
+| **Property** | **Description** |
+| --- | --- |
+| **Default Table** | The default table name to use when loading assets. |
+| **Asynchronous Behaviour** | The asynchronous behaviour to use when loading assets. Uses [WaitForCompletion](https://docs.unity3d.com/Packages/com.unity.addressables@latest?subfolder=/api/UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.html#UnityEngine_ResourceManagement_AsyncOperations_AsyncOperationHandle_WaitForCompletion) to force the localization system to complete asynchronous operations immediately.|
+| **Use Fallback** | Whether to use a fallback locale when a localized value cannot be found in the selected locale. |
+| **No Translation Found Format** | Used to configure the string that should be returned for non-localized values. |
 
 ## Project Locale
 

@@ -1,13 +1,33 @@
 using UnityEditor.Localization.Reporting;
 using UnityEngine;
 using UnityEngine.Localization.Tables;
+using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.Plugins.XLIFF
 {
     static class MenuItems
     {
-        const string kPrefXliffDirectory = "Localization-xliff-import-directory";
-        const string kPrefXliffFile = "Localization-xliff-import-file";
+        const string k_PrefXliffDirectory = "Localization-xliff-import-directory";
+        const string k_PrefXliffFile = "Localization-xliff-import-file";
+
+        [LocalizationImportMenu]
+        public static void PopulateImportMenu(LocalizationTableCollection collection, DropdownMenu menu)
+        {
+            if (collection is StringTableCollection)
+            {
+                menu.AppendAction(L10n.Tr("XLIFF into Collection..."), _ => ImportIntoCollection(new MenuCommand(collection)));
+                menu.AppendAction(L10n.Tr("XLIFF..."), _ => ImportXliffFile());
+            }
+        }
+
+        [LocalizationExportMenu]
+        public static void PopulateExportMenu(LocalizationTableCollection collection, DropdownMenu menu)
+        {
+            if (collection is StringTableCollection)
+            {
+                menu.AppendAction(L10n.Tr("XLIFF..."), _ => ExportCollection(new MenuCommand(collection)));
+            }
+        }
 
         [MenuItem("CONTEXT/StringTableCollection/Export/XLIFF...")]
         public static void ExportCollection(MenuCommand command)
@@ -35,10 +55,10 @@ namespace UnityEditor.Localization.Plugins.XLIFF
             var collection = command.context as StringTableCollection;
             Debug.Assert(collection != null, "Expected StringTableCollection");
 
-            var file = EditorUtility.OpenFilePanel("Import XLIFF", EditorPrefs.GetString(kPrefXliffFile, ""), "xlf");
+            var file = EditorUtility.OpenFilePanel("Import XLIFF", EditorPrefs.GetString(k_PrefXliffFile, ""), "xlf");
             if (string.IsNullOrEmpty(file))
                 return;
-            EditorPrefs.SetString(kPrefXliffFile, file);
+            EditorPrefs.SetString(k_PrefXliffFile, file);
 
             Xliff.ImportFileIntoCollection(collection, file, null, TaskReporter.CreateDefaultReporter());
         }
@@ -49,20 +69,20 @@ namespace UnityEditor.Localization.Plugins.XLIFF
             var table = command.context as StringTable;
             Debug.Assert(table != null, "Expected StringTable");
 
-            var file = EditorUtility.OpenFilePanel("Import XLIFF", EditorPrefs.GetString(kPrefXliffFile, ""), "xlf");
+            var file = EditorUtility.OpenFilePanel("Import XLIFF", EditorPrefs.GetString(k_PrefXliffFile, ""), "xlf");
             if (string.IsNullOrEmpty(file))
                 return;
-            EditorPrefs.SetString(kPrefXliffFile, file);
+            EditorPrefs.SetString(k_PrefXliffFile, file);
 
             Xliff.ImportFileIntoTable(file, table, Xliff.ImportNotesBehavior.Replace, TaskReporter.CreateDefaultReporter());
         }
 
         public static void ImportXliffDirectory()
         {
-            var dir = EditorUtility.OpenFolderPanel("Import XLIFF from directory", EditorPrefs.GetString(kPrefXliffDirectory, ""), "");
+            var dir = EditorUtility.OpenFolderPanel("Import XLIFF from directory", EditorPrefs.GetString(k_PrefXliffDirectory, ""), "");
             if (string.IsNullOrEmpty(dir))
                 return;
-            EditorPrefs.SetString(kPrefXliffDirectory, dir);
+            EditorPrefs.SetString(k_PrefXliffDirectory, dir);
 
             Xliff.ImportDirectory(dir, null, TaskReporter.CreateDefaultReporter());
         }

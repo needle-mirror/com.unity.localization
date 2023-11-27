@@ -1,7 +1,6 @@
 using System;
-using UnityEngine.Localization.Tables;
 using UnityEngine.Localization.Settings;
-using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.Localization.Tables;
 
 namespace UnityEngine.Localization
 {
@@ -9,7 +8,7 @@ namespace UnityEngine.Localization
     /// Provides a way to reference a table entry inside of a specific <see cref="LocalizationTable"/>.
     /// </summary>
     [Serializable]
-    public abstract class LocalizedReference : ISerializationCallbackReceiver
+    public abstract partial class LocalizedReference : ISerializationCallbackReceiver
     {
         [SerializeField]
         TableReference m_TableReference;
@@ -23,7 +22,7 @@ namespace UnityEngine.Localization
         [SerializeField]
         bool m_WaitForCompletion = false;
 
-        Locale m_LocaleOverride;
+        internal Locale m_LocaleOverride;
 
         #if UNITY_EDITOR
         // This is so we can detect when a change is made via the inspector.
@@ -122,6 +121,8 @@ namespace UnityEngine.Localization
             get => m_WaitForCompletion;
             set => m_WaitForCompletion = value;
         }
+
+        internal abstract bool ForceSynchronous { get; }
 
         /// <summary>
         /// Checks whether both <see cref="TableReference"/> and <see cref="TableEntryReference"/> contain valid references, and returns true if one of them is empty.

@@ -70,7 +70,7 @@ Prior to version **0.11.0**, localization assets were stored using different def
 
 ## Addressable Analyzers
 
-To fix an Addressables issue, or upgrade a project when the Addressable Group rules have been modified, use Addressable AnalyzersFind the Addressable Analyzers in the Analyzer window (**Window > Asset Management > Addressables > Analyze**)
+To fix an Addressables issue, or upgrade a project when the Addressable Group rules have been modified, use Addressable Analyzers. Find the Addressable Analyzers in the Analyzer window (**Window > Asset Management > Addressables > Analyze**)
 
 After an analyzer has been run, it produces a report of any issues that have been found and the severity of those issues. The issues can then be automatically fixed by selecting the **Fix Selected Rules** button.
 

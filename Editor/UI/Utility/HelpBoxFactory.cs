@@ -5,10 +5,12 @@ namespace UnityEditor.Localization.UI
 {
     internal static class HelpBoxFactory
     {
+        internal const string k_Name = "unity-helpbox";
+
         internal static VisualElement CreateDefaultHelpBox(string message)
         {
 #if UNITY_2020_1_OR_NEWER
-            return new HelpBox(message, HelpBoxMessageType.Warning);
+            return new HelpBox(message, HelpBoxMessageType.Warning) { name = k_Name };
 #else
             return CreateHelpBox(message);
 #endif
@@ -23,6 +25,7 @@ namespace UnityEditor.Localization.UI
             const float padding = 1;
             var helpBox = new VisualElement
             {
+                name = k_Name,
                 style =
                 {
                     flexDirection = FlexDirection.Row,

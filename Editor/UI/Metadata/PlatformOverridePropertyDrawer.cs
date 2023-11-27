@@ -120,9 +120,9 @@ namespace UnityEditor.Localization.UI
             {
                 var treeSelection = new TableTreeView(m_TableType, sel =>
                 {
-                    tableRef.Reference = sel != null ? sel.TableCollectionNameReference : default(TableReference);
+                    tableRef.SetReference(sel);
                     var entryRef = new SerializedTableEntryReference(property.FindPropertyRelative("tableEntryReference"));
-                    entryRef.Reference = SharedTableData.EmptyId;
+                    entryRef.SetReference(null);
                     property.serializedObject.ApplyModifiedProperties();
                 });
                 PopupWindow.Show(dropDownPosition, new TreeViewPopupWindow(treeSelection) { Width = dropDownPosition.width });
@@ -150,9 +150,9 @@ namespace UnityEditor.Localization.UI
 
                 var treeSelection = new EntryTreeView(assetType, m_Collection, (c, e) =>
                 {
-                    entryRef.Reference = e != null ? e.Id : SharedTableData.EmptyId;
+                    entryRef.SetReference(e);
                     var tableRef = new SerializedTableReference(property.FindPropertyRelative("tableReference"));
-                    tableRef.Reference = c != null ? c.TableCollectionNameReference : default(TableReference);
+                    tableRef.SetReference(c);
                     property.serializedObject.ApplyModifiedProperties();
                 });
                 PopupWindow.Show(dropDownPosition, new TreeViewPopupWindow(treeSelection) { Width = dropDownPosition.width });
@@ -194,8 +194,8 @@ namespace UnityEditor.Localization.UI
 
                 var treeSelection = new TableEntryTreeView(assetType, (c, e) =>
                 {
-                    entryRef.Reference = e != null ? e.Id : SharedTableData.EmptyId;
-                    tableRef.Reference = c != null ? c.TableCollectionNameReference : default(TableReference);
+                    entryRef.SetReference(e);
+                    tableRef.SetReference(c);
                     property.serializedObject.ApplyModifiedProperties();
                 });
                 PopupWindow.Show(dropDownPosition, new TreeViewPopupWindow(treeSelection) { Width = dropDownPosition.width });

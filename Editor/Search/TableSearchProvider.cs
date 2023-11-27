@@ -51,10 +51,19 @@ namespace UnityEditor.Localization.Search
             fetchItems = FetchItems;
             AddFilters(QueryEngine);
             showDetails = true;
+            fetchDescription = FetchDescription;
 
             #if ENABLE_SEARCH_QUERY_BUILDER
             fetchPropositions = FetchPropositions;
             #endif
+        }
+
+        static string FetchDescription(SearchItem si, SearchContext sc)
+        {
+            // Show more info when in the minimum zoom level (LOC-941)
+            if (sc.searchView.itemIconSize == 0)
+                return $"{si.description}/{si.label}";
+            return si.description;
         }
 
         static void TrackSelection(SearchItem si, SearchContext sc)

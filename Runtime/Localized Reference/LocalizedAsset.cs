@@ -11,64 +11,68 @@ namespace UnityEngine.Localization
     /// <summary>
     /// Provides a specialized <see cref="LocalizedAsset{TObject}"/> which can be used to localize [AudioClip](https://docs.unity3d.com/ScriptReference/AudioClip.html) assets.
     /// </summary>
+    /// <example>
+    /// This example shows how to use the LocalizedAudioClip in a [MonoBehaviour](https://docs.unity3d.com/ScriptReference/MonoBehaviour.html).
+    /// <code source="../../DocCodeSamples.Tests/LocalizedAudioClipSamples.cs" region="example"/>
+    /// </example>
     [Serializable]
-    public class LocalizedAudioClip : LocalizedAsset<AudioClip> {}
+    public partial class LocalizedAudioClip : LocalizedAsset<AudioClip> {}
     #endif
 
     /// <summary>
     /// Provides a specialized <see cref="LocalizedAsset{TObject}"/> which can be used to localize [Prefabs](https://docs.unity3d.com/Manual/Prefabs.html).
     /// </summary>
     [Serializable]
-    public class LocalizedGameObject : LocalizedAsset<GameObject> {}
+    public partial class LocalizedGameObject : LocalizedAsset<GameObject> {}
 
     /// <summary>
     /// Provides a specialized <see cref="LocalizedAsset{TObject}"/> which can be used to localize a [Mesh](https://docs.unity3d.com/ScriptReference/Mesh.html).
     /// </summary>
     [Serializable]
-    public class LocalizedMesh : LocalizedAsset<Mesh> {}
+    public partial class LocalizedMesh : LocalizedAsset<Mesh> {}
 
     /// <summary>
     /// Provides a specialized <see cref="LocalizedAsset{TObject}"/> which can be used to localize [Materials](https://docs.unity3d.com/ScriptReference/Material.html).
     /// </summary>
     [Serializable]
-    public class LocalizedMaterial : LocalizedAsset<Material> {}
+    public partial class LocalizedMaterial : LocalizedAsset<Material> {}
 
     /// <summary>
     /// Provides a <see cref="LocalizedAsset{TObject}"/> which you can use to localize any [UnityEngine.Object](https://docs.unity3d.com/ScriptReference/Object.html).
     /// </summary>
     [Serializable]
-    public class LocalizedObject : LocalizedAsset<Object> {}
+    public partial class LocalizedObject : LocalizedAsset<Object> {}
 
     /// <summary>
     /// Provides a <see cref="LocalizedAsset{TObject}"/> which you can use to localize [Sprites](https://docs.unity3d.com/ScriptReference/Sprite.html).
     /// </summary>
     [Serializable]
-    public class LocalizedSprite : LocalizedAsset<Sprite> {}
+    public partial class LocalizedSprite : LocalizedAsset<Sprite> {}
 
     /// <summary>
     /// Provides a <see cref="LocalizedAsset{TObject}"/> which you can use to localize [Textures](https://docs.unity3d.com/ScriptReference/Texture.html) assets.
     /// </summary>
     [Serializable]
-    public class LocalizedTexture : LocalizedAsset<Texture> {}
+    public partial class LocalizedTexture : LocalizedAsset<Texture> {}
 
     #if PACKAGE_TMP || (UNITY_2023_2_OR_NEWER && PACKAGE_UGUI) || PACKAGE_DOCS_GENERATION
     /// <summary>
     /// Provides a <see cref="LocalizedAsset{TObject}"/> which you can use to localize a TextMeshPro [TMPro.TMP_FontAsset](https://docs.unity3d.com/Packages/com.unity.textmeshpro@latest?subfolder=/api/TMPro.TMP_FontAsset)/>.
     /// </summary>
     [Serializable]
-    public class LocalizedTmpFont : LocalizedAsset<TMPro.TMP_FontAsset> {}
+    public partial class LocalizedTmpFont : LocalizedAsset<TMPro.TMP_FontAsset> {}
     #endif
 
     /// <summary>
     /// Provides a <see cref="LocalizedAsset{TObject}"/> which you can use to localize a [Font](https://docs.unity3d.com/ScriptReference/Font.html)/>.
     /// </summary>
     [Serializable]
-    public class LocalizedFont : LocalizedAsset<Font> {}
+    public partial class LocalizedFont : LocalizedAsset<Font> {}
 
     /// <summary>
     /// Base class for all localized assets.
     /// </summary>
-    public abstract class LocalizedAssetBase : LocalizedReference
+    public abstract partial class LocalizedAssetBase : LocalizedReference
     {
         /// <summary>
         /// Returns the localized asset as a [UnityEngine.Object](https://docs.unity3d.com/ScriptReference/Object.html).
@@ -106,6 +110,10 @@ namespace UnityEngine.Localization
     /// This example shows how a <see cref="LocalizedAsset{TObject}"/> can be used to localize a [ScriptableObject](https://docs.unity3d.com/ScriptReference/ScriptableObject.html).
     /// <code source="../../DocCodeSamples.Tests/LocalizedAssetSamples.cs" region="localized-scriptable-object"/>
     /// </example>
+    /// <example>
+    /// This example shows how to bind to a UI Toolkit property. Note that this requires Unity 2023.2 and above.
+    /// <code source="../../DocCodeSamples.Tests/LocalizedTextureUIDocumentExample.cs" region="example"/>
+    /// </example>
     [Serializable]
     public partial class LocalizedAsset<TObject> : LocalizedAssetBase, IDisposable where TObject : Object
     {
@@ -135,6 +143,8 @@ namespace UnityEngine.Localization
                 #endif
             }
         }
+
+        internal override bool ForceSynchronous => WaitForCompletion || LocalizationSettings.AssetDatabase.AsynchronousBehaviour == AsynchronousBehaviour.ForceSynchronous;
 
         /// <summary>
         /// The current loading operation for the asset when using <see cref="AssetChanged"/>. This is <see langword="default"/> if a loading operation is not available.
@@ -236,6 +246,9 @@ namespace UnityEngine.Localization
 
         class ConvertToObjectOperation : WaitForCurrentOperationAsyncOperationBase<Object>
         {
+            public static readonly ObjectPool<ConvertToObjectOperation> Pool = new ObjectPool<ConvertToObjectOperation>(
+                () => new ConvertToObjectOperation(), collectionCheck:false);
+
             AsyncOperationHandle<TObject> m_Operation;
 
             public void Init(AsyncOperationHandle<TObject> operation)
@@ -261,7 +274,7 @@ namespace UnityEngine.Localization
             protected override void Destroy()
             {
                 AddressablesInterface.Release(m_Operation);
-                GenericPool<ConvertToObjectOperation>.Release(this);
+                Pool.Release(this);
             }
         }
 
@@ -269,7 +282,7 @@ namespace UnityEngine.Localization
         public override AsyncOperationHandle<Object> LoadAssetAsObjectAsync()
         {
             var wrappedOperation = LoadAssetAsync();
-            var operation = GenericPool<ConvertToObjectOperation>.Get();
+            var operation = ConvertToObjectOperation.Pool.Get();
             operation.Init(wrappedOperation);
             return AddressablesInterface.ResourceManager.StartOperation(operation, default);
         }
@@ -296,11 +309,15 @@ namespace UnityEngine.Localization
             }
         }
 
-        void HandleLocaleChange(Locale _)
+        void HandleLocaleChange(Locale locale)
         {
             #if UNITY_EDITOR
             m_CurrentTable = TableReference;
             m_CurrentTableEntry = TableEntryReference;
+
+            #if MODULE_UITK && ENABLE_UITK_DATA_BINDING
+            HandleLocaleChangeDataBinding(locale);
+            #endif
 
             // Dont update if we have no selected Locale
             if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode && LocaleOverride == null && LocalizationSettings.SelectedLocale == null)
@@ -330,7 +347,7 @@ namespace UnityEngine.Localization
             if (!CurrentLoadingOperationHandle.IsDone)
             {
                 #if !UNITY_WEBGL
-                if (WaitForCompletion)
+                if (WaitForCompletion || LocalizationSettings.AssetDatabase.AsynchronousBehaviour == AsynchronousBehaviour.ForceSynchronous)
                 {
                     CurrentLoadingOperationHandle.WaitForCompletion();
                 }

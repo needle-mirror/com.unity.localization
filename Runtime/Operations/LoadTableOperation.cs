@@ -23,6 +23,9 @@ namespace UnityEngine.Localization.Operations
         Locale m_SelectedLocale;
         string m_CollectionName;
 
+        public static readonly ObjectPool<LoadTableOperation<TTable, TEntry>> Pool = new ObjectPool<LoadTableOperation<TTable, TEntry>>(
+            () => new LoadTableOperation<TTable, TEntry>(), collectionCheck: false);
+
         public Action<AsyncOperationHandle<TTable>> RegisterTableOperation { get; private set; }
 
         public LoadTableOperation()
@@ -172,7 +175,7 @@ namespace UnityEngine.Localization.Operations
 
             AddressablesInterface.ReleaseAndReset(ref m_LoadTableOperation);
 
-            GenericPool<LoadTableOperation<TTable, TEntry>>.Release(this);
+            Pool.Release(this);
         }
 
         public override string ToString() => $"{GetType().Name}, Selected Locale: {m_SelectedLocale}, Table: {m_TableReference}";

@@ -7,8 +7,6 @@ namespace UnityEditor.Localization.UI.Toolkit
 {
     class ReorderableList : VisualElement
     {
-        public new class UxmlTraits : VisualElement.UxmlTraits {}
-
         public static readonly string UssClassName = "reorderable-list";
         public static readonly string EmptyUssClassName = UssClassName + "__empty";
         public static readonly string ItemUssClassName = UssClassName + "-item";

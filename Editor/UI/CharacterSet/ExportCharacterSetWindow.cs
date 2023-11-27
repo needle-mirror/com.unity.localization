@@ -14,6 +14,15 @@ namespace UnityEditor.Localization.UI
 
         public static ExportCharacterSetWindow ShowWindow() => GetWindow<ExportCharacterSetWindow>("Export Character Set", true);
 
+        [LocalizationExportMenu]
+        static void PopulateExportMenu(LocalizationTableCollection collection, DropdownMenu menu)
+        {
+            if (collection is StringTableCollection)
+            {
+                menu.AppendAction(L10n.Tr("Character Set..."), _ => ShowWindow().SelectedTables.SetSelection(collection));
+            }
+        }
+
         void OnEnable()
         {
             var template = Resources.GetTemplate(nameof(ExportCharacterSetWindow));

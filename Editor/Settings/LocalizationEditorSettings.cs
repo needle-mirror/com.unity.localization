@@ -26,6 +26,8 @@ namespace UnityEditor.Localization
         internal const string k_GameViewPref = "Localization-ShowLocaleMenuInGameView";
         internal const string k_StringPicker = "Localization-UseSearchStringPicker";
         internal const string k_AssetPicker = "Localization-UseSearchAssetPicker";
+        internal const string k_TableRefMethod = "Localization-TableRefMethod";
+        internal const string k_EntryRefMethod = "Localization-EntryRefMethod";
 
         static LocalizationEditorSettings s_Instance;
 
@@ -78,6 +80,24 @@ namespace UnityEditor.Localization
         {
             get => EditorPrefs.GetBool(k_AssetPicker, true);
             set => EditorPrefs.SetBool(k_AssetPicker, value);
+        }
+
+        /// <summary>
+        /// Adds a reference to a table in the Editor.
+        /// </summary>
+        public static TableReferenceMethod TableReferenceMethod
+        {
+            get => (TableReferenceMethod)EditorPrefs.GetInt(k_TableRefMethod, (int)TableReferenceMethod.Guid);
+            set => EditorPrefs.SetInt(k_TableRefMethod, (int)value);
+        }
+
+        /// <summary>
+        /// Adds a reference to a table entry in the Editor.
+        /// </summary>
+        public static EntryReferenceMethod EntryReferenceMethod
+        {
+            get => (EntryReferenceMethod)EditorPrefs.GetInt(k_EntryRefMethod, (int)EntryReferenceMethod.Id);
+            set => EditorPrefs.SetInt(k_EntryRefMethod, (int)value);
         }
 
         /// <summary>

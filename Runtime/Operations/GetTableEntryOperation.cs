@@ -26,6 +26,9 @@ namespace UnityEngine.Localization.Operations
         bool m_UseFallback;
         bool m_AutoRelease;
 
+        public static readonly ObjectPool<GetTableEntryOperation<TTable, TEntry>> Pool = new ObjectPool<GetTableEntryOperation<TTable, TEntry>>(
+            () => new GetTableEntryOperation<TTable, TEntry>(), collectionCheck: false);
+
         public GetTableEntryOperation()
         {
             m_ExtractEntryFromTableAction = ExtractEntryFromTable;
@@ -237,7 +240,7 @@ namespace UnityEngine.Localization.Operations
             m_LoadTableOperation = default;
 
             base.Destroy();
-            GenericPool<GetTableEntryOperation<TTable, TEntry>>.Release(this);
+            Pool.Release(this);
 
             if (m_FallbackQueue != null)
             {

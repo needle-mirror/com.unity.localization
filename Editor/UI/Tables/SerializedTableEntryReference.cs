@@ -8,6 +8,8 @@ namespace UnityEditor.Localization.UI
         public SerializedProperty keyId;
         TableEntryReference m_Reference;
 
+        public SerializedProperty Property { get; }
+
         public bool HasMultipleDifferentValues => key.hasMultipleDifferentValues || keyId.hasMultipleDifferentValues;
 
         public TableEntryReference Reference
@@ -21,8 +23,19 @@ namespace UnityEditor.Localization.UI
             }
         }
 
+        public void SetReference(SharedTableData.SharedTableEntry entry)
+        {
+            if (entry == null)
+                Reference = null;
+            else if (LocalizationEditorSettings.EntryReferenceMethod == EntryReferenceMethod.Id)
+                Reference = entry.Id;
+            else
+                Reference = entry.Key;
+        }
+
         public SerializedTableEntryReference(SerializedProperty property)
         {
+            Property = property;
             key = property.FindPropertyRelative("m_Key");
             keyId = property.FindPropertyRelative("m_KeyId");
 

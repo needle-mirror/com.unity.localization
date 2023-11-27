@@ -10,7 +10,7 @@ namespace UnityEngine.Localization.SmartFormat.PersistentVariables
     /// </summary>
     /// <typeparam name="T">The value type to store in this variable.</typeparam>
     [Serializable]
-    public class Variable<T> : IVariableValueChanged
+    public partial class Variable<T> : IVariableValueChanged
     #if UNITY_EDITOR
         , ISerializationCallbackReceiver
     #endif
@@ -75,89 +75,89 @@ namespace UnityEngine.Localization.SmartFormat.PersistentVariables
     /// </summary>
     [Serializable]
     [DisplayName("Boolean")]
-    public class BoolVariable : Variable<bool> {}
+    public partial class BoolVariable : Variable<bool> {}
 
     /// <summary>
     /// A <see cref="IVariable"/> that holds a single signed byte value.
     /// </summary>
     [Serializable]
     [DisplayName("Signed Byte")]
-    public class SByteVariable : Variable<sbyte> {}
+    public partial class SByteVariable : Variable<sbyte> {}
 
     /// <summary>
     /// A <see cref="IVariable"/> that holds a single byte value.
     /// </summary>
     [Serializable]
     [DisplayName("Byte")]
-    public class ByteVariable : Variable<byte> {}
+    public partial class ByteVariable : Variable<byte> {}
 
     /// <summary>
     /// A <see cref="IVariable"/> that holds a single short value.
     /// </summary>
     [Serializable]
     [DisplayName("Short")]
-    public class ShortVariable : Variable<short> {}
+    public partial class ShortVariable : Variable<short> {}
 
     /// <summary>
     /// A <see cref="IVariable"/> that holds a single unsigned short value.
     /// </summary>
     [Serializable]
     [DisplayName("Unsigned Short")]
-    public class UShortVariable : Variable<ushort> {}
+    public partial class UShortVariable : Variable<ushort> {}
 
     /// <summary>
     /// A <see cref="IVariable"/> that holds a single integer value.
     /// </summary>
     [Serializable]
     [DisplayName("Integer")]
-    public class IntVariable : Variable<int> {}
+    public partial class IntVariable : Variable<int> {}
 
     /// <summary>
     /// A <see cref="IVariable"/> that holds a single unsigned integer value.
     /// </summary>
     [Serializable]
     [DisplayName("Unsigned Integer")]
-    public class UIntVariable : Variable<uint> {}
+    public partial class UIntVariable : Variable<uint> {}
 
     /// <summary>
     /// A <see cref="IVariable"/> that holds a single long value.
     /// </summary>
     [Serializable]
     [DisplayName("Long")]
-    public class LongVariable : Variable<long> {}
+    public partial class LongVariable : Variable<long> {}
 
     /// <summary>
     /// A <see cref="IVariable"/> that holds a single unsigned long value.
     /// </summary>
     [Serializable]
     [DisplayName("Unsigned Long")]
-    public class ULongVariable : Variable<ulong> {}
+    public partial class ULongVariable : Variable<ulong> {}
 
     /// <summary>
     /// A <see cref="IVariable"/> that holds a single string value.
     /// </summary>
     [Serializable]
     [DisplayName("String")]
-    public class StringVariable : Variable<string> {}
+    public partial class StringVariable : Variable<string> {}
 
     /// <summary>
     /// A <see cref="IVariable"/> that holds a single float value.
     /// </summary>
     [Serializable]
     [DisplayName("Float")]
-    public class FloatVariable : Variable<float> {}
+    public partial class FloatVariable : Variable<float> {}
 
     /// <summary>
     /// A <see cref="IVariable"/> that holds a single double value.
     /// </summary>
     [Serializable]
     [DisplayName("Double")]
-    public class DoubleVariable : Variable<double> {}
+    public partial class DoubleVariable : Variable<double> {}
 
     /// <summary>
     /// A <see cref="IVariable"/> that can reference an <see cref="Object"/> instance.
     /// </summary>
     [Serializable]
     [DisplayName("Object Reference")]
-    public class ObjectVariable : Variable<Object> {}
+    public partial class ObjectVariable : Variable<Object> {}
 }

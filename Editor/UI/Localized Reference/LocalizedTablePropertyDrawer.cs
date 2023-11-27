@@ -6,7 +6,7 @@ using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization.UI
 {
-    abstract class LocalizedTablePropertyDrawer<TCollection> : PropertyDrawerExtended<LocalizedTablePropertyDrawer<TCollection>.LocalizedTablePropertyDrawerPropertyData>
+    abstract class LocalizedTablePropertyDrawer<TCollection> : PropertyDrawerExtended<LocalizedTablePropertyDrawer<TCollection>.LocalizedTablePropertyDrawerPropertyData>, IDisposable
         where TCollection : LocalizationTableCollection
     {
         public class LocalizedTablePropertyDrawerPropertyData : PropertyDrawerExtendedData
@@ -51,10 +51,7 @@ namespace UnityEditor.Localization.UI
                     m_SelectedTableCollection = value;
                     m_FieldLabel = null;
                     warningMessage = null;
-                    if (value != null)
-                        tableReference.Reference = value.SharedData.TableCollectionNameGuid;
-                    else
-                        tableReference.Reference = string.Empty;
+                    tableReference.SetReference(value);
                 }
             }
 
@@ -89,6 +86,11 @@ namespace UnityEditor.Localization.UI
         }
 
         ~LocalizedTablePropertyDrawer()
+        {
+            Dispose();
+        }
+
+        public void Dispose()
         {
             LocalizationEditorSettings.EditorEvents.CollectionAdded -= EditorEvents_CollectionModified;
             LocalizationEditorSettings.EditorEvents.CollectionRemoved -= EditorEvents_CollectionModified;

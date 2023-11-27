@@ -37,7 +37,6 @@ namespace UnityEditor.Localization
                         continue;
                     }
                 }
-
             }
             else
             {

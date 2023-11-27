@@ -7,7 +7,7 @@ using UnityEngine.Localization.Tables;
 
 namespace UnityEditor.Localization.UI
 {
-    abstract class LocalizedReferencePropertyDrawer<TCollection> : PropertyDrawerExtended<LocalizedReferencePropertyDrawer<TCollection>.Data> where TCollection : LocalizationTableCollection
+    abstract class LocalizedReferencePropertyDrawer<TCollection> : PropertyDrawerExtended<LocalizedReferencePropertyDrawer<TCollection>.Data>, IDisposable where TCollection : LocalizationTableCollection
     {
         protected static class Styles
         {
@@ -41,7 +41,7 @@ namespace UnityEditor.Localization.UI
             public GUIContent warningMessage;
             public float warningMessageHeight;
 
-            public (TCollection collection, SharedTableData.SharedTableEntry entry)? deferredSetReference;
+            public (TCollection collection, SharedTableData.SharedTableEntry entry) ? deferredSetReference;
 
             GUIContent m_FieldLabel;
             SharedTableData.SharedTableEntry m_SelectedEntry;
@@ -111,13 +111,7 @@ namespace UnityEditor.Localization.UI
                     m_SelectedTableIdx = -1;
                     SelectedTableEntry = null;
                     warningMessage = null;
-                    if (tableReference != null)
-                    {
-                        if (value != null)
-                            tableReference.Reference = value.SharedData.TableCollectionNameGuid;
-                        else
-                            tableReference.Reference = string.Empty;
-                    }
+                    tableReference?.SetReference(value);
                 }
             }
 
@@ -151,8 +145,7 @@ namespace UnityEditor.Localization.UI
                 {
                     m_FieldLabel = null;
                     m_SelectedEntry = value;
-                    if (tableEntryReference != null)
-                        tableEntryReference.Reference = value != null ? value.Id : SharedTableData.EmptyId;
+                    tableEntryReference?.SetReference(value);
                 }
             }
 
@@ -257,6 +250,11 @@ namespace UnityEditor.Localization.UI
 
         ~LocalizedReferencePropertyDrawer()
         {
+            Dispose();
+        }
+
+        public void Dispose()
+        {
             LocalizationEditorSettings.EditorEvents.CollectionAdded -= EditorEvents_CollectionModified;
             LocalizationEditorSettings.EditorEvents.CollectionRemoved -= EditorEvents_CollectionModified;
             LocalizationEditorSettings.EditorEvents.TableEntryRemoved -= EditorEvents_CollectionEntryRemoved;
@@ -315,8 +313,8 @@ namespace UnityEditor.Localization.UI
         {
             var rowPosition = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
 
-            var foldoutRect = new Rect(rowPosition.x, rowPosition.y, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight);
-            var dropDownPosition = new Rect(foldoutRect.xMax, rowPosition.y, rowPosition.width - EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight);
+            var foldoutRect = new Rect(rowPosition.x, rowPosition.y, PrefixLabelWidth, EditorGUIUtility.singleLineHeight);
+            var dropDownPosition = new Rect(foldoutRect.xMax, rowPosition.y, rowPosition.width - PrefixLabelWidth, EditorGUIUtility.singleLineHeight);
             rowPosition.MoveToNextLine();
 
             EditorGUI.BeginProperty(foldoutRect, label, property);
@@ -381,17 +379,17 @@ namespace UnityEditor.Localization.UI
                 var openTableEditorPos = new Rect(tableSelectionPos.xMax, tableSelectionPos.y, k_OpenTableEditorButtonWidth, tableSelectionPos.height);
                 if (GUI.Button(openTableEditorPos, EditorIcons.TableWindow))
                 {
-                    LocalizationTablesWindow.ShowWindow(data.SelectedTableCollection);
+                    LocalizationTablesWindow.ShowWindow(data.tableReference.Reference, data.tableEntryReference.Reference);
                 }
             }
 
             rowPosition.y += rowPosition.height;
-            var buttonPos = new Rect(rowPosition.x + EditorGUIUtility.labelWidth, rowPosition.y, rowPosition.width - EditorGUIUtility.labelWidth, rowPosition.height);
+            var buttonPos = new Rect(rowPosition.x + PrefixLabelWidth, rowPosition.y, rowPosition.width - PrefixLabelWidth, rowPosition.height);
             if (selectedTableIndex == 0)
             {
                 if (GUI.Button(buttonPos, Styles.addTableCollection, EditorStyles.miniButton))
                 {
-                    LocalizationTablesWindow.ShowTableCreator();
+                    TableCreatorWindow.ShowWindow();
                 }
             }
             else

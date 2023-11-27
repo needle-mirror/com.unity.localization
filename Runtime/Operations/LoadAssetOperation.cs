@@ -12,6 +12,9 @@ namespace UnityEngine.Localization.Operations
         AsyncOperationHandle<TObject> m_LoadAssetOperation;
         bool m_AutoRelease;
 
+        public static readonly ObjectPool<LoadAssetOperation<TObject>> Pool = new ObjectPool<LoadAssetOperation<TObject>>(
+            () => new LoadAssetOperation<TObject>(), collectionCheck: false);
+
         public LoadAssetOperation()
         {
             m_AssetLoadedAction = AssetLoaded;
@@ -75,7 +78,7 @@ namespace UnityEngine.Localization.Operations
         {
             AddressablesInterface.ReleaseAndReset(ref m_LoadAssetOperation);
             base.Destroy();
-            GenericPool<LoadAssetOperation<TObject>>.Release(this);
+            Pool.Release(this);
         }
     }
 }

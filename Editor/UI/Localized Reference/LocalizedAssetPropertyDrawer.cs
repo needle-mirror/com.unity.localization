@@ -3,7 +3,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
-using Object = UnityEngine.Object;
 
 #if ENABLE_SEARCH
 using UnityEditor.Localization.Search;
@@ -96,10 +95,9 @@ namespace UnityEditor.Localization.UI
 
             var provider = new AssetTableSearchProvider(data.assetType);
             var context = UnityEditor.Search.SearchService.CreateContext(provider);
-            var picker = new LocalizedReferencePicker<AssetTableCollection>(context, "asset table entry", data, this);
+            var picker = new LocalizedReferencePicker<StringTableCollection>(context, "string table entry", data.tableReference.Property, data.tableEntryReference.Property);
             picker.Show();
         }
-
         #endif
 
         public override float GetPropertyHeight(Data data, SerializedProperty property, GUIContent label)

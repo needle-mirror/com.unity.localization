@@ -2,23 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.IMGUI.Controls;
+using UnityEditor.Localization.Bridge;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
 using UnityEngine.Pool;
-using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 using TreeView = UnityEditor.IMGUI.Controls.TreeView;
 
 namespace UnityEditor.Localization.UI
 {
-    interface ISelectable
-    {
-        bool Selected { get; set; }
-
-        VisualElement CreateEditor();
-    }
-
     abstract class GenericAssetTableListView<T1, T2> : TreeView, IDisposable
         where T1 : LocalizationTable
         where T2 : GenericAssetTableTreeViewItem<T1>, new()
@@ -26,43 +19,29 @@ namespace UnityEditor.Localization.UI
         const string k_DragId = "GenericAssetTableListViewDragging";
         const string k_CurrentPagePref = "Localization-CurrentPage";
         const string k_PageSizePref = "Localization-PageSize";
-        const string k_Search = "Localization-TablesView-Search";
         const int k_DefaultPageSize = 50;
         const int k_TableStartIndex = 2; // Key, Key Id and then tables
+        const int k_PageControlsHeight = 20;
+        const float k_RowFooterHeight = 22;
+        protected static readonly float k_RowVerticalPadding = EditorGUIUtility.standardVerticalSpacing * 2;
+        static readonly float k_RowFooterHeightWithPadding = k_RowFooterHeight + (k_RowVerticalPadding * 2);
+        const float k_RemoveButtonWidth = 27;
+        protected const float k_EntryMenuButtonWidth = 20;
 
-        static readonly GUIContent k_NewEntry = EditorGUIUtility.TrTextContent("Add New Entry");
+        static readonly GUIContent k_NewEntry = EditorGUIUtility.TrTextContent("New Entry");
+        static readonly GUIContent k_RemoveEntry = EditorGUIUtility.TrIconContent("Toolbar Minus");
         static readonly GUIContent k_PrevPage = new GUIContent(EditorGUIUtility.IconContent("Animation.PrevKey").image as Texture2D);
         static readonly GUIContent k_NextPage = new GUIContent(EditorGUIUtility.IconContent("Animation.NextKey").image as Texture2D);
         static readonly GUIContent k_FirstPage = new GUIContent(EditorGUIUtility.IconContent("Animation.FirstKey").image as Texture2D);
         static readonly GUIContent k_LastPage = new GUIContent(EditorGUIUtility.IconContent("Animation.LastKey").image as Texture2D);
         static readonly GUIContent k_PageSize = new GUIContent(EditorGUIUtility.TrTextContent("Page Size"));
+        static readonly GUIStyle k_SelectedStyle = "TV Selection";
 
         protected string TableCollectionName => TableCollection.TableCollectionName;
 
         public LocalizationTableCollection TableCollection { get; private set; }
 
-        public ISelectable Selected
-        {
-            get => m_Selected;
-            set
-            {
-                if (m_Selected != null)
-                    m_Selected.Selected = false;
-
-                // Toggle?
-                if (m_Selected == value)
-                    value = null;
-
-                m_Selected = value;
-
-                if (m_Selected != null)
-                {
-                    m_Selected.Selected = true;
-                }
-
-                SelectedForEditing?.Invoke(m_Selected);
-            }
-        }
+        protected virtual float MinRowHeight => 60;
 
         int PageSize
         {
@@ -106,12 +85,8 @@ namespace UnityEditor.Localization.UI
             }
         }
 
-        public delegate void SelectedDelegate(ISelectable selected);
-        public event SelectedDelegate SelectedForEditing;
-
         const int k_AddItemId = int.MaxValue;
 
-        ISelectable m_Selected;
         TreeViewItem m_AddKeyItem;
         SearchField m_SearchField;
 
@@ -132,7 +107,6 @@ namespace UnityEditor.Localization.UI
             TableCollection = tableCollection;
             m_SearchField = new SearchField();
             m_SearchField.downOrUpArrowKeyPressed += SetFocusAndEnsureSelectedItem;
-            searchString = SessionState.GetString(k_Search, string.Empty);
             Undo.undoRedoPerformed += UndoRedoPerformed;
             LocalizationEditorSettings.EditorEvents.TableEntryAdded += EditorEvents_TableEntryModified;
             LocalizationEditorSettings.EditorEvents.TableEntryRemoved += EditorEvents_TableEntryModified;
@@ -145,8 +119,7 @@ namespace UnityEditor.Localization.UI
 
             m_PageSize = EditorPrefs.GetInt(k_PageSizePref, k_DefaultPageSize);
             m_CurrentPage = EditorPrefs.GetInt(k_CurrentPagePref, 1);
-
-            rowHeight = EditorStyles.textArea.lineHeight;
+            cellMargin = 5;
         }
 
         ~GenericAssetTableListView()
@@ -220,24 +193,24 @@ namespace UnityEditor.Localization.UI
 
         protected override float GetCustomRowHeight(int row, TreeViewItem item)
         {
+            float height = k_RowFooterHeightWithPadding + k_RowVerticalPadding; // Plus top padding
+
             if (item is T2 i)
             {
                 // Height of key field
-                return EditorStyles.textArea.CalcSize(new GUIContent(i.Key)).y;
+                height += Math.Max(EditorStyles.textArea.CalcSize(new GUIContent(i.Key)).y, MinRowHeight);
             }
-            return base.GetCustomRowHeight(row, item);
+            else
+            {
+                height += base.GetCustomRowHeight(row, item);
+            }
+
+            return height;
         }
 
         protected virtual void UndoRedoPerformed()
         {
             RefreshCustomRowHeights();
-
-            if (TableCollection != null && Selected is TableEntrySelected entrySelected)
-            {
-                // If the selected entry was removed by an undo operation then deselect it.
-                if (!TableCollection.SharedData.Contains(entrySelected.KeyId))
-                    Selected = null;
-            }
         }
 
         public virtual void Initialize()
@@ -276,7 +249,7 @@ namespace UnityEditor.Localization.UI
                     var table = projectTables[matchingTableIdx];
                     m_SortedTables.Add(table);
                     projectTables.RemoveAt(matchingTableIdx);
-                    columns.Add(new TableColumn<T1>(TableCollection, table, locale));
+                    columns.Add(new TableColumn<T1>(TableCollection, table, locale) {  headerTextAlignment = TextAlignment.Left });
                 }
                 else
                 {
@@ -298,7 +271,6 @@ namespace UnityEditor.Localization.UI
             multiColumnHeader = new GenericAssetTableListViewMultiColumnHeader<T1, T2>(multiColState, this, TableCollection);
             multiColumnHeader.visibleColumnsChanged += (header) => RefreshCustomRowHeights();
             multiColumnHeader.ResizeToFit();
-
             ListPool<Locale>.Release(localesWithNoMatchingTable);
             ListPool<T1>.Release(projectTables);
         }
@@ -357,22 +329,6 @@ namespace UnityEditor.Localization.UI
             return root;
         }
 
-        protected virtual Rect DrawSearchField(Rect rect)
-        {
-            // Apply a small border around the search field
-            const float borderWidth = 2;
-            const float borderHeight = 1;
-            var searchRect = new Rect(rect.x + borderWidth, rect.y + borderHeight, rect.width - (2 * borderWidth), EditorGUIUtility.singleLineHeight);
-            EditorGUI.BeginChangeCheck();
-            searchString = m_SearchField.OnToolbarGUI(searchRect, searchString);
-            if (EditorGUI.EndChangeCheck())
-            {
-                SessionState.SetString(k_Search, searchString);
-            }
-            rect.yMin += EditorGUIUtility.singleLineHeight + (2 * borderHeight);
-            return rect;
-        }
-
         void DrawPageControls(Rect rect)
         {
             var buttonWidth = GUILayout.Width(30);
@@ -419,21 +375,61 @@ namespace UnityEditor.Localization.UI
 
         public override void OnGUI(Rect rect)
         {
-            rect = DrawSearchField(rect);
-
-            rect.yMax -= 20;
+            rect.yMax -= k_PageControlsHeight;
             base.OnGUI(rect);
 
             rect.y = rect.yMax;
-            rect.height = 20;
+            rect.height = k_PageControlsHeight;
             DrawPageControls(rect);
+        }
+
+        protected override void AfterRowsGUI()
+        {
+            base.AfterRowsGUI();
+
+            if (Event.current.rawType == EventType.Repaint)
+            {
+                Rect rect = Rect.zero;
+                for (int i = 0; i < multiColumnHeader.state.visibleColumns.Length; ++i)
+                {
+                    rect = multiColumnHeader.GetColumnRect(i);
+
+                    // Calculate height without the Add Key row.
+                    const float borderPadding = 2;
+
+                    rect.height = totalHeight - borderPadding - MultiColumnHeader.DefaultGUI.defaultHeight;
+
+                    if (CurrentPage == TotalPages)
+                    {
+                        // Remove lines from the New Key row
+                        rect.height -= k_RowFooterHeightWithPadding + rowHeight + 4;
+                    }
+
+                    rect.x += rect.width - 1;
+                    rect.width = 1;
+                    MultiColumnHeaderBridge.DrawDivider(rect);
+                }
+
+                // Bottom horizontal line
+                rect.x = 0;
+                rect.y = rect.yMax - 1;
+                rect.height = 1;
+                rect.width = multiColumnHeader.state.widthOfAllVisibleColumns;
+                MultiColumnHeaderBridge.DrawDivider(rect);
+            }
         }
 
         protected override void RowGUI(RowGUIArgs args)
         {
-            if (Event.current.rawType == EventType.Repaint && args.item.id != k_AddItemId && args.row % 2 == 0)
+            // We control the background drawing so we can limit how far the alternating rows are drawn. We dont want them drawn for empty rows.
+            if (Event.current.rawType == EventType.Repaint)
             {
-                DefaultStyles.backgroundEven.Draw(args.rowRect, m_TotalPagesLabel, false, false, false, false);
+                if (args.item.id == k_AddItemId) // Hide the selection rect for the add key row.
+                    DefaultStyles.backgroundEven.Draw(args.rowRect, false, false, false, false);
+                else if (args.selected)
+                    k_SelectedStyle.Draw(args.rowRect, false, false, false, false);
+                else if (args.row % 2 == 1)
+                    DefaultStyles.backgroundEven.Draw(args.rowRect, false, false, false, false);
             }
 
             for (int i = 0; i < args.GetNumVisibleColumns(); ++i)
@@ -451,20 +447,47 @@ namespace UnityEditor.Localization.UI
                 }
                 else
                 {
+                    cellRect.height -= k_RowFooterHeight + (k_RowVerticalPadding * 3);
+                    cellRect.y += k_RowVerticalPadding;
+
+                    var item = args.item as T2;
                     switch (col)
                     {
                         case KeyColumn _:
-                            DrawKeyField(cellRect, args.item as T2);
+                            // Apply cell margin as it is not applied to the first column.
+                            cellRect.x += cellMargin;
+                            cellRect.width -= 2f * cellMargin;
+
+                            DrawKeyField(cellRect, item);
+                            cellRect.MoveToNextLine();
+                            cellRect.height = k_RowFooterHeight;
+                            DrawKeyFieldFooter(cellRect, item);
+
                             break;
+
                         case KeyIdColumn _:
-                            DrawKeyIdField(cellRect, args.item as T2);
+                            DrawKeyIdField(cellRect, item);
                             break;
+
                         case TableColumn<T1> tc:
-                            DrawItemField(cellRect, colId, tc, args.item as T2);
+                            if (Event.current.rawType == EventType.Repaint && MetadataEditorWindow.IsSelectedForEditing(tc.Table, item.KeyId))
+                            {
+                                var unadjustedCellRect = args.GetCellRect(i);
+                                unadjustedCellRect.x -= cellMargin;
+                                unadjustedCellRect.width += (2f * cellMargin) - 1;
+                                EditorIcons.SelectionRect.Draw(unadjustedCellRect, string.Empty, false, false, false, false);
+                            }
+
+                            DrawItemField(cellRect, colId, tc, item);
+                            cellRect.MoveToNextLine();
+                            cellRect.height = k_RowFooterHeight;
+                            DrawItemFieldFooter(cellRect, colId, tc, item);
                             break;
+
                         case MissingTableColumn mtc:
                             DrawMissingTableField(cellRect, colId, mtc);
                             break;
+
                         default:
                             Debug.LogError($"Unexpected column type \"{col.GetType().Name}\"");
                             break;
@@ -502,11 +525,8 @@ namespace UnityEditor.Localization.UI
 
         protected virtual void DrawKeyField(Rect cellRect, T2 keyItem)
         {
-            var keyFieldRect = new Rect(cellRect.x, cellRect.y, cellRect.width - 20, cellRect.height);
-            var removeKeyButtonRect = new Rect(keyFieldRect.xMax, cellRect.y, 20, cellRect.height);
-
             EditorGUI.BeginChangeCheck();
-            var newKey = EditorGUI.TextArea(keyFieldRect, keyItem.Key);
+            var newKey = EditorGUI.TextArea(cellRect, keyItem.Key);
             if (EditorGUI.EndChangeCheck())
             {
                 if (TableCollection.SharedData.Contains(newKey))
@@ -521,12 +541,14 @@ namespace UnityEditor.Localization.UI
                     RefreshCustomRowHeights();
                 }
             }
+        }
 
-            if (GUI.Button(removeKeyButtonRect, "-"))
+        protected virtual void DrawKeyFieldFooter(Rect cellRect, T2 keyItem)
+        {
+            cellRect.x += cellRect.width - k_RemoveButtonWidth;
+            cellRect.width = k_RemoveButtonWidth;
+            if (GUI.Button(cellRect, k_RemoveEntry))
             {
-                // Remove any selections (LOC-296)
-                Selected = null;
-
                 var objects = new Object[TableCollection.Tables.Count + 1];
                 for (int i = 0; i < TableCollection.Tables.Count; ++i)
                 {
@@ -536,6 +558,9 @@ namespace UnityEditor.Localization.UI
                 Undo.RecordObjects(objects, "Remove key from collection");
                 keyItem.OnDeleteKey();
                 TableCollection.RemoveEntry(keyItem.KeyId);
+
+                if (MetadataEditorWindow.IsSelectedForEditing(keyItem.KeyId))
+                    MetadataEditorWindow.CloseWindow();
 
                 foreach (var o in objects)
                     EditorUtility.SetDirty(o);
@@ -549,11 +574,14 @@ namespace UnityEditor.Localization.UI
         /// </summary>
         protected virtual void DrawNewKeyField(Rect cellRect)
         {
-            if (GUI.Button(cellRect, k_NewEntry))
-            {
-                searchString = String.Empty;
-                SessionState.SetString(k_Search, searchString);
+            const float border = 3;
+            cellRect.yMin += border;
+            cellRect.height -= border;
+            cellRect.xMin += border;
+            cellRect.width -= border;
 
+            if (string.IsNullOrEmpty(searchString) && GUI.Button(cellRect, k_NewEntry))
+            {
                 AddNewKey();
                 var s = state;
                 s.scrollPos += new Vector2(0, 100);
@@ -579,6 +607,51 @@ namespace UnityEditor.Localization.UI
 
         protected abstract void DrawItemField(Rect cellRect, int colIdx, TableColumn<T1> col, T2 item);
 
+        protected virtual void DrawItemFieldFooter(Rect cellRect, int colIdx, TableColumn<T1> col, T2 item)
+        {
+            cellRect.y += k_RowVerticalPadding;
+            cellRect.x += cellRect.width - k_EntryMenuButtonWidth;
+            cellRect.width = k_EntryMenuButtonWidth;
+            cellRect.height = 27;
+
+            if (EditorGUI.DropdownButton(cellRect, GUIContent.none, FocusType.Passive, EditorStylesBridge.PaneOptions))
+            {
+                cellRect.height = EditorStylesBridge.PaneOptions.fixedHeight;
+
+                var menu = new GenericMenu();
+                PopulateEntryDropdown(menu, colIdx, col, item);
+                menu.DropDown(cellRect);
+            }
+        }
+
+        internal protected virtual void PopulateEntryDropdown(GenericMenu menu, int colIdx, TableColumn<T1> col, T2 item)
+        {
+            menu.AddItem(new GUIContent("See Metadata"), false, () =>
+            {
+                MetadataEditorWindow.ShowWindow(col.Table, item.KeyId);
+            });
+
+            // Add custom menu items
+            object[] args = { TableCollection, col.Table, item.KeyId, menu };
+            foreach (var t in TypeCache.GetMethodsWithAttribute<LocalizationEntryMenuAttribute>())
+            {
+                var parameters = t.GetParameters();
+                if (!t.IsStatic ||
+                    t.ReturnType != typeof(void) ||
+                    parameters.Length != 4 ||
+                    parameters[0].ParameterType != typeof(LocalizationTableCollection) ||
+                    parameters[1].ParameterType != typeof(LocalizationTable) ||
+                    parameters[2].ParameterType != typeof(long) ||
+                    parameters[3].ParameterType != typeof(GenericMenu))
+                {
+                    Debug.LogError($"{typeof(LocalizationEntryMenuAttribute).Name} method {t.Name} must have the following signature: static void {t.Name}(LocalizationTableCollection, LocalizationTable, long, GenericMenu)");
+                    continue;
+                }
+
+                t.Invoke(null, args);
+            }
+        }
+
         protected override bool CanStartDrag(CanStartDragArgs args) => true;
 
         protected override void SetupDragAndDrop(SetupDragAndDropArgs args)
@@ -589,7 +662,7 @@ namespace UnityEditor.Localization.UI
             {
                 DragAndDrop.PrepareStartDrag();
                 DragAndDrop.SetGenericData(k_DragId, draggedRows[0]);
-                DragAndDrop.objectReferences = new UnityEngine.Object[] {};   // this is required for dragging to work
+                DragAndDrop.objectReferences = new Object[] {};   // this is required for dragging to work
                 DragAndDrop.StartDrag("Move Key");
             }
         }

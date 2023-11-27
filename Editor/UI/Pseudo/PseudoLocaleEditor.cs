@@ -107,7 +107,7 @@ namespace UnityEditor.Localization.UI
                 if (string.IsNullOrEmpty(m_PseudoPreviewText))
                     UpdatePreviewText();
 
-                GUILayout.Label(m_PseudoPreviewText);
+                GUILayout.Label(m_PseudoPreviewText, EditorStyles.wordWrappedLabel);
 
                 GUILayout.EndVertical();
             }

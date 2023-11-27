@@ -42,6 +42,9 @@ namespace UnityEditor.Localization.UI
             return propertyData;
         }
 
+        const float k_PrefixPaddingRight = 2;
+        public static float PrefixLabelWidth => EditorGUIUtility.labelWidth + k_PrefixPaddingRight;
+
         public abstract TData CreatePropertyData(SerializedProperty property);
         public abstract void OnGUI(TData data, Rect position, SerializedProperty property, GUIContent label);
         public abstract float GetPropertyHeight(TData data, SerializedProperty property, GUIContent label);

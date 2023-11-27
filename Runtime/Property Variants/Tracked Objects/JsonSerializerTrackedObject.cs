@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.Localization.PropertyVariants.TrackedProperties;
 using UnityEngine.Localization.Pseudo;
+using UnityEngine.Localization.Settings;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
@@ -66,6 +67,9 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
             public JValue jsonValue;
             public readonly Action<AsyncOperationHandle<string>> callback;
 
+            public static readonly ObjectPool<DeferredJsonStringOperation> Pool = new ObjectPool<DeferredJsonStringOperation>(
+                () => new DeferredJsonStringOperation(), collectionCheck: false);
+
             public DeferredJsonStringOperation()
             {
                 callback = OnStringLoaded;
@@ -77,7 +81,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
 
                 // Clear
                 jsonValue = null;
-                GenericPool<DeferredJsonStringOperation>.Release(this);
+                Pool.Release(this);
             }
         }
 
@@ -86,6 +90,9 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
         {
             public JValue jsonValue;
             public readonly Action<AsyncOperationHandle<Object>> callback;
+
+            public static readonly ObjectPool<DeferredJsonObjectOperation> Pool = new ObjectPool<DeferredJsonObjectOperation>(
+                () => new DeferredJsonObjectOperation(), collectionCheck: false);
 
             public DeferredJsonObjectOperation()
             {
@@ -98,7 +105,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
 
                 // Clear
                 jsonValue = null;
-                GenericPool<DeferredJsonObjectOperation>.Release(this);
+                Pool.Release(this);
             }
         }
 
@@ -189,7 +196,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                             AddressablesInterface.Release(stringOp);
                         }
                         #if !UNITY_WEBGL // WebGL does not support WaitForCompletion
-                        else if (localizedStringProperty.LocalizedString.WaitForCompletion)
+                        else if (localizedStringProperty.LocalizedString.ForceSynchronous)
                         {
                             jsonProperty.Value = stringOp.WaitForCompletion();
                             AddressablesInterface.Release(stringOp);
@@ -197,7 +204,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                         #endif
                         else
                         {
-                            var asyncHandler = GenericPool<DeferredJsonStringOperation>.Get();
+                            var asyncHandler = DeferredJsonStringOperation.Pool.Get();
                             asyncHandler.jsonValue = jsonProperty;
                             stringOp.Completed += asyncHandler.callback;
                             asyncOperations.Add(stringOp);
@@ -223,7 +230,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                             
                         }
                         #if !UNITY_WEBGL // WebGL does not support WaitForCompletion
-                        else if (localizedAssetProperty.LocalizedObject.WaitForCompletion)
+                        else if (localizedAssetProperty.LocalizedObject.ForceSynchronous)
                         {
                             var result = assetOp.WaitForCompletion();
                             jsonProperty.Value = result != null ? result.GetInstanceID() : 0;
@@ -232,7 +239,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                         #endif
                         else
                         {
-                            var asyncHandler = GenericPool<DeferredJsonObjectOperation>.Get();
+                            var asyncHandler = DeferredJsonObjectOperation.Pool.Get();
                             asyncHandler.jsonValue = jsonProperty;
                             assetOp.Completed += asyncHandler.callback;
                             asyncOperations.Add(assetOp);

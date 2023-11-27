@@ -34,6 +34,14 @@ namespace UnityEngine.Localization
     /// This example shows how to use local variables to represent a health counter.
     /// <code source="../../DocCodeSamples.Tests/LocalizedStringSamples.cs" region="health-counter"/>
     /// </example>
+    /// <example>
+    /// This example shows how to bind to a UI Toolkit property. Note that this requires Unity 2023.2 and above.
+    /// <code source="../../DocCodeSamples.Tests/LocalizedStringUIDocumentExample.cs" region="example"/>
+    /// </example>
+    /// <example>
+    /// This example shows how to use local variables when you bind to a UI Toolkit property. Note that this requires Unity 2023.2 and above.
+    /// <code source="../../DocCodeSamples.Tests/LocalizedStringVariablesUIDocumentExample.cs" region="example"/>
+    /// </example>
     [Serializable]
     public partial class LocalizedString : LocalizedReference, IVariableGroup, IDictionary<string, IVariable>, IVariableValueChanged, IDisposable
     {
@@ -56,20 +64,7 @@ namespace UnityEngine.Localization
         /// <inheritdoc/>
         public event Action<IVariable> ValueChanged;
 
-        // Used to send temportary arguments including local variables and script variables
-        [DefaultMember("Item")]
-        class TempArgumentList : List<object>
-        {
-            public static TempArgumentList Get() => GenericPool<TempArgumentList>.Get();
-
-            void Release()
-            {
-                Clear();
-                GenericPool<TempArgumentList>.Release(this);
-            }
-
-            public void Release(AsyncOperationHandle _) => Release();
-        };
+        internal override bool ForceSynchronous => WaitForCompletion || LocalizationSettings.StringDatabase.AsynchronousBehaviour == AsynchronousBehaviour.ForceSynchronous;
 
         /// <summary>
         /// Arguments that will be passed through to Smart Format. These arguments are not serialized and will need to be set at runtime.
@@ -209,7 +204,7 @@ namespace UnityEngine.Localization
             if (!CurrentLoadingOperationHandle.IsDone)
             {
                 #if !UNITY_WEBGL
-                if (WaitForCompletion)
+                if (ForceSynchronous)
                 {
                     CurrentLoadingOperationHandle.WaitForCompletion();
                     return true;
@@ -716,11 +711,15 @@ namespace UnityEngine.Localization
             m_ChangeHandler.UnlockForChanges();
         }
 
-        void HandleLocaleChange(Locale _)
+        void HandleLocaleChange(Locale locale)
         {
             // Cancel any previous loading operations.
             ClearLoadingOperation();
             m_CurrentStringChangedValue = null;
+
+            #if MODULE_UITK && ENABLE_UITK_DATA_BINDING && UNITY_EDITOR
+            HandleLocaleChangeDataBinding(locale);
+            #endif
 
             #if UNITY_EDITOR
             m_CurrentTable = TableReference;
@@ -747,7 +746,7 @@ namespace UnityEngine.Localization
             if (!CurrentLoadingOperationHandle.IsDone)
             {
                 #if !UNITY_WEBGL
-                if (WaitForCompletion)
+                if (ForceSynchronous)
                 {
                     CurrentLoadingOperationHandle.WaitForCompletion();
                 }

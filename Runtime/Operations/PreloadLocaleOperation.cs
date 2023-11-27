@@ -42,6 +42,9 @@ namespace UnityEngine.Localization.Operations
 
         protected override string DebugName => $"Preload ({m_Locale}) {m_Database.GetType()}";
 
+        public static readonly ObjectPool<PreloadLocaleOperation<TTable, TEntry>> Pool = new ObjectPool<PreloadLocaleOperation<TTable, TEntry>>(
+            () => new PreloadLocaleOperation<TTable, TEntry>(), collectionCheck: false);
+
         public PreloadLocaleOperation()
         {
             m_LoadTablesAction = LoadTables;
@@ -205,7 +208,7 @@ namespace UnityEngine.Localization.Operations
         protected override void Destroy()
         {
             base.Destroy();
-            GenericPool<PreloadLocaleOperation<TTable, TEntry>>.Release(this);
+            Pool.Release(this);
         }
     }
 }

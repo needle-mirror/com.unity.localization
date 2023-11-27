@@ -1,8 +1,0 @@
-<UXML xmlns:ui="UnityEngine.UIElements">
-    <ui:TextField label="Table Name" name="table-name-field" binding-path="m_TableName"/>
-    <ui:VisualElement name="table-name-help-box-container"/>
-    <ui:VisualElement class="unity-box" style="flex-direction: row; flex-grow: 1; margin-left: 3px; margin-right: 3px; margin-top: 5px; margin-bottom: 3px;">
-        <ui:VisualElement name="table-contents-panel" style="flex-grow: 2; flex-shrink: 0;" />
-        <ui:ScrollView name="properties-panel" class="unity-box" style="flex-grow: 1; display: none;" />
-    </ui:VisualElement>
-</UXML>

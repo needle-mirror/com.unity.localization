@@ -110,6 +110,7 @@ namespace UnityEngine.Localization.Tables
         /// <summary>
         /// Provides support for overriding the localized asset for the Entry. Note this is only temporary and will not persist in the Editor or if the table is reloaded.
         /// This allows for a table to be updated in the player.
+        /// To remove the override, call <see cref="AssetTable.ReleaseAsset(AssetTableEntry)"/>.
         /// </summary>
         /// <typeparam name="T">The type to store the asset as locally.</typeparam>
         /// <param name="asset">The asset reference to use instead of <see cref="Address"/>.</param>
@@ -236,7 +237,7 @@ namespace UnityEngine.Localization.Tables
                 return emptyOperation;
             }
 
-            var subAssetOperation = GenericPool<LoadSubAssetOperation<TObject>>.Get();
+            var subAssetOperation = LoadSubAssetOperation<TObject>.Pool.Get();
             subAssetOperation.Init(entry.PreloadAsyncOperation, entry.Address, entry.IsSubAsset, entry.SubAssetName);
             var operation = ResourceManager.StartOperation(subAssetOperation, entry.PreloadAsyncOperation);
             entry.AsyncOperation = operation;

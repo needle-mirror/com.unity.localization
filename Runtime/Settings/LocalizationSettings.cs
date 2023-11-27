@@ -61,7 +61,7 @@ namespace UnityEngine.Localization.Settings
         Locale m_ProjectLocale;
         CallbackArray<Action<Locale>> m_SelectedLocaleChanged;
 
-        static LocalizationSettings s_Instance;
+        internal static LocalizationSettings s_Instance;
 
         /// <summary>
         /// Called when the <see cref="SelectedLocale"/> is changed.
@@ -247,7 +247,7 @@ namespace UnityEngine.Localization.Settings
             set => Instance.m_PreloadBehavior = value;
         }
 
-        void OnEnable()
+        internal virtual void OnEnable()
         {
             #if UNITY_EDITOR
             UnityEditor.EditorApplication.playModeStateChanged += EditorApplication_playModeStateChanged;
@@ -261,6 +261,15 @@ namespace UnityEngine.Localization.Settings
             if (s_Instance == null)
             {
                 s_Instance = this;
+
+                if (IsPlaying)
+                {
+                    var initOp = InitializationOperation;
+                    if (!initOp.IsValid())
+                    {
+                        Debug.Log("Failed to initialize LocalizationSettings.");
+                    }
+                }
             }
         }
 
@@ -302,7 +311,7 @@ namespace UnityEngine.Localization.Settings
         {
             if (!m_InitializingOperationHandle.IsValid())
             {
-                var operation = GenericPool<InitializationOperation>.Get();
+                var operation = Operations.InitializationOperation.Pool.Get();
                 operation.Init(this);
 
                 // We need to depend on InitializeAsync to workaround an issue (LOC-823)

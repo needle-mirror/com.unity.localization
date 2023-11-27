@@ -2,6 +2,7 @@
 
 using System;
 using UnityEngine.Localization.PropertyVariants.TrackedProperties;
+using UnityEngine.Localization.Settings;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
@@ -62,7 +63,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                     MeshOperationCompleted(m_CurrentOperation);
                 }
                 #if !UNITY_WEBGL // WebGL does not support WaitForCompletion
-                else if (localizedAssetProperty.LocalizedObject.WaitForCompletion)
+                else if (localizedAssetProperty.LocalizedObject.ForceSynchronous)
                 {
                     var result = m_CurrentOperation.WaitForCompletion();
                     MeshOperationCompleted(m_CurrentOperation);

@@ -1,9 +1,18 @@
-<UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="true">
     <uie:Toolbar style="flex-direction: row;">
-        <uie:ToolbarToggle text="New Table Collection" name="new-table-tab" />
-        <uie:ToolbarToggle text="Edit Table Collection" name="edit-table-tab" />
-        <uie:ToolbarSpacer style="flex-grow: 1;"/>
+        <uie:ToolbarButton text="+ New Table Collection" name="new-table-collection-btn" focusable="false" />
+        <uie:ToolbarSpacer style="flex-grow: 1;" />
+        <uie:ToolbarSearchField focusable="true" name="table-search" view-data-key="table-search-contents" placeholder-text="Search in table collection..." style="flex-grow: 1;" />
+        <uie:ToolbarMenu text="Import" name="import-btn" />
+        <uie:ToolbarMenu text="Export" name="export-btn" />
     </uie:Toolbar>
-    <UnityEditor.Localization.UI.TableCreator name="new-table-tab-panel" style="flex-grow: 1;"/>
-    <UnityEditor.Localization.UI.EditAssetTables name="edit-table-tab-panel" style="flex-grow: 1;"/>
-</UXML>
+    <ui:Foldout text="Current table" view-data-key="current-table-foldout" name="current-table">
+        <UnityEditor.Localization.UI.ProjectTablesPopup />
+        <ui:VisualElement name="table-details" style="flex-grow: 1;">
+            <ui:TextField picking-mode="Ignore" label="Name" name="collection-name" is-delayed="true" tooltip="The name of the table collection." style="align-items: stretch;" />
+            <ui:VisualElement name="table-name-help-box-container" />
+            <ui:Toggle label="Preload" name="preload-tables" tooltip="Should the table be preloaded during initialization?" />
+        </ui:VisualElement>
+    </ui:Foldout>
+    <ui:VisualElement name="table-contents" style="flex-grow: 1;" />
+</ui:UXML>

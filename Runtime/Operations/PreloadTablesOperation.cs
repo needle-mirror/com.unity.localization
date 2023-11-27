@@ -23,6 +23,9 @@ namespace UnityEngine.Localization.Operations
         IList<TableReference> m_TableReferences;
         Locale m_SelectedLocale;
 
+        public static readonly ObjectPool<PreloadTablesOperation<TTable, TEntry>> Pool = new ObjectPool<PreloadTablesOperation<TTable, TEntry>>(
+            () => new PreloadTablesOperation<TTable, TEntry>(), collectionCheck: false);
+
         public PreloadTablesOperation()
         {
             m_LoadTableContentsAction = a =>
@@ -122,7 +125,7 @@ namespace UnityEngine.Localization.Operations
             m_LoadTablesOperation.Clear();
             m_PreloadTablesOperations.Clear();
             m_TableReferences = null;
-            GenericPool<PreloadTablesOperation<TTable, TEntry>>.Release(this);
+            Pool.Release(this);
         }
     }
 }

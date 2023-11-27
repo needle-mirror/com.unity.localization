@@ -10,9 +10,12 @@ namespace UnityEditor.Localization.UI
     /// <summary>
     /// Displays all the asset tables for the project collated by type.
     /// </summary>
-    class ProjectTablesPopup : PopupField<LocalizationTableCollection>, IDisposable
+    #if UNITY_2023_3_OR_NEWER
+    [UxmlElement]
+    #endif
+    partial class ProjectTablesPopup : PopupField<LocalizationTableCollection>, IDisposable
     {
-        class NoTables : LocalizationTableCollection
+        internal class NoTables : LocalizationTableCollection
         {
             protected internal override Type TableType => null;
             protected internal override Type RequiredExtensionAttribute => null;
@@ -26,26 +29,31 @@ namespace UnityEditor.Localization.UI
         }
 
         const string k_EditorPrefValueKey = "Localization-SelectedAssetTable";
-        const string k_NoTablesMessage = "No Asset Tables Found. Please Create One";
+        const string k_NoTablesMessage = "No Tables Found. Please Create One";
 
-        public new class UxmlFactory : UxmlFactory<ProjectTablesPopup> {}
+        #if !UNITY_2023_3_OR_NEWER
+        internal new class UxmlFactory : UxmlFactory<ProjectTablesPopup> {}
+        #endif
 
         static readonly NoTables k_NoTables = NoTables.CreateInstance<NoTables>();
-        static List<LocalizationTableCollection> s_Tables;
+        static readonly List<LocalizationTableCollection> s_Tables = new List<LocalizationTableCollection>();
 
         public ProjectTablesPopup()
             : base(GetChoices(), GetDefaultIndex(), FormatSelectedLabel, FormatListLabel)
         {
-            label = "Selected Table Collection";
+            label = "Selected collection";
 
-            LocalizationEditorSettings.EditorEvents.CollectionAdded += OnCollectionAdded;
-            LocalizationEditorSettings.EditorEvents.CollectionRemoved += OnCollectionRemoved;
-            LocalizationEditorSettings.EditorEvents.CollectionModified += OnCollectionModified;
-        }
+            RegisterCallback<AttachToPanelEvent>(evt =>
+            {
+                LocalizationEditorSettings.EditorEvents.CollectionAdded += OnCollectionAdded;
+                LocalizationEditorSettings.EditorEvents.CollectionRemoved += OnCollectionRemoved;
+                LocalizationEditorSettings.EditorEvents.CollectionModified += OnCollectionModified;
+            });
 
-        ~ProjectTablesPopup()
-        {
-            ((IDisposable)this).Dispose();
+            RegisterCallback<DetachFromPanelEvent>(evt =>
+            {
+                ((IDisposable)this).Dispose();
+            });
         }
 
         void IDisposable.Dispose()
@@ -81,7 +89,7 @@ namespace UnityEditor.Localization.UI
         static int GetDefaultIndex()
         {
             var selection = EditorPrefs.GetString(k_EditorPrefValueKey, null);
-            if (!string.IsNullOrEmpty(selection))
+             if (!string.IsNullOrEmpty(selection))
             {
                 for (int i = 0; i < s_Tables.Count; ++i)
                 {
@@ -118,14 +126,16 @@ namespace UnityEditor.Localization.UI
             return atc is NoTables ? atc.ToString() : $"{atc.Group}/{atc.TableCollectionName}";
         }
 
-        static string FormatSelectedLabel(LocalizationTableCollection atc) => atc.ToString();
+        static string FormatSelectedLabel(LocalizationTableCollection atc)
+        {
+            if (atc != null)
+                return atc.ToString();
+            return k_NoTablesMessage;
+        }
 
         static List<LocalizationTableCollection> GetChoices()
         {
-            if (s_Tables == null)
-                s_Tables = new List<LocalizationTableCollection>();
             s_Tables.Clear();
-
             s_Tables.AddRange(LocalizationEditorSettings.Instance.TableCollectionCache.StringTableCollections);
             s_Tables.AddRange(LocalizationEditorSettings.Instance.TableCollectionCache.AssetTableCollections);
 

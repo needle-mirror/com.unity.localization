@@ -1,3 +1,8 @@
+#if UNITY_2022_1_OR_NEWER
+#define UNLOAD_BUNDLE_ASYNC
+using UnityEngine.ResourceManagement.ResourceProviders;
+#endif
+
 using System;
 using System.Collections.Generic;
 using UnityEngine.Localization.Settings;
@@ -11,6 +16,59 @@ namespace UnityEngine.Localization.Operations
     /// </summary>
     class InitializationOperation : WaitForCurrentOperationAsyncOperationBase<LocalizationSettings>
     {
+        #if UNLOAD_BUNDLE_ASYNC
+        // We need to wait for unloading to complete first to avoid any potential conflicts with unloading and loading the same bundle at the same time. (LOC-1021)
+        class UnloadBundlesOperation : AsyncOperationBase<object>
+        {
+            readonly Action<AsyncOperation> m_OperationCompleted;
+            readonly List<AsyncOperation> m_UnloadBundleOperations = new List<AsyncOperation>();
+
+            public UnloadBundlesOperation()
+            {
+                m_OperationCompleted = OnOperationCompleted;
+            }
+
+            protected override void Execute()
+            {
+                if (AssetBundleProvider.UnloadingAssetBundleCount == 0)
+                {
+                    Complete(null, true, null);
+                    return;
+                }
+
+                m_UnloadBundleOperations.Clear();
+                foreach (var operation in AssetBundleProvider.UnloadingBundles.Values)
+                {
+                    if (!operation.isDone)
+                    {
+                        m_UnloadBundleOperations.Add(operation);
+                        operation.completed += m_OperationCompleted;
+                    }
+                }
+            }
+
+            private void OnOperationCompleted(AsyncOperation obj)
+            {
+                m_UnloadBundleOperations.Remove(obj);
+                if (m_UnloadBundleOperations.Count == 0)
+                {
+                    Complete(null, true, null);
+                }
+            }
+
+            protected override bool InvokeWaitForCompletion()
+            {
+                AssetBundleProvider.WaitForAllUnloadingBundlesToComplete();
+                return true;
+            }
+
+            protected override void Destroy() => GenericPool<UnloadBundlesOperation>.Release(this);
+        }
+
+        AsyncOperationHandle m_UnloadBundlesOperationHandle;
+        readonly Action<AsyncOperationHandle> m_LoadLocales;
+        #endif
+
         readonly Action<AsyncOperationHandle<Locale>> m_PreloadTablesAction;
         readonly Action<AsyncOperationHandle> m_FinishInitializingAction;
 
@@ -33,10 +91,17 @@ namespace UnityEngine.Localization.Operations
 
         protected override string DebugName => "Localization Settings Initialization";
 
+        public static readonly ObjectPool<InitializationOperation> Pool = new ObjectPool<InitializationOperation>(
+            () => new InitializationOperation(), collectionCheck: false);
+
         public InitializationOperation()
         {
             m_PreloadTablesAction = a => PreloadTables();
             m_FinishInitializingAction = FinishInitializing;
+
+            #if UNLOAD_BUNDLE_ASYNC
+            m_LoadLocales = _ => LoadLocales();
+            #endif
         }
 
         public void Init(LocalizationSettings settings)
@@ -48,11 +113,26 @@ namespace UnityEngine.Localization.Operations
 
         protected override void Execute()
         {
+            #if UNLOAD_BUNDLE_ASYNC
+            var unloadBundlesOpeeration = GenericPool<UnloadBundlesOperation>.Get();
+            m_UnloadBundlesOperationHandle = AddressablesInterface.ResourceManager.StartOperation(unloadBundlesOpeeration, default);
+            if (!m_UnloadBundlesOperationHandle.IsDone)
+            {
+                CurrentOperation = m_UnloadBundlesOperationHandle;
+                m_UnloadBundlesOperationHandle.Completed += m_LoadLocales;
+                return;
+            }
+            #endif
+
             LoadLocales();
         }
 
         void LoadLocales()
         {
+            #if UNLOAD_BUNDLE_ASYNC
+            AddressablesInterface.SafeRelease(m_UnloadBundlesOperationHandle);
+            #endif
+
             var localeOp = m_Settings.GetSelectedLocaleAsync();
             if (!localeOp.IsDone)
             {
@@ -115,7 +195,7 @@ namespace UnityEngine.Localization.Operations
         protected override void Destroy()
         {
             base.Destroy();
-            GenericPool<InitializationOperation>.Release(this);
+            Pool.Release(this);
         }
     }
 }

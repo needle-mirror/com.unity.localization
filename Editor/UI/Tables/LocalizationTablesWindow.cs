@@ -1,7 +1,9 @@
-using System.Collections.Generic;
+using System;
 using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.Localization.Tables;
 using UnityEngine.UIElements;
+using TreeView = UnityEditor.IMGUI.Controls.TreeView;
 
 namespace UnityEditor.Localization.UI
 {
@@ -10,17 +12,36 @@ namespace UnityEditor.Localization.UI
     /// </summary>
     public class LocalizationTablesWindow : EditorWindow, IHasCustomMenu
     {
-        const string k_EditorPrefValueKey = "Localization-LocalizationTablesWindow-Selected-Tab";
         const string k_WindowTitle = "Localization Tables";
+        const string k_Search = "Localization-TablesView-Search";
+
+        internal static LocalizationTablesWindow s_Instance;
 
         static readonly Vector2 k_MinSize = new Vector2(900, 600);
-        List<ToolbarToggle> m_TabToggles;
-        List<VisualElement> m_TabPanels;
 
-        internal int SelectedTab
+        ToolbarMenu m_ImportMenu;
+        ToolbarMenu m_ExportMenu;
+        internal ProjectTablesPopup m_ProjectTablesPopup;
+        Foldout m_CurrentTableFoldout;
+        string m_CurrentTableFoldoutText;
+        VisualElement m_TableDetails;
+        internal TextField m_NameField;
+        Toggle m_PreloadTables;
+        VisualElement m_TableNameHelpBoxContainer;
+        VisualElement m_TableContents;
+        internal ToolbarSearchField m_ToolbarSearchField;
+        IMGUIContainer m_TableContentsImguiContainer;
+        internal TreeView m_TableView;
+        bool m_SelectionChanged;
+
+        LocalizationTableCollection SelectedCollection
         {
-            get => EditorPrefs.GetInt(k_EditorPrefValueKey, 0);
-            set => EditorPrefs.SetInt(k_EditorPrefValueKey, value);
+            get
+            {
+                if (m_ProjectTablesPopup.value is ProjectTablesPopup.NoTables)
+                    return null;
+                return m_ProjectTablesPopup.value;
+            }
         }
 
         /// <summary>
@@ -29,9 +50,9 @@ namespace UnityEditor.Localization.UI
         [MenuItem("Window/Asset Management/Localization Tables")]
         public static void ShowWindow()
         {
-            var window = GetWindow<LocalizationTablesWindow>(false, k_WindowTitle, true);
-            window.titleContent = EditorGUIUtility.TrTextContent("Localization Tables", EditorIcons.TableWindow);
-            window.Show();
+            s_Instance = GetWindow<LocalizationTablesWindow>(false, null, true);
+            s_Instance.titleContent = EditorGUIUtility.TrTextContent(k_WindowTitle, EditorIcons.TableWindow);
+            s_Instance.Show();
         }
 
         /// <summary>
@@ -40,10 +61,23 @@ namespace UnityEditor.Localization.UI
         /// <param name="selectedcollection"></param>
         public static void ShowWindow(LocalizationTableCollection selectedcollection)
         {
-            var window = GetWindow<LocalizationTablesWindow>(false, k_WindowTitle, true);
-            window.titleContent = EditorGUIUtility.TrTextContent("Localization Tables", EditorIcons.TableWindow);
-            window.Show();
-            window.EditCollection(selectedcollection);
+            s_Instance = GetWindow<LocalizationTablesWindow>(false, null, true);
+            s_Instance.titleContent = EditorGUIUtility.TrTextContent(k_WindowTitle, EditorIcons.TableWindow);
+            s_Instance.Show(true);
+            s_Instance.EditCollection(selectedcollection);
+        }
+
+        /// <summary>
+        /// Opens the window in the Editor and selects the table collection and entry for editing.
+        /// </summary>
+        /// <param name="tableEntryReference">The table to select for editing.</param>
+        /// <param name="tableReference">The entry to highlight for editing.</param>
+        public static void ShowWindow(TableReference tableReference, TableEntryReference tableEntryReference)
+        {
+            s_Instance = GetWindow<LocalizationTablesWindow>(false, null, true);
+            s_Instance.titleContent = EditorGUIUtility.TrTextContent(k_WindowTitle, EditorIcons.TableWindow);
+            s_Instance.Show();
+            s_Instance.EditCollection(tableReference, tableEntryReference);
         }
 
         /// <summary>
@@ -51,13 +85,7 @@ namespace UnityEditor.Localization.UI
         /// </summary>
         public static void ShowTableCreator()
         {
-            var window = GetWindow<LocalizationTablesWindow>(false, k_WindowTitle, true);
-            window.Show();
-            if (LocalizationEditorSettings.ActiveLocalizationSettings != null)
-            {
-                int idx = window.m_TabPanels.FindIndex(p => p is TableCreator);
-                window.m_TabToggles[idx].value = true;
-            }
+            ShowWindow();
         }
 
         /// <summary>
@@ -68,12 +96,31 @@ namespace UnityEditor.Localization.UI
         {
             if (LocalizationEditorSettings.ActiveLocalizationSettings == null)
                 return;
+            m_ProjectTablesPopup.value = selectedCollection;
+        }
 
-            int idx = m_TabPanels.FindIndex(p => p is EditAssetTables);
-            TabSelected(idx);
+        public void EditCollection(TableReference tableReference, TableEntryReference tableEntryReference)
+        {
+            if (LocalizationEditorSettings.ActiveLocalizationSettings == null)
+                return;
 
-            var panel = m_TabPanels[idx] as EditAssetTables;
-            panel.Select(selectedCollection);
+            var stc = LocalizationEditorSettings.GetStringTableCollection(tableReference);
+            var atc = LocalizationEditorSettings.GetAssetTableCollection(tableReference);
+
+            SharedTableData.SharedTableEntry entry = null;
+            LocalizationTableCollection collection = stc;
+            if (stc != null)
+            {
+                entry = stc.SharedData.GetEntryFromReference(tableEntryReference);
+            }
+            if (atc != null && entry == null)
+            {
+                collection = atc;
+                entry = atc.SharedData.GetEntryFromReference(tableEntryReference);
+            }
+
+            m_ProjectTablesPopup.value = collection;
+            m_ToolbarSearchField.value = entry != null ? entry.Id.ToString() : string.Empty;
         }
 
         void OnEnable()
@@ -104,38 +151,183 @@ namespace UnityEditor.Localization.UI
             }
         }
 
-        void Init()
+        void OnDisable()
         {
-            m_TabToggles = rootVisualElement.Query<ToolbarToggle>().ToList();
-            m_TabPanels = new List<VisualElement>();
-            for (int i = 0; i < m_TabToggles.Count; ++i)
-            {
-                var toggle = m_TabToggles[i];
-                var panelName = $"{toggle.name}-panel";
-                var panel = rootVisualElement.Q(panelName);
-                Debug.Assert(panel != null, $"Could not find panel \"{panelName}\"");
-                m_TabPanels.Add(panel);
-                panel.style.display = SelectedTab == i ? DisplayStyle.Flex : DisplayStyle.None;
-                toggle.value = SelectedTab == i;
-                int idx = i;
-                toggle.RegisterValueChangedCallback((chg) => TabSelected(idx));
-            }
-
-            Debug.Assert(m_TabPanels.Count == m_TabToggles.Count, "Expected the same number of tab toggle buttons and panels.");
+            s_Instance = null;
+            Undo.undoRedoPerformed -= UndoRedoPerformed;
+            MetadataEditorWindow.CloseWindow();
         }
 
-        void TabSelected(int idx)
+        void Init()
         {
-            if (SelectedTab == idx)
+            var root = rootVisualElement;
+
+            var newCollectionButton = root.Q<ToolbarButton>("new-table-collection-btn");
+
+            newCollectionButton.clickable.clicked += TableCreatorWindow.ShowWindow;
+
+            m_ImportMenu = rootVisualElement.Q<ToolbarMenu>("import-btn");
+            m_ExportMenu = rootVisualElement.Q<ToolbarMenu>("export-btn");
+
+            m_ProjectTablesPopup = root.Q<ProjectTablesPopup>();
+            m_ProjectTablesPopup.RegisterValueChangedCallback(_ => m_SelectionChanged = true);
+
+            m_CurrentTableFoldout = root.Q<Foldout>("current-table");
+            m_CurrentTableFoldoutText = m_CurrentTableFoldout.text;
+            UpdateCurrentTableFoldoutLabel();
+
+            m_TableDetails = root.Q("table-details");
+            m_NameField = root.Q<TextField>("collection-name");
+            m_NameField.RegisterValueChangedCallback(TableCollectionNameChanged);
+            m_TableNameHelpBoxContainer = root.Q("table-name-help-box-container");
+
+            m_PreloadTables = root.Q<Toggle>("preload-tables");
+            m_PreloadTables.RegisterValueChangedCallback(evt => SelectedCollection.SetPreloadTableFlag(evt.newValue, true));
+
+            m_ToolbarSearchField = root.Q<ToolbarSearchField>("table-search");
+            m_ToolbarSearchField.SetValueWithoutNotify(SessionState.GetString(k_Search, null));
+            m_ToolbarSearchField.RegisterValueChangedCallback(SearchChanged);
+
+            m_TableContents = root.Q("table-contents");
+            m_TableContentsImguiContainer = new IMGUIContainer(OnTableContentsIMGUI);
+            m_TableContents.Add(m_TableContentsImguiContainer);
+            m_TableContentsImguiContainer.StretchToParentSize();
+
+            m_SelectionChanged = true;
+
+            Undo.undoRedoPerformed += UndoRedoPerformed;
+        }
+
+        void UndoRedoPerformed()
+        {
+            SelectedCollection.RefreshAddressables();
+
+            var name = SelectedCollection.TableCollectionName;
+            m_NameField.SetValueWithoutNotify(name);
+            m_PreloadTables.SetValueWithoutNotify(SelectedCollection.IsPreloadTableFlagSet());
+            m_ProjectTablesPopup.RefreshLabels();
+            m_TableView?.Reload();
+            UpdateCurrentTableFoldoutLabel();
+        }
+
+        void SearchChanged(ChangeEvent<string> evt)
+        {
+            SessionState.SetString(k_Search, evt.newValue);
+
+            if (m_TableView != null)
+                m_TableView.searchString = evt.newValue;
+        }
+
+        void TableCollectionNameChanged(ChangeEvent<string> evt)
+        {
+            m_TableNameHelpBoxContainer.Clear();
+
+            if (SelectedCollection.TableCollectionName == evt.newValue)
                 return;
 
-            m_TabToggles[SelectedTab].SetValueWithoutNotify(false);
-            m_TabPanels[SelectedTab].style.display = DisplayStyle.None;
+            var tableNameError = LocalizationEditorSettings.Instance.IsTableNameValid(SelectedCollection.GetType(), evt.newValue);
+            if (tableNameError != null)
+            {
+                var helpbox = HelpBoxFactory.CreateDefaultHelpBox(tableNameError);
+                m_TableNameHelpBoxContainer.Add(helpbox);
+                return;
+            }
 
-            m_TabToggles[idx].SetValueWithoutNotify(true);
-            m_TabPanels[idx].style.display = DisplayStyle.Flex;
+            SelectedCollection.SetTableCollectionName(evt.newValue, true);
+            m_ProjectTablesPopup.RefreshLabels();
+            UpdateCurrentTableFoldoutLabel();
+        }
 
-            SelectedTab = idx;
+        void TableCollectionSelectionChanged()
+        {
+            MetadataEditorWindow.CloseWindow();
+
+            if (m_TableView is IDisposable disposable)
+                disposable.Dispose();
+            m_TableView = null;
+
+            UpdateCurrentTableFoldoutLabel();
+            UpdateImportExportMenuItems();
+
+            if (SelectedCollection == null)
+            {
+                m_TableDetails.style.display = DisplayStyle.None;
+                return;
+            }
+
+            m_TableDetails.style.display = DisplayStyle.Flex;
+            m_NameField.SetValueWithoutNotify(SelectedCollection.TableCollectionName);
+            m_PreloadTables.SetValueWithoutNotify(SelectedCollection.IsPreloadTableFlagSet());
+
+            if (SelectedCollection is StringTableCollection stringTableCollection)
+            {
+                var stringTableListView = new StringTableListView(stringTableCollection);
+                stringTableListView.Initialize();
+                m_TableView = stringTableListView;
+            }
+            else if (SelectedCollection is AssetTableCollection assetTableCollection)
+            {
+                var assetTableListView = new LocalizedAssetTableListView(assetTableCollection);
+                assetTableListView.Initialize();
+                m_TableView = assetTableListView;
+            }
+
+            m_TableView.searchString = m_ToolbarSearchField.value;
+        }
+
+        void UpdateCurrentTableFoldoutLabel()
+        {
+            var label = L10n.Tr(m_CurrentTableFoldoutText);
+            if (SelectedCollection != null)
+                label += $" ({SelectedCollection.TableCollectionName})";
+            m_CurrentTableFoldout.text = label;
+        }
+
+        void OnTableContentsIMGUI()
+        {
+            if (m_SelectionChanged)
+            {
+                // We need to do selection inside of the IMGUI container as it uses
+                // EditorStyles and they may not be initialized outside of the callback.
+                TableCollectionSelectionChanged();
+                m_SelectionChanged = false;
+            }
+
+            m_TableView?.OnGUI(m_TableContentsImguiContainer.layout);
+        }
+
+        internal void UpdateImportExportMenuItems()
+        {
+            PopulateMenuWithAttribute<LocalizationImportMenuAttribute>(m_ImportMenu);
+            PopulateMenuWithAttribute<LocalizationExportMenuAttribute>(m_ExportMenu);
+        }
+
+        void PopulateMenuWithAttribute<T>(ToolbarMenu toolbarMenu) where T : Attribute
+        {
+            toolbarMenu.menu.MenuItems().Clear();
+
+            #if UNITY_2023_2_OR_NEWER
+            toolbarMenu.menu.ClearHeaderItems();
+            #endif
+
+            object[] args = { SelectedCollection, toolbarMenu.menu };
+            foreach (var t in TypeCache.GetMethodsWithAttribute<T>())
+            {
+                var parameters = t.GetParameters();
+                if (!t.IsStatic ||
+                    t.ReturnType != typeof(void) ||
+                    parameters.Length != 2 ||
+                    parameters[0].ParameterType != typeof(LocalizationTableCollection) ||
+                    parameters[1].ParameterType != typeof(DropdownMenu))
+                {
+                    Debug.LogError($"{typeof(T).Name} method {t.Name} must have the following signature: static void {t.Name}(LocalizationTableCollection, DropdownMenu)");
+                    continue;
+                }
+
+                t.Invoke(null, args);
+            }
+
+            toolbarMenu.SetEnabled(toolbarMenu.menu.MenuItems().Count > 0);
         }
 
         /// <summary>
@@ -144,29 +336,7 @@ namespace UnityEditor.Localization.UI
         /// <param name="menu"></param>
         public void AddItemsToMenu(GenericMenu menu)
         {
-            menu.AddItem(EditorGUIUtility.TrTextContent("Import/XLIFF Directory..."), false, Plugins.XLIFF.MenuItems.ImportXliffDirectory);
-
-            if (LocalizationEditorSettings.ActiveLocalizationSettings == null)
-                return;
-
-            int idx = m_TabPanels.FindIndex(p => p is EditAssetTables);
-
-            var panel = m_TabPanels[idx] as EditAssetTables;
-            if (SelectedTab != idx)
-                return;
-
-            var selectedCollection = panel.SelectedCollection as StringTableCollection;
-            if (selectedCollection != null)
-            {
-                menu.AddItem(EditorGUIUtility.TrTextContent("Import/XLIFF into Collection..."), false, () => Plugins.XLIFF.MenuItems.ImportIntoCollection(new MenuCommand(selectedCollection)));
-                menu.AddItem(EditorGUIUtility.TrTextContent("Import/XLIFF..."), false, () => Plugins.XLIFF.MenuItems.ImportXliffFile());
-                menu.AddItem(EditorGUIUtility.TrTextContent("Import/CSV..."), false, () => Plugins.CSV.MenuItems.ImportCollection(new MenuCommand(selectedCollection)));
-                menu.AddItem(EditorGUIUtility.TrTextContent("Import/CSV(Merge)..."), false, () => Plugins.CSV.MenuItems.ImportCollectionMerge(new MenuCommand(selectedCollection)));
-                menu.AddItem(EditorGUIUtility.TrTextContent("Export/XLIFF..."), false, () => Plugins.XLIFF.MenuItems.ExportCollection(new MenuCommand(selectedCollection)));
-                menu.AddItem(EditorGUIUtility.TrTextContent("Export/CSV..."), false, () => Plugins.CSV.MenuItems.ExportCollection(new MenuCommand(selectedCollection)));
-                menu.AddItem(EditorGUIUtility.TrTextContent("Export/CSV(With Comments)..."), false, () => Plugins.CSV.MenuItems.ExportCollectionWithComments(new MenuCommand(selectedCollection)));
-                menu.AddItem(EditorGUIUtility.TrTextContent("Export/Character Set..."), false, () => ExportCharacterSetWindow.ShowWindow().SelectedTables.SetSelection(selectedCollection));
-            }
+            // Not used, however removing this API will require a major version increase.
         }
     }
 }

@@ -7,10 +7,9 @@ namespace UnityEditor.Localization.UI
 {
     class LocalizedAssetTableListView : GenericAssetTableListView<AssetTable, AssetTableTreeViewItem>
     {
-        protected static readonly Color k_SelectedColor = new Color(0.37f, 0.41f, 0.7f);
-        static readonly GUIContent k_MetadataIcon = EditorGUIUtility.TrTextContent(string.Empty, "Edit Table Entry Metadata", EditorIcons.Metadata);
-        const int k_MetadataLabelWidth = 20;
         const float k_ThumbnailPreviewHeight = 80;
+
+        protected override float MinRowHeight => 22;
 
         public LocalizedAssetTableListView(AssetTableCollection tableCollection) :
             base(tableCollection)
@@ -45,16 +44,6 @@ namespace UnityEditor.Localization.UI
 
         protected override void DrawItemField(Rect cellRect, int colIdx, TableColumn<AssetTable> col, AssetTableTreeViewItem item)
         {
-            var buttonColor = GUI.backgroundColor;
-            GUI.backgroundColor = item.IsTableEntrySelected(colIdx) ? k_SelectedColor : buttonColor;
-            cellRect.xMax -= k_MetadataLabelWidth;
-            var btnRect = new Rect(cellRect.xMax, cellRect.y, k_MetadataLabelWidth, cellRect.height);
-            if (GUI.Button(btnRect, k_MetadataIcon))
-            {
-                Selected = item.Select(colIdx, col.TableLocale);
-            }
-            GUI.backgroundColor = buttonColor;
-
             EditorGUI.BeginChangeCheck();
             var newAsset = EditorGUI.ObjectField(cellRect, item.GetTableAsset(colIdx), item.AssetType, false);
             if (EditorGUI.EndChangeCheck())

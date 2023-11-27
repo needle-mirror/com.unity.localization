@@ -20,6 +20,9 @@ namespace UnityEngine.Localization.Operations
 
         protected override string DebugName => $"Preload {m_Database.GetType()}";
 
+        public static readonly ObjectPool<PreloadDatabaseOperation<TTable, TEntry>> Pool = new ObjectPool<PreloadDatabaseOperation<TTable, TEntry>>(
+            () => new PreloadDatabaseOperation<TTable, TEntry>(), collectionCheck: false);
+
         public PreloadDatabaseOperation()
         {
             m_CompleteOperation = CompleteOperation;
@@ -90,7 +93,7 @@ namespace UnityEngine.Localization.Operations
 
         AsyncOperationHandle PreloadLocale(Locale locale)
         {
-            var operation = GenericPool<PreloadLocaleOperation<TTable, TEntry>>.Get();
+            var operation = PreloadLocaleOperation<TTable, TEntry>.Pool.Get();
             operation.Init(m_Database, locale);
             return AddressablesInterface.ResourceManager.StartOperation(operation, default);
         }
@@ -135,7 +138,7 @@ namespace UnityEngine.Localization.Operations
         protected override void Destroy()
         {
             base.Destroy();
-            GenericPool<PreloadDatabaseOperation<TTable, TEntry>>.Release(this);
+            Pool.Release(this);
         }
     }
 }

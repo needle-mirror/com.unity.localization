@@ -16,8 +16,6 @@ namespace UnityEditor.Localization.UI
 
         public long KeyId => SharedEntry.Id;
 
-        public bool Selected { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
-
         /// <summary>
         /// Called during the setup of the tree view.
         /// </summary>

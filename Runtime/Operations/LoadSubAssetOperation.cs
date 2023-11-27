@@ -14,6 +14,9 @@ namespace UnityEngine.Localization.Operations
         bool m_IsSubAsset;
         string m_SubAssetName;
 
+        public static readonly ObjectPool<LoadSubAssetOperation<TObject>> Pool = new ObjectPool<LoadSubAssetOperation<TObject>>(
+            () => new LoadSubAssetOperation<TObject>(), collectionCheck: false);
+
         public LoadSubAssetOperation()
         {
             m_AssetLoadedAction = AssetLoaded;
@@ -82,7 +85,7 @@ namespace UnityEngine.Localization.Operations
             AddressablesInterface.ReleaseAndReset(ref m_AssetOperation);
 
             base.Destroy();
-            GenericPool<LoadSubAssetOperation<TObject>>.Release(this);
+            Pool.Release(this);
         }
     }
 }

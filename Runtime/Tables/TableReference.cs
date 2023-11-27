@@ -263,9 +263,13 @@ namespace UnityEngine.Localization.Tables
             if (s_StringToGuidCache.TryGetValue(value, out var result))
                 return result;
 
-            var guid = Guid.Parse(value.Substring(k_GuidTag.Length, value.Length - k_GuidTag.Length));
-            s_StringToGuidCache[value] = guid;
-            return guid;
+            if (Guid.TryParse(value.Substring(k_GuidTag.Length, value.Length - k_GuidTag.Length), out var guid))
+            {
+                s_StringToGuidCache[value] = guid;
+                return guid;
+            }
+
+            return Guid.Empty;
         }
 
         /// <summary>
@@ -305,7 +309,7 @@ namespace UnityEngine.Localization.Tables
         {
             if (string.IsNullOrEmpty(value))
                 return false;
-            return value.StartsWith(k_GuidTag, StringComparison.Ordinal);
+            return value.StartsWith(k_GuidTag, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -329,7 +333,6 @@ namespace UnityEngine.Localization.Tables
             {
                 TableCollectionNameGuid = GuidFromString(m_TableCollectionName);
                 ReferenceType = Type.Guid;
-                m_TableCollectionName = null; // Clear the name.
             }
             else
             {

@@ -1,7 +1,7 @@
 {
   "name": "com.unity.localization",
   "displayName": "Localization",
-  "version": "1.4.5",
+  "version": "1.5.0-pre.2",
   "unity": "2019.4",
   "description": "Use the Localization package to easily configure localization settings for your application.\n\nAdd support for multiple languages and regional variants, including:\n\n• String localization: Set different strings to display based on locale. Use the Smart Strings feature to add logic to automatically replace specific strings, such as placeholders and plurals.\n• Asset localization: Use a different asset (such as a texture, model, or audio file) based on a locale.\n• Pseudo-localization: Test how your project will adapt to different localizations at an early stage, before adding your translations.\n• Import and export localization data to XLIFF, CSV and Google Sheets.\n\nAdd localization to your projects using the Localization package to help make your applications more accessible to a wider audience.",
   "keywords": [
@@ -10,23 +10,23 @@
     "language"
   ],
   "dependencies": {
-    "com.unity.addressables": "1.21.8",
+    "com.unity.addressables": "1.21.9",
     "com.unity.nuget.newtonsoft-json": "3.0.2"
   },
   "relatedPackages": {
-    "com.unity.localization.tests": "1.4.5"
+    "com.unity.localization.tests": "1.5.0-pre.2"
   },
   "_upm": {
-    "changelog": "### Fixed\n\n- Added handling of null `StringReference`/`AssetReference` reference to `LocalizedAssetBehaviour` and `LocalizedStringEvent`. ([LOC-945](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-942))\n- Fixed \"Objects are trying to be loaded during a domain backup\" error occurring on empty `TableReferences` during serialization. ([LOC-969](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-969))\n- Fixed `StringTableEntry.IsSmart` from not detecting if the entry was marked smart when its local `SmartFormatTag` metadata was missing but it was still registered in the `SmartFormatTag`. ([LOC-966](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-966))\n- Fixed an issue that would cause sprites/textures to flicker when the locale was changed. This was due to us unloading the previous locale's assets before the new ones were available. The `LocalizedAsset` now holds onto the asset handle until its new one has finished loading. ([LOC-976](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-976))\n- Fixed compilation errors when using Addressables 2.0.0.\n- Fixed Create Table window controls being hidden when a large number of locales were in the project,. (LOC-913)"
+    "changelog": "### Fixed\n\n- Added back in removed API for `ProjectLocalePopupField` and `LocalizationTablesWindow` to avoid making breaking changes to API."
   },
   "upmCi": {
-    "footprint": "a14f948ac13b38e788b9cf0d3206a42635ebf0e1"
+    "footprint": "b0ed6b98d3c48076d01ad23b81b8b44ae4a0a565"
   },
-  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.localization@1.4/manual/index.html",
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.localization@1.5/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.localization.git",
     "type": "git",
-    "revision": "a4890be557c52504bb1c494b8b425c4c4efb61ad"
+    "revision": "23bbb87f280166f5e6fbff138ce10adef7622738"
   },
   "samples": [
     {

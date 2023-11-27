@@ -61,7 +61,7 @@ namespace UnityEngine.Localization.Pseudo
         /// <inheritdoc cref="Message.CreateTextFragment(string, int, int)"/>
         public WritableMessageFragment CreateTextFragment(int start, int end)
         {
-            var frag = GenericPool<WritableMessageFragment>.Get();
+            var frag = WritableMessageFragment.Pool.Get();
             var startIndex = m_StartIndex == -1 ? start : m_StartIndex + start;
             var endIndex = m_StartIndex == -1 ? end : m_StartIndex + end;
             frag.Initialize(@Message, m_OriginalString, startIndex, endIndex);
@@ -71,7 +71,7 @@ namespace UnityEngine.Localization.Pseudo
         /// <inheritdoc cref="Message.CreateReadonlyTextFragment(string, int, int)"/>
         public ReadOnlyMessageFragment CreateReadonlyTextFragment(int start, int end)
         {
-            var frag = GenericPool<ReadOnlyMessageFragment>.Get();
+            var frag = ReadOnlyMessageFragment.Pool.Get();
             var startIndex = m_StartIndex == -1 ? start : m_StartIndex + start;
             var endIndex = m_StartIndex == -1 ? end : m_StartIndex + end;
             frag.Initialize(@Message, m_OriginalString, startIndex, endIndex);
@@ -114,6 +114,9 @@ namespace UnityEngine.Localization.Pseudo
     [DebuggerDisplay("Writable: {Text}")]
     public class WritableMessageFragment : MessageFragment
     {
+        internal static readonly ObjectPool<WritableMessageFragment> Pool = new ObjectPool<WritableMessageFragment>(
+            () => new WritableMessageFragment(), collectionCheck: false);
+
         /// <summary>
         /// The text contained in this fragment.
         /// </summary>
@@ -130,6 +133,9 @@ namespace UnityEngine.Localization.Pseudo
     [DebuggerDisplay("ReadOnly: {Text}")]
     public class ReadOnlyMessageFragment : MessageFragment
     {
+        internal static readonly ObjectPool<ReadOnlyMessageFragment> Pool = new ObjectPool<ReadOnlyMessageFragment>(
+            () => new ReadOnlyMessageFragment(), collectionCheck: false);
+
         /// <summary>
         /// The text contained in this fragment.
         /// </summary>
@@ -142,6 +148,9 @@ namespace UnityEngine.Localization.Pseudo
     /// </summary>
     public class Message
     {
+        internal static readonly ObjectPool<Message> Pool = new ObjectPool<Message>(
+            () => new Message(), collectionCheck: false);
+
         /// <summary>
         /// The original text before it was broken into fragments.
         /// </summary>
@@ -178,7 +187,7 @@ namespace UnityEngine.Localization.Pseudo
         /// <returns>A new fragment.</returns>
         public WritableMessageFragment CreateTextFragment(string original, int start, int end)
         {
-            var frag = GenericPool<WritableMessageFragment>.Get();
+            var frag = WritableMessageFragment.Pool.Get();
             frag.Initialize(this, original, start, end);
             return frag;
         }
@@ -192,7 +201,7 @@ namespace UnityEngine.Localization.Pseudo
         /// <returns>A new fragment.</returns>
         public WritableMessageFragment CreateTextFragment(string original)
         {
-            var frag = GenericPool<WritableMessageFragment>.Get();
+            var frag = WritableMessageFragment.Pool.Get();
             frag.Initialize(this, original);
             return frag;
         }
@@ -209,7 +218,7 @@ namespace UnityEngine.Localization.Pseudo
         /// <returns>A new fragment.</returns>
         public ReadOnlyMessageFragment CreateReadonlyTextFragment(string original, int start, int end)
         {
-            var frag = GenericPool<ReadOnlyMessageFragment>.Get();
+            var frag = ReadOnlyMessageFragment.Pool.Get();
             frag.Initialize(this, original, start, end);
             return frag;
         }
@@ -223,7 +232,7 @@ namespace UnityEngine.Localization.Pseudo
         /// <returns>A new fragment.</returns>
         public ReadOnlyMessageFragment CreateReadonlyTextFragment(string original)
         {
-            var frag = GenericPool<ReadOnlyMessageFragment>.Get();
+            var frag = ReadOnlyMessageFragment.Pool.Get();
             frag.Initialize(this, original);
             return frag;
         }
@@ -250,9 +259,9 @@ namespace UnityEngine.Localization.Pseudo
         public void ReleaseFragment(MessageFragment fragment)
         {
             if (fragment is WritableMessageFragment wmf)
-                GenericPool<WritableMessageFragment>.Release(wmf);
+                WritableMessageFragment.Pool.Release(wmf);
             else if (fragment is ReadOnlyMessageFragment romf)
-                GenericPool<ReadOnlyMessageFragment>.Release(romf);
+                ReadOnlyMessageFragment.Pool.Release(romf);
         }
 
         /// <summary>
@@ -262,7 +271,7 @@ namespace UnityEngine.Localization.Pseudo
         /// <returns>A new Message instance.</returns>
         internal static Message CreateMessage(string text)
         {
-            var message = GenericPool<Message>.Get();
+            var message = Pool.Get();
             message.Fragments.Add(message.CreateTextFragment(text));
             message.Original = text;
             return message;
@@ -276,7 +285,7 @@ namespace UnityEngine.Localization.Pseudo
             }
             Fragments.Clear();
 
-            GenericPool<Message>.Release(this);
+            Pool.Release(this);
         }
 
         public override string ToString()

@@ -9,6 +9,9 @@ namespace UnityEngine.Localization.Operations
     /// </summary>
     class LocalizationGroupOperation : ResourceManagement.AsyncOperations.GroupOperation
     {
+        public static readonly ObjectPool<LocalizationGroupOperation> Pool = new ObjectPool<LocalizationGroupOperation>(
+            () => new LocalizationGroupOperation(), collectionCheck: false);
+
         protected override bool InvokeWaitForCompletion()
         {
             //If Result is null then we've auto released and need to return
@@ -32,7 +35,7 @@ namespace UnityEngine.Localization.Operations
 
         protected override void Destroy()
         {
-            GenericPool<LocalizationGroupOperation>.Release(this);
+            Pool.Release(this);
             base.Destroy();
         }
     }

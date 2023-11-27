@@ -8,6 +8,10 @@ namespace UnityEditor.Localization.UI
     class StringTableListView : GenericAssetTableListView<StringTable, StringTableTreeViewItem>
     {
         protected static readonly Color k_SelectedColor = new Color(0.37f, 0.41f, 0.7f);
+        static readonly GUIContent k_WordWrap = EditorGUIUtility.TrTextContent("Wordwrap");
+        static readonly GUIContent k_SmartStringIcon = EditorGUIUtility.TrTextContent("{S}", "Smart Formatting enabled");
+
+        const float k_SmartStringIconWidth = 20;
 
         public StringTableListView(LocalizationTableCollection tableCollection) :
             base(tableCollection)
@@ -36,11 +40,7 @@ namespace UnityEditor.Localization.UI
             {
                 foreach (var colIdx in visibleColumns)
                 {
-                    var editor = stringTableItem.GetSmartFormatEditor(colIdx);
-                    if (editor != null)
-                    {
-                        maxHeight = Mathf.Max(maxHeight, editor.Height);
-                    }
+                    maxHeight = Mathf.Max(maxHeight, stringTableItem.GetHeight(colIdx));
                 }
             }
             return maxHeight;
@@ -50,6 +50,45 @@ namespace UnityEditor.Localization.UI
         {
             if (item.Draw(colIdx, cellRect, this))
                 RefreshCustomRowHeights();
+        }
+
+        protected override void DrawItemFieldFooter(Rect cellRect, int colIdx, TableColumn<StringTable> col, StringTableTreeViewItem item)
+        {
+            base.DrawItemFieldFooter(cellRect, colIdx, col, item);
+
+            // Smart string icon
+            if (item.IsSmart(colIdx))
+            {
+                cellRect.y += k_RowVerticalPadding - 1;
+                cellRect.x += cellRect.width - k_EntryMenuButtonWidth - k_SmartStringIconWidth;
+                cellRect.width = k_SmartStringIconWidth;
+                cellRect.height = 16;
+                GUI.Label(cellRect, k_SmartStringIcon);
+            }
+        }
+
+        internal protected override void PopulateEntryDropdown(GenericMenu menu, int colIdx, TableColumn<StringTable> col, StringTableTreeViewItem item)
+        {
+            base.PopulateEntryDropdown(menu, colIdx, col, item);
+
+            menu.AddItem(k_WordWrap, StringTableTreeViewItem.WordWrap, () =>
+            {
+                StringTableTreeViewItem.WordWrap = !StringTableTreeViewItem.WordWrap;
+            });
+
+            var isSmartCol = item.IsSmart(colIdx);
+            menu.AddItem(new GUIContent($"Smart String ({col.TableLocale})"), isSmartCol, () =>
+            {
+                item.SetSmart(colIdx, !isSmartCol);
+            });
+
+            var isSmartAll = item.AreAllSmart();
+            menu.AddItem(new GUIContent("Smart String (All)"), isSmartAll, () =>
+            {
+                item.SetSmartAll(!isSmartAll);
+            });
+
+            RefreshCustomRowHeights();
         }
     }
 }

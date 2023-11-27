@@ -65,7 +65,7 @@ namespace UnityEngine.Localization
                 Acquire(op);
             }
 
-            var go = GenericPool<LocalizationGroupOperation>.Get();
+            var go = LocalizationGroupOperation.Pool.Get();
             go.Init(asyncOperations);
             return ResourceManager.StartOperation(go, default);
         }

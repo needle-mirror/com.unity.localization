@@ -6,6 +6,7 @@ using UnityEditor.Localization.Reporting;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Localization.Tables;
+using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.Plugins.CSV
 {
@@ -21,6 +22,26 @@ namespace UnityEditor.Localization.Plugins.CSV
                 return Path.GetDirectoryName(file);
             }
             set => EditorPrefs.SetString(k_PrefFile, value);
+        }
+
+        [LocalizationImportMenu]
+        public static void PopulateImportMenu(LocalizationTableCollection collection, DropdownMenu menu)
+        {
+            if (collection is StringTableCollection)
+            {
+                menu.AppendAction(L10n.Tr("CSV..."), _ => ImportCollection(new MenuCommand(collection)));
+                menu.AppendAction(L10n.Tr("CSV(Merge)..."), _ => ImportCollectionMerge(new MenuCommand(collection)));
+            }
+        }
+
+        [LocalizationExportMenu]
+        public static void PopulateExportMenu(LocalizationTableCollection collection, DropdownMenu menu)
+        {
+            if (collection is StringTableCollection)
+            {
+                menu.AppendAction(L10n.Tr("CSV..."), _ => ExportCollection(new MenuCommand(collection)));
+                menu.AppendAction(L10n.Tr("CSV(With Comments)..."), _ => ExportCollectionWithComments(new MenuCommand(collection)));
+            }
         }
 
         [MenuItem("CONTEXT/StringTableCollection/Export/CSV...")]

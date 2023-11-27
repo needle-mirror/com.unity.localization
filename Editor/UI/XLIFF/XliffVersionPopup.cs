@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor.Localization.Plugins.XLIFF;
 using UnityEditor.UIElements;
@@ -8,8 +9,14 @@ namespace UnityEditor.Localization.UI
     /// <summary>
     /// Provides a field for selecting an XLIFF version.
     /// </summary>
-    public class XliffVersionPopup : PopupField<XliffVersion>
+    #if UNITY_2023_3_OR_NEWER
+    [UxmlElement]
+    #endif
+    public partial class XliffVersionPopup : PopupField<XliffVersion>
     {
+        #if UNITY_2023_3_OR_NEWER
+        [Obsolete("UxmlFactory is deprecated and will be removed. Use UxmlElementAttribute instead.", false)]
+        #endif
         public new class UxmlFactory : UxmlFactory<XliffVersionPopup> {}
 
         /// <summary>

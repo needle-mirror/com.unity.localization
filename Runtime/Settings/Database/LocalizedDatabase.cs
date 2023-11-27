@@ -47,6 +47,22 @@ namespace UnityEngine.Localization.Settings
     }
 
     /// <summary>
+    /// Options for how to handle asynchronous operations.
+    /// </summary>
+    public enum AsynchronousBehaviour
+    {
+        /// <summary>
+        /// Use the default behavior specified in the <see cref="LocalizedReference"/>.
+        /// </summary>
+        Default,
+
+        /// <summary>
+        /// Forces the operation to complete synchronously.
+        /// </summary>
+        ForceSynchronous
+    }
+
+    /// <summary>
     /// Can be assigned to <see cref="LocalizedDatabase{TTable, TEntry}.TableProvider"/> to override the default table loading through Addressables in order to provide a custom table.
     /// </summary>
     /// <example>
@@ -135,7 +151,7 @@ namespace UnityEngine.Localization.Settings
 
                 if (!m_PreloadOperationHandle.IsValid())
                 {
-                    var operation = GenericPool<PreloadDatabaseOperation<TTable, TEntry>>.Get();
+                    var operation = PreloadDatabaseOperation<TTable, TEntry>.Pool.Get();
                     operation.Init(this);
                     m_PreloadOperationHandle = AddressablesInterface.ResourceManager.StartOperation(operation, default);
                 }
@@ -146,6 +162,7 @@ namespace UnityEngine.Localization.Settings
         [SerializeField] TableReference m_DefaultTableReference;
         [SerializeReference] ITableProvider m_CustomTableProvider;
         [SerializeReference] ITablePostprocessor m_CustomTablePostprocessor;
+        [SerializeField] AsynchronousBehaviour m_AsynchronousBehaviour;
         [SerializeField] bool m_UseFallback;
 
         internal AsyncOperationHandle m_PreloadOperationHandle;
@@ -218,6 +235,15 @@ namespace UnityEngine.Localization.Settings
         {
             get => m_UseFallback;
             set => m_UseFallback = value;
+        }
+
+        /// <summary>
+        /// Options for how to handle asyncronous operations.
+        /// </summary>
+        public AsynchronousBehaviour AsynchronousBehaviour
+        {
+            get => m_AsynchronousBehaviour;
+            set => m_AsynchronousBehaviour = value;
         }
 
         /// <summary>
@@ -596,7 +622,7 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         public virtual AsyncOperationHandle<IList<TTable>> GetAllTables(Locale locale = null)
         {
-            var operation = GenericPool<LoadAllTablesOperation<TTable, TEntry>>.Get();
+            var operation = LoadAllTablesOperation<TTable, TEntry>.Pool.Get();
             operation.Init(this, locale);
             operation.Dependency = LocalizationSettings.InitializationOperation;
             var handle = AddressablesInterface.ResourceManager.StartOperation(operation, LocalizationSettings.InitializationOperation);
@@ -623,8 +649,8 @@ namespace UnityEngine.Localization.Settings
                 return false;
         }
 
-        internal virtual LoadTableOperation<TTable, TEntry> CreateLoadTableOperation() => GenericPool<LoadTableOperation<TTable, TEntry>>.Get();
-        internal virtual PreloadTablesOperation<TTable, TEntry> CreatePreloadTablesOperation() => GenericPool<PreloadTablesOperation<TTable, TEntry>>.Get();
+        internal virtual LoadTableOperation<TTable, TEntry> CreateLoadTableOperation() => LoadTableOperation<TTable, TEntry>.Pool.Get();
+        internal virtual PreloadTablesOperation<TTable, TEntry> CreatePreloadTablesOperation() => PreloadTablesOperation<TTable, TEntry>.Pool.Get();
 
         /// <summary>
         /// Returns the entry from the requested table. A table entry will contain the localized item and metadata.
@@ -651,7 +677,7 @@ namespace UnityEngine.Localization.Settings
         public virtual AsyncOperationHandle<TableEntryResult> GetTableEntryAsync(TableReference tableReference, TableEntryReference tableEntryReference, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings)
         {
             var loadTableOperation = GetTableAsync(tableReference, locale);
-            var getTableEntryOperation = GenericPool<GetTableEntryOperation<TTable, TEntry>>.Get();
+            var getTableEntryOperation = GetTableEntryOperation<TTable, TEntry>.Pool.Get();
             var useFallback = fallbackBehavior != FallbackBehavior.UseProjectSettings ? fallbackBehavior == FallbackBehavior.UseFallback : UseFallback;
 
             getTableEntryOperation.Init(this, loadTableOperation, tableReference, tableEntryReference, locale, useFallback, true);

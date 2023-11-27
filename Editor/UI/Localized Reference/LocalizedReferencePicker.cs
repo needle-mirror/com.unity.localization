@@ -9,22 +9,21 @@ namespace UnityEditor.Localization.UI
     class LocalizedReferencePicker<TCollection> where TCollection : LocalizationTableCollection
     {
         readonly SearchContext m_SearchContext;
-        readonly SerializedObject m_SerializedObject;
-        readonly LocalizedReferencePropertyDrawer<TCollection> m_PropertyDrawer;
         readonly string m_Title;
-        readonly string m_PropertyPath;
         readonly int m_UndoGroup;
 
         ISearchView m_View;
         bool m_Revert = true;
 
-        public LocalizedReferencePicker(SearchContext context, string title, LocalizedReferencePropertyDrawer<TCollection>.Data data, LocalizedReferencePropertyDrawer<TCollection> drawer)
+        SerializedTableReference m_Table;
+        SerializedTableEntryReference m_Entry;
+
+        public LocalizedReferencePicker(SearchContext context, string title, SerializedProperty tableProperty, SerializedProperty entryProperty)
         {
-            m_SerializedObject = data.serializedObject;
-            m_PropertyPath = data.rootProperty.propertyPath;
-            m_PropertyDrawer = drawer;
             m_SearchContext = context;
             m_Title = title;
+            m_Table = new SerializedTableReference(tableProperty);
+            m_Entry = new SerializedTableEntryReference(entryProperty);
 
             Undo.IncrementCurrentGroup();
             m_UndoGroup = Undo.GetCurrentGroup();
@@ -54,7 +53,8 @@ namespace UnityEditor.Localization.UI
             {
                 // Apply selection
                 var selection = (TableEntrySearchData)item.data;
-                SetItem(selection?.Collection, selection?.Entry, true);
+                SetItem(selection?.Collection, selection?.Entry);
+                Undo.CollapseUndoOperations(m_UndoGroup);
             }
             m_View = null;
             Selection.selectionChanged -= CloseNoRevert;
@@ -63,22 +63,14 @@ namespace UnityEditor.Localization.UI
         void Track(SearchItem item)
         {
             var selection = (TableEntrySearchData)item.data;
-            SetItem(selection?.Collection, selection?.Entry, false);
+            SetItem(selection?.Collection, selection?.Entry);
         }
 
-        void SetItem(LocalizationTableCollection collection, SharedTableData.SharedTableEntry entry, bool collapse)
+        void SetItem(LocalizationTableCollection collection, SharedTableData.SharedTableEntry entry)
         {
-            var property = m_SerializedObject.FindProperty(m_PropertyPath);
-            if (property == null)
-                return;
-
-            var data = m_PropertyDrawer.GetDataForProperty(property);
-            data.SelectedTableCollection = collection as TCollection;
-            data.SelectedTableEntry = entry;
-            m_SerializedObject.ApplyModifiedProperties();
-
-            if (collapse)
-                Undo.CollapseUndoOperations(m_UndoGroup);
+            m_Entry.SetReference(entry);
+            m_Table.SetReference(collection);
+            m_Table.TableNameProperty.serializedObject.ApplyModifiedProperties();
         }
     }
 }

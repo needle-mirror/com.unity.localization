@@ -61,7 +61,17 @@ namespace UnityEditor.Localization
         /// Event that is sent when a table collection is modified.
         /// </summary>
         public event EventHandler<LocalizationTableCollection> CollectionModified;
-        internal virtual void RaiseCollectionModified(object sender, LocalizationTableCollection collection) => CollectionModified?.Invoke(sender, collection);
+
+        /// <summary>
+        /// Sends an event to <see cref="CollectionModified"/> that indicates a table collection has been modified.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="collection"></param>
+        /// <example>
+        /// This shows how to export and import a <see cref="StringTableCollection"/> as JSON.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationTablesWindowPopulateMenu.cs"/>
+        /// </example>
+        public virtual void RaiseCollectionModified(object sender, LocalizationTableCollection collection) => CollectionModified?.Invoke(sender, collection);
 
         /// <summary>
         /// Event that is sent when a new table collection is added to the project.

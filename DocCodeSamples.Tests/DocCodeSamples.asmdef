@@ -27,14 +27,19 @@
     ],
     "versionDefines": [
         {
-            "name": "com.unity.ugui",
-            "expression": "1.0.0",
-            "define": "PACKAGE_UGUI"
-        },
-        {
             "name": "com.unity.modules.audio",
             "expression": "1.0.0",
             "define": "MODULE_AUDIO"
+        },
+        {
+            "name": "com.unity.modules.uielements",
+            "expression": "1.0.0",
+            "define": "MODULE_UITK"
+        },
+        {
+            "name": "com.unity.ugui",
+            "expression": "1.0.0",
+            "define": "PACKAGE_UGUI"
         },
         {
             "name": "com.unity.textmeshpro",
@@ -50,6 +55,11 @@
             "name": "Unity",
             "expression": "2021.2",
             "define": "ENABLE_SEARCH"
+        },
+        {
+            "name": "Unity",
+            "expression": "2023.3",
+            "define": "ENABLE_UITK_DATA_BINDING"
         }
     ],
     "noEngineReferences": false

@@ -1,33 +1,28 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.IMGUI.Controls;
+using UnityEditor.Localization.Bridge;
 using UnityEngine;
 using UnityEngine.Localization;
-using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Tables;
-using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.UI
 {
-    class GenericAssetTableListViewMultiColumnHeader<T1, T2> : MultiColumnHeader
+    class GenericAssetTableListViewMultiColumnHeader<T1, T2> : MultiColumnHeaderBridge
         where T1 : LocalizationTable
         where T2 : GenericAssetTableTreeViewItem<T1>, new()
     {
-        const float k_MetadataLabelHeight = 20;
+        const float k_MetadataLabelWidth = 28;
 
         static readonly GUIContent k_MissingTableMenuItem = EditorGUIUtility.TrTextContent("Missing Tables");
 
-        static readonly GUIContent k_MetadataIcon = EditorGUIUtility.TrTextContent(string.Empty, "Edit Table Metadata", EditorIcons.Metadata);
+        static readonly GUIContent k_MetadataIcon = EditorGUIUtility.TrTextContent(string.Empty, "Edit table metadata", EditorIcons.Metadata);
 
         LocalizationTableCollection TableCollection { get; set; }
 
-        GenericAssetTableListView<T1, T2> m_Parent;
-
-        public GenericAssetTableListViewMultiColumnHeader(MultiColumnHeaderState state, GenericAssetTableListView<T1, T2> parent, LocalizationTableCollection collection)
+        public GenericAssetTableListViewMultiColumnHeader(MultiColumnHeaderState state, GenericAssetTableListView<T1, T2> _, LocalizationTableCollection collection)
             : base(state)
         {
-            height += k_MetadataLabelHeight;
-            m_Parent = parent;
             TableCollection = collection;
 
             var visibleColumns = new List<int>();
@@ -89,18 +84,23 @@ namespace UnityEditor.Localization.UI
 
         protected override void ColumnHeaderGUI(MultiColumnHeaderState.Column column, Rect headerRect, int columnIndex)
         {
-            var btnRect = new Rect(headerRect.x, headerRect.y, headerRect.width, k_MetadataLabelHeight);
-            headerRect.yMin += k_MetadataLabelHeight;
             switch (column)
             {
-                case ISelectable selectable:
+                case TableColumn<T1> tableCol:
                 {
-                    EditorGUI.BeginChangeCheck();
-                    GUI.Toggle(btnRect, selectable.Selected, k_MetadataIcon, GUI.skin.button);
-                    if (EditorGUI.EndChangeCheck())
+                    if (Event.current.rawType == EventType.Repaint && MetadataEditorWindow.IsSelectedForEditing(TableCollection, tableCol.TableLocale))
                     {
-                        m_Parent.Selected = selectable;
+                        EditorIcons.SelectionRect.Draw(headerRect, string.Empty, false, false, false, false);
                     }
+
+                    headerRect.width -= k_MetadataLabelWidth + 7;
+                    var btnRect = new Rect(headerRect.xMax + 2, headerRect.y + 3, k_MetadataLabelWidth, 20);
+
+                    if (GUI.Button(btnRect, k_MetadataIcon))
+                    {
+                        MetadataEditorWindow.ShowWindow(TableCollection, tableCol.TableLocale);
+                    }
+                    headerRect.xMin += 2;
                     base.ColumnHeaderGUI(column, headerRect, columnIndex);
                     break;
                 }
@@ -111,8 +111,7 @@ namespace UnityEditor.Localization.UI
 
                 case MissingTableColumn mtc:
                 {
-                    var labelRect = new Rect(headerRect.x, headerRect.yMax - EditorGUIUtility.singleLineHeight - EditorGUIUtility.standardVerticalSpacing, headerRect.width, EditorGUIUtility.singleLineHeight);
-                    if (GUI.Button(labelRect, mtc.headerContent))
+                    if (GUI.Button(headerRect, mtc.headerContent))
                     {
                         CreateMissingTable(mtc);
                     }
@@ -140,7 +139,7 @@ namespace UnityEditor.Localization.UI
         }
     }
 
-    class TableColumn<T1> : VisibleColumn, ISelectable where T1 : LocalizationTable
+    class TableColumn<T1> : VisibleColumn where T1 : LocalizationTable
     {
         public T1 Table { get; set; }
         public SerializedObject SerializedObjectTable { get; private set; }
@@ -150,9 +149,6 @@ namespace UnityEditor.Localization.UI
         public bool Selected { get; set; }
 
         LocalizationTableCollection m_TableCollection;
-        bool m_PreloadAllMixedValues;
-        bool m_PreloadAllToggle;
-        bool m_PreloadSelectedToggle;
 
         public TableColumn(LocalizationTableCollection collection, LocalizationTable table, Locale locale)
         {
@@ -163,103 +159,8 @@ namespace UnityEditor.Localization.UI
             SerializedObjectSharedTableData = new SerializedObject(Table.SharedData);
             TableLocale = locale;
             headerContent = new GUIContent(TableLocale != null ? TableLocale.ToString() : table.LocaleIdentifier.Code);
-            headerTextAlignment = TextAlignment.Center;
             canSort = false;
             allowToggleVisibility = true;
-            Undo.undoRedoPerformed += RefreshPreloadToggle;
-        }
-
-        ~TableColumn()
-        {
-            Undo.undoRedoPerformed -= RefreshPreloadToggle;
-        }
-
-        void RefreshPreloadToggle()
-        {
-            // TODO: We could use the instanceId instead of the asset so that we do not need to load the asset. (e.g for hidden columns)
-            int preloadCount = m_TableCollection.Tables.Count(tbl => tbl.asset != null && LocalizationEditorSettings.GetPreloadTableFlag(tbl.asset));
-            if (preloadCount == 0)
-            {
-                m_PreloadAllToggle = false;
-                m_PreloadAllMixedValues = false;
-                m_PreloadSelectedToggle = false;
-            }
-            else if (preloadCount == m_TableCollection.Tables.Count)
-            {
-                m_PreloadAllToggle = true;
-                m_PreloadAllMixedValues = false;
-                m_PreloadSelectedToggle = true;
-            }
-            else
-            {
-                m_PreloadAllToggle = true;
-                m_PreloadAllMixedValues = true;
-                m_PreloadSelectedToggle = LocalizationEditorSettings.GetPreloadTableFlag(Table);
-            }
-        }
-
-        public VisualElement CreateEditor()
-        {
-            var root = new VisualElement(){ style = { marginLeft = 5, marginRight = 5, marginTop = 5, marginBottom = 5 } };
-
-            var preloadEditor = new IMGUIContainer(() =>
-            {
-                EditorGUI.BeginChangeCheck();
-                EditorGUI.showMixedValue = m_PreloadAllMixedValues;
-                m_PreloadAllToggle = EditorGUILayout.Toggle("Preload All Tables", m_PreloadAllToggle);
-                EditorGUI.showMixedValue = false;
-                if (EditorGUI.EndChangeCheck())
-                {
-                    var group = Undo.GetCurrentGroup();
-                    Undo.SetCurrentGroupName("Set Preload flag");
-                    foreach (var table in m_TableCollection.Tables)
-                    {
-                        LocalizationEditorSettings.SetPreloadTableFlag(table.asset, m_PreloadAllToggle, true);
-                    }
-                    Undo.CollapseUndoOperations(group);
-                    RefreshPreloadToggle();
-                }
-
-                EditorGUI.BeginChangeCheck();
-                m_PreloadSelectedToggle = EditorGUILayout.Toggle("Preload Table", m_PreloadSelectedToggle);
-                if (EditorGUI.EndChangeCheck())
-                {
-                    LocalizationEditorSettings.SetPreloadTableFlag(Table, m_PreloadSelectedToggle, true);
-                    RefreshPreloadToggle();
-                }
-            });
-            preloadEditor.AddToClassList("unity-box");
-            root.Add(preloadEditor);
-
-            var sharedTableDataEditor = new IMGUIContainer(() =>
-            {
-                SerializedObjectSharedTableData.Update();
-                EditorGUILayout.LabelField("Shared", EditorStyles.boldLabel);
-                EditorGUILayout.PropertyField(SerializedObjectSharedTableData.FindProperty("m_Metadata"));
-                SerializedObjectSharedTableData.ApplyModifiedProperties();
-            });
-            sharedTableDataEditor.style.borderBottomWidth = 10;
-            root.Add(sharedTableDataEditor);
-
-            RefreshPreloadToggle();
-
-            // TODO: Clean this up so we have editors for each type.
-            var tablePropDrawer = new MetadataCollectionField();
-            tablePropDrawer.Type = new MetadataTypeAttribute(Table is AssetTable ? MetadataType.AssetTable : MetadataType.StringTable);
-            var label = new GUIContent("Metadata");
-            var tableEditor = new IMGUIContainer(() =>
-            {
-                SerializedObjectTable.Update();
-                EditorGUILayout.LabelField(headerContent, EditorStyles.boldLabel);
-
-                var p = SerializedObjectTable.FindProperty("m_Metadata");
-                var rect = EditorGUILayout.GetControlRect(true, tablePropDrawer.GetPropertyHeight(p, label));
-                tablePropDrawer.OnGUI(rect, p, label);
-                SerializedObjectTable.ApplyModifiedProperties();
-            });
-            root.Add(tableEditor);
-
-            return root;
         }
 
         public override string ToString() => "Table: " + Table;
@@ -288,8 +189,7 @@ namespace UnityEditor.Localization.UI
 
         public KeyIdColumn(SharedTableData sharedData)
         {
-            minWidth = 50;
-            maxWidth = 150;
+            minWidth = 100;
             Keys = sharedData;
             headerContent = new GUIContent("Key Id");
             headerTextAlignment = TextAlignment.Center;
@@ -315,9 +215,7 @@ namespace UnityEditor.Localization.UI
 
         public MissingTableColumn(Locale locale)
         {
-            minWidth = 50;
-            maxWidth = 150;
-
+            minWidth = 200;
             TableLocale = locale;
             headerContent = new GUIContent("Add " + TableLocale);
             headerTextAlignment = TextAlignment.Center;

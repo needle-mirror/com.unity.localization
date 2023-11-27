@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using UnityEditor.UIElements;
 using UnityEngine.Localization.Tables;
@@ -8,9 +7,14 @@ using UnityEngine.UIElements;
 
 namespace UnityEditor.Localization.UI
 {
-    class ProjectCollectionsTableSelector : VisualElement
+    #if UNITY_2023_3_OR_NEWER
+    [UxmlElement]
+    #endif
+    partial class ProjectCollectionsTableSelector : VisualElement
     {
-        public new class UxmlFactory : UxmlFactory<ProjectCollectionsTableSelector> {}
+        #if !UNITY_2023_3_OR_NEWER
+        internal new class UxmlFactory : UxmlFactory<ProjectCollectionsTableSelector> {}
+        #endif
 
         [Flags]
         public enum CollectionType

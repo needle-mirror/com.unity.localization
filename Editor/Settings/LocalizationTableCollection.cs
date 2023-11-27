@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
-using UnityEditor.AddressableAssets;
 using UnityEditor.Localization.Addressables;
 using UnityEditor.Localization.UI;
 using UnityEngine;
@@ -155,6 +154,12 @@ namespace UnityEditor.Localization
         /// <param name="name"></param>
         /// <param name="createUndo"></param>
         public void SetTableCollectionName(string name, bool createUndo = false)
+        {
+            SetTableCollectionNameInternal(name, createUndo);
+        }
+
+        // virtual for testing
+        internal virtual void SetTableCollectionNameInternal(string name, bool createUndo)
         {
             if (name == TableCollectionName)
                 return;

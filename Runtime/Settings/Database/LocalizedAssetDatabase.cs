@@ -96,7 +96,7 @@ namespace UnityEngine.Localization.Settings
         {
             var tableEntryOperation = GetTableEntryAsync(tableReference, tableEntryReference, locale, fallbackBehavior);
 
-            var operation = GenericPool<LoadAssetOperation<TObject>>.Get();
+            var operation = LoadAssetOperation<TObject>.Pool.Get();
             operation.Init(tableEntryOperation, true);
             operation.Dependency = tableEntryOperation;
             var handle = AddressablesInterface.ResourceManager.StartOperation(operation, tableEntryOperation);

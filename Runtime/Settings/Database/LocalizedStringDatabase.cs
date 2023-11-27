@@ -262,7 +262,7 @@ namespace UnityEngine.Localization.Settings
         {
             var tableEntryOperation = GetTableEntryAsync(tableReference, tableEntryReference, locale, fallbackBehavior);
 
-            var operation = GenericPool<GetLocalizedStringOperation>.Get();
+            var operation = GetLocalizedStringOperation.Pool.Get();
             operation.Dependency = tableEntryOperation;
             operation.Init(tableEntryOperation, locale, this, tableReference, tableEntryReference, arguments, localVariables, autoRelease);
             var handle = AddressablesInterface.ResourceManager.StartOperation(operation, tableEntryOperation);

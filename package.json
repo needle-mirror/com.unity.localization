@@ -1,7 +1,7 @@
 {
   "name": "com.unity.localization",
   "displayName": "Localization",
-  "version": "1.5.0-pre.2",
+  "version": "1.5.0-pre.3",
   "unity": "2019.4",
   "description": "Use the Localization package to easily configure localization settings for your application.\n\nAdd support for multiple languages and regional variants, including:\n\n• String localization: Set different strings to display based on locale. Use the Smart Strings feature to add logic to automatically replace specific strings, such as placeholders and plurals.\n• Asset localization: Use a different asset (such as a texture, model, or audio file) based on a locale.\n• Pseudo-localization: Test how your project will adapt to different localizations at an early stage, before adding your translations.\n• Import and export localization data to XLIFF, CSV and Google Sheets.\n\nAdd localization to your projects using the Localization package to help make your applications more accessible to a wider audience.",
   "keywords": [
@@ -14,19 +14,19 @@
     "com.unity.nuget.newtonsoft-json": "3.0.2"
   },
   "relatedPackages": {
-    "com.unity.localization.tests": "1.5.0-pre.2"
+    "com.unity.localization.tests": "1.5.0-pre.3"
   },
   "_upm": {
-    "changelog": "### Fixed\n\n- Added back in removed API for `ProjectLocalePopupField` and `LocalizationTablesWindow` to avoid making breaking changes to API."
+    "changelog": "### Fixed\n\n- Fixed an issue with version defines that was failing to detect 2023.3."
   },
   "upmCi": {
-    "footprint": "b0ed6b98d3c48076d01ad23b81b8b44ae4a0a565"
+    "footprint": "068ac2ca1d634799151ffa14120f037207d6c061"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.localization@1.5/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.localization.git",
     "type": "git",
-    "revision": "23bbb87f280166f5e6fbff138ce10adef7622738"
+    "revision": "17d1a70027c15bfd0d9e489d15dc4321326cef80"
   },
   "samples": [
     {

@@ -40,11 +40,6 @@
             "name": "Unity",
             "expression": "2020.3",
             "define": "ENABLE_PROPERTY_VARIANTS"
-        },
-        {
-            "name": "Unity",
-            "expression": "2023.3",
-            "define": "ENABLE_UITK_DATA_BINDING"
         }
     ],
     "noEngineReferences": false

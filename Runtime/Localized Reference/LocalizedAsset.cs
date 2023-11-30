@@ -315,7 +315,7 @@ namespace UnityEngine.Localization
             m_CurrentTable = TableReference;
             m_CurrentTableEntry = TableEntryReference;
 
-            #if MODULE_UITK && ENABLE_UITK_DATA_BINDING
+            #if MODULE_UITK && UNITY_2023_3_OR_NEWER
             HandleLocaleChangeDataBinding(locale);
             #endif
 

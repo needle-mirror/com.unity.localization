@@ -2,6 +2,12 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.5.0-pre.3] - 2023-11-30
+
+### Fixed
+
+- Fixed an issue with version defines that was failing to detect 2023.3.
+
 ## [1.5.0-pre.2] - 2023-11-27
 
 ### Fixed

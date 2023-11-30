@@ -79,11 +79,6 @@
             "name": "Unity",
             "expression": "2022",
             "define": "ENABLE_SEARCH_QUERY_BUILDER"
-        },
-        {
-            "name": "Unity",
-            "expression": "2023.3",
-            "define": "ENABLE_UITK_DATA_BINDING"
         }
     ],
     "noEngineReferences": false

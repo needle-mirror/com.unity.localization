@@ -306,10 +306,6 @@ namespace UnityEditor.Localization.UI
         {
             toolbarMenu.menu.MenuItems().Clear();
 
-            #if UNITY_2023_2_OR_NEWER
-            toolbarMenu.menu.ClearHeaderItems();
-            #endif
-
             object[] args = { SelectedCollection, toolbarMenu.menu };
             foreach (var t in TypeCache.GetMethodsWithAttribute<T>())
             {

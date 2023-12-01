@@ -2,6 +2,12 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.5.0-pre.4] - 2023-12-01
+
+### Changed
+
+- Removed use of new contextual menu API call `ClearHeaderItems`. This will be removed in 2023.3.
+
 ## [1.5.0-pre.3] - 2023-11-30
 
 ### Fixed

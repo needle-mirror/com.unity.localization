@@ -2,6 +2,12 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.5.0-pre.5] - 2023-12-04
+
+### Fixed
+
+- Fixed an issue with UXML attribute converters not being included in 2023.3.
+
 ## [1.5.0-pre.4] - 2023-12-01
 
 ### Changed

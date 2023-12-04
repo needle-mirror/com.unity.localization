@@ -717,7 +717,7 @@ namespace UnityEngine.Localization
             ClearLoadingOperation();
             m_CurrentStringChangedValue = null;
 
-            #if MODULE_UITK && ENABLE_UITK_DATA_BINDING && UNITY_EDITOR
+            #if MODULE_UITK && UNITY_2023_3_OR_NEWER && UNITY_EDITOR
             HandleLocaleChangeDataBinding(locale);
             #endif
 

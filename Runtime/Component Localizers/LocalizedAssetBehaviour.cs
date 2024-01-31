@@ -104,6 +104,14 @@ namespace UnityEngine.Localization.Components
             set => m_UpdateAsset = value;
         }
 
+        #if UNITY_EDITOR
+        internal override void ClearChangeHandler()
+        {
+            Editor_UnregisterKnownDrivenProperties(OnUpdateAsset);
+            base.ClearChangeHandler();
+        }
+        #endif
+
         /// <inheritdoc/>
         protected override void UpdateAsset(TObject localizedAsset)
         {

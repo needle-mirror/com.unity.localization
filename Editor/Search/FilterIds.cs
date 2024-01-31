@@ -13,7 +13,9 @@ namespace UnityEditor.Localization.Search
         public const string MetadataValue = "mv";
 
         public const string AssetTableProvider = "at";
+        public const string AssetTableProviderFilter = AssetTableProvider + ":";
         public const string StringTableProvider = "st";
+        public const string StringTableProviderFilter = StringTableProvider + ":";
     }
 }
 

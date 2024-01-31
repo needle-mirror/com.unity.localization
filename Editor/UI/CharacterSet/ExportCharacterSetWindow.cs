@@ -65,7 +65,7 @@ namespace UnityEditor.Localization.UI
             }
 
             var distinctCharacters = string.Concat(e.Distinct().OrderBy(c => c));
-            File.WriteAllText(path, distinctCharacters, Encoding.UTF8);
+            File.WriteAllText(path, distinctCharacters, new UTF8Encoding(false));
             AssetDatabase.Refresh();
 
             EditorUtility.RevealInFinder(path);

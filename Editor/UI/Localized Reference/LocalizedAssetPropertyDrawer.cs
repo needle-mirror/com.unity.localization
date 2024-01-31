@@ -94,7 +94,7 @@ namespace UnityEditor.Localization.UI
             }
 
             var provider = new AssetTableSearchProvider(data.assetType);
-            var context = UnityEditor.Search.SearchService.CreateContext(provider);
+            var context = UnityEditor.Search.SearchService.CreateContext(provider, FilterIds.AssetTableProviderFilter);
             var picker = new LocalizedReferencePicker<StringTableCollection>(context, "string table entry", data.tableReference.Property, data.tableEntryReference.Property);
             picker.Show();
         }

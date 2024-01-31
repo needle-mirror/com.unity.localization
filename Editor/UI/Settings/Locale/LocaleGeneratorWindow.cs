@@ -10,16 +10,9 @@ namespace UnityEditor.Localization.UI
 {
     class LocaleGeneratorWindow : EditorWindow
     {
-        internal enum LocaleSource
-        {
-            CultureInfo,
-            SystemLanguage
-        }
-
         class Texts
         {
-            public GUIContent generateLocalesButton = EditorGUIUtility.TrTextContent("Generate Locales");
-            public GUIContent localeSource = EditorGUIUtility.TrTextContent("Locale Source", "Source data for generating the locales");
+            public GUIContent generateLocalesButton = EditorGUIUtility.TrTextContent("Add Locales");
             public const string progressTitle = "Generating Locales";
             public const string saveDialog = "Save locales to folder";
 
@@ -32,20 +25,40 @@ namespace UnityEditor.Localization.UI
 
         static Texts s_Texts;
 
+        static readonly List<LocaleIdentifier> s_Choices = GenerateLocaleChoices();
+
         const float k_WindowFooterHeight = 150;
 
-        internal LocaleSource m_LocaleSource;
+        [SerializeField] internal SearchField m_SearchField;
+        [SerializeField] internal LocaleGeneratorListView m_ListView;
 
-        [SerializeField]
-        internal SearchField m_SearchField;
-        [SerializeField]
-        internal LocaleGeneratorListView m_ListView;
+        static List<LocaleIdentifier> GenerateLocaleChoices()
+        {
+            var locales = new List<LocaleIdentifier>();
 
-        //[MenuItem("Window/Localization/Locale Generator")]
+            var cultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
+
+            for (int i = 0; i < cultures.Length; ++i)
+            {
+                var cultureInfo = cultures[i];
+
+                if (cultureInfo.LCID == CultureInfo.InvariantCulture.LCID)
+                    continue;
+
+                // Ignore legacy cultures
+                if (cultureInfo.EnglishName.Contains("Legacy"))
+                    continue;
+
+                locales.Add(new LocaleIdentifier(cultureInfo));
+            }
+
+            return locales;
+        }
+
         public static void ShowWindow()
         {
             var window = (LocaleGeneratorWindow)GetWindow(typeof(LocaleGeneratorWindow));
-            window.titleContent = EditorGUIUtility.TrTextContent("Locale Generator", EditorIcons.Locale);
+            window.titleContent = EditorGUIUtility.TrTextContent("Add Locale", EditorIcons.Locale);
             window.minSize = new Vector2(500, 500);
             window.ShowUtility();
         }
@@ -53,7 +66,7 @@ namespace UnityEditor.Localization.UI
         void OnEnable()
         {
             m_ListView = new LocaleGeneratorListView();
-            m_ListView.Items = GenerateLocaleChoices(m_LocaleSource);
+            m_ListView.Items = s_Choices;
             m_SearchField = new SearchField();
             m_SearchField.downOrUpArrowKeyPressed += m_ListView.SetFocusAndEnsureSelectedItem;
         }
@@ -62,14 +75,6 @@ namespace UnityEditor.Localization.UI
         {
             if (s_Texts == null)
                 s_Texts = new Texts();
-
-            EditorGUI.BeginChangeCheck();
-            var newSource = (LocaleSource)EditorGUILayout.EnumPopup(s_Texts.localeSource, m_LocaleSource);
-            if (EditorGUI.EndChangeCheck() && m_LocaleSource != newSource)
-            {
-                m_LocaleSource = newSource;
-                m_ListView.Items = GenerateLocaleChoices(m_LocaleSource);
-            }
 
             DrawLocaleList();
 
@@ -155,7 +160,6 @@ namespace UnityEditor.Localization.UI
                 // Export the assets
 
                 // Disabled StartAssetEditing and StopAssetEditing due to bug LOC-195.
-                // AssetDatabase.StartAssetEditing(); // Batch the assets into a single asset operation
                 var relativePath = PathHelper.MakePathRelative(path);
                 for (int i = 0; i < locales.Count; ++i)
                 {
@@ -165,7 +169,6 @@ namespace UnityEditor.Localization.UI
                     assetPath = AssetDatabase.GenerateUniqueAssetPath(assetPath);
                     AssetDatabase.CreateAsset(locale, assetPath);
                 }
-                // AssetDatabase.StopAssetEditing();
 
                 // Import the Locales now instead of waiting for them to be imported via the asset post processor.
                 // If we wait for them to be imported during the asset post processor then they will not be available
@@ -177,39 +180,6 @@ namespace UnityEditor.Localization.UI
             {
                 EditorUtility.ClearProgressBar();
             }
-        }
-
-        static List<LocaleIdentifier> GenerateLocaleChoices(LocaleSource source)
-        {
-            var locales = new List<LocaleIdentifier>();
-
-            if (source == LocaleSource.CultureInfo)
-            {
-                var cultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
-
-                for (int i = 0; i < cultures.Length; ++i)
-                {
-                    var cultureInfo = cultures[i];
-
-                    if (cultureInfo.LCID == CultureInfo.InvariantCulture.LCID)
-                        continue;
-
-                    // Ignore legacy cultures
-                    if (cultureInfo.EnglishName.Contains("Legacy"))
-                        continue;
-
-                    locales.Add(new LocaleIdentifier(cultureInfo));
-                }
-            }
-            else
-            {
-                for (int i = 0; i < (int)SystemLanguage.Unknown; ++i)
-                {
-                    locales.Add(new LocaleIdentifier((SystemLanguage)i));
-                }
-            }
-
-            return locales;
         }
     }
 }

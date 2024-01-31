@@ -23,8 +23,8 @@ namespace UnityEditor.Localization.UI
         const int k_TableStartIndex = 2; // Key, Key Id and then tables
         const int k_PageControlsHeight = 20;
         const float k_RowFooterHeight = 22;
-        protected static readonly float k_RowVerticalPadding = EditorGUIUtility.standardVerticalSpacing * 2;
-        static readonly float k_RowFooterHeightWithPadding = k_RowFooterHeight + (k_RowVerticalPadding * 2);
+        internal static readonly float k_RowVerticalPadding = EditorGUIUtility.standardVerticalSpacing * 2;
+        internal static readonly float k_RowFooterHeightWithPadding = k_RowFooterHeight + (k_RowVerticalPadding * 2);
         const float k_RemoveButtonWidth = 27;
         protected const float k_EntryMenuButtonWidth = 20;
 
@@ -198,7 +198,7 @@ namespace UnityEditor.Localization.UI
             if (item is T2 i)
             {
                 // Height of key field
-                height += Math.Max(EditorStyles.textArea.CalcSize(new GUIContent(i.Key)).y, MinRowHeight);
+                height += Mathf.Max(EditorStyles.textArea.CalcSize(new GUIContent(i.Key)).y, MinRowHeight);
             }
             else
             {
@@ -644,7 +644,7 @@ namespace UnityEditor.Localization.UI
                     parameters[2].ParameterType != typeof(long) ||
                     parameters[3].ParameterType != typeof(GenericMenu))
                 {
-                    Debug.LogError($"{typeof(LocalizationEntryMenuAttribute).Name} method {t.Name} must have the following signature: static void {t.Name}(LocalizationTableCollection, LocalizationTable, long, GenericMenu)");
+                    Debug.LogError($"{nameof(LocalizationEntryMenuAttribute)} method {t.Name} must have the following signature: static void {t.Name}(LocalizationTableCollection, LocalizationTable, long, GenericMenu)");
                     continue;
                 }
 

@@ -100,7 +100,7 @@ namespace UnityEditor.Localization.Plugins.CSV
             // Use FileShare.ReadWrite to avoid IOException: Sharing violation (LOC-348)
             using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite))
             {
-                var stream = new StreamWriter(fs, Encoding.UTF8);
+                var stream = new StreamWriter(fs, new UTF8Encoding(false));
                 var reporter = TaskReporter.CreateDefaultReporter();
                 reporter.Start("Exporting " + path, string.Empty);
                 Csv.Export(stream, collection, cellMappings, reporter);

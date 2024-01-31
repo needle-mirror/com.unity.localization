@@ -3,6 +3,7 @@
 using UnityEditor.Localization.Search;
 using UnityEditor.Search;
 using UnityEngine.Localization.Tables;
+using UnityEngine.Search;
 
 namespace UnityEditor.Localization.UI
 {
@@ -38,8 +39,23 @@ namespace UnityEditor.Localization.UI
 
         public void Show()
         {
+            #if UNITY_2022_2_OR_NEWER
+            var state = new SearchViewState(m_SearchContext)
+            {
+                title = m_Title,
+                ignoreSaveSearches = true,
+                hideAllGroup = true,
+                queryBuilderEnabled = true,
+                hideTabs = true,
+                flags = SearchViewFlags.DisableInspectorPreview | SearchViewFlags.OpenInBuilderMode,
+                selectHandler = Select,
+                trackingHandler = Track
+            };
+            m_View = UnityEditor.Search.SearchService.ShowPicker(state);
+            #else
             var state = new SearchViewState(m_SearchContext) { title = m_Title };
             m_View = UnityEditor.Search.SearchService.ShowPicker(m_SearchContext, Select, Track, null, null, m_Title);
+            #endif
         }
 
         void Select(SearchItem item, bool cancelled)

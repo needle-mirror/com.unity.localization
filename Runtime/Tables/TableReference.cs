@@ -6,7 +6,7 @@ using UnityEngine.Serialization;
 namespace UnityEngine.Localization.Tables
 {
     /// <summary>
-    /// It is possible to reference a table via either the table collection name of the table collection name guid.
+    /// It is possible to reference a table via either the table collection name or the table collection name guid.
     /// The TableReference provides a flexible way to reference via either of these methods and also includes editor functionality.
     /// </summary>
     [Serializable]

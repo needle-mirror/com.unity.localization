@@ -2,6 +2,23 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.5.0-pre.6] - 2024-01-31
+
+### Changed
+
+- CSV files will now be exported in UTF8 without the unesessesary byte order mark (BOM).
+- Improved string and asset picker in 2022.2+. The search provider will now start in visual query builder mode and the Inspector panel is now disabled, it was not used.
+- Removed the Locale Source option from the **Locale Generator** window.
+- Renamed **Locale Generator** to **Add Locale** in Localization Settings.
+
+### Fixed
+
+- A locale change event is no longer sent in playmode when a change is detected to the localization tables. This is now only done in edit mode when previewing a locale via the localization scene controls. ([LOC-1025](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1025))
+- Fixed incorrect calculation of string table row height in the Table window. ([LOC-1058](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1058))
+- Improved handling of dependency operations that may be released after execution. The localization initialization operation will no longer fail during WaitForCompletion when the addressable initialization operation is automatically released. ([LOC-1039](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1039))
+- Improved null handling of `TrackedProperties` values when something went wrong during serialization.
+- We now fail the initialization operation if one of the sub-operations fails. ([LOC-1038](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1038))
+
 ## [1.5.0-pre.5] - 2023-12-04
 
 ### Fixed

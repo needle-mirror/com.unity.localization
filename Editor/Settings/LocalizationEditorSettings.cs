@@ -329,6 +329,10 @@ namespace UnityEditor.Localization
 
         internal static void RefreshEditorPreview()
         {
+            // Only update the preview in edit mode (LOC-1025)
+            if (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
+                return;
+
             if (ActiveLocalizationSettings != null && ActiveLocalizationSettings.GetSelectedLocale() != null)
             {
                 LocalizationPropertyDriver.UnregisterProperties();

@@ -69,8 +69,12 @@ namespace UnityEngine.Localization.Operations
         readonly Action<AsyncOperationHandle> m_LoadLocales;
         #endif
 
-        readonly Action<AsyncOperationHandle<Locale>> m_PreloadTablesAction;
-        readonly Action<AsyncOperationHandle> m_FinishInitializingAction;
+        internal const string k_LocaleError = "Failed to initialize localization, could not load the selected locale.\n{0}";
+        internal const string k_PreloadAssetTablesError = "Failed to initialize localization, could not preload asset tables.\n{0}";
+        internal const string k_PreloadStringTablesError = "Failed to initialize localization, could not preload string tables.\n{0}";
+
+        readonly Action<AsyncOperationHandle<Locale>> m_LoadLocalesCompletedAction;
+        readonly Action<AsyncOperationHandle> m_FinishPreloadingTablesAction;
 
         LocalizationSettings m_Settings;
         readonly List<AsyncOperationHandle> m_LoadDatabasesOperations = new List<AsyncOperationHandle>();
@@ -96,8 +100,8 @@ namespace UnityEngine.Localization.Operations
 
         public InitializationOperation()
         {
-            m_PreloadTablesAction = a => PreloadTables();
-            m_FinishInitializingAction = FinishInitializing;
+            m_LoadLocalesCompletedAction = LoadLocalesCompleted;
+            m_FinishPreloadingTablesAction = _ => PreloadTablesCompleted();
 
             #if UNLOAD_BUNDLE_ASYNC
             m_LoadLocales = _ => LoadLocales();
@@ -137,12 +141,28 @@ namespace UnityEngine.Localization.Operations
             if (!localeOp.IsDone)
             {
                 CurrentOperation = localeOp;
-                localeOp.Completed += m_PreloadTablesAction;
+                localeOp.Completed += m_LoadLocalesCompletedAction;
             }
             else
             {
-                PreloadTables();
+                LoadLocalesCompleted(localeOp);
             }
+        }
+
+        bool CheckOperationSucceeded(AsyncOperationHandle handle, string errorMessage)
+        {
+            if (handle.Status != AsyncOperationStatus.Succeeded)
+            {
+                FinishInitializing(false, string.Format(errorMessage, handle.OperationException?.Message));
+                return false;
+            }
+            return true;
+        }
+
+        void LoadLocalesCompleted(AsyncOperationHandle<Locale> operationHandle)
+        {
+            if (CheckOperationSucceeded(operationHandle, k_LocaleError))
+                PreloadTables();
         }
 
         void PreloadTables()
@@ -163,12 +183,30 @@ namespace UnityEngine.Localization.Operations
             {
                 m_PreloadDatabasesOperation = AddressablesInterface.CreateGroupOperation(m_LoadDatabasesOperations);
                 CurrentOperation = m_PreloadDatabasesOperation;
-                m_PreloadDatabasesOperation.CompletedTypeless += m_FinishInitializingAction;
+                m_PreloadDatabasesOperation.CompletedTypeless += m_FinishPreloadingTablesAction;
             }
             else
             {
-                FinishInitializing(true, null);
+                PreloadTablesCompleted();
             }
+        }
+
+        void PreloadTablesCompleted()
+        {
+            // Check  each operation to see if it failed.
+            if (m_Settings.GetAssetDatabase() is IPreloadRequired assetOperation &&
+                !CheckOperationSucceeded(assetOperation.PreloadOperation, k_PreloadAssetTablesError))
+            {
+                return;
+            }
+
+            if (m_Settings.GetStringDatabase() is IPreloadRequired stringOperation &&
+                !CheckOperationSucceeded(stringOperation.PreloadOperation, k_PreloadStringTablesError))
+            {
+                return;
+            }
+
+            FinishInitializing(true, null);
         }
 
         void PostInitializeExtensions()

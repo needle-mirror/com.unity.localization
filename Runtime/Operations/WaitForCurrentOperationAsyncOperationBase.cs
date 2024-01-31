@@ -31,14 +31,8 @@ namespace UnityEngine.Localization.Operations
                 {
                     Dependency.WaitForCompletion();
 
-                    // Check the dependency status again as it may have changed. (LOC-992)
-                    if (!Dependency.IsValid())
-                    {
-                        Complete(default, false, $"Dependency `{Handle.DebugName}` is no longer valid after calling WaitForCompletion.");
-                        return true;
-                    }
-
-                    if (Dependency.Status == AsyncOperationStatus.Failed)
+                    // Its possible that the operation was released after use so we ignore invalid operations.
+                    if (Dependency.IsValid() && Dependency.Status == AsyncOperationStatus.Failed)
                     {
                         Complete(default, false, $"Dependency `{Handle.DebugName}` failed to complete.");
                         return true;

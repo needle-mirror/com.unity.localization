@@ -118,7 +118,7 @@ public static class CsvExamples
         #region export-file
 
         var collection = LocalizationEditorSettings.GetStringTableCollection("My Strings");
-        using (var stream = new StreamWriter("My Strings CSV.csv", false, Encoding.UTF8))
+        using (var stream = new StreamWriter("My Strings CSV.csv", false, new UTF8Encoding(false)))
         {
             Csv.Export(stream, collection);
         }
@@ -159,7 +159,7 @@ public static class CsvExamples
         });
 
         // Now export
-        using (var stream = new StreamWriter("My Strings CSV.csv", false, Encoding.UTF8))
+        using (var stream = new StreamWriter("My Strings CSV.csv", false, new UTF8Encoding(false)))
         {
             Csv.Export(stream, collection, columnMappings);
         }
@@ -259,7 +259,7 @@ public static class CsvExamples
         foreach (var collection in stringTableCollections)
         {
             var file = Path.Combine(path, collection.TableCollectionName + ".csv");
-            using (var stream = new StreamWriter(file, false, Encoding.UTF8))
+            using (var stream = new StreamWriter(file, false, new UTF8Encoding(false)))
             {
                 Csv.Export(stream, collection);
             }
@@ -285,7 +285,7 @@ public static class CsvExamples
                 {
                     if (!string.IsNullOrEmpty(csvExtension.File))
                     {
-                        using (var stream = new StreamWriter(csvExtension.File, false, Encoding.UTF8))
+                        using (var stream = new StreamWriter(csvExtension.File, false, new UTF8Encoding(false)))
                         {
                             Csv.Export(stream, collection, csvExtension.Columns);
                         }

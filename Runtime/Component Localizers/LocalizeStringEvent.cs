@@ -163,6 +163,10 @@ namespace UnityEngine.Localization.Components
 
         internal virtual void ClearChangeHandler()
         {
+            #if UNITY_EDITOR
+            Editor_UnregisterKnownDrivenProperties(OnUpdateString);
+            #endif
+
             if (StringReference != null)
                 StringReference.StringChanged -= m_ChangeHandler;
         }

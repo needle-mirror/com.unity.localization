@@ -34,16 +34,19 @@ namespace UnityEditor.Localization.UI
 
         protected override float GetCustomRowHeight(int row, TreeViewItem item)
         {
-            float maxHeight = base.GetCustomRowHeight(row, item);
-            var visibleColumns = multiColumnHeader.state.visibleColumns;
+            float maxTextHeight = 0;
             if (item is StringTableTreeViewItem stringTableItem)
             {
+                var visibleColumns = multiColumnHeader.state.visibleColumns;
                 foreach (var colIdx in visibleColumns)
                 {
-                    maxHeight = Mathf.Max(maxHeight, stringTableItem.GetHeight(colIdx));
+                    maxTextHeight = Mathf.Max(maxTextHeight, stringTableItem.GetHeight(colIdx));
                 }
             }
-            return maxHeight;
+
+            var totalHeight = maxTextHeight + k_RowFooterHeightWithPadding + k_RowVerticalPadding;
+            var baseHeight = base.GetCustomRowHeight(row, item);
+            return Mathf.Max(totalHeight, baseHeight);
         }
 
         protected override void DrawItemField(Rect cellRect, int colIdx, TableColumn<StringTable> col, StringTableTreeViewItem item)

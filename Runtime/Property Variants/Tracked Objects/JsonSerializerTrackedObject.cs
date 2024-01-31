@@ -146,6 +146,9 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
 
             foreach (var property in TrackedProperties)
             {
+                if (property == null)
+                    continue;
+
                 #if UNITY_EDITOR
                 if (!Application.isPlaying)
                     VariantsPropertyDriver.RegisterProperty(Target, property.PropertyPath);

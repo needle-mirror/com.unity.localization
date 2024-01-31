@@ -140,7 +140,8 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
             m_PropertiesLookup.Clear();
             foreach (var trackedProperty in m_TrackedProperties.items)
             {
-                m_PropertiesLookup[trackedProperty.PropertyPath] = trackedProperty;
+                if (trackedProperty != null)
+                    m_PropertiesLookup[trackedProperty.PropertyPath] = trackedProperty;
             }
         }
 

@@ -38,6 +38,7 @@ namespace UnityEditor.Localization
                 case "Enum":
                     return property.intValue.ToString();
 
+                case "uint":
                 case "long":
                 case "ulong":
                     return property.longValue.ToString();
@@ -75,20 +76,25 @@ namespace UnityEditor.Localization
                 case "short":
                 case "ushort":
                 case "Enum":
-                    property.intValue = int.Parse(modification.value);
+                    if (int.TryParse(modification.value, out var i))
+                        property.intValue = i;
                     break;
 
+                case "uint":
                 case "long":
                 case "ulong":
-                    property.longValue = long.Parse(modification.value);
+                    if (long.TryParse(modification.value, out var l))
+                        property.longValue = l;
                     break;
 
                 case "float":
-                    property.floatValue = float.Parse(modification.value);
+                    if (float.TryParse(modification.value, out var f))
+                        property.floatValue = f;
                     break;
 
                 case "double":
-                    property.doubleValue = double.Parse(modification.value);
+                    if (double.TryParse(modification.value, out var d))
+                        property.doubleValue = d;
                     break;
 
                 case "string":

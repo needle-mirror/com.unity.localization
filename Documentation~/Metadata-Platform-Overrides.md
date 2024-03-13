@@ -17,7 +17,7 @@ You can use different Override Types within the same Entry based on requirements
 To extract a localized value from a separate Entry from the same Table, use Entry Mode .
 This means all Localized values can be stored in the same table.
 
-![An example of a String Table Collection using Entry Platform Overrides.](images/PlatformOverride-Entry.png)
+![An example of a String Table Collection using Entry Platform Overrides.](images/PlatformOverride.png)
 _An example of a String Table Collection using Entry Platform Overrides._
 
 ### Table mode
@@ -26,24 +26,9 @@ To extract a localized value from a separate table with the same Entry name, use
 This allows you to have multiple Table Collections that use the same Entry Name but have different values for each platform.
 It is safe for the Entries in different tables to have different Key Id's because only the name is considered when using the platform table.
 
-![Example of a String Table Collection using Table Platform Overrides.](images/PlatformOverride-Table.png)
-_Example of a String Table Collection using Table Platform Overrides._
-
-![The PS4 Table.](images/PlatformOverride-Table-Console.png)
-_The PS4 Table._
-
-![The Android Table.](images/PlatformOverride-Table-Android.png)
-_The Android Table._
-
 ### Table And Entry mode
 
 To extract a localized value from a separate table and entry, use Table and Entry mode.
-
-![Example of a String Table using a different Table and Entry for each platform override.](images/PlatformOverride-TableAndEntry1.png)
-_Example of a String Table using a different Table and Entry for each platform override._
-
-![The Platform Override Table.](images/PlatformOverride-TableAndEntry2.png)
-_The Platform Override Table._
 
 ## Custom Entry Overrides
 

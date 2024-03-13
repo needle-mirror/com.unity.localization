@@ -108,10 +108,10 @@ The Settings section contains general settings to configure how to parse and for
 
 The following [escape sequences](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/strings/#string-escape-sequences) are supported when **Convert Character String Literals** is enabled:
 
-| **Escape sequence**     | **Character Name**                                     | **Unicode encoding** |
-| ----------------------- | ------------------------------------------------------ | -------------------- |
-| **\\`**                 | Single quote                                           | 0x0027 |
-| **\\"**                 | Double quote                                           | 0x0022 |
+| **Escape sequence**     | **Character Name**                                     | **Unicode encoding (Hexadecimal)** |
+| ----------------------- | ------------------------------------------------------ | ---------------------------------- |
+| **\\&#39;**             | Single quote                                           | 0x0027 |
+| **\\&#34;**             | Double quote                                           | 0x0022 |
 | **\\\\**                | Backslash                                              | 0x0008 |
 | **\\0**                 | Form feed                                              | 0x000C |
 | **\\a**                 | Alert                                                  | 0x0007 |
@@ -121,7 +121,7 @@ The following [escape sequences](https://docs.microsoft.com/en-us/dotnet/csharp/
 | **\\r**                 | Carriage return                                        | 0x000D |
 | **\\t**                 | Horizontal tab                                         | 0x0009 |
 | **\\v**                 | Vertical tab                                           | 0x000B |
-| **\\u**                 | Unicode escape sequence (UTF-16)                       | `\uHHHH` (range: 0000 - FFFF; example: `\u00E7` = "ç")
+| **\\u**                 | Unicode escape sequence (UTF-16)                       | `\uHHHH` (range: 0000 - FFFF; example: `\u00E7` = "ç") |
 | **\\{**                 | Left curly bracket. Requires **Alternative Escaping**. | 0x007B |
 | **\\}**                 | Right curly bracket. Requires **Alternative Escaping** | 0x007D |
 

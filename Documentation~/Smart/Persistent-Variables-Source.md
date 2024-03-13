@@ -61,13 +61,21 @@ By default you can add the following Persistent Variables:
 
 | **Name**                   | **Description**                                                                                                    |
 |----------------------------|--------------------------------------------------------------------------------------------------------------------|
-| **Float**                  | Contains a single float value.                                                                                     |
-| **String**                 | Contains a single string value.                                                                                    |
-| **Integer**                | Contains a single int value.                                                                                       |
-| **Bool**                   | Contains a single bool value.                                                                                      |
-| **Object Reference**       | Can be used to reference a UnityEngine Object.                                                                     |
-| **Nested Variables Group** | Can be used to contain a reference to a Persistent Variables Group Asset. This can allow for nesting of variables. |
-| **LocalizedString**        | Can be used to provide nested translations.                                                                        |
+| [Bool](xref:UnityEngine.Localization.SmartFormat.PersistentVariables.BoolVariable)                           | Contains a single bool value. |
+| [Sbyte](xref:UnityEngine.Localization.SmartFormat.PersistentVariables.SByteVariable)                         | Contains a single signed byte value. |
+| [Byte](xref:UnityEngine.Localization.SmartFormat.PersistentVariables.ByteVariable)                           | Contains a single byte value. |
+| [Short](xref:UnityEngine.Localization.SmartFormat.PersistentVariables.ShortVariable)                         | Contains a single short value. |
+| [UShort](xref:UnityEngine.Localization.SmartFormat.PersistentVariables.UShortVariable)                       | Contains a single unsigned short value. |
+| [Integer](xref:UnityEngine.Localization.SmartFormat.PersistentVariables.IntVariable)                         | Contains a single int value. |
+| [UInteger](xref:UnityEngine.Localization.SmartFormat.PersistentVariables.UIntVariable)                       | Contains a single unsigned int value. |
+| [Long](xref:UnityEngine.Localization.SmartFormat.PersistentVariables.LongVariable)                           | Contains a single long value. |
+| [ULong](xref:UnityEngine.Localization.SmartFormat.PersistentVariables.ULongVariable)                         | Contains a single unsigned long value. |
+| [Float](xref:UnityEngine.Localization.SmartFormat.PersistentVariables.FloatVariable)                         | Contains a single float value. |
+| [Double](xref:UnityEngine.Localization.SmartFormat.PersistentVariables.DoubleVariable)                       | Contains a single double value. |
+| [String](xref:UnityEngine.Localization.SmartFormat.PersistentVariables.StringVariable)                       | Contains a single string value. |
+| [Object Reference](xref:UnityEngine.Localization.SmartFormat.PersistentVariables.ObjectVariable)             | Can be used to reference a UnityEngine [Object](https://docs.unity3d.com/ScriptReference/Object.html). |
+| [Nested Variables Group](xref:UnityEngine.Localization.SmartFormat.PersistentVariables.NestedVariablesGroup) | Can be used to contain a reference to a Persistent Variables Group Asset. This can allow for nesting of variables. |
+| [LocalizedString](xref:UnityEngine.Localization.LocalizedString)                                             | Can be used to provide nested translations. |
 
 ## Nested translations
 

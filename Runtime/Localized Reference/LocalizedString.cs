@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
+using UnityEngine.Localization.SmartFormat.Core.Formatting;
 using UnityEngine.Localization.SmartFormat.Extensions;
 using UnityEngine.Localization.SmartFormat.PersistentVariables;
 using UnityEngine.Localization.Tables;
@@ -556,10 +557,11 @@ namespace UnityEngine.Localization
         }
 
         /// <inheritdoc/>
+        /// <exception cref="DataNotReadyException">Thrown when <see cref="IsEmpty"/>, no locale is available, the table is still loading, or the entry is missing.</exception>
         public object GetSourceValue(ISelectorInfo selector)
         {
             if (IsEmpty)
-                return string.Empty;
+                throw new DataNotReadyException("{Empty}");
 
             // Determine what Locale we should use.
             var locale = LocaleOverride;
@@ -568,18 +570,18 @@ namespace UnityEngine.Localization
             if (locale == null && LocalizationSettings.SelectedLocaleAsync.IsDone)
                 locale = LocalizationSettings.SelectedLocaleAsync.Result;
             if (locale == null)
-                return "<No Available Locale>";
+                throw new DataNotReadyException("{No Available Locale}");
 
             var operation = LocalizationSettings.StringDatabase.GetTableEntryAsync(TableReference, TableEntryReference, locale, FallbackState);
             if (!operation.IsDone)
             {
                 operation.Completed += m_CompletedSourceValue;
-                return string.Empty;
+                throw new DataNotReadyException();
             }
 
             var entry = operation.Result.Entry;
             if (entry == null)
-                return "<Missing Entry>";
+                throw new DataNotReadyException("{Missing Entry}");
 
             // If the entry is not smart then we do not need to forward as much information to the child.
             if (!entry.IsSmart)

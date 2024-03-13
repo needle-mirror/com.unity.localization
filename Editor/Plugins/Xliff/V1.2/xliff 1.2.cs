@@ -6,6 +6,8 @@ namespace UnityEditor.Localization.Plugins.XLIFF.V12
 {
     public partial class xliff : IXliffDocument
     {
+        const string k_FileDataType = "plaintext";
+
         string m_SourceLang;
         string m_TargetLang;
 
@@ -75,12 +77,13 @@ namespace UnityEditor.Localization.Plugins.XLIFF.V12
             var f12 = TypeVersionCheck.GetConcreteTypeThrowIfTypeVersionMismatch<file>(f);
             f12.sourcelanguage = m_SourceLang;
             f12.targetlanguage = m_TargetLang;
+            f12.datatype = k_FileDataType;
             file.Add(f12);
         }
 
         public IFile AddNewFile()
         {
-            var f = new file { sourcelanguage = m_SourceLang, targetlanguage = m_TargetLang };
+            var f = new file { sourcelanguage = m_SourceLang, targetlanguage = m_TargetLang, datatype = k_FileDataType };
             file.Add(f);
             return f;
         }

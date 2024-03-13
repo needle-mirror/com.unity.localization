@@ -61,13 +61,11 @@ This example demonstrates changing an asset's texture to the flag of that locale
 
 First, you need to create an Asset Table. To do this, open the **Localization Tables Window** (menu: **Window > Asset Management > Localization Tables**).
 
-1. In the Asset Tables window, select the **New Table Collection** tab.
+1. In the Localization Tables window, select **New Table Collection**.
 2. Select which locales you want to generate tables for.
 3. In the Type dropdown, select **Asset Table Collection**.
 4. In the Name field, give the collection a name.
 5. Select Create and choose a directory to generate the assets.
-
-![Create an Asset Table](images/CreateAssetTable.png)
 
 ### Localize a sprite
 
@@ -139,11 +137,9 @@ To localize strings, follow these steps:
 
 First, you need to create a string table. To do this, open the **Localization Tables Window** (menu: **Window > Asset Management > Localization Tables**).
 
-1. In the Asset Tables window, select the **New Table Collection tab**.
+1. In the Localization Tables window, select **New Table Collection**.
 2. Select which Locales you want to generate tables for, choose the **String Table Collection** from the Type dropdown and give the collection a name.
 3. Click the Create button and choose a directory to generate the assets.
-
-    ![Create a String Table Collection.](images/CreateStringTable.png)
 
 ### Localize static text
 
@@ -204,13 +200,14 @@ To add a UI Text element to the Scene, go to **GameObject > UI > Text**.
 2. Add the **Apples** component to the same GameObject as the Text.
 3. Press the Add (+) button in the **Local Variables** field, select **Object Reference** and drag the **Apples** Component into the **Object Reference** slot. Name the variable **apple-component**.
 
-Note: if the Apples component is on a different GameObject then ensure that the component is dragged into the slot and not the GameObject reference. One way to do this is to open two inspectors and lock one of them to the Text; you can then drag the Component across from one inspector and into the other.
+> [!NOTE]
+> If the **Apples** component is on a different GameObject, ensure you drag the component into the slot, not the GameObject reference. One method is to open two inspectors, lock one of them to the Text, and then drag the component from one inspector to the other.
 
 ![Unity finds and pairs the table with the matching Key during setup.](images/LocalizeStringComponent.png)
 
 The Text and the 2nd Argument appleCount is now configured however we also need to configure the 1st argument {global.player-name}.
 
-1. Create a Global Variables Group Asset (Menu: **Assets/Create/Localization/Global Variables Group**)
+1. To create a Variables Group Asset, select **Assets** > **Create** > **Localization** > **Variables Group**.
 2. Select Add (+) in the Variables list and create a new String variable. Name it `player-name`.
 
     ![Press the + button in the Variables list and create a new String variable. Name it player-name.](images/GlobalVariablesPlayerName.png)

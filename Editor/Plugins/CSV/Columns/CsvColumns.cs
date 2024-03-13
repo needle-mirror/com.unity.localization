@@ -10,6 +10,7 @@ namespace UnityEditor.Localization.Plugins.CSV.Columns
     /// </summary>
     /// <example>
     /// This shows how synchronize custom <see cref="UnityEngine.Localization.Metadata.IMetadata"/> over multiple CSV columns.
+    /// Note: To use **CsvWriter** and **CsvReader** you will need to add an [Assembly Reference](https://docs.unity3d.com/Manual/ScriptCompilationAssemblyDefinitionFiles.html) to **Unity.Localization.ThirdParty.Editor**.
     /// <code source="../../../../DocCodeSamples.Tests/CsvSamples.cs" region="custom-column"/>
     /// </example>
     [Serializable]

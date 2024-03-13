@@ -4,9 +4,10 @@ Smart Strings are a modified version of the [SmartFormat](https://github.com/axu
 
 Smart Strings are a powerful alternative to using [String.Format](https://docs.microsoft.com/en-us/dotnet/api/system.string.format) when generating dynamic strings; they enable data-driven templates to have proper pluralization, gender conjugation, lists, and conditional language logic. Named placeholders give a more intuitive and less error-prone way to introduce variables which can help to provide additional context to translators.
 
-To mark a localized string as smart, select the Smart field in the Table Editor window.
+To mark a localized string as smart, click the button at the bottom-right of the entry (&#8942;) in the Localization Tables window and select Smart Format from the menu.
+A Smart String can be identified by the **{S}** icon at the bottom-right of the entry.
 
-![The Table Editor window displays two rows. A normal string at the top and a Smart String at the bottom.](../images/SmartFieldToggle.png)
+![The Localization Table window displays two rows. A normal string at the top and a Smart String at the bottom.](../images/SmartFieldToggle.png)
 
 You can also mark a string as smart in the **Smart** field in the **Localized String** editor.
 

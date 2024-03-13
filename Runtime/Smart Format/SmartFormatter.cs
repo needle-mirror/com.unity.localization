@@ -312,6 +312,13 @@ namespace UnityEngine.Localization.SmartFormat
                 {
                     EvaluateSelectors(childFormattingInfo);
                 }
+                catch (DataNotReadyException ex)
+                {
+                    // Handle async data not being ready (LOC-1087)
+                    if (!string.IsNullOrEmpty(ex.Text))
+                        formattingInfo.Write(ex.Text);
+                    continue;
+                }
                 catch (Exception ex)
                 {
                     // An error occurred while evaluation selectors

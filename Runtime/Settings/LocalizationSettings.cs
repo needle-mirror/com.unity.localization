@@ -61,6 +61,8 @@ namespace UnityEngine.Localization.Settings
         Locale m_ProjectLocale;
         CallbackArray<Action<Locale>> m_SelectedLocaleChanged;
 
+        internal bool IsChangingSelectedLocale { get; private set; }
+
         internal static LocalizationSettings s_Instance;
 
         /// <summary>
@@ -457,6 +459,7 @@ namespace UnityEngine.Localization.Settings
 
         void InvokeSelectedLocaleChanged(Locale locale)
         {
+            IsChangingSelectedLocale = true;
             try
             {
                 m_SelectedLocaleChanged.LockForChanges();
@@ -476,7 +479,7 @@ namespace UnityEngine.Localization.Settings
             {
                 Debug.LogException(ex);
             }
-
+            IsChangingSelectedLocale = false;
             m_SelectedLocaleChanged.UnlockForChanges();
         }
 

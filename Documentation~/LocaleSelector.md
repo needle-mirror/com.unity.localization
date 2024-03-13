@@ -3,7 +3,8 @@
 
 The Locale Selector is part of the [Localization Settings](LocalizationSettings.md). It determines which [Locale](Locale.md) Unity should use when the application first starts or an active Locale isn't selected. For example, you might want to use a default Locale, or attempt to use the Locale that the player is using on their device.
 
-The Localization Settings query each selector in the list, starting at the top(index 0). If a selector doesn't return a locale(null), then it queries the next, until it finds a valid Locale or it reaches the end of the list. This lets you create fallback behaviors when Unity is selecting which Locale to use.
+> [!NOTE]
+> The Localization Settings query each selector in the list, starting at the top (index 0). If a selector doesn't return a locale (null), then it queries the next, until it finds a valid Locale or it reaches the end of the list. This lets you create fallback behaviors when Unity is selecting which Locale to use.
 
 ![Configure the Locale Selectors in the Localization Project Settings window.](images/LocalizationSettings_LocaleSelector.png)
 

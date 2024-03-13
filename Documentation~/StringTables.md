@@ -23,10 +23,10 @@ To create custom Extensions, you can inherit from [CollectionExtension](xref:Uni
 
 ## Preloading
 
-![Preloading can be configured from the Table Properties panel.](images/StringTables_TableProperties.png)
+![Preloading can be configured from the Localization Tables window top panel.](images/PreloadToggle.png)
 
-By default, the Localization system does not pre-load a String Table. This means that the first time Unity requests a String Table or its contents, the Localization table must first load the table., This happens asynchronously in the background, however, it means that the requested string might not be immediately available.
-You can configure the Localization system to pre-load String Tables, so that they are immediately available upon request. To do this, navigate to the Asset Tables window, click the Table Properties button (above the Locale name), and enable **Preload All Tables** to preload all tables in this collection or **Preload Table** to only preload the selected table.
+By default, the Localization system does not pre-load a String Table. This means that the first time Unity requests a String Table or its contents, the Localization table must first load the table. This happens asynchronously in the background, however, it means that the requested string might not be immediately available.
+You can configure the Localization system to pre-load String Tables, so that they are immediately available upon request. To do this, navigate to the Localization Tables window and enable the Preload toggle.
 
 ## Smart Strings
 
@@ -36,12 +36,15 @@ You can use the **Smart** field to enable or disable [Smart Formatting](Smart/Sm
 
 You can view [Metadata](Metadata.md) for tables and table entries.
 
-- To view Metadata for a table, select the button above the table column header.
-- To view Metadata for a table entry, select the button in the table entry cell.
+- To view Metadata for a table, select the button at the right of the table column header.
 
-The Localization system stores **Shared** Metadata in the **Shared Table Data** for the table collection. This means that all Tables have access to this data. Locale-specific Metadata (the list below Shared) is stored in the table and is only accessible by the table with the data.
+![Editing Table Metadata](images/TableMetadata.png)
 
-![Editing Table Entry Metadata](images/StringTables_EntryProperties.png)
+- To view Metadata for a table entry, select the button at the bottom-right (&#8942;) of the table entry cell.
+
+The Localization system stores **Shared** Metadata in the **Shared Table Data** for the table collection. This means that all Tables have access to this data. Locale-specific Metadata (the list below **Shared**) is stored in the table and is only accessible by the table with the data.
+
+![Editing Table Entry Metadata](images/EntryMetadata.png)
 
 ## Character Sets
 
@@ -50,7 +53,7 @@ Unity can determine the **Character Sets** for **String Tables** by examining th
 
 For example, the **Character Set** for the [Smart String](Smart/SmartStrings.md) `You have {count:plural:an Apple|{} apples}!` would be ` !AYaehlnopsuv`.
 
-You can export a **Character Set** file from the context menu of the String Table window, the String Table Collection window, or the Localization Tables window. A **Character Set** can also be generated through script by calling [GenerateCharacterSet](xref:UnityEditor.Localization.StringTableCollection.GenerateCharacterSet(UnityEngine.Localization.LocaleIdentifier[])).
+You can export a **Character Set** file from the context menu of the String Table window, the String Table Collection window, or the export menu of the Localization Tables window. A **Character Set** can also be generated through script by calling [GenerateCharacterSet](xref:UnityEditor.Localization.StringTableCollection.GenerateCharacterSet(UnityEngine.Localization.LocaleIdentifier[])).
 
 The type of export depends on where you run the export from:
 

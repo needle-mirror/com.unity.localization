@@ -180,7 +180,7 @@ namespace UnityEngine.Localization.Settings
         /// <returns></returns>
         /// <example>
         /// This example shows how to get a localized string from the <see cref="LocalizedDatabase{TTable, TEntry}.DefaultTable"/> which uses formatting arguments and use the Completed event to display it.
-        /// <code source="../../../DocCodeSamples.Tests/LocalizedStringDatabaseSamples.cs" region="get-string-argument-async"/>
+        /// <code source="../../../DocCodeSamples.Tests/LocalizedStringDatabaseSamples.cs" region="get-string"/>
         /// </example>
         public string GetLocalizedString(TableEntryReference tableEntryReference, IList<object> arguments, Locale locale = null, FallbackBehavior fallbackBehavior = FallbackBehavior.UseProjectSettings)
         {

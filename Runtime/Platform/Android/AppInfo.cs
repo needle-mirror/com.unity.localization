@@ -7,6 +7,11 @@ namespace UnityEngine.Localization.Platform.Android
     /// Contains all values that can be localized in the Android Application.
     /// These values can be displayed when the App is not running, such as the application name that is displayed on the home screen.
     /// </summary>
+    /// <example>
+    /// This example shows how to configure the Android App Info.
+    /// __Note__: You must complete this configuration before the application is built, otherwise, the changes will not be applied.
+    /// <code source="../../../DocCodeSamples.Tests/AndroidAppInfoExample.cs"/>
+    /// </example>
     [DisplayName("Android App Info", "Packages/com.unity.localization/Editor/Icons/Android/Android.png")]
     [Metadata(AllowedTypes = MetadataType.LocalizationSettings, AllowMultiple = false, MenuItem = "Android/App Info")]
     [Serializable]

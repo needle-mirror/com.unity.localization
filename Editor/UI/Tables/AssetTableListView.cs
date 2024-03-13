@@ -36,7 +36,7 @@ namespace UnityEditor.Localization.UI
             if (item is AssetTableTreeViewItem tvi && tvi.AssetType != typeof(Object))
             {
                 if (EditorGUIUtility.HasObjectThumbnail(tvi.AssetType))
-                    return Mathf.Max(k_ThumbnailPreviewHeight, height);
+                    return Mathf.Max(k_ThumbnailPreviewHeight, height) + k_RowFooterHeightWithPadding + k_RowVerticalPadding;
             }
 
             return height;

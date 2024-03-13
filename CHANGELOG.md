@@ -2,6 +2,20 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.5.0-pre.7] - 2024-03-13
+
+### Added
+
+- Added `AbortFormattingException`, this can be used to stop processing of the current format item in a Smart String when thrown from a custom `ISource`. ([LOC-1087](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1087))
+
+### Fixed
+
+- Exported XLIFF 1.2 documents will now include the required attribute datatype on the file elements. (LOC-1091)
+- Fixed errors in smart strings that contain nested localized strings with additional selectors/formatters when the string table had not yet loaded. ([LOC-1087](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1087))
+- Fixed the GameObjectLocalizer not updating if a persistent variable is changed. ([LOC-964](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-964))
+- Improved error handling when trying to parse an invalid localized property variant value. ([LOC-1081](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1081))
+- Improved performance when removing an item from the Localization Tables Window. ([LOC-1042](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1042))
+
 ## [1.5.0-pre.6] - 2024-01-31
 
 ### Changed

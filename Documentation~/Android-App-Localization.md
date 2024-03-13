@@ -68,3 +68,9 @@ To add a Legacy Icon, add the **Android/Legacy Icon Metadata**.
 ![To add a Legacy Icon, add the Android/Legacy Icon Metadata.](images/AndroidLegacyIconMetadataMenu.png)
 
 ![The Legacy Icon editor.](images/AndroidLegacyIconMetadata.png)
+
+## Configure through script
+
+You can also configure the App Info via script. You must complete the configuration before the application is built, otherwise, the changes will not be applied.
+
+[!code-cs[](../DocCodeSamples.Tests/AndroidAppInfoExample.cs)]

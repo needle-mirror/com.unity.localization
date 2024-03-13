@@ -32,6 +32,11 @@ namespace UnityEngine.Localization.Platform.Android
     /// An Adaptive Launcher Icon represents the application icon on the device's Home Screen and in the launcher window on devices running Android 8 and above.
     /// Please see [Android Documentation](https://developer.android.com/guide/practices/ui_guidelines/icon_design_adaptive) for more details on Adaptive Icon.
     /// </summary>
+    /// <example>
+    /// This example shows how to configure the Android App Info.
+    ///  __Note__: You must complete this configuration before the application is built, otherwise, the changes will not be applied.
+    /// <code source="../../../DocCodeSamples.Tests/AndroidAppInfoExample.cs"/>
+    /// </example>
     [DisplayName("Android Adaptive Icon Info")]
     [Metadata(AllowedTypes = MetadataType.LocalizationSettings, AllowMultiple = false, MenuItem = "Android/Adaptive Icon")]
     [Serializable]

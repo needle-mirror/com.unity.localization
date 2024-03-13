@@ -34,13 +34,11 @@ This demonstrates changing an Asset's Texture to the flag of that Locale's count
 
 First, you need to create an Asset Table. To do this, open the **Localization Tables Window** (menu: **Window > Asset Management > Localization Tables**).
 
-1. In the Asset Tables window, select the **New Table Collection** tab.
+1. In the Localization Tables window, select **New Table Collection**.
 2. Select which locales you want to generate tables for.
 3. In the Type dropdown, select **Asset Table Collection**.
 4. In the Name field, give the collection a name.
 5. Select Create and choose a directory to generate the assets.
-
-![Create an Asset Table](images/CreateAssetTable.png)
 
 Click **Edit Table Collection** and select the **My Assets** table.
 
@@ -92,15 +90,14 @@ To localize Audio Clips, we could follow the same process as localizing the Text
 
 First, you need to create a String Table. To do this, open the **Localization TablesWindow** (menu: **Window > Asset Management > Localization Tables**).
 
-1. In the Asset Tables window, select the **New Table Collection** tab.
+1. In the Localization Tables window, select **New Table Collection**.
 2. Select which locales you want to generate tables for.
-3. In the Type dropdown, select **String Table Collection**.
-4. In the Name field, give the collection a name.
+3. In the **Type** dropdown, select **String Table Collection**.
+4. In the **Name** field, give the collection a name.
 5. Select Create and choose a directory to generate the assets.
+6. Select **New Entry** to add an entry to the table.
+7. To enable [Smart String](Smart/SmartStrings.md) for the entry, go to its **More** (&#8942;) menu and select *Smart String**.
 
-![Press the Add New Entry button to create a new String Table entry.](images/StringTables_EntryProperties.png)
-
-Enable the **Smart** option to mark the entry as a [Smart String](Smart/SmartStrings.md).
 In this example we will use the Smart String reflection and plural features to print out a variable from the following script:
 
 [!code-cs[apple-sample](../DocCodeSamples.Tests/Apples.cs)]
@@ -126,7 +123,25 @@ Press the Add (+) button in the **Local Variables** field, select **Object Refer
 
 ![Unity finds and pairs the table with the matching Key during setup.](images/LocalizeStringComponent.png)
 
-![Example text.](images/LocalizedString_Plurals.gif)
+You've configured the Text and the second Argument, `appleCount`. However, you still need to configure the first argument, {global.player-name}.
+
+1. To create a Variables Group Asset, select **Assets** > **Create** > **Localization** > **Variables Group**.
+2. To create a new string variable, select the Add (+) button in the Variables list.
+3. Give the variable a name, such as `player-name`.
+
+    ![Press the + button in the Variables list and create a new String variable. Name it player-name.](images/GlobalVariablesPlayerName.png)
+
+3. To open the Localization Settings, select **Edit** > **Project Settings** > **Localization**.
+4. Go to **String Database** > **Smart Format** > Smart Format Sources list**.
+1. Select **Add (+)** to create a new Global Variables Source. 
+1. Drag and drop the Global Variables Source to the second position in the Sources List, under the List Formatter item.
+5. Select **Add (+)** in the Global Variables Source to create a new item. Keep the default name “global”, this is the value used in the first part of the Smart String {**global**.player-name} and drag the Global Variables Source asset into the slot. The Global Variables source is now configured.
+
+    ![Configure the Global Variables Source.](images/GlobalVariables_Source.png)
+
+1. Duplicate the Text GameObject and change the Apple count to a different value. Click **Play** and notice that the text uses the correct plural form for each.
+
+    ![Example text.](images/LocalizedString_Plurals.gif)
 
 ## 9. Build Preview and configuration
 

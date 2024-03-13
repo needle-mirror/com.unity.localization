@@ -2,7 +2,7 @@
     "ErrorExceptions": [
         {
             "ValidationTest": "API Validation",
-            "PackageVersion": "1.5.0-pre.6",
+            "PackageVersion": "1.5.0-pre.7",
             "Reason" : "Failing test can not be exempted due to the exception containing a temporary path name."
         }
     ],

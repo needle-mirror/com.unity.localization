@@ -15,8 +15,9 @@ namespace UnityEditor.Localization.Plugins.XLIFF
         {
             if (collection is StringTableCollection)
             {
-                menu.AppendAction(L10n.Tr("XLIFF into Collection..."), _ => ImportIntoCollection(new MenuCommand(collection)));
-                menu.AppendAction(L10n.Tr("XLIFF..."), _ => ImportXliffFile());
+                menu.AppendAction(L10n.Tr("XLIFF into collection"), _ => ImportIntoCollection(new MenuCommand(collection)));
+                menu.AppendAction(L10n.Tr("XLIFF file"), _ => ImportXliffFile());
+                menu.AppendAction(L10n.Tr("XLIFF directory"), _ => ImportXliffDirectory());
             }
         }
 

@@ -20,19 +20,22 @@ To create custom Extensions, you can inherit from [CollectionExtension](xref:Uni
 
 ## Preloading
 
-![Preloading can be configured from the Table Properties panel.](images/AssetTables_TableProperties.png)
+![Preloading can be configured from the Localization Tables window top panel.](images/PreloadToggle.png)
 
 By default, the Localization system does not pre-load an Asset Table and its contents. This means that the first time Unity requests an asset, the Localization system must load the table and then the requested asset. This happens asynchronously in the background; however, it means that the requested asset might not be immediately available.
 
-You can configure the Localization system to pre-load assets, so that they are immediately available upon request. To do this, navigate to the Asset Tables window, click the **Table Properties** button (above the Locale name) and enable **Preload All Tables** to preload all tables in this collection, or **Preload Table** to only preload the selected table.
+You can configure the Localization system to pre-load assets, so that they are immediately available upon request. To do this, navigate to the Localization Tables window and enable the Preload toggle.
 
 ## Metadata
 
 You can view [Metadata](Metadata.md) for tables and table entries.
 
-- To view Metadata for a table, select the button above the table column header.
-- To view Metadata for a table entry, select the button in the table entry cell.
+- To view Metadata for a table, select the button at the right of the table column header.
+
+![Editing Table Metadata](images/TableMetadata.png)
+
+- To view Metadata for a table entry, open the **More** (&#8942;) menu at the bottom-right of the table entry cell.
 
 The Localization system stores **Shared** Metadata in the **Shared Table Data** for the table collection. This means that all Tables have access to this data. Locale-specific Metadata (the list below **Shared**) is stored in the table and is only accessible by the table with the data.
 
-![Editing Table Entry Metadata](images/AssetTables_EntryProperties.png)
+![Editing Table Entry Metadata](images/EntryMetadata.png)

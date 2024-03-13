@@ -555,7 +555,9 @@ namespace UnityEditor.Localization.UI
                     objects[i] = TableCollection.Tables[i].asset;
                 }
                 objects[TableCollection.Tables.Count] = TableCollection.SharedData;
-                Undo.RecordObjects(objects, "Remove key from collection");
+
+                // RecordObject has a significant performance hit when removing from large tables due to GenerateUndoDiffs. (LOC-1042)
+                Undo.RegisterCompleteObjectUndo(objects, "Remove key from collection");
                 keyItem.OnDeleteKey();
                 TableCollection.RemoveEntry(keyItem.KeyId);
 

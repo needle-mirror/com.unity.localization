@@ -37,7 +37,7 @@ namespace UnityEngine.Localization
         public string Code => m_Code;
 
         /// <summary>
-        /// A [CultureInfo}(https://docs.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo) representation of the Locale.
+        /// A [CultureInfo](https://docs.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo) representation of the Locale.
         /// The <see cref="Code"/> is used to query for a valid [CultureInfo}(https://docs.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo).
         /// If a value can not be determined from the <see cref="Code"/> then <see langword="null"/> will be returned.
         /// </summary>

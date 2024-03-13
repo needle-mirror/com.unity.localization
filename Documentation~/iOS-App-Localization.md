@@ -19,3 +19,9 @@ Values that are not set are left unlocalized and use their default values.
 | **Microphone Usage Description**  | [NSMicrophoneUsageDescription](https://developer.apple.com/documentation/bundleresources/information_property_list/nsmicrophoneusagedescription) | A message that tells the user why the app is requesting access to the device’s microphone. This replaces the value in the Project Settings.
 | **Location Usage Description**    | [NSLocationWhenInUseUsageDescription](https://developer.apple.com/documentation/bundleresources/information_property_list/nslocationwheninuseusagedescription) | A message that tells the user why the app is requesting access to the user’s location information while the app is running in the foreground. This replaces the value in the Project Settings.
 | **User Tracking Usage Description** | [NSUserTrackingUsageDescription](https://developer.apple.com/documentation/bundleresources/information_property_list/nsusertrackingusagedescription) | A message that informs the user why an app is requesting permission to use data for tracking the user or the device. |
+
+## Configure through script
+
+The App Info can also be configure via script. Please note that this configuration must be completed prior to the application build, otherwise, the changes will not be applied.
+
+[!code-cs[](../DocCodeSamples.Tests/IosAppInfoExample.cs)]

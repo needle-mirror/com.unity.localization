@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Localization.PropertyVariants.TrackedObjects;
+using UnityEngine.Localization.PropertyVariants.TrackedProperties;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Pool;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -11,8 +12,8 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 namespace UnityEngine.Localization.PropertyVariants
 {
     /// <summary>
-    /// The GameObject GameObject Localizer component is responsible for storing and applying all Localized Property Variants Configurations
-    /// for the <see cref="GameObject"/> it is attached to.
+    /// The GameObject Localizer component is responsible for storing and applying all Localized Property Variants Configurations
+    /// for the [GameObject](https://docs.unity3d.com/ScriptReference/GameObject.html) it is attached to.
     /// </summary>
     /// <example>
     /// This shows how to configure a <see cref="GameObjectLocalizer"/> to apply changes to a [Text](https://docs.unity3d.com/Packages/com.unity.ugui@latest/index.html?subfolder=/api/UnityEngine.UI.Text.html)
@@ -51,6 +52,8 @@ namespace UnityEngine.Localization.PropertyVariants
         List<TrackedObject> m_TrackedObjects = new List<TrackedObject>();
 
         Locale m_CurrentLocale;
+        LocalizedString.ChangeHandler m_LocalizedStringChanged;
+        bool m_IgnoreChange;
 
         internal AsyncOperationHandle CurrentOperation
         {
@@ -61,6 +64,8 @@ namespace UnityEngine.Localization.PropertyVariants
         void OnEnable()
         {
             LocalizationSettings.SelectedLocaleChanged += SelectedLocaleChanged;
+
+            RegisterChanges();
 
             // Update when reenabled (LOC-579)
             if (m_CurrentLocale != null)
@@ -75,6 +80,7 @@ namespace UnityEngine.Localization.PropertyVariants
 
         void OnDisable()
         {
+            UnregisterChanges();
             AddressablesInterface.SafeRelease(CurrentOperation);
             CurrentOperation = default;
             LocalizationSettings.SelectedLocaleChanged -= SelectedLocaleChanged;
@@ -210,6 +216,57 @@ namespace UnityEngine.Localization.PropertyVariants
 
             ListPool<AsyncOperationHandle>.Release(asyncOperations);
             return default;
+        }
+
+        void RegisterChanges()
+        {
+            if (m_LocalizedStringChanged == null)
+                m_LocalizedStringChanged = _ => RequestUpdate();
+
+            try
+            {
+                // Ignore any changes sent whilst we register
+                m_IgnoreChange = true;
+                foreach (var trackedObject in m_TrackedObjects)
+                {
+                    foreach (var property in trackedObject.TrackedProperties)
+                    {
+                        if (property is LocalizedStringProperty localizedStringProperty)
+                        {
+                            localizedStringProperty.LocalizedString.StringChanged += m_LocalizedStringChanged;
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                m_IgnoreChange = false;
+            }
+        }
+
+        void UnregisterChanges()
+        {
+            if (m_LocalizedStringChanged == null)
+                return;
+
+            foreach (var trackedObject in m_TrackedObjects)
+            {
+                foreach (var property in trackedObject.TrackedProperties)
+                {
+                    if (property is LocalizedStringProperty localizedStringProperty)
+                    {
+                        localizedStringProperty.LocalizedString.StringChanged -= m_LocalizedStringChanged;
+                    }
+                }
+            }
+        }
+
+        void RequestUpdate()
+        {
+            // Ignore the change, it will be handled by the selected locale change event.
+            if (m_IgnoreChange || LocalizationSettings.Instance.IsChangingSelectedLocale || (CurrentOperation.IsValid() && !CurrentOperation.IsDone))
+                return;
+            ApplyLocaleVariant(m_CurrentLocale);
         }
     }
 }

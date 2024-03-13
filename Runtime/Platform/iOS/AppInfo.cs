@@ -7,6 +7,11 @@ namespace UnityEngine.Localization.Platform.iOS
     /// Contains all values that can be localized in the iOS Application.
     /// These are values that can be displayed when the App is not running such as the application name displayed on the home screen.
     /// </summary>
+    /// <example>
+    /// This example shows how to configure the iOS AppInfo.
+    /// __Note__: You must complete this configuration before the application is built, otherwise, the changes will not be applied.
+    /// <code source="../../../DocCodeSamples.Tests/IosAppInfoExample.cs"/>
+    /// </example>
     [DisplayName("iOS App Info")]
     [Metadata(AllowedTypes = MetadataType.LocalizationSettings, AllowMultiple = false, MenuItem = "iOS/App Info")]
     [Serializable]

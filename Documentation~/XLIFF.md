@@ -100,9 +100,7 @@ To export data from the Localization system to an XLIFF document, you need to us
 
 ### Export XLIFF Window
 
-To open the Export XLIFF window, open the window for the data you want to export (Localization Table, String Table or String Table Collection), select the **More** menu (⋮), and go to **Export > XLIFF**.
-
-![The Export option in the String Table Collection window.](images/XLIFF_ExportStringTableCollection.png)
+To export to XLIFF open the Localization Tables window (**Window > Asset Management > Localization Tables**) and select **Export/XLIFF...**.
 
 By default, this selects all tables in the window for export.
 
@@ -124,11 +122,9 @@ There are several ways you can import XLIFF documents: automatically through the
 
 An automatic XLIFF import attempts to automatically match the XLIFF documents to existing String Table Collections. This method provides a quick way to export data, update it with translations, then re-import the updated data.
 
-To perform an automatic import, open the Localization Tables window, select the **More** menu (⋮), and go to **Import**.
+To perform an automatic import, open the Localization Tables window and click the **Import** button.
 
-![Import XLIFF menu.](images/XLIFF_ImportMenu.png)
-
-To load all files with the .xlf or .xliff extensions in a given directory and sub-directories, select **XLIFF Directory**. To load a single file, select **XLIFF File**.
+To load all files with the .xlf or .xliff extensions in a given directory and sub-directories, select **XLIFF directory**. To load a single file, select **XLIFF file**.
 
 When Unity imports the XLIFF documents, it also searches for existing String Tables to populate with the data. If Unity created the original XLIFF document, then the assets already have references through their names and GUIDs (see [XLIFF Standard Support](#XLIFF Standard Support). If an external tool created the XLIFF document, then Unity performs the following checks to match it to an existing table:
 
@@ -141,6 +137,7 @@ If it is not part of a String Table Collection, or if the file ID does not match
 ### Importing into a String Table Collection
 
 To import a XLIFF document into a selected String Table Collection, open the String Table Collection window, select the **More** menu (⋮), and go to **Import > XLIFF**. Unity uses this String Table Collection for all the data in the XLIFF document, and uses a XLIFF file’s **Source Language** and **Target Language** fields to determine which String Tables to update.
+You can also do this from the Localization Tables window by selecting  **Import** > **XLIFF into collection**.
 
 ![Importing into a String Table Collection.](images/XLIFF_ImportCollectionMenu.png)
 

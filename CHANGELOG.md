@@ -2,6 +2,12 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.5.1] - 2024-03-13
+
+### Changed
+
+- Release version of 1.5.0. Contains all preview changes.
+
 ## [1.5.0-pre.7] - 2024-03-13
 
 ### Added

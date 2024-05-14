@@ -59,7 +59,7 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
                 if (entry != null)
                 {
                     if (entry.Key != cellValue)
-                        m_SharedTableData.RenameKey(entry.Key, cellValue);
+                        m_SharedTableData.RenameKey(entry.Id, cellValue);
                     return entry;
                 }
                 else

@@ -38,7 +38,7 @@ The following demonstrates the output for the 2 supported XLIFF versions:
 ```XML
 <?xml version="1.0"?>
 <xliff xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
-  <file original="Assets/Tables/Example Table_es.asset" source-language="en" target-language="es">
+  <file original="Assets/Tables/Example Table_es.asset" source-language="en" datatype="plaintext" target-language="es">
     <header>
       <skl>
         <external-file href="Assets/Tables/Example Table_es.asset" uid="8e0d86343d612504c9dda03e44e5026d" />

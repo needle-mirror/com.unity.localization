@@ -1,10 +1,10 @@
-# UI Toolkit (2023.3+)
+# UI Toolkit (Unity 6+)
 
 > [!NOTE]
-> This feature requires Unity 2023.3 and above.
+> This feature requires Unity 6 and above.
 
 The localization package provides UI Toolkit support through the [data bindings system](https://docs.unity3d.com/2023.3/Documentation/Manual/UIE-data-binding.html).
-When you bind a field, it automatically updates itself when you create the UI Document, change the selected locale, or change a persistent variable with a LocalizedString.
+When you bind a field, it automatically updates itself when you create the UI Document, change the selected locale, or change a persistent variable with a [LocalizedString](xref:UnityEngine.Localization.LocalizedString).
 You can add a localized binding in UI Builder, UXML, or C# script.
 
 The following table lists the supported localization bindings:
@@ -68,7 +68,7 @@ You can also use the following UXML structure to create a binding directly in UX
 ```xml
 <ELEMENT>
     <Bindings>
-        <BINDING-TYPE property="PROPERTY-PATH" table="TABLE-NAME-OF-GUID" entry="ENTRY-NAME-OF ID" />
+        <BINDING-TYPE property="PROPERTY-PATH" table="TABLE-NAME-OR-GUID" entry="ENTRY-NAME-OR-ID" />
     </Bindings>
 </ELEMENT>
 ```

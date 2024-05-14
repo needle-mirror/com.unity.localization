@@ -410,7 +410,7 @@ namespace UnityEditor.Localization
         /// </summary>
         /// <param name="table">The table to look for.</param>
         /// <returns></returns>
-        public bool ContainsTable(LocalizationTable table)
+        public virtual bool ContainsTable(LocalizationTable table)
         {
             // We use the instance id so as not to force the tables to be loaded.
             var tableInstanceID = table.GetInstanceID();

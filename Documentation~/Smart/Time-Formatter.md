@@ -29,9 +29,51 @@ You can combine options using the pipe symbol (|), for example (less|week).)The 
 > [!NOTE]
 > The time values are not localized and are only available in English.
 
-| **Example Smart String** | **Arguments**                                                                        | **Result**                            |
-|--------------------------|--------------------------------------------------------------------------------------|---------------------------------------|
-| {0:time(abbr)}           | [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-time-formatter-1)] | 451d 6h 22m 5s                        |
-| {0:time(full)}           | [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-time-formatter-1)] | 451 days 6 hours 22 minutes 5 seconds |
-| {0:time(less\|weeks)}    | [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-time-formatter-2)] | Less than 1 week                      |
-| {0:time(less\|d\|h)}     | [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-time-formatter-2)] | 1 day 6 hours                         |
+<table>
+<tr>
+<th><strong>Example Smart String</strong></th>
+<th><strong>Arguments</strong></th>
+<th><strong>Result</strong></th>
+</tr>
+
+<tr>
+<td>{0:time(abbr)}</td>
+<td>
+
+[!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-time-formatter-1)]
+
+</td>
+<td>451d 6h 22m 5s</td>
+</tr>
+
+<tr>
+<td>{0:time(full)}</td>
+<td>
+
+[!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-time-formatter-1)]
+
+</td>
+<td>451 days 6 hours 22 minutes 5 seconds</td>
+</tr>
+
+<tr>
+<td>{0:time(less\|weeks)}</td>
+<td>
+
+[!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-time-formatter-2)]
+
+</td>
+<td>Less than 1 week</td>
+</tr>
+
+<tr>
+<td>{0:time(less\|d\|h)}</td>
+<td>
+
+[!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-time-formatter-2)]
+
+</td>
+<td>1 day 6 hours</td>
+</tr>
+
+</table>

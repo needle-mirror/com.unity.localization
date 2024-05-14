@@ -382,7 +382,13 @@ namespace UnityEngine.Localization.Settings
             var tableIdString = tableReference.ReferenceType == TableReference.Type.Guid ? TableReference.StringFromGuid(tableReference.TableCollectionNameGuid) : tableReference.TableCollectionName;
             var localeId = useSelectedLocalePlaceholder ? k_SelectedLocaleId : locale.Identifier;
             if (TableOperations.TryGetValue((localeId, tableIdString), out var operationHandle))
-                return operationHandle;
+            {
+                // Something has invalidated the handle, possibly caused by an unexpected release. We should remove it and try again.
+                if (!operationHandle.IsValid())
+                    TableOperations.Remove((localeId, tableIdString));
+                else
+                    return operationHandle;
+            }
 
             // Start a new operation
             var operation = CreateLoadTableOperation();

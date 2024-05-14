@@ -108,20 +108,24 @@ namespace UnityEditor.Localization
                 throw new Exception("The table does not belong to this collection.");
             }
 
-            if (!EditorUtility.IsPersistent(table))
+            if (!IsPersistentAsset(table))
                 throw new AssetNotPersistentException(table);
 
-            if (!EditorUtility.IsPersistent(asset))
+            if (!IsPersistentAsset(asset))
                 throw new AssetNotPersistentException(asset);
+
+            // Reject Editor assets such as Folders. (LOC-1107)
+            if (asset is DefaultAsset)
+                throw new ArgumentException(nameof(asset), $"Can not add unsupported asset `{asset}` to table.");
+
+            var path = AssetDatabase.GetAssetPath(asset);
+            if (AssetUtility.IsBuiltInResource(path))
+                throw new ArgumentException($"Builtin resources are not supported. Can not add {asset} from {path}.", nameof(asset));
 
             // Add the asset to the Addressables system and setup the table with the key to guid mapping.
             var aaSettings = LocalizationEditorSettings.Instance.GetAddressableAssetSettings(true);
             if (aaSettings == null)
                 return;
-
-            var path = AssetDatabase.GetAssetPath(asset);
-            if (AssetUtility.IsBuiltInResource(path))
-                throw new ArgumentException($"Builtin resources are not supported. Can not add {asset} from {path}.", nameof(asset));
 
             using (new UndoScope("Add asset to table", createUndo))
             {
@@ -174,6 +178,8 @@ namespace UnityEditor.Localization
                 LocalizationEditorSettings.EditorEvents.RaiseAssetTableEntryAdded(this, table, tableEntry);
             }
         }
+
+        internal virtual bool IsPersistentAsset(Object asset) => EditorUtility.IsPersistent(asset);
 
         /// <summary>
         /// Remove the asset mapping from the table entry and also cleans up the Addressables if necessary.

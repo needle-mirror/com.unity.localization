@@ -2,7 +2,18 @@
 
 All notable changes to this package will be documented in this file.
 
-## [1.5.1] - 2024-03-13
+## [1.5.2] - 2024-05-14
+
+### Fixed
+
+- Exporting to an existing CSV file will now replace it instead of over-writing the contents. (LOC-1105). ([LOC-1105](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1105))
+- Fixed an issue when comparing locales in the player. We now do a check against the locale contents as well as the reference. ([LOC-1098](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1096))
+- Fixed an issue where a table handle could become invalid and still be used. We now reload when this occurs. ([LOC-1098](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1096))
+- Removed initialization during preloaded assets phase. This was causing freezing issues when trying to load bundles before any scenes had been loaded. ([ADDR-3664](https://issuetracker.unity3d.com/product/unity/issues/guid/ADDR-3664))
+- Removed the ability to add a folder to an asset table. This is unsupported. ([LOC-1107](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1107))
+- Resolved issues with renaming entries when pulling data from a Google Sheet, particularly in cases where the ID between entries had been swapped. ([LOC-909](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-909))
+
+## [1.5.1] - 2024-03-19
 
 ### Changed
 

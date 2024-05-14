@@ -4,11 +4,41 @@ The [Dictionary source](xref:UnityEngine.Localization.SmartFormat.Extensions.Dic
 
 When evaluating an IDictionary, if the Key is not a string, the Dictionary source first converts it to a string using the object’s ToString method. The case sensitivity of the comparison is determined by the Smart Form [Case Sensitivity](../LocalizationSettings.md#smart-format-settings) option.
 
-| **Example Smart String**                 | **Arguments**                                                              | **Result**                       |
-|------------------------------------------|----------------------------------------------------------------------------|----------------------------------|
-| {SomeKey}                                | [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-dict-1)] | 999                              |
-| Hello {Name} {Surname}                   | [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-dict-2)] | Hello Gordon Freeman             |
-| {Name} {Surname} scored {1:Score} points | [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-dict-3)] | Gordon Freeman scored 153 points |
+<table>
+<tr>
+<th><strong>Example Smart String</strong></th>
+<th><strong>Arguments</strong></th>
+<th><strong>Result</strong></th>
+</tr>
+
+<tr>
+<td>{SomeKey}</td>
+<td> 
+
+[!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-dict-1)]
+
+</td>
+<td>999</td>
+
+<tr>
+<td>Hello {Name} {Surname}</td>
+<td> 
+
+[!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-dict-2)]
+
+</td>
+<td>Hello Gordon Freeman</td>
+
+<tr>
+<td>{Name} {Surname} scored {1:Score} points</td>
+<td> 
+
+[!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-dict-3)]
+
+</td>
+<td>Gordon Freeman scored 153 points</td>
+
+</table>
 
 The following example shows how a dictionary could be provided as an argument.
 

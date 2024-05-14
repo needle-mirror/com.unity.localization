@@ -126,13 +126,22 @@ namespace UnityEditor.Localization.UI
         public void SetAsset(Object asset, int colIdx)
         {
             DelayedInit();
-            if (asset == null)
+
+            try
             {
-                m_AssetTableCollection.RemoveAssetFromTable(m_TableProperties[colIdx].table, KeyId, true);
+                if (asset == null)
+                {
+                    m_AssetTableCollection.RemoveAssetFromTable(m_TableProperties[colIdx].table, KeyId, true);
+                }
+                else
+                {
+                    m_AssetTableCollection.AddAssetToTable(m_TableProperties[colIdx].table, KeyId, asset, true);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                m_AssetTableCollection.AddAssetToTable(m_TableProperties[colIdx].table, KeyId, asset, true);
+                Debug.LogException(ex);
+                return;
             }
 
             m_TableProperties[colIdx].value = asset;

@@ -4,9 +4,47 @@ The [default source](xref:UnityEngine.Localization.SmartFormat.Extensions.Defaul
 
 The default source examines the current selector. If the selector can be parsed as an integer and is a valid index (within the number of provided arguments), the default source extracts the argument at the selected index and no further selectors are considered.
 
-| **Example Smart String**         | **Arguments**                                                                     | **Result**                      |
-|----------------------------------|-----------------------------------------------------------------------------------|---------------------------------|
-| {0} {1} {2}                      | [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-one-two-three)] | 1 2 3                           |
-| {1} {1} {2} {0}                  | [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-one-two-three)] | 2 2 3 1                         |
-| Player {0} scored {1} points     | [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-string-int)]    | Player Potato scored 155 points |
-| Player {0.Name} score {0.Points} | [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-anon-class)]    | Player One Scored 100 points    |
+<table>
+<tr>
+<th><strong>Example Smart String</strong></th>
+<th><strong>Arguments</strong></th>
+<th><strong>Result</strong></th>
+</tr>
+
+<tr>
+<td>{0} {1} {2}</td>
+<td> 
+
+[!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-one-two-three)]
+
+</td>
+<td>1 2 3</td>
+
+<tr>
+<td>{1} {1} {2} {0}</td>
+<td> 
+
+[!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-one-two-three)]
+
+</td>
+<td>2 2 3 1</td>
+
+<tr>
+<td>Player {0} scored {1} points</td>
+<td> 
+
+[!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-string-int)]
+
+</td>
+<td>Player Potato scored 155 points</td>
+
+<tr>
+<td>Player {0.Name} score {0.Points}</td>
+<td> 
+
+[!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-anon-class)]
+
+</td>
+<td>Player One Scored 100 points</td>
+
+</table>

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine.Localization.Tables;
 
@@ -10,8 +11,19 @@ namespace UnityEngine.Localization.Metadata
     /// </summary>
     public abstract class SharedTableEntryMetadata : IMetadata, ISerializationCallbackReceiver
     {
+        // Deprecated in favor of m_SharedEntries
         [SerializeField]
-        List<long> m_Entries = new List<long>();
+        List<long> m_Entries;
+
+        // Unity will serialize a list of primatives as binary, this makes it hard to diff and merge
+        // so we force it to serialize as a list of structs which does not use binary serialization. (LOC-1095)
+        [Serializable]
+        struct Entry
+        {
+            public long id;
+        }
+        [SerializeField]
+        List<Entry> m_SharedEntries = new List<Entry>();
 
         HashSet<long> m_EntriesLookup = new HashSet<long>();
 
@@ -37,12 +49,13 @@ namespace UnityEngine.Localization.Metadata
         /// </summary>
         public void OnBeforeSerialize()
         {
-            if (m_Entries == null)
-                m_Entries = new List<long>();
-            else
-                m_Entries.Clear();
+            m_Entries = null;
 
-            m_Entries.AddRange(m_EntriesLookup);
+            m_SharedEntries.Clear();
+            foreach (var e in m_EntriesLookup)
+            {
+                m_SharedEntries.Add(new Entry { id = e });
+            }
         }
 
         /// <summary>
@@ -55,9 +68,22 @@ namespace UnityEngine.Localization.Metadata
             else
                 m_EntriesLookup.Clear();
 
-            foreach (var e in m_Entries)
+            // Use the old system
+            if (m_Entries != null && m_Entries.Count > 0)
             {
-                m_EntriesLookup.Add(e);
+                foreach (var e in m_Entries)
+                {
+                    m_EntriesLookup.Add(e);
+                }
+                m_Entries = null;
+            }
+
+            if (m_SharedEntries != null && m_SharedEntries.Count > 0)
+            {
+                foreach (var e in m_SharedEntries)
+                {
+                    m_EntriesLookup.Add(e.id);
+                }
             }
         }
     }

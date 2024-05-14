@@ -1,6 +1,6 @@
 # Conditional Formatter
 
-Conditional formatting occurs on any placeholder that contains a pipe character (|) after the colon (:).
+Conditional formatting occurs on any placeholder that contains a pipe character `|` after the colon `:`.
 To invoke the [Conditional Formatter](xref:UnityEngine.Localization.SmartFormat.Extensions.ConditionalFormatter) explicitly use the name "conditional" or "cond". It can also be used implicitly when no name is provided.
 
 | **Data Type** | **Syntax** | **Example** |
@@ -15,20 +15,39 @@ To invoke the [Conditional Formatter](xref:UnityEngine.Localization.SmartFormat.
 | | {0:negative\|zero\|positive} | My birthday {0:was {0} ago\|is today!\|will be in {0} from now} |
 | **object** | {0:default\|nothing} | Property: {0:{0}\|(Nothing)} |
 
-Each parameter is separated by "|". The comparison is followed by a "?" and then the text. The last (default) entry does not contain a comparison nor a "?".
+Each parameter is separated by `|`. The comparison is followed by a `?` and then the text. The last (default) entry does not contain a comparison nor a `?`.
 
 The following comparisons are supported:
 
-- **>=**
-- **\>**
+- **&gt;=**
+- **&gt;**
 - **=**
-- **\<**
-- **\<=**
+- **&lt;**
+- **&lt;=**
 - **!=**
 
-To combine comparisons, use "&" for AND or "/" for OR.
+To combine comparisons, use `&` for AND or `/` for OR.
 
-| **Example Smart String** | **Arguments** | **Result** |
-| ------------------------ | ------------- | ---------- |
-| {0:cond:>10?Greater Than 10\|=10?Equals to 10\|Less than 10} | `5` | Less than 10 |
-| {Age:cond:>=55?Senior Citizen\|>=30?Adult\|>=18?Young Adult\|>12?Teenager\|>2?Child\|Baby} | [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-cond-1)] | Adult |
+<table>
+<tr>
+<th><strong>Example Smart String</strong></th>
+<th><strong>Arguments</strong></th>
+<th><strong>Result</strong></th>
+</tr>
+
+<tr>
+<td>{0:cond:>10?Greater Than 10\|=10?Equals to 10\|Less than 10}</td>
+<td><code>5</code></td>
+<td>Less than 10</td>
+
+<tr>
+<td>{Age:cond:&gt;=55?Senior Citizen|&gt;=30?Adult|&gt;=18?Young Adult|&gt;12?Teenager|&gt;2?Child|Baby}</td>
+<td> 
+
+[!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-cond-1)]
+
+</td>
+<td>Adult</td>
+</tr>
+
+</table>

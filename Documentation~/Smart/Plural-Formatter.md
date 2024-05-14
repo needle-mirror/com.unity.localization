@@ -22,10 +22,49 @@ To determine which plural rules to apply, the Plural Localization Formatter uses
 
 **Note**: You can use a plural formatter against an IEnumerable value. In this case, the Count of the IEnumerable count is used as the plural value.
 
-| **Example Smart String**                                                          | **Arguments**                                                                          | **Result**                                          |
-|-----------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|-----------------------------------------------------|
-| I have {0:plural:an apple\|{} apples}                                             | English Locale:<br><br>10                                                              | I have 10 apples                                    |
-| {0} {0:банан\|банана\|бананов}                                                    | Russian Locale:<br><br>1                                                               | 1 банана                                            |
-| {0:p:{} manzana\|{} manzanas}                                                     | Spanish Locale:<br><br>2                                                               | 2 Manzanas                                          |
-| The following {0:plural:person is\|people are} impressed: {0:list:{}\|, \|, and}. | [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-plural-formatter-1)] | The following people are impressed: bob, and alice. |
-|                                                                                   | [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-plural-formatter-2)] | The following person is impressed: Mohamed.         |
+<table>
+<tr>
+<th><strong>Example Smart String</strong></th>
+<th><strong>Arguments</strong></th>
+<th><strong>Result</strong></th>
+</tr>
+
+<tr>
+<td>I have {0:plural:an apple\|{} apples}</td>
+<td>English Locale:<br><br>10</td>
+<td>I have 10 apples</td>
+</tr>
+
+<tr>
+<td>{0} {0:банан\|{} банана\|{} бананов}</td>
+<td>Russian Locale:<br><br>1</td>
+<td>1 банана</td>
+</tr>
+
+<tr>
+<td>{0:p:{} manzana\|{} manzanas}</td>
+<td>Spanish Locale:<br><br>2</td>
+<td>2 Manzanas</td>
+</tr>
+
+<tr>
+<td>The following {0:plural:person is\|people are} impressed: {0:list:{}\|, \|, and}.</td>
+<td>
+
+[!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-plural-formatter-1)]
+
+</td>
+<td>The following people are impressed: bob, and alice.</td>
+</tr>
+
+<tr>
+<td></td>
+<td>
+
+[!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-plural-formatter-2)]
+
+</td>
+<td>The following person is impressed: Mohamed.</td>
+</tr>
+
+</table>

@@ -263,15 +263,6 @@ namespace UnityEngine.Localization.Settings
             if (s_Instance == null)
             {
                 s_Instance = this;
-
-                if (IsPlaying)
-                {
-                    var initOp = InitializationOperation;
-                    if (!initOp.IsValid())
-                    {
-                        Debug.Log("Failed to initialize LocalizationSettings.");
-                    }
-                }
             }
         }
 
@@ -564,8 +555,18 @@ namespace UnityEngine.Localization.Settings
         /// <param name="locale"></param>
         public void SetSelectedLocale(Locale locale)
         {
-            if (m_SelectedLocaleAsync.IsValid() && ReferenceEquals(m_SelectedLocaleAsync.Result, locale))
-                return;
+            // Do nothing if we are assigning the same locale
+            if (m_SelectedLocaleAsync.IsValid())
+            {
+                var previousLocale = m_SelectedLocaleAsync.Result;
+                if (ReferenceEquals(previousLocale, locale))
+                    return;
+
+                // Sometimes users will hold a list of Locales in a script and assign them in the player,
+                // these assets are now copies and wont have the same reference so we should also check the asset code and name.(LOC-1096)
+                if (previousLocale != null && locale != null && previousLocale.name == locale.name && previousLocale.Identifier.Code == locale.Identifier.Code)
+                    return;
+            }
 
             // We need to ensure initialization has been started
             GetInitializationOperation();

@@ -112,7 +112,7 @@ public static class LocalizationEditorSettingsSamples
         var entry = newTable.AddEntry("Hello", "Hola");
 
         // Add some metadata
-        entry.AddMetadata(new Comment { CommentText = "This is a comment"});
+        entry.AddMetadata(new Comment { CommentText = "This is a comment" });
 
         // We need to mark the table and shared table data entry as we have made changes
         EditorUtility.SetDirty(newTable);
@@ -238,4 +238,24 @@ public static class LocalizationEditorSettingsSamples
 
         #endregion
     }
+
+
+    #region add-missing-tables
+
+    [MenuItem("Localization/Add Missing Tables")]
+    public static void AddMissingTables()
+    {
+        foreach (var stringTableCollection in LocalizationEditorSettings.GetStringTableCollections())
+        {
+            foreach (var locale in LocalizationEditorSettings.GetLocales())
+            {
+                var table = stringTableCollection.GetTable(locale.Identifier);
+                if (table == null)
+                {
+                    table = stringTableCollection.AddNewTable(locale.Identifier);
+                }
+            }
+        }
+    }
+    #endregion
 }

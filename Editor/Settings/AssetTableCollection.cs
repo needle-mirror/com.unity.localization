@@ -245,17 +245,13 @@ namespace UnityEditor.Localization
         /// When an asset is first added to an entry, the type is recorded so that the Editor can ensure all subsequent assets that are added are compatible.
         /// </summary>
         /// <param name="tableEntry">The entry to return the asset type for.</param>
-        /// <returns>The expected asset type or typeof(Object) if unknown.</returns>
         public Type GetEntryAssetType(TableEntryReference tableEntry)
         {
             long keyId = tableEntry.ReferenceType == TableEntryReference.Type.Name ? SharedData.GetId(tableEntry.Key) : tableEntry.KeyId;
 
-            foreach (AssetTypeMetadata assetType in SharedData.Metadata.MetadataEntries)
+            foreach (var metadata in SharedData.Metadata.MetadataEntries)
             {
-                if (assetType == null)
-                    continue;
-
-                if (assetType.Contains(keyId))
+                if (metadata is AssetTypeMetadata assetType && assetType.Contains(keyId))
                 {
                     return assetType.Type;
                 }

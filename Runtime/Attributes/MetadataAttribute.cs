@@ -74,7 +74,7 @@ namespace UnityEngine.Localization.Metadata
         /// <summary>
         /// Metadata can be added to anything.
         /// </summary>
-        All = AllTables | AllTableEntries | Locale | SharedTableData
+        All = AllTables | AllTableEntries | Locale | SharedTableData | AllSharedTableEntries | LocalizationSettings
     }
 
     [AttributeUsage(AttributeTargets.Field)]

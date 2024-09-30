@@ -626,6 +626,14 @@ namespace UnityEngine.Localization.Settings
         /// </summary>
         /// <param name="locale">The <see cref="Locale"/> to load the table from, use null to default to cref="LocalizationSettings.SelectedLocale"/>.</param>
         /// <returns></returns>
+        /// <example>
+        /// This example gets all the tables and waits for the completion of the operation.
+        /// <code source="../../../DocCodeSamples.Tests/LocalizedStringDatabaseSamples.cs" region="get-all-tables-async"/>
+        /// </example>
+        /// <example>
+        /// This example gets all tables and uses [WaitForCompletion](xref:UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion) to force the loading to complete synchronously.
+        /// <code source="../../../DocCodeSamples.Tests/LocalizedStringDatabaseSamples.cs" region="get-all-tables"/>
+        /// </example>
         public virtual AsyncOperationHandle<IList<TTable>> GetAllTables(Locale locale = null)
         {
             var operation = LoadAllTablesOperation<TTable, TEntry>.Pool.Get();

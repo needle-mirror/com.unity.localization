@@ -49,8 +49,11 @@ namespace UnityEngine.Localization.Metadata
         /// <summary>
         /// Check we don't have a fallback locale chain that leads back to this locale and an infinite loop.
         /// </summary>
-        bool IsCyclic(Locale locale)
+        internal bool IsCyclic(Locale locale)
         {
+            if (locale == null)
+                return false;
+
             var parentMetadata = locale.Metadata?.GetMetadata<FallbackLocale>();
 
             while (parentMetadata != null && parentMetadata.Locale != null)

@@ -1,6 +1,6 @@
 # Plural Localization Formatter
 
-Languages vary in how they handle plurals of nouns or unit expressions, for example, "hour" vs "hours". Some languages have two forms, like English; some languages have only a single form; and some languages have multiple forms. The [Plural Localization Formatter](xref:UnityEngine.Localization.SmartFormat.Extensions.PluralLocalizationFormatter) follows the Unicode [Common Locale Data Repository](https://cldr.unicode.org/) (CLDR) approach to handle plurals.
+Languages vary in how they handle plurals of nouns or unit expressions, for example, "hour" vs "hours". Some languages have two forms, like English; some languages have only a single form; and some languages have multiple forms. The [Plural Localization Formatter](xref:UnityEngine.Localization.SmartFormat.Extensions.PluralLocalizationFormatter) follows the Unicode [Common Locale Data Repository](https://cldr.unicode.org/) (CLDR) approach to handle [plurals](https://cldr.unicode.org/index/cldr-spec/plural-rules).
 
 CLDR uses short, mnemonic tags for these plural categories:
 

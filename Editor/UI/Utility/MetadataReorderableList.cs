@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Localization.Metadata;
@@ -15,11 +17,8 @@ namespace UnityEditor.Localization.UI.Toolkit
             AddCallback = ShowAddItemMenu;
         }
 
-        void ShowAddItemMenu(ReorderableList list, int index)
+        public static void PopulateAddMetadataMenu(GenericMenu menu, MetadataType allowedType, SerializedProperty listProperty, IList<Type> metadataTypes, Action<Type> addCallback)
         {
-            var menu = new GenericMenu();
-            var metadataTypes = TypeCache.GetTypesDerivedFrom<IMetadata>();
-
             for (int i = 0; i < metadataTypes.Count; ++i)
             {
                 var md = metadataTypes[i];
@@ -30,18 +29,18 @@ namespace UnityEditor.Localization.UI.Toolkit
                 if (itemAttribute == null)
                     continue;
 
-                if ((itemAttribute.AllowedTypes & m_MetadataType.Type) == 0)
+                if ((itemAttribute.AllowedTypes & allowedType) == 0)
                     continue;
 
                 bool enabled = true;
                 if (!itemAttribute.AllowMultiple)
                 {
-                    for (int j = 0; j < list.ListProperty.arraySize; ++j)
+                    for (int j = 0; j < listProperty.arraySize; ++j)
                     {
-                        var typeName = list.ListProperty.GetArrayElementAtIndex(j).managedReferenceFullTypename;
+                        var typeName = listProperty.GetArrayElementAtIndex(j).managedReferenceFullTypename;
                         if (!string.IsNullOrEmpty(typeName))
                         {
-                            var type = ManagedReferenceUtility.GetType(list.ListProperty.GetArrayElementAtIndex(j).managedReferenceFullTypename);
+                            var type = ManagedReferenceUtility.GetType(listProperty.GetArrayElementAtIndex(j).managedReferenceFullTypename);
                             if (type == md)
                             {
                                 enabled = false;
@@ -60,7 +59,7 @@ namespace UnityEditor.Localization.UI.Toolkit
                 {
                     menu.AddItem(label, false, () =>
                     {
-                        AddManagedItem(list, md, index);
+                        addCallback(md);
                     });
                 }
                 else
@@ -68,7 +67,12 @@ namespace UnityEditor.Localization.UI.Toolkit
                     menu.AddDisabledItem(label);
                 }
             }
+        }
 
+        void ShowAddItemMenu(ReorderableList list, int index)
+        {
+            var menu = new GenericMenu();
+            PopulateAddMetadataMenu(menu, m_MetadataType.Type, list.ListProperty, TypeCache.GetTypesDerivedFrom<IMetadata>(), (type) => AddManagedItem(list, type, index));
             menu.ShowAsContext();
         }
     }

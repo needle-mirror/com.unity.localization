@@ -52,7 +52,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
 
             // Grab the current values
             m_PositionToApply = transform.localPosition;
-            m_RotationToApply = transform.rotation;
+            m_RotationToApply = transform.localRotation;
             m_ScaleToApply = transform.localScale;
 
             // Iterate through the tracked properties and use the property handlers to apply changes.
@@ -75,9 +75,9 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
             }
 
             // Apply the changes
-            transform.position = m_PositionToApply;
-            transform.rotation = m_RotationToApply;
             transform.localScale = m_ScaleToApply;
+            transform.localPosition = m_PositionToApply;
+            transform.localRotation = m_RotationToApply;
 
             return default;
         }

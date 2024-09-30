@@ -86,6 +86,9 @@ namespace UnityEngine.Localization.Operations
         {
             foreach (var locale in current.GetFallbacks())
             {
+                if (locales.Contains(locale))
+                    continue;
+
                 locales.Add(locale);
                 GetAllFallbackLocales(locale, locales);
             }

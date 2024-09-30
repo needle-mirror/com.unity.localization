@@ -181,4 +181,32 @@ public class GetLocalizedStringExamples
         Debug.Log($"Translation Not Found for {key} in {table?.TableCollectionName} for {locale}");
     }
     #endregion
+
+    public IEnumerator GetAllTablesExampleAsync()
+    {
+        #region get-all-tables-async
+
+        var tables = LocalizationSettings.StringDatabase.GetAllTables();
+        yield return tables;
+
+        foreach (var table in tables.Result)
+        {
+            Debug.Log("Loaded " + table.TableCollectionName);
+        }
+        #endregion
+    }
+
+    public void GetAllTablesExample()
+    {
+        #region get-all-tables
+
+        var tables = LocalizationSettings.StringDatabase.GetAllTables();
+        tables.WaitForCompletion();
+
+        foreach (var table in tables.Result)
+        {
+            Debug.Log("Loaded " + table.TableCollectionName);
+        }
+        #endregion
+    }
 }

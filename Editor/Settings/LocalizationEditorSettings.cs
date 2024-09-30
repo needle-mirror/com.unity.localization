@@ -174,6 +174,10 @@ namespace UnityEditor.Localization
         /// This example shows how to print out the contents of all the <see cref="StringTableCollection"/> in the project.
         /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="get-string-tables"/>
         /// </example>
+        /// <example>
+        /// This example adds missing tables for locales in the project.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationEditorSettingsSamples.cs" region="add-missing-tables"/>
+        /// </example>
         /// <returns></returns>
         public static ReadOnlyCollection<StringTableCollection> GetStringTableCollections() => Instance.GetStringTableCollectionsInternal();
 

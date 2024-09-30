@@ -19,8 +19,8 @@ namespace UnityEditor.Localization.UI
 
         static readonly Vector2 k_MinSize = new Vector2(900, 600);
 
-        ToolbarMenu m_ImportMenu;
-        ToolbarMenu m_ExportMenu;
+        internal ToolbarMenu m_ImportMenu;
+        internal ToolbarMenu m_ExportMenu;
         internal ProjectTablesPopup m_ProjectTablesPopup;
         Foldout m_CurrentTableFoldout;
         string m_CurrentTableFoldoutText;

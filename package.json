@@ -1,7 +1,7 @@
 {
   "name": "com.unity.localization",
   "displayName": "Localization",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "unity": "2019.4",
   "description": "Use the Localization package to easily configure localization settings for your application.\n\nAdd support for multiple languages and regional variants, including:\n\n• String localization: Set different strings to display based on locale. Use the Smart Strings feature to add logic to automatically replace specific strings, such as placeholders and plurals.\n• Asset localization: Use a different asset (such as a texture, model, or audio file) based on a locale.\n• Pseudo-localization: Test how your project will adapt to different localizations at an early stage, before adding your translations.\n• Import and export localization data to XLIFF, CSV and Google Sheets.\n\nAdd localization to your projects using the Localization package to help make your applications more accessible to a wider audience.",
   "keywords": [
@@ -10,23 +10,23 @@
     "language"
   ],
   "dependencies": {
-    "com.unity.addressables": "1.21.9",
+    "com.unity.addressables": "1.22.2",
     "com.unity.nuget.newtonsoft-json": "3.0.2"
   },
   "relatedPackages": {
-    "com.unity.localization.tests": "1.5.2"
+    "com.unity.localization.tests": "1.5.3"
   },
   "_upm": {
-    "changelog": "### Fixed\n\n- Exporting to an existing CSV file will now replace it instead of over-writing the contents. (LOC-1105). ([LOC-1105](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1105))\n- Fixed an issue when comparing locales in the player. We now do a check against the locale contents as well as the reference. ([LOC-1098](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1096))\n- Fixed an issue where a table handle could become invalid and still be used. We now reload when this occurs. ([LOC-1098](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1096))\n- Removed initialization during preloaded assets phase. This was causing freezing issues when trying to load bundles before any scenes had been loaded. ([ADDR-3664](https://issuetracker.unity3d.com/product/unity/issues/guid/ADDR-3664))\n- Removed the ability to add a folder to an asset table. This is unsupported. ([LOC-1107](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1107))\n- Resolved issues with renaming entries when pulling data from a Google Sheet, particularly in cases where the ID between entries had been swapped. ([LOC-909](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-909))"
+    "changelog": "### Added\n\n- Added additional menu options to Tables Window to expose the CSV Extension(s) available for a collection. This enables you to import and export data using custom settings configured through the CSV Extensions on the collection. (LOC-1130)\n- Added 'Open(Merge)` and `Import(Merge)' options to the CSV Extension property drawer. (LOC-1130)\n\n### Changed\n\n- Upgraded to Addressables 1.22.2. (LOC-1125)\n\n### Fixed\n\n- Added \"None\" option to localized string and asset picker. ([LOC-1141](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1141))\n- Added support for tracking UGUI Layout Groups via property variants so the layout updates when a locale is changed. This will require re-adding the GameObjectLocalizer as we do not currently have a way to update existing trackers to the new type. ([LOC-1128](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1128))\n- Fixed `LocalizationSettings.ProjectLocale` being null when the available locales are not initialized. ([LOC-1139](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1139))\n- Fixed `MetadataType.All` not including `AllSharedTableEntries` and `LocalizationSettings`. ([LOC-1131](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1131))\n- Fixed `StackOverflowException` when two locales use each other as fallbacks and Preload Behavior is set to Preload Selected Locale And Fallbacks. ([LOC-1119](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1119))\n- Fixed an issue where we would parse strings that were not marked as smart. ([LOC-1156](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1156))\n- Fixed being able to create cyclic locale fallbacks through the editor. (LOC-1117)\n- Fixed TrackedTransform so it correctly applies the locale position and rotation to a tracked GameObject. ([LOC-1148](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1148))"
   },
   "upmCi": {
-    "footprint": "2263d85684d18caf6123b8af969be75d45a7511b"
+    "footprint": "4f49f2ee69495e9b3a964965ea6b237613336f78"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.localization@1.5/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.localization.git",
     "type": "git",
-    "revision": "2ac1268d377abdf8c77b9fa97c8b900c1c5bdfbe"
+    "revision": "da1ce1d52234fd7265be8dc35797298743715d76"
   },
   "samples": [
     {

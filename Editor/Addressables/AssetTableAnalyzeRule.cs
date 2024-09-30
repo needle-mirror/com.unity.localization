@@ -89,6 +89,8 @@ namespace UnityEditor.Localization.Addressables
                 if (assetTableEntry.IsEmpty)
                     continue;
 
+                var entryLabel = $"{label}:{assetTableEntry.Key}";
+
                 var path  = AssetDatabase.GUIDToAssetPath(assetTableEntry.Guid);
                 var entry = settings.FindAssetEntry(assetTableEntry.Guid);
                 if (entry == null)
@@ -98,7 +100,7 @@ namespace UnityEditor.Localization.Addressables
                     {
                         Results.Add(new AnalyzeResultWithFixAction
                         {
-                            resultName = $"{label}:Asset Is Missing:{assetTableEntry.Address} {path}",
+                            resultName = $"{entryLabel}:Asset Is Missing:{assetTableEntry.Address} {path}",
                             severity = MessageType.Info,
                         });
                     }
@@ -106,7 +108,7 @@ namespace UnityEditor.Localization.Addressables
                     {
                         Results.Add(new AnalyzeResultWithFixAction
                         {
-                            resultName = $"{label}:Asset Not Marked as Addressable:{path}",
+                            resultName = $"{entryLabel}:Asset Not Marked as Addressable:{path}",
                             severity = MessageType.Error,
                             FixAction = () => assetTableCollection.AddAssetToTable(table, assetTableEntry.KeyId, asset)
                         });
@@ -130,7 +132,7 @@ namespace UnityEditor.Localization.Addressables
                     {
                         Results.Add(new AnalyzeResultWithFixAction
                         {
-                            resultName = $"{label}:Sub-Asset {assetTableEntry.SubAssetName} Is Missing:{assetTableEntry.Guid} {path}",
+                            resultName = $"{entryLabel}:Sub-Asset {assetTableEntry.SubAssetName} Is Missing:{assetTableEntry.Guid} {path}",
                             severity = MessageType.Error,
                         });
                     }
@@ -150,7 +152,7 @@ namespace UnityEditor.Localization.Addressables
                                 var subAsset = asset;
                                 Results.Add(new AnalyzeResultWithFixAction
                                 {
-                                    resultName = $"{label}:Main Asset {mainAssetType} does not match expected type {assetType}. A sub-asset name {assetTableEntry.SubAssetName} Is Missing:{assetTableEntry.Guid} {path}",
+                                    resultName = $"{entryLabel}:Main Asset {mainAssetType} does not match expected type {assetType}. A sub-asset name {assetTableEntry.SubAssetName} Is Missing:{assetTableEntry.Guid} {path}",
                                     severity = MessageType.Warning,
                                     FixAction = () => assetTableCollection.AddAssetToTable(table, assetTableEntry.KeyId, subAsset)
                                 });

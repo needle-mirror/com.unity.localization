@@ -11,7 +11,6 @@ Use the [Choose Formatter](xref:UnityEngine.Localization.SmartFormat.Extensions.
 | {0:choose(1\|2\|3):one\|two\|three\|other}            | 5             | other       |
 | {0:choose(True\|False):yes\|no}                       | true          | yes         |
 | {0:choose(null): NULL \| {} }                         | `null`        | NULL        |
-| {0:choose(null): NULL \| {} }                         | "Hello World" | Hello World |
 | How {0:choose(Male\|Female):is he\|is she\|are they}? | "Male"        | How is he?  |
 | It is {day:choose(1\|2\|3\|4\|5):Mon\|Tue\|Wed\|Thur\|Fri\|the weekend}.                    | 7 | It is the weekend.   |
 | Es {day:choose(1\|2\|3\|4\|5):lunes\|martes\|miércoles\|jueves\|viernes\|el fin de semana}. | 7 | Es el fin de semana. |

@@ -44,7 +44,7 @@ namespace UnityEditor.Localization.UI
             {
                 title = m_Title,
                 ignoreSaveSearches = true,
-                hideAllGroup = true,
+                hideAllGroup = false,
                 queryBuilderEnabled = true,
                 hideTabs = true,
                 flags = SearchViewFlags.DisableInspectorPreview | SearchViewFlags.OpenInBuilderMode,

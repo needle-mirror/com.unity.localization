@@ -1,5 +1,5 @@
 using System;
-using System.Reflection;
+using UnityEditor.Localization.UI.Toolkit;
 using UnityEngine;
 using UnityEngine.Localization.Metadata;
 
@@ -80,60 +80,8 @@ namespace UnityEditor.Localization.UI
         void AddItem(Rect rect, MetadataCollectionFieldPropertyData data)
         {
             var menu = new GenericMenu();
-            var metadataTypes = TypeCache.GetTypesDerivedFrom<IMetadata>();
-
             var metadataType = Type;
-            Debug.Assert(metadataType != null);
-            for (int i = 0; i < metadataTypes.Count; ++i)
-            {
-                var md = metadataTypes[i];
-                if (md.IsAbstract)
-                    continue;
-
-                var itemAttribute = md.GetCustomAttribute<MetadataAttribute>();
-                if (itemAttribute == null)
-                    continue;
-
-                if ((itemAttribute.AllowedTypes & metadataType.Type) == 0)
-                    continue;
-
-                // Check if the item is already added.
-                bool enabled = true;
-                if (!itemAttribute.AllowMultiple)
-                {
-                    for (int j = 0; j < data.m_ItemsProperty.arraySize; ++j)
-                    {
-                        var typeName = data.m_ItemsProperty.GetArrayElementAtIndex(j).managedReferenceFullTypename;
-                        if (!string.IsNullOrEmpty(typeName))
-                        {
-                            var type = ManagedReferenceUtility.GetType(data.m_ItemsProperty.GetArrayElementAtIndex(j).managedReferenceFullTypename);
-                            if (type == md)
-                            {
-                                enabled = false;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                var name = itemAttribute.MenuItem;
-                if (string.IsNullOrEmpty(name))
-                    name = ObjectNames.NicifyVariableName(md.Name);
-
-                var label = new GUIContent(name);
-                if (enabled)
-                {
-                    menu.AddItem(label, false, () =>
-                    {
-                        data.m_DeferredAdd = md;
-                    });
-                }
-                else
-                {
-                    menu.AddDisabledItem(label);
-                }
-            }
-
+            MetadataReorderableList.PopulateAddMetadataMenu(menu, metadataType.Type, data.m_ItemsProperty, TypeCache.GetTypesDerivedFrom<IMetadata>(), type => data.m_DeferredAdd = type);
             menu.DropDown(rect);
         }
     }

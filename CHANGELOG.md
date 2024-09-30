@@ -2,6 +2,28 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.5.3] - 2024-09-30
+
+### Added
+
+- Added additional menu options to Tables Window to expose the CSV Extension(s) available for a collection. This enables you to import and export data using custom settings configured through the CSV Extensions on the collection. (LOC-1130)
+- Added 'Open(Merge)` and `Import(Merge)' options to the CSV Extension property drawer. (LOC-1130)
+
+### Changed
+
+- Upgraded to Addressables 1.22.2. (LOC-1125)
+
+### Fixed
+
+- Added "None" option to localized string and asset picker. ([LOC-1141](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1141))
+- Added support for tracking UGUI Layout Groups via property variants so the layout updates when a locale is changed. This will require re-adding the GameObjectLocalizer as we do not currently have a way to update existing trackers to the new type. ([LOC-1128](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1128))
+- Fixed `LocalizationSettings.ProjectLocale` being null when the available locales are not initialized. ([LOC-1139](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1139))
+- Fixed `MetadataType.All` not including `AllSharedTableEntries` and `LocalizationSettings`. ([LOC-1131](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1131))
+- Fixed `StackOverflowException` when two locales use each other as fallbacks and Preload Behavior is set to Preload Selected Locale And Fallbacks. ([LOC-1119](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1119))
+- Fixed an issue where we would parse strings that were not marked as smart. ([LOC-1156](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1156))
+- Fixed being able to create cyclic locale fallbacks through the editor. (LOC-1117)
+- Fixed TrackedTransform so it correctly applies the locale position and rotation to a tracked GameObject. ([LOC-1148](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1148))
+
 ## [1.5.2] - 2024-05-14
 
 ### Fixed

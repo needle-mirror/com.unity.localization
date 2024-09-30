@@ -93,6 +93,9 @@ namespace UnityEngine.Localization.Tables
 
         internal FormatCache GetOrCreateFormatCache()
         {
+            if (!IsSmart)
+                return null;
+
             if (m_FormatCache == null && !string.IsNullOrEmpty(Data.Localized))
             {
                 m_FormatCache = FormatCachePool.Get(LocalizationSettings.StringDatabase.SmartFormatter.Parser.ParseFormat(Data.Localized, LocalizationSettings.StringDatabase.SmartFormatter.GetNotEmptyFormatterExtensionNames()));

@@ -217,7 +217,15 @@ namespace UnityEngine.Localization.Settings
             get
             {
                 if (Instance.m_ProjectLocale == null || Instance.m_ProjectLocale.Identifier != Instance.m_ProjectLocaleIdentifier)
+                {
+                    // Initialize the locales (LOC-1139)
+                    if (Instance.GetAvailableLocales() is IPreloadRequired localesProvider && !localesProvider.PreloadOperation.IsDone)
+                    {
+                        localesProvider.PreloadOperation.WaitForCompletion();
+                    }
+
                     Instance.m_ProjectLocale = AvailableLocales?.GetLocale(Instance.m_ProjectLocaleIdentifier);
+                }
                 return Instance.m_ProjectLocale;
             }
             set
@@ -609,7 +617,7 @@ namespace UnityEngine.Localization.Settings
         {
             if (!m_SelectedLocaleAsync.IsValid())
             {
-                if (m_AvailableLocales is IPreloadRequired localesProvider && !localesProvider.PreloadOperation.IsDone)
+                if (GetAvailableLocales() is IPreloadRequired localesProvider && !localesProvider.PreloadOperation.IsDone)
                 {
                     m_SelectedLocaleAsync = AddressablesInterface.ResourceManager.CreateChainOperation(localesProvider.PreloadOperation, (op) => AddressablesInterface.ResourceManager.CreateCompletedOperation(SelectActiveLocale(), null));
                 }

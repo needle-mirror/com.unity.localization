@@ -485,7 +485,8 @@ namespace UnityEditor.Localization.UI
                 if (data.SelectedTableEntry != null)
                 {
                     // Entry name
-                    height += EditorStyles.textArea.CalcHeight(new GUIContent(data.SelectedTableEntry?.Key), EditorGUIUtility.currentViewWidth) + EditorGUIUtility.standardVerticalSpacing;
+                    var labelwidth = EditorGUI.PrefixLabel(new Rect(0, 0, EditorGUIUtility.currentViewWidth, EditorGUIUtility.singleLineHeight), data.entryNameLabel).width;
+                    height += EditorStyles.textArea.CalcHeight(new GUIContent(data.SelectedTableEntry?.Key), labelwidth) + EditorGUIUtility.standardVerticalSpacing;
                 }
             }
             return height;

@@ -51,6 +51,26 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
             base.PostApplyTrackedProperties();
         }
     }
+
+    /// <summary>
+    /// Uses JSON to apply variant data to <see cref="LayoutGroup"/>.
+    /// Forces a layout rebuild on the target object after applying changes.
+    /// </summary>
+    [Serializable]
+    [DisplayName("Layout Group")]
+    [CustomTrackedObject(typeof(LayoutGroup), true)]
+    public class TrackedLayoutGroup : JsonSerializerTrackedObject
+    {
+        protected override void PostApplyTrackedProperties()
+        {
+            if (Target is LayoutGroup lg && lg.transform is RectTransform rt)
+            {
+                LayoutRebuilder.MarkLayoutForRebuild(rt);
+            }
+
+            base.PostApplyTrackedProperties();
+        }
+    }
 }
 
 #endif

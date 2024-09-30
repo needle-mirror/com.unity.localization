@@ -25,7 +25,9 @@ namespace UnityEditor.Localization.Plugins.CSV
             public static readonly GUIContent header = EditorGUIUtility.TrTextContent("Comma Separated Values (CSV)", EditorIcons.Csv);
             public static readonly GUIContent save = EditorGUIUtility.TrTextContent("Save...");
             public static readonly GUIContent open = EditorGUIUtility.TrTextContent("Open...");
+            public static readonly GUIContent openMerge = EditorGUIUtility.TrTextContent("Open(Merge)...");
             public static readonly GUIContent import = EditorGUIUtility.TrTextContent("Import");
+            public static readonly GUIContent importMerge = EditorGUIUtility.TrTextContent("Import(Merge)");
             public static readonly GUIContent export = EditorGUIUtility.TrTextContent("Export");
             public static readonly GUIContent show = EditorGUIUtility.TrTextContent("Show Folder");
         }
@@ -75,7 +77,7 @@ namespace UnityEditor.Localization.Plugins.CSV
             EditorUtility.RevealInFinder(path);
         }
 
-        static void Import(string path, StringTableCollection collection, IList<CsvColumns> columns)
+        static void Import(string path, StringTableCollection collection, IList<CsvColumns> columns, bool merge)
         {
             // Use FileShare.ReadWrite to avoid IOException: Sharing violation (LOC-348)
             using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
@@ -83,7 +85,7 @@ namespace UnityEditor.Localization.Plugins.CSV
                 var stream = new StreamReader(fs);
                 var reporter = TaskReporter.CreateDefaultReporter();
                 reporter.Start("Importing " + path, string.Empty);
-                Csv.ImportInto(stream, collection, columns, true, reporter, true);
+                Csv.ImportInto(stream, collection, columns, true, reporter, merge);
             }
         }
 
@@ -107,7 +109,7 @@ namespace UnityEditor.Localization.Plugins.CSV
             data.m_ColumnsList.DoList(position);
             position.MoveToNextLine();
             position.height = EditorGUIUtility.singleLineHeight;
-            var buttonsRect = position.SplitHorizontal();
+            var buttonsRect = position.SplitIntoThreeParts();
             position.MoveToNextLine();
 
             if (GUI.Button(buttonsRect.left, Styles.save))
@@ -129,7 +131,7 @@ namespace UnityEditor.Localization.Plugins.CSV
                 GUIUtility.ExitGUI();
             }
 
-            if (GUI.Button(buttonsRect.right, Styles.open))
+            if (GUI.Button(buttonsRect.center, Styles.open))
             {
                 var target = property.GetActualObjectForSerializedProperty<CsvExtension>(fieldInfo);
                 var collection = target.TargetCollection as StringTableCollection;
@@ -139,7 +141,27 @@ namespace UnityEditor.Localization.Plugins.CSV
                 if (!string.IsNullOrEmpty(path))
                 {
                     data.m_ConnectedFile.stringValue = path;
-                    Import(path, collection, target.Columns);
+                    Import(path, collection, target.Columns, true);
+                    MenuItems.PreviousDirectory = path;
+                }
+
+                // We need to apply the changes here as we exit early (LOC-751).
+                data.m_ConnectedFile.serializedObject.ApplyModifiedProperties();
+
+                GUIUtility.ExitGUI();
+            }
+
+            if (GUI.Button(buttonsRect.right, Styles.openMerge))
+            {
+                var target = property.GetActualObjectForSerializedProperty<CsvExtension>(fieldInfo);
+                var collection = target.TargetCollection as StringTableCollection;
+
+                var path = EditorUtility.OpenFilePanel("Import CSV", MenuItems.PreviousDirectory, "csv");
+                path = PathHelper.MakePathRelative(path);
+                if (!string.IsNullOrEmpty(path))
+                {
+                    data.m_ConnectedFile.stringValue = path;
+                    Import(path, collection, target.Columns, false);
                     MenuItems.PreviousDirectory = path;
                 }
 
@@ -164,27 +186,36 @@ namespace UnityEditor.Localization.Plugins.CSV
                 }
                 position.MoveToNextLine();
 
-                var syncButtonsRect = position.SplitIntoThreeParts();
+                var splitHalves = position.SplitHorizontal();
+                var syncLeft = splitHalves.left.SplitHorizontal();
+                var syncRight = splitHalves.right.SplitHorizontal();
 
-                if (GUI.Button(syncButtonsRect.left, Styles.export))
+                if (GUI.Button(syncLeft.left, Styles.export))
                 {
                     var target = property.GetActualObjectForSerializedProperty<CsvExtension>(fieldInfo);
                     var collection = target.TargetCollection as StringTableCollection;
                     Export(data.m_ConnectedFile.stringValue, collection, target.Columns);
                 }
 
-                if (GUI.Button(syncButtonsRect.center, Styles.show))
+                if (GUI.Button(syncLeft.right, Styles.show))
                 {
                     EditorUtility.RevealInFinder(data.m_ConnectedFile.stringValue);
                 }
 
                 using (new EditorGUI.DisabledScope(!File.Exists(data.m_ConnectedFile.stringValue)))
                 {
-                    if (GUI.Button(syncButtonsRect.right, Styles.import))
+                    if (GUI.Button(syncRight.left, Styles.import))
                     {
                         var target = property.GetActualObjectForSerializedProperty<CsvExtension>(fieldInfo);
                         var collection = target.TargetCollection as StringTableCollection;
-                        Import(data.m_ConnectedFile.stringValue, collection, target.Columns);
+                        Import(data.m_ConnectedFile.stringValue, collection, target.Columns, true);
+                    }
+
+                    if (GUI.Button(syncRight.right, Styles.importMerge))
+                    {
+                        var target = property.GetActualObjectForSerializedProperty<CsvExtension>(fieldInfo);
+                        var collection = target.TargetCollection as StringTableCollection;
+                        Import(data.m_ConnectedFile.stringValue, collection, target.Columns, false);
                     }
                 }
                 position.MoveToNextLine();

@@ -1,5 +1,4 @@
 {
   "displayName": "Loading Strings",
-  "description": "This sample shows multiple ways to fetch localized strings from the Localization system.",
-  "createSeparatePackage": false
+  "description": "This sample shows multiple ways to fetch localized strings from the Localization system."
 }

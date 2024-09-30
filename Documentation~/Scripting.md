@@ -38,7 +38,7 @@ For example, to support localizing font assets, you could define the following c
 
 [!code-cs[localized-font](../DocCodeSamples.Tests/LocalizedFontSample.cs)]
 
-In this example, you can now add `LocalizedFont` to a script, and [LocalizedAsset](xref:UnityEngine.Localization.LocalizedAsset`1) will call the [AssetChanged](xref:UnityEngine.Localization.LocalizedAsset`1.AssetChanged) event when a localized Font asset is available.
+In this example, you can now add `LocalizedFont` to a script(LocalizedFontExample), and [LocalizedAsset](xref:UnityEngine.Localization.LocalizedAsset`1) will call the [AssetChanged](xref:UnityEngine.Localization.LocalizedAsset`1.AssetChanged) event when a localized Font asset is available.
 
 The following Unity assets are already supported:
 
@@ -51,7 +51,7 @@ The following Unity assets are already supported:
 | [UnityEngine.Object](https://docs.unity3d.com/ScriptReference/Object.html) | [LocalizedObject](xref:UnityEngine.Localization.LocalizedObject) |
 | [Sprite](https://docs.unity3d.com/ScriptReference/Sprite.html) | [LocalizedSprite](xref:UnityEngine.Localization.LocalizedSprite) |
 | [Texture](https://docs.unity3d.com/ScriptReference/Texture.html) | [LocalizedTexture](xref:UnityEngine.Localization.LocalizedTexture) |
-| [TMP Font](https://docs.unity3d.com/Packages/com.unity.textmeshpro@latest?subfolder=/api/TMPro.TMP_FontAsset) [LocalizedTmpFont](xref:UnityEngine.Localization.LocalizedTmpFont) |
+| [TMP Font](https://docs.unity3d.com/Packages/com.unity.textmeshpro@latest?subfolder=/api/TMPro.TMP_FontAsset) | [LocalizedTmpFont](xref:UnityEngine.Localization.LocalizedTmpFont) |
 
 ### TableReference
 

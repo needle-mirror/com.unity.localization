@@ -217,10 +217,17 @@ namespace UnityEditor.Localization
                 var assetTableCollections = LocalizationEditorSettings.GetAssetTableCollections();
                 foreach (var collection in assetTableCollections)
                 {
-                    if (collection.GetTable(table.LocaleIdentifier) is AssetTable tableWithMatchingLocaleId && tableWithMatchingLocaleId.ContainsValue(removedAssetGuid))
+                    if (collection.GetTable(table.LocaleIdentifier) is AssetTable tableWithMatchingLocaleId)
                     {
-                        // The asset is referenced elsewhere by a table with the same Locale so we can not remove the locale label or asset.
-                        return;
+                        // Check if any of the entries contain the same guid.
+                        foreach (var entry in tableWithMatchingLocaleId.Values)
+                        {
+                            if (entry.Guid == removedAssetGuid)
+                            {
+                                // The asset is referenced elsewhere by a table with the same Locale so we can not remove the locale label or asset.
+                                return;
+                            }
+                        }
                     }
                 }
 

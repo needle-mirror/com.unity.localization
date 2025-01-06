@@ -3,8 +3,11 @@ using System;
 namespace UnityEngine.Localization.Tables
 {
     /// <summary>
-    /// A Key generator that uses the current time in ms with the machine id to generate a
-    /// unique value every time. This means it is safe for multiple users to add entries to the same table without
+    /// Provides unique IDs for entries in a <see cref="StringTable"/> or <see cref="AssetTable"/>.
+    /// </summary>
+    /// <remarks>
+    /// A [Key generator](xref:table-entry-keys) that combines the current time in milliseconds with the machine ID to generate a unique value every time.
+    /// This means it is safe for multiple users to add entries to the same table without
     /// suffering from conflicts due to the entries using the same key but having different values.
     ///
     /// The implementation is based on this article https://www.callicoder.com/distributed-unique-id-sequence-number-generator/
@@ -32,14 +35,15 @@ namespace UnityEngine.Localization.Tables
     /// <term>A timestamp using a custom epoch which is the time the class was created.
     /// The maximum timestamp that can be represented is 69 years from the custom epoch, at this point the Key generator will have exhausted its possible unique Ids.</term>
     /// </item>
-    /// </list>
     ///
     /// <item>
     /// <term>Signed Bit</term>
     /// <term>1 Bit(64)</term>
     /// <term>The signed bit is unused by the ID generator. If you wish to add custom Id values then using the signed bit and adding negative ids will avoid conflicts.</term>
     /// </item>
-    /// </summary>
+    ///
+    /// </list>
+    /// </remarks>
     [Serializable]
     public class DistributedUIDGenerator : IKeyGenerator
     {

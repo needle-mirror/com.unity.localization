@@ -539,6 +539,7 @@ namespace UnityEditor.Localization.UI
                     TableCollection.SharedData.RenameKey(keyItem.Key, newKey);
                     EditorUtility.SetDirty(TableCollection.SharedData);
                     RefreshCustomRowHeights();
+                    LocalizationEditorSettings.EditorEvents.RaiseTableEntryModified(keyItem.SharedEntry);
                 }
             }
         }

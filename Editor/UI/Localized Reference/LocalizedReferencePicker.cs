@@ -2,6 +2,7 @@
 
 using UnityEditor.Localization.Search;
 using UnityEditor.Search;
+using UnityEngine;
 using UnityEngine.Localization.Tables;
 using UnityEngine.Search;
 
@@ -16,15 +17,18 @@ namespace UnityEditor.Localization.UI
         ISearchView m_View;
         bool m_Revert = true;
 
-        SerializedTableReference m_Table;
-        SerializedTableEntryReference m_Entry;
+        Object[] m_Targets;
+        string m_TablePath;
+        string m_EntryPath;
 
         public LocalizedReferencePicker(SearchContext context, string title, SerializedProperty tableProperty, SerializedProperty entryProperty)
         {
             m_SearchContext = context;
             m_Title = title;
-            m_Table = new SerializedTableReference(tableProperty);
-            m_Entry = new SerializedTableEntryReference(entryProperty);
+
+            m_Targets = tableProperty.serializedObject.targetObjects;
+            m_TablePath = tableProperty.propertyPath;
+            m_EntryPath = entryProperty.propertyPath;
 
             Undo.IncrementCurrentGroup();
             m_UndoGroup = Undo.GetCurrentGroup();
@@ -84,9 +88,15 @@ namespace UnityEditor.Localization.UI
 
         void SetItem(LocalizationTableCollection collection, SharedTableData.SharedTableEntry entry)
         {
-            m_Entry.SetReference(entry);
-            m_Table.SetReference(collection);
-            m_Table.TableNameProperty.serializedObject.ApplyModifiedProperties();
+            var so = new SerializedObject(m_Targets);
+            var tableProp = so.FindProperty(m_TablePath);
+            var entryProp = so.FindProperty(m_EntryPath);
+
+            var tableRef = new SerializedTableReference(tableProp);
+            var entryRef = new SerializedTableEntryReference(entryProp);
+            entryRef.SetReference(entry);
+            tableRef.SetReference(collection);
+            so.ApplyModifiedProperties();
         }
     }
 }

@@ -278,3 +278,62 @@ public class XmlElement : IVariable
     }
 }
 #endregion
+
+#region bool-variable-sample
+public class BoolVariableSample : MonoBehaviour
+{
+    // Assuming the Localizing String is set in the inspector and is in the format "The door is {door-state:choose(Open|Closed)}"
+    public LocalizedString localizedString;
+    BoolVariable m_Variable;
+
+    void Start()
+    {
+        m_Variable = new BoolVariable { Value = false };
+        localizedString.Add("door-state", m_Variable);
+    }
+
+    public void OpenDoor() => m_Variable.Value = true;
+    public void CloseDoor() => m_Variable.Value = false;
+}
+
+#endregion
+
+#region sbyte-variable-sample
+public class SByteVariableSample : MonoBehaviour
+{
+    // Assuming the Localizing String is set in the inspector and is in the format "The value is {my-value}"
+    public LocalizedString localizedString;
+    SByteVariable m_Variable;
+
+    void Start()
+    {
+        m_Variable = new SByteVariable { Value = 1 };
+        localizedString.Add("my-value", m_Variable);
+    }
+
+    public void SetValue(sbyte value) => m_Variable.Value = value;
+}
+
+#endregion
+
+#region double-variable-sample
+public class DoubleVariableSample : MonoBehaviour
+{
+    // Assuming the Localizing String is set in the inspector and is in the format "The road is {length}m long."
+    public LocalizedString localizedString;
+    DoubleVariable m_Variable;
+
+    public double Length
+    {
+        get => m_Variable.Value;
+        set => m_Variable.Value = value;
+    }
+
+    void Start()
+    {
+        m_Variable = new DoubleVariable { Value = 100 };
+        localizedString.Add("length", m_Variable);
+    }
+}
+
+#endregion

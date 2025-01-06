@@ -9,9 +9,12 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 namespace UnityEngine.Localization.Settings
 {
     /// <summary>
-    /// The localization settings is the core component to the localization system.
-    /// It provides the entry point to all player based localization features.
+    /// Provides access to the localization system and its settings.
     /// </summary>
+    /// <remarks>
+    /// The Localization Settings serves as the central element of the localization system,
+    /// offering the primary access point for all player-based localization features.
+    /// </remarks>
     public class LocalizationSettings : ScriptableObject, IReset, IDisposable
     {
         /// <summary>

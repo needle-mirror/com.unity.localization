@@ -63,7 +63,11 @@ namespace UnityEditor.Localization.PropertyVariants
                                 break;
 
                             if (property.serializedObject.targetObject is GameObjectLocalizer localizer)
+                            {
+                                // Apply the changes before we call ApplyLocaleVariant. (LOC-1169)
+                                property.serializedObject.ApplyModifiedProperties();
                                 localizer.ApplyLocaleVariant(locale);
+                            }
                         }
 
                         if (GUI.Button(split.right, GUIContent.none, "OL Minus"))

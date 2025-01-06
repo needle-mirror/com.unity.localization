@@ -3,6 +3,8 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
+using System.Collections.Generic;
+
 
 #if ENABLE_SEARCH
 using UnityEditor.Localization.Search;
@@ -32,6 +34,9 @@ namespace UnityEditor.Localization.UI
             {
                 if (baseType.IsArray)
                     baseType = baseType.GetElementType().BaseType;
+
+                if (baseType.IsGenericType && typeof(List<>).IsAssignableFrom(baseType.GetGenericTypeDefinition()))
+                    baseType = baseType.GetGenericArguments()[0];
 
                 if (baseType.IsGenericType && baseType.GetGenericTypeDefinition() == typeof(LocalizedAsset<>))
                 {

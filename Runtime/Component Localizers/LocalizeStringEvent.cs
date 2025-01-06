@@ -6,11 +6,13 @@ using UnityEngine.Localization.Tables;
 namespace UnityEngine.Localization.Components
 {
     /// <summary>
-    /// Component that can be used to Localize a string.
-    /// Provides an update event <see cref="UpdateString(string)"/> that can be used to automatically update the string
-    /// when the <see cref="LocalizationSettings.SelectedLocale"/> or <see cref="StringReference"/> changes.
-    /// Allows for configuring optional arguments that will be used by **Smart Format** or [String.Format](https://docs.microsoft.com/en-us/dotnet/api/system.string.format).
+    /// A component that triggers events for string localization.
     /// </summary>
+    /// <remarks>
+    /// Provides an <see cref="OnUpdateString"/> event, accessible in the Inspector or scripts, for automatic string updates.
+    /// This event is triggered when the <see cref="StringReference"/> emits its <see cref="LocalizedString.StringChanged"/> event or its reference is changed.
+    /// The <see cref="StringReference"/> supports optional arguments for use with [Smart Strings](xref:smart-strings) or [string.Format](https://docs.microsoft.com/en-us/dotnet/api/system.string.format).
+    /// </remarks>
     /// <example>
     /// This example shows how a Localized String Event can be dynamically updated with a different localized string or new formatting data.
     /// <code source="../../DocCodeSamples.Tests/LocalizeStringEventExample.cs"/>
@@ -72,6 +74,10 @@ namespace UnityEngine.Localization.Components
         /// <summary>
         /// Forces the string to be regenerated, such as when the string formatting argument values have changed.
         /// </summary>
+        /// <example>
+        /// This example shows how to refresh the string when the value of a variable has changed.
+        /// <code source="../../DocCodeSamples.Tests/LocalizeStringEventSamples.cs" region="refresh-string"/>
+        /// </example>
         public void RefreshString()
         {
             StringReference?.RefreshString();
@@ -114,7 +120,14 @@ namespace UnityEngine.Localization.Components
         /// <summary>
         /// Invokes the <see cref="OnUpdateString"/> event.
         /// </summary>
-        /// <param name="value"></param>
+        /// <remarks>
+        /// You can override this method to provide custom behavior when the string is updated.
+        /// </remarks>
+        /// <example>
+        /// This example shows how to override the <see cref="UpdateString(string)"/> method to provide a custom behavior.
+        /// <code source="../../DocCodeSamples.Tests/LocalizeStringEventSamples.cs" region="update-string"/>
+        /// </example>
+        /// <param name="value">The localized string from the <see cref="StringReference"/>.</param>
         protected virtual void UpdateString(string value)
         {
             #if UNITY_EDITOR

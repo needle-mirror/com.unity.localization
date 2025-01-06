@@ -43,7 +43,7 @@ namespace UnityEditor.Localization.UI
 
             public (TCollection collection, SharedTableData.SharedTableEntry entry) ? deferredSetReference;
 
-            GUIContent m_FieldLabel;
+            internal GUIContent m_FieldLabel;
             SharedTableData.SharedTableEntry m_SelectedEntry;
             TCollection m_SelectedTableCollection;
             int m_SelectedTableIdx = -1;
@@ -245,6 +245,7 @@ namespace UnityEditor.Localization.UI
             LocalizationEditorSettings.EditorEvents.CollectionModified += EditorEvents_CollectionModifiedWithSender;
             LocalizationEditorSettings.EditorEvents.LocaleAdded += EditorEvents_LocaleAddedOrRemoved;
             LocalizationEditorSettings.EditorEvents.LocaleRemoved += EditorEvents_LocaleAddedOrRemoved;
+            LocalizationEditorSettings.EditorEvents.TableEntryModified += EditorEvents_TableEntryModified;
             Undo.undoRedoPerformed += UndoRedoPerformed;
         }
 
@@ -261,6 +262,7 @@ namespace UnityEditor.Localization.UI
             LocalizationEditorSettings.EditorEvents.CollectionModified -= EditorEvents_CollectionModifiedWithSender;
             LocalizationEditorSettings.EditorEvents.LocaleAdded -= EditorEvents_LocaleAddedOrRemoved;
             LocalizationEditorSettings.EditorEvents.LocaleRemoved -= EditorEvents_LocaleAddedOrRemoved;
+            LocalizationEditorSettings.EditorEvents.TableEntryModified -= EditorEvents_TableEntryModified;
             Undo.undoRedoPerformed -= UndoRedoPerformed;
         }
 
@@ -297,6 +299,13 @@ namespace UnityEditor.Localization.UI
             s_TableChoicesLabels = null;
             s_TableChoices = null;
             ClearPropertyDataCache();
+        }
+
+        void EditorEvents_TableEntryModified(SharedTableData.SharedTableEntry obj)
+        {
+            // Reset cached labels
+            foreach (var p in PropertyData.Values)
+                p.m_FieldLabel = null;
         }
 
         public override Data GetDataForProperty(SerializedProperty property)
@@ -485,8 +494,15 @@ namespace UnityEditor.Localization.UI
                 if (data.SelectedTableEntry != null)
                 {
                     // Entry name
-                    var labelwidth = EditorGUI.PrefixLabel(new Rect(0, 0, EditorGUIUtility.currentViewWidth, EditorGUIUtility.singleLineHeight), data.entryNameLabel).width;
-                    height += EditorStyles.textArea.CalcHeight(new GUIContent(data.SelectedTableEntry?.Key), labelwidth) + EditorGUIUtility.standardVerticalSpacing;
+                    var padding = EditorStyles.textArea.padding.left +
+                        EditorStyles.textArea.padding.right +
+                        EditorStyles.textArea.margin.left +
+                        EditorStyles.textArea.margin.right +
+                        EditorStyles.textArea.border.left +
+                        EditorStyles.textArea.border.right;
+
+                    var minWidth = EditorGUIUtility.currentViewWidth - EditorGUIUtility.labelWidth - padding;
+                    height += EditorStyles.textArea.CalcHeight(new GUIContent(data.SelectedTableEntry?.Key), minWidth) + EditorGUIUtility.standardVerticalSpacing;
                 }
             }
             return height;

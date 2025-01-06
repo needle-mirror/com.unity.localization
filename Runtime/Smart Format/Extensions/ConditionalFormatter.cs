@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
 using UnityEngine.Localization.SmartFormat.Core.Parsing;
@@ -182,7 +183,7 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
 
             for (var i = 0; i < andOrs.Count; i++)
             {
-                var v = decimal.Parse(values[i].Value);
+                var v = decimal.Parse(values[i].Value, CultureInfo.InvariantCulture);
                 var exp = false;
                 switch (comps[i].Value)
                 {

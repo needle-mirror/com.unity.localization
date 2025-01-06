@@ -169,7 +169,7 @@ namespace UnityEditor.Localization.Plugins.CSV
                     csvReader.ReadHeader();
 
                     if (reporter?.Started != true)
-                        reporter?.Start("Exporting CSV", string.Empty);
+                        reporter?.Start("Importing CSV", string.Empty);
                     reporter?.ReportProgress("Mapping Headers", 0);
                     foreach (var col in columnMappings)
                     {

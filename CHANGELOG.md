@@ -2,6 +2,18 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.5.4] - 2025-01-06
+
+### Fixed
+
+- Fixed an issue where we would remove an asset from Addressables when it was still being used by another entry. ([LOC-1159](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1159))
+- Fixed localized property variant changes not being applied correctly when updating the values via the GameObjectLocalizer inspector. ([LOC-1169](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1169))
+- Fixed LocalizedAsset property drawer not handling Lists of LocalizedAssets. ([LOC-1182](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1182))
+- Fixed possible NullReferenceException due to disposed of SerializedProperties when selecting items in the localized reference picker. ([LOC-1179](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1179))
+- Fixed the Conditional formatter so that it uses the invariant culture when parsing decimal values. ([LOC-1176](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1176))
+- Fixed the LocalizedReference dropdown label not updating when the key was renamed. ([LOC-1165](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1166))
+- Fixed the LocalizedString property drawer so it does not display "Entry Name" in the corner. ([LOC-1165](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1165))
+
 ## [1.5.3] - 2024-09-30
 
 ### Added

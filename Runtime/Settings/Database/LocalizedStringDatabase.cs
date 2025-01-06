@@ -13,6 +13,9 @@ namespace UnityEngine.Localization.Settings
     /// <summary>
     /// Handles loading strings and their tables for the selected locale.
     /// </summary>
+    /// <remarks>
+    /// It provides various methods to get localized strings from a <see cref="StringTable"/> through the <see cref="LocalizationSettings"/>.
+    /// </remarks>
     [Serializable]
     public class LocalizedStringDatabase : LocalizedDatabase<StringTable, StringTableEntry>
     {

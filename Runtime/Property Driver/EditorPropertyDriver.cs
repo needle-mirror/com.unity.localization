@@ -57,7 +57,7 @@ namespace UnityEngine.Localization
         {
             #if UNITY_EDITOR
             if (!LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode)
-                LocalizationPropertyDriver.RegisterProperty(target, propertyPath);
+                LocalizationPropertyDriver.UnregisterProperty(target, propertyPath);
             #endif
         }
     }

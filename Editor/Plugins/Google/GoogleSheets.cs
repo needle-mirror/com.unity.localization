@@ -600,7 +600,7 @@ namespace UnityEditor.Localization.Plugins.Google
             for (int row = skipFirstRow ? 1 : 0; row < rowCount; row++)
             {
                 var keyRowData = columns[0].rowData[row];
-                var keyData = keyRowData?.Values ? [keyValueIndex];
+                var keyData = keyRowData?.Values?.ElementAtOrDefault(keyValueIndex);
                 var keyValue = keyData?.FormattedValue;
                 var keyNote = keyData?.Note;
 

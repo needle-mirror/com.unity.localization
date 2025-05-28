@@ -1,7 +1,7 @@
 {
   "name": "com.unity.localization",
   "displayName": "Localization",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "unity": "2019.4",
   "description": "Use the Localization package to easily configure localization settings for your application.\n\nAdd support for multiple languages and regional variants, including:\n\n• String localization: Set different strings to display based on locale. Use the Smart Strings feature to add logic to automatically replace specific strings, such as placeholders and plurals.\n• Asset localization: Use a different asset (such as a texture, model, or audio file) based on a locale.\n• Pseudo-localization: Test how your project will adapt to different localizations at an early stage, before adding your translations.\n• Import and export localization data to XLIFF, CSV and Google Sheets.\n\nAdd localization to your projects using the Localization package to help make your applications more accessible to a wider audience.",
   "keywords": [
@@ -10,23 +10,23 @@
     "language"
   ],
   "dependencies": {
-    "com.unity.addressables": "1.22.2",
+    "com.unity.addressables": "1.25.0",
     "com.unity.nuget.newtonsoft-json": "3.0.2"
   },
   "relatedPackages": {
-    "com.unity.localization.tests": "1.5.4"
+    "com.unity.localization.tests": "1.5.5"
   },
   "_upm": {
-    "changelog": "### Fixed\n\n- Fixed an issue where we would remove an asset from Addressables when it was still being used by another entry. ([LOC-1159](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1159))\n- Fixed localized property variant changes not being applied correctly when updating the values via the GameObjectLocalizer inspector. ([LOC-1169](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1169))\n- Fixed LocalizedAsset property drawer not handling Lists of LocalizedAssets. ([LOC-1182](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1182))\n- Fixed possible NullReferenceException due to disposed of SerializedProperties when selecting items in the localized reference picker. ([LOC-1179](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1179))\n- Fixed the Conditional formatter so that it uses the invariant culture when parsing decimal values. ([LOC-1176](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1176))\n- Fixed the LocalizedReference dropdown label not updating when the key was renamed. ([LOC-1165](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1166))\n- Fixed the LocalizedString property drawer so it does not display \"Entry Name\" in the corner. ([LOC-1165](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1165))"
+    "changelog": "### Fixed\n\n- Added `LocalizationSettings.ForceRefresh`. This method triggers the `SelectedLocaleChanged` event, which typically forces all subscribing systems to update their displayed content. (LOC-1100)\n- Fixed `EditorPropertyDriver.UnregisterProperty` incorrectly calling the `RegisterProperty` method. ([LOC-1195](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1195))\n- Fixed an exception that could occur when pulling from a google sheet using API key and it was missing data. ([LOC-1206](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1206))\n- Fixed an issue where the `LocalizedString` would remain subscribed to a persistent variable `ValueChanged` event after all `StringChanged` subscribers have been removed. ([LOC-1213](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1213))\n- Fixed an issue where the gameobject localizer would try to load assets whilst entering playmode.\n- Fixed InvalidOperationException being thrown when using a PersistentVariable as a serialized field. ([LOC-1188](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1188))\n- Localization addressable analyzers are now available in Addressables 2.3.1 and above. ([LOC-1193](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1193))\n- Support for the device simulator platform override feature was added so you can localize on different platforms in the editor. (LOC-1184)\n- The LocalizedString binding editor variable name field is now delayed, so it will not trigger an update while it is being edited.\n- Updated to Addressables 1.25.0."
   },
   "upmCi": {
-    "footprint": "3955a4da2bc7e7e6828273437bed065d87ca840c"
+    "footprint": "42d4cba04bdfde22f6f22cd20a538b13be502f87"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.localization@1.5/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.localization.git",
     "type": "git",
-    "revision": "5e39cb8be2051821e233973d43c66ee03ea7668e"
+    "revision": "e3831f685d52f3591932487a4fb91933b785b9fd"
   },
   "samples": [
     {

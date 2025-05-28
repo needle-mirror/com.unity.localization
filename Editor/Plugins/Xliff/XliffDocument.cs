@@ -31,6 +31,9 @@ namespace UnityEditor.Localization.Plugins.XLIFF
     /// </example>
     public static class XliffDocument
     {
+        const string k_SupportedVersion1 = "1.2";
+        const string k_SupportedVersion2 = "2.0";
+
         /// <summary>
         /// Creates a new XLIFF file with the requested version.
         /// </summary>
@@ -50,7 +53,7 @@ namespace UnityEditor.Localization.Plugins.XLIFF
             {
                 xdoc =  new V20.xliff
                 {
-                    version = "2.0"
+                    version = k_SupportedVersion2
                 };
             }
 
@@ -71,12 +74,12 @@ namespace UnityEditor.Localization.Plugins.XLIFF
             var version = GetVersionFromXml(stream);
 
             Type rootType;
-            if (version == "1.2")
+            if (version == k_SupportedVersion1)
                 rootType = typeof(V12.xliff);
-            else if (version == "2.0")
+            else if (version == k_SupportedVersion2)
                 rootType = typeof(V20.xliff);
             else
-                throw new NotSupportedException($"Unsupported XLIFF version {version}. Supported versions are 1.1 and 2.0");
+                throw new NotSupportedException($"Unsupported XLIFF version {version}. Supported versions are {k_SupportedVersion1} and {k_SupportedVersion2}");
 
             var ser = new XmlSerializer(rootType);
             return ser.Deserialize(stream) as IXliffDocument;

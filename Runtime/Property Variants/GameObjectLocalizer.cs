@@ -63,6 +63,11 @@ namespace UnityEngine.Localization.PropertyVariants
 
         void OnEnable()
         {
+            #if UNITY_EDITOR
+            if (LocalizationSettings.Instance.IsChangingPlayMode)
+                return;
+            #endif
+
             LocalizationSettings.SelectedLocaleChanged += SelectedLocaleChanged;
 
             RegisterChanges();

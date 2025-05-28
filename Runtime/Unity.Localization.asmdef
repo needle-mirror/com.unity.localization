@@ -40,6 +40,16 @@
             "name": "Unity",
             "expression": "2020.3",
             "define": "ENABLE_PROPERTY_VARIANTS"
+        },
+        {
+            "name": "Unity",
+            "expression": "[2021.3,2022.1.0]",
+            "define": "ENABLE_DEVICE_SIMULATOR"
+        },
+        {
+            "name": "Unity",
+            "expression": "2022.3",
+            "define": "ENABLE_DEVICE_SIMULATOR"
         }
     ],
     "noEngineReferences": false

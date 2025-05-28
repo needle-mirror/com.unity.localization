@@ -41,7 +41,7 @@ The Entry Override is evaluated during the Get Table Entry phase:
 To create a custom override implement the [IEntryOverride](xref:UnityEngine.Localization.Metadata.IEntryOverride) interface.
 The following example shows how to create an override that will only be applied on a chosen day of the week.
 
-[!code-cs[continent-sample]](../DocCodeSamples.Tests/PlatformOverrideExamples.cs#custom-entry-override)]
+[!code-cs[](../DocCodeSamples.Tests/PlatformOverrideExamples.cs#custom-entry-override)]
 
 ![In this example the “Normal Text” entry will be used as the default, when the day is Friday the entry will be overridden and redirected to the Friday Text entry instead.](images/CustomEntryOverride.png)
 _In this example the “Normal Text” entry will be used as the default, when the day is Friday the entry will be overridden and redirected to the Friday Text entry instead._

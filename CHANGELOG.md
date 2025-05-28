@@ -2,6 +2,21 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.5.5] - 2025-05-28
+
+### Fixed
+
+- Added `LocalizationSettings.ForceRefresh`. This method triggers the `SelectedLocaleChanged` event, which typically forces all subscribing systems to update their displayed content. (LOC-1100)
+- Fixed `EditorPropertyDriver.UnregisterProperty` incorrectly calling the `RegisterProperty` method. ([LOC-1195](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1195))
+- Fixed an exception that could occur when pulling from a google sheet using API key and it was missing data. ([LOC-1206](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1206))
+- Fixed an issue where the `LocalizedString` would remain subscribed to a persistent variable `ValueChanged` event after all `StringChanged` subscribers have been removed. ([LOC-1213](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1213))
+- Fixed an issue where the gameobject localizer would try to load assets whilst entering playmode.
+- Fixed InvalidOperationException being thrown when using a PersistentVariable as a serialized field. ([LOC-1188](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1188))
+- Localization addressable analyzers are now available in Addressables 2.3.1 and above. ([LOC-1193](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1193))
+- Support for the device simulator platform override feature was added so you can localize on different platforms in the editor. (LOC-1184)
+- The LocalizedString binding editor variable name field is now delayed, so it will not trigger an update while it is being edited.
+- Updated to Addressables 1.25.0.
+
 ## [1.5.4] - 2025-01-06
 
 ### Fixed

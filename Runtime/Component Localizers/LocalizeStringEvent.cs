@@ -108,7 +108,15 @@ namespace UnityEngine.Localization.Components
         /// <summary>
         /// Starts listening for changes to <see cref="StringReference"/>.
         /// </summary>
-        protected virtual void OnEnable() => RegisterChangeHandler();
+        protected virtual void OnEnable()
+        {
+            #if UNITY_EDITOR
+            if (LocalizationSettings.Instance.IsChangingPlayMode)
+                return;
+            #endif
+
+            RegisterChangeHandler();
+        }
 
         /// <summary>
         /// Stops listening for changes to <see cref="StringReference"/>.

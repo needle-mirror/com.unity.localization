@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
 using UnityEngine.Localization.SmartFormat.Core.Formatting;
@@ -56,10 +55,10 @@ namespace UnityEngine.Localization
         readonly Dictionary<string, VariableNameValuePair> m_VariableLookup = new Dictionary<string, VariableNameValuePair>();
 
         readonly List<IVariableValueChanged> m_UsedVariables = new List<IVariableValueChanged>();
-        Action<IVariable> m_OnVariableChanged;
-        Action<Locale> m_SelectedLocaleChanged;
-        Action<AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult>> m_AutomaticLoadingCompleted;
-        Action<AsyncOperationHandle<LocalizedDatabase<StringTable, StringTableEntry>.TableEntryResult>> m_CompletedSourceValue;
+        readonly Action<IVariable> m_OnVariableChanged;
+        readonly Action<Locale> m_SelectedLocaleChanged;
+        readonly Action<AsyncOperationHandle<LocalizedStringDatabase.TableEntryResult>> m_AutomaticLoadingCompleted;
+        readonly Action<AsyncOperationHandle<LocalizedDatabase<StringTable, StringTableEntry>.TableEntryResult>> m_CompletedSourceValue;
         bool m_WaitingForVariablesEndUpdate;
 
         /// <inheritdoc/>
@@ -141,6 +140,7 @@ namespace UnityEngine.Localization
                 {
                     LocalizationSettings.SelectedLocaleChanged -= m_SelectedLocaleChanged;
                     ClearLoadingOperation();
+                    ClearVariableListeners();
                 }
             }
         }
@@ -642,15 +642,19 @@ namespace UnityEngine.Localization
             ValueChanged?.Invoke(this);
         }
 
-        void UpdateVariableListeners(List<IVariableValueChanged> variables)
+        void ClearVariableListeners()
         {
-            // Unsubscribe from any old ones
             foreach (var gv in m_UsedVariables)
             {
                 gv.ValueChanged -= m_OnVariableChanged;
             }
-
             m_UsedVariables.Clear();
+        }
+
+        void UpdateVariableListeners(List<IVariableValueChanged> variables)
+        {
+            ClearVariableListeners();
+
             if (variables == null)
                 return;
 
@@ -818,6 +822,7 @@ namespace UnityEngine.Localization
         {
             m_ChangeHandler.Clear();
             ClearLoadingOperation();
+            ClearVariableListeners();
             LocalizationSettings.SelectedLocaleChanged -= m_SelectedLocaleChanged;
             GC.SuppressFinalize(this);
         }

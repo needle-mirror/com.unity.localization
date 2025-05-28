@@ -41,7 +41,15 @@ namespace UnityEngine.Localization.Components
             }
         }
 
-        protected virtual void OnEnable() => RegisterChangeHandler();
+        protected virtual void OnEnable()
+        {
+            #if UNITY_EDITOR
+            if (LocalizationSettings.Instance.IsChangingPlayMode)
+                return;
+            #endif
+
+            RegisterChangeHandler();
+        }
 
         protected virtual void OnDisable() => ClearChangeHandler();
 

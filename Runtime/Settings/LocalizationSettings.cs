@@ -338,6 +338,8 @@ namespace UnityEngine.Localization.Settings
         internal bool? IsPlayingOverride { get; set; }
         #endif
 
+        internal bool IsChangingPlayMode => IsPlayingOrWillChangePlaymode && !IsPlaying;
+
         internal bool IsPlayingOrWillChangePlaymode
         {
             get
@@ -364,7 +366,12 @@ namespace UnityEngine.Localization.Settings
             }
         }
 
-        internal virtual RuntimePlatform Platform => Application.platform;
+        internal virtual RuntimePlatform Platform =>
+            #if ENABLE_DEVICE_SIMULATOR
+            Device.Application.platform;
+            #else
+            Application.platform;
+            #endif
 
         /// <summary>
         /// <inheritdoc cref="IStartupLocaleSelector"/>
@@ -414,6 +421,28 @@ namespace UnityEngine.Localization.Settings
         /// </summary>
         /// <returns></returns>
         public MetadataCollection GetMetadata() => m_Metadata;
+
+        /// <summary>
+        /// Raises the <see cref="SelectedLocaleChanged"/> event to notify listeners that the selected locale has changed, triggering a refresh of localized strings and assets.
+        /// </summary>
+        /// <remarks>
+        /// This method triggers the <see cref="SelectedLocaleChanged"/> event, which typically forces all subscribing
+        /// systems to update their displayed content based on the current locale.
+        /// Use this after modifying localization assets, such as string tables, to 
+        /// immediately reflect the latest translations throughout the application.
+        /// If no locale is currently selected, the event will be raised with a <see langword="null"/> value.
+        /// </remarks>
+        /// <example>
+        /// The following example uses ForceRefresh to force an update after updating a string table entry.
+        /// <code source="../../DocCodeSamples.Tests/LocalizationSettingsSamples.cs" region="force-update"/>
+        /// </example>
+        public void ForceRefresh()
+        {
+            if (m_SelectedLocaleAsync.IsValid() && m_SelectedLocaleAsync.IsDone)
+                InvokeSelectedLocaleChanged(m_SelectedLocaleAsync.Result);
+            else
+                InvokeSelectedLocaleChanged(null);
+        }
 
         /// <summary>
         /// Sends out notifications when the locale has changed. Ensures the the events are sent in the correct order.
@@ -708,6 +737,8 @@ namespace UnityEngine.Localization.Settings
             LocalizationSettings settings;
             #if UNITY_EDITOR
             UnityEditor.EditorBuildSettings.TryGetConfigObject(ConfigName, out settings);
+            #elif UNITY_6000_0_OR_NEWER
+            settings = FindFirstObjectByType<LocalizationSettings>();
             #else
             settings = FindObjectOfType<LocalizationSettings>();
             #endif

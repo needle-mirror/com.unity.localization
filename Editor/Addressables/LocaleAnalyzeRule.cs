@@ -1,4 +1,4 @@
-#if ADDRESSABLES_V1
+#if ADDRESSABLES_ANALYZE
 
 using System.Collections.Generic;
 using System.Linq;

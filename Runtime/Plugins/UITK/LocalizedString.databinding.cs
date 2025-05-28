@@ -10,7 +10,7 @@ namespace UnityEngine.Localization
     [UxmlObject]
     internal partial class LocalVariable
     {
-        [UxmlAttribute]
+        [UxmlAttribute, Delayed]
         public string Name { get; set; }
 
         [UxmlObjectReference]

@@ -54,7 +54,7 @@ To configure the table view to display additional columns, right-click the colum
 
 ## Scripted searching
 
-You can use the Search Tool through script with the String and Asset Table filters. 
+You can use the Search Tool through script with the String and Asset Table filters.
 This can be used to write automation tools to quickly search for entries, for example to find all entries that have not yet been translated.
 
 The following example shows various ways to search assets and string tables:

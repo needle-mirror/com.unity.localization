@@ -152,7 +152,7 @@ namespace UnityEditor.Localization.UI
             formatCache.Table = m_Table;
 
             m_PreviewText.style.display = DisplayStyle.Flex;
-            m_PreviewText.text = smartFormatter?.FormatWithCache(ref formatCache, ValueField.value, locale?.Formatter, localizedString?.Arguments);
+            m_PreviewText.text = smartFormatter?.FormatWithCache(ref formatCache, ValueField.value, locale, localizedString?.Arguments);
             m_VariableChangedEvents.AddRange(formatCache.VariableTriggers);
 
             foreach (var v in m_VariableChangedEvents)

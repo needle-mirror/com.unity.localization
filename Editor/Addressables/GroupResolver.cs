@@ -150,7 +150,9 @@ namespace UnityEditor.Localization.Addressables
                 // TODO: We may want to provide an option to leave assets that are in unknown groups here. We would need to figure out a way to know what is a known group and what is not.
                 if (createUndo)
                     Undo.RecordObjects(new Object[] { aaSettings, group, assetEntry.parentGroup }, "Add to group");
-                aaSettings.MoveEntry(assetEntry, group, MarkEntriesReadOnly);
+
+                if (!group.entries.Contains(assetEntry))
+                    aaSettings.MoveEntry(assetEntry, group, MarkEntriesReadOnly);
             }
 
             return assetEntry;

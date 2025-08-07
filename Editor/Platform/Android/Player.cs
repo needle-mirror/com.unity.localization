@@ -100,8 +100,7 @@ namespace UnityEditor.Localization.Platform.Android
                 };
                 var adaptiveIconFolderName = $"mipmap-{localeIdentifier}-anydpi-v26";
 
-
-                if (roundIconsInfo != null || legacyIconsInfo != null)
+                if (roundIconsInfo != null || legacyIconsInfo != null || adaptiveIconsInfo != null)
                     GenerateIconDirectory(folderNames, project.GetResFolderPath(projectDirectory), locale);
                 if (adaptiveIconsInfo != null)
                     GenerateIconDirectory(adaptiveIconFolderName, project.GetResFolderPath(projectDirectory), locale);

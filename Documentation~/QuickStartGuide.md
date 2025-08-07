@@ -133,7 +133,7 @@ You've configured the Text and the second Argument, `appleCount`. However, you s
 
 3. To open the Localization Settings, select **Edit** > **Project Settings** > **Localization**.
 4. Go to **String Database** > **Smart Format** > Smart Format Sources list**.
-1. Select **Add (+)** to create a new Global Variables Source. 
+1. Select **Add (+)** to create a new Global Variables Source.
 1. Drag and drop the Global Variables Source to the second position in the Sources List, under the List Formatter item.
 5. Select **Add (+)** in the Global Variables Source to create a new item. Keep the default name “global”, this is the value used in the first part of the Smart String {**global**.player-name} and drag the Global Variables Source asset into the slot. The Global Variables source is now configured.
 

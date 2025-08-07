@@ -3,7 +3,12 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.Localization.Tables;
 using UnityEngine.UIElements;
+
+#if !UNITY_6000_2_OR_NEWER
 using TreeView = UnityEditor.IMGUI.Controls.TreeView;
+#else
+using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
+#endif
 
 namespace UnityEditor.Localization.UI
 {

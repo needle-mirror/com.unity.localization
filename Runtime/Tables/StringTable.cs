@@ -153,7 +153,7 @@ namespace UnityEngine.Localization.Tables
         public string GetLocalizedString(IFormatProvider formatProvider, IList<object> args, PseudoLocale pseudoLocale)
         {
             if (formatProvider == null)
-                formatProvider = LocalizationSettings.AvailableLocales?.GetLocale(Table.LocaleIdentifier)?.Formatter;
+                formatProvider = LocalizationSettings.AvailableLocales?.GetLocale(Table.LocaleIdentifier);
 
             string translatedText = null;
 

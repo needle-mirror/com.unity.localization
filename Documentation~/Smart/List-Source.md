@@ -11,7 +11,7 @@ The [List Formatter](xref:UnityEngine.Localization.SmartFormat.Extensions.ListFo
 
 <tr>
 <td>The value of the item at index 1 is {0.1}</td>
-<td> 
+<td>
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-list-1)]
 
@@ -20,7 +20,7 @@ The [List Formatter](xref:UnityEngine.Localization.SmartFormat.Extensions.ListFo
 
 <tr>
 <td>{0.0} {0.1} {0.2}</td>
-<td> 
+<td>
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-list-2)]
 
@@ -29,7 +29,7 @@ The [List Formatter](xref:UnityEngine.Localization.SmartFormat.Extensions.ListFo
 
 <tr>
 <td>The index placeholder can be used to sync multiple lists such as {0:{} = {1.index}\|, }</td>
-<td> 
+<td>
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-list-3)]
 

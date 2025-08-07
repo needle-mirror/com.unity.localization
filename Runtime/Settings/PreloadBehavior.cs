@@ -6,7 +6,7 @@ namespace UnityEngine.Localization.Settings
     public enum PreloadBehavior
     {
         /// <summary>
-        /// No preloading will be performed. 
+        /// No preloading will be performed.
         /// </summary>
         NoPreloading,
 

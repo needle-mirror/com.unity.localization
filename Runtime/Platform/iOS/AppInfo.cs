@@ -4,25 +4,25 @@ using UnityEngine.Localization.Metadata;
 namespace UnityEngine.Localization.Platform.iOS
 {
     /// <summary>
-    /// Contains all values that can be localized in the iOS Application.
+    /// Contains all values that can be localized in an Apple Application for iOS, macOS or tvOS.
     /// These are values that can be displayed when the App is not running such as the application name displayed on the home screen.
     /// </summary>
     /// <example>
-    /// This example shows how to configure the iOS AppInfo.
+    /// This example shows how to configure the AppInfo.
     /// __Note__: You must complete this configuration before the application is built, otherwise, the changes will not be applied.
     /// <code source="../../../DocCodeSamples.Tests/IosAppInfoExample.cs"/>
     /// </example>
-    [DisplayName("iOS App Info")]
-    [Metadata(AllowedTypes = MetadataType.LocalizationSettings, AllowMultiple = false, MenuItem = "iOS/App Info")]
+    [DisplayName("Apple App Info")]
+    [Metadata(AllowedTypes = MetadataType.LocalizationSettings, AllowMultiple = false, MenuItem = "Apple/App Info")]
     [Serializable]
     public class AppInfo : IMetadata
     {
-        [Tooltip("The user-visible name for the bundle, used by Siri and visible on the iOS Home screen.\n" +
+        [Tooltip("The user-visible name for the bundle, used by Siri, visible on the iOS Home screen and Mac app menu.\n" +
             "This name can contain up to 15 characters.\n" +
             "CFBundleName field in xcode projects info.plist file.")]
         [SerializeField] LocalizedString m_ShortName = new LocalizedString();
 
-        [Tooltip("The user-visible name for the bundle, used by Siri and visible on the iOS Home screen.\n" +
+        [Tooltip("The user-visible name for the bundle, used by Siri visible on the iOS Home screen and Mac app menu.\n" +
             "Use this key if you want a product name that's longer than Bundle Name.\n" +
             "CFBundleDisplayName field in xcode projects info.plist file.")]
         [SerializeField] LocalizedString m_DisplayName = new LocalizedString();

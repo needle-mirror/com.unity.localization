@@ -303,7 +303,7 @@ namespace UnityEngine.Localization.Settings
 
         protected internal virtual string GenerateLocalizedString(StringTable table, StringTableEntry entry, TableReference tableReference, TableEntryReference tableEntryReference, Locale locale, IList<object> arguments)
         {
-            var result = entry?.GetLocalizedString(locale?.Formatter, arguments, locale as PseudoLocale);
+            var result = entry?.GetLocalizedString(locale, arguments, locale as PseudoLocale);
 
             if (string.IsNullOrEmpty(result))
             {

@@ -84,7 +84,7 @@ namespace UnityEngine.Localization
             if (locale != null)
             {
                 // We now have a locale so revert the editor override.
-                m_LocaleOverride = null;              
+                m_LocaleOverride = null;
             }
             MarkDirty();
         }

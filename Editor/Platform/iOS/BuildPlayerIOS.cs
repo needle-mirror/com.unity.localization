@@ -1,4 +1,4 @@
-#if UNITY_IOS || UNITY_IPHONE
+#if ((UNITY_TVOS || UNITY_STANDALONE_OSX || UNITY_VISIONOS) && ENABLE_LOCALIZATION_XCODE_SUPPORT) || (UNITY_IOS || UNITY_IPHONE)
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;

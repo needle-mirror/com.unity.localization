@@ -13,7 +13,6 @@ namespace UnityEditor.Localization
     {
         [SerializeField] LocalizedStringTable m_StringTable;
         [SerializeField] LocalizedAssetTable m_AssetTable;
-        [SerializeField] bool m_TrackingChanges;
 
         /// <summary>
         /// The <see cref="StringTableCollection"/> that new string properties are added to.
@@ -48,12 +47,8 @@ namespace UnityEditor.Localization
         /// </summary>
         public static bool TrackChanges
         {
-            get => instance.m_TrackingChanges;
-            set
-            {
-                instance.m_TrackingChanges = value;
-                instance.Save();
-            }
+            get => SessionState.GetBool("LocalizationProjectSettings.TrackChanges", false);
+            set => SessionState.SetBool("LocalizationProjectSettings.TrackChanges", value);
         }
 
         internal void Save() => instance.Save(true);

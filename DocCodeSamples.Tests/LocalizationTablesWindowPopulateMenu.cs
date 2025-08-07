@@ -42,7 +42,7 @@ public class JsonExportExample
                 if (st.GetEntry(id) is StringTableEntry entry)
                 {
                     Undo.RecordObject(st, "Clear Entry");
-                    
+
                     entry.Value = string.Empty;
 
                     EditorUtility.SetDirty(table);

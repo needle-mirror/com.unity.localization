@@ -55,8 +55,7 @@ namespace UnityEditor.Localization.UI
                 else
                     serializedObject.Update();
 
-                var trackChanges = serializedObject.FindProperty("m_TrackingChanges");
-                EditorGUILayout.PropertyField(trackChanges, Styles.trackChanges);
+                LocalizationProjectSettings.TrackChanges = EditorGUILayout.Toggle(Styles.trackChanges, LocalizationProjectSettings.TrackChanges);
 
                 var stringTable = serializedObject.FindProperty("m_StringTable");
                 EditorGUILayout.PropertyField(stringTable, Styles.stringTable, true);

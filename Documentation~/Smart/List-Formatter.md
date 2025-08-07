@@ -16,7 +16,7 @@ Use the placeholder index to access the current index of the list being iterated
 
 <tr>
 <td>{0:list:{}|, |, and }</td>
-<td> 
+<td>
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-list-formatter-1)]
 
@@ -25,7 +25,7 @@ Use the placeholder index to access the current index of the list being iterated
 
 <tr>
 <td>{theKey:ismatch(^.+123.+$):Fixed content if match|No match content}</td>
-<td> 
+<td>
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-list-formatter-2)]
 
@@ -34,7 +34,7 @@ Use the placeholder index to access the current index of the list being iterated
 
 <tr>
 <td>{0:list:{:ismatch(^100|200|999$):{:0.00}|'no match'}|, | and }</td>
-<td> 
+<td>
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-list-formatter-3)]
 
@@ -43,7 +43,7 @@ Use the placeholder index to access the current index of the list being iterated
 
 <tr>
 <td>{0:list:{:ismatch(^100|200|999$):'match'|'no match'}|, | and }</td>
-<td> 
+<td>
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-list-formatter-3)]
 
@@ -54,7 +54,7 @@ Use the placeholder index to access the current index of the list being iterated
 <td>The index placeholder can be used to sync multiple lists such as:
 
 {0:{} = {1.index}|, }</td>
-<td> 
+<td>
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-list-formatter-4)]
 

@@ -10,64 +10,64 @@ apiRules:
       type: Type
   - exclude:
       # Tests
-      uidRegex: Localization\.Tests*
+      uidRegex: ^.*Localization\.Tests.*$
       type: Namespace
   - exclude:
       # Samples.
-      uidRegex: Sample*
+      uidRegex: ^.*Sample.*$
       type: Namespace
   - exclude:
       uidRegex: ^Global Namespace.*
       type: Namespace
   - exclude:
       # XLIFF generated code
-      uidRegex: XLIFF\.V.*
+      uidRegex: ^.*XLIFF\.V.*$
       type: Namespace
 
   # Smart format
   - exclude:
-      uidRegex: UnityEngine\.Localization\.SmartFormat\.Core\.Formatting
+      uidRegex: ^.*UnityEngine\.Localization\.SmartFormat\.Core\.Formatting.*$
       type: Namespace
   - exclude:
-      uidRegex: UnityEngine\.Localization\.SmartFormat\.Core\.Parsing
+      uidRegex: ^.*UnityEngine\.Localization\.SmartFormat\.Core\.Parsing.*$
       type: Namespace
   - exclude:
-      uidRegex: UnityEngine\.Localization\.SmartFormat\.Core\.Output
+      uidRegex: ^.*UnityEngine\.Localization\.SmartFormat\.Core\.Output.*$
       type: Namespace
   - exclude:
-      uidRegex: UnityEngine\.Localization\.SmartFormat\.Utilities
+      uidRegex: ^.*UnityEngine\.Localization\.SmartFormat\.Utilities.*$
       type: Namespace
   - exclude:
-      uidRegex: Localization\.SmartFormat\.Tests*
+      uidRegex: ^.*Localization\.SmartFormat\.Tests.*$
       type: Namespace
 
   # XLIFF generated code
   - exclude:
-      uidRegex: XLIFF\.V.*
+      uidRegex: ^.*XLIFF\.V.*$
       type: Method
 
   # Misc Unity
   - exclude:
-      uidRegex: OnAfterDeserialize$
+      uidRegex: ^.*OnAfterDeserialize$
       type: Method
   - exclude:
-      uidRegex: OnBeforeSerialize$
+      uidRegex: ^.*OnBeforeSerialize$
       type: Method
   - exclude:
-      uidRegex: OnEnable$
+      uidRegex: ^.*OnEnable$
       type: Method
   - exclude:
-      uidRegex: OnDisable$
+      uidRegex: ^.*OnDisable$
       type: Method
   - exclude:
-      uidRegex: Finalize$
+      uidRegex: ^.*Finalize$
       type: Method
   - exclude:
-      uidRegex: ToString$
+      uidRegex: ^.*ToString$
       type: Method
   - exclude:
-      uidRegex: UxmlFactory$
+      uidRegex: ^.*UxmlFactory$
       type: Class
   - exclude:
-      uidRegex: UxmlTraits$
+      uidRegex: ^.*UxmlTraits$
       type: Class

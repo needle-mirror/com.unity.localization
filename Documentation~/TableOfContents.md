@@ -25,7 +25,7 @@
   * Platforms
     * [Android](Android-App-Localization.md)
     * [Editor](EditModeSupport.md)
-    * [iOS](iOS-App-Localization.md)
+    * [Apple (iOS, macOS, tvOS, visionOS)](iOS-App-Localization.md)
   * [Pseudo-Localization](Pseudo-Localization.md)
     * [Methods](Pseudo-Localization-Methods.md)
   * [Scripting](Scripting.md)

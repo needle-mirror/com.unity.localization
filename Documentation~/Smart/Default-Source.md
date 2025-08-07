@@ -13,7 +13,7 @@ The default source examines the current selector. If the selector can be parsed 
 
 <tr>
 <td>{0} {1} {2}</td>
-<td> 
+<td>
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-one-two-three)]
 
@@ -22,7 +22,7 @@ The default source examines the current selector. If the selector can be parsed 
 
 <tr>
 <td>{1} {1} {2} {0}</td>
-<td> 
+<td>
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-one-two-three)]
 
@@ -31,7 +31,7 @@ The default source examines the current selector. If the selector can be parsed 
 
 <tr>
 <td>Player {0} scored {1} points</td>
-<td> 
+<td>
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-string-int)]
 
@@ -40,7 +40,7 @@ The default source examines the current selector. If the selector can be parsed 
 
 <tr>
 <td>Player {0.Name} score {0.Points}</td>
-<td> 
+<td>
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-anon-class)]
 

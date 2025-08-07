@@ -58,7 +58,7 @@ Copyright JoshClose
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-  
+
   Microsoft Public License (MS-PL)
   This license governs use of the accompanying software. If you use the software, you accept this license. If you do not accept the license, do not use the software.
   1. Definitions

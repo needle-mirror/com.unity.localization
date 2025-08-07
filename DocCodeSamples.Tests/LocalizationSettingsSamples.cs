@@ -102,7 +102,7 @@ public class ForceUpdateExample : MonoBehaviour
     [ContextMenu("Change Source Value")]
     public void ChangeSourceValue()
     {
-        // Get the table and entry, and update the value. 
+        // Get the table and entry, and update the value.
         var tableEntry = LocalizationSettings.StringDatabase.GetTableEntry(myString.TableReference, myString.TableEntryReference);
         tableEntry.Entry.Value = "New Value";
 

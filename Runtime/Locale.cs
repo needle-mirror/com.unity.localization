@@ -204,7 +204,7 @@ namespace UnityEngine.Localization
     /// <summary>
     /// A Locale represents a language. It supports regional variations and can be configured with an optional fallback Locale via metadata.
     /// </summary>
-    public class Locale : ScriptableObject, IEquatable<Locale>, IComparable<Locale>, ISerializationCallbackReceiver
+    public class Locale : ScriptableObject, IEquatable<Locale>, IComparable<Locale>, ISerializationCallbackReceiver, IFormatProvider
     {
         [SerializeField]
         LocaleIdentifier m_Identifier;
@@ -492,5 +492,12 @@ namespace UnityEngine.Localization
                 return false;
             return LocaleName == other.LocaleName && Identifier.Equals((other.Identifier));
         }
+
+        /// <summary>
+        /// Applies formatting using <see cref="Formatter"/>.
+        /// </summary>
+        /// <param name="formatType"></param>
+        /// <returns></returns>
+        object IFormatProvider.GetFormat(Type formatType) => Formatter?.GetFormat(formatType);
     }
 }

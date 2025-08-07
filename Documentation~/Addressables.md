@@ -19,7 +19,7 @@ Some examples of different rule sets are:
 
 ### Group Resolver
 
-By default each rule set will use a **GroupResolver**. To create more complex rules, create a custom class. 
+By default each rule set will use a **GroupResolver**. To create more complex rules, create a custom class.
 
 The Group Resolver uses the following rules to pick a group:
 

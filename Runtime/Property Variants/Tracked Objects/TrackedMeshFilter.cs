@@ -57,7 +57,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
             else if (property is LocalizedAssetProperty localizedAssetProperty && !localizedAssetProperty.LocalizedObject.IsEmpty)
             {
                 m_CurrentOperation = localizedAssetProperty.LocalizedObject.LoadAssetAsync<Mesh>();
-                 
+
                 if (m_CurrentOperation.IsDone)
                 {
                     MeshOperationCompleted(m_CurrentOperation);

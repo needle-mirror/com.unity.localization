@@ -230,7 +230,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedObjects
                             var result = assetOp.Result;
                             jsonProperty.Value = result != null ? result.GetInstanceID() : 0;
                             AddressablesInterface.Release(assetOp);
-                            
+
                         }
                         #if !UNITY_WEBGL // WebGL does not support WaitForCompletion
                         else if (localizedAssetProperty.LocalizedObject.ForceSynchronous)

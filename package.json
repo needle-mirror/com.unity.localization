@@ -1,7 +1,7 @@
 {
   "name": "com.unity.localization",
   "displayName": "Localization",
-  "version": "1.5.5",
+  "version": "1.5.7",
   "unity": "2019.4",
   "description": "Use the Localization package to easily configure localization settings for your application.\n\nAdd support for multiple languages and regional variants, including:\n\n• String localization: Set different strings to display based on locale. Use the Smart Strings feature to add logic to automatically replace specific strings, such as placeholders and plurals.\n• Asset localization: Use a different asset (such as a texture, model, or audio file) based on a locale.\n• Pseudo-localization: Test how your project will adapt to different localizations at an early stage, before adding your translations.\n• Import and export localization data to XLIFF, CSV and Google Sheets.\n\nAdd localization to your projects using the Localization package to help make your applications more accessible to a wider audience.",
   "keywords": [
@@ -14,59 +14,18 @@
     "com.unity.nuget.newtonsoft-json": "3.0.2"
   },
   "relatedPackages": {
-    "com.unity.localization.tests": "1.5.5"
+    "com.unity.localization.tests": "1.5.7"
   },
   "_upm": {
-    "changelog": "### Fixed\n\n- Added `LocalizationSettings.ForceRefresh`. This method triggers the `SelectedLocaleChanged` event, which typically forces all subscribing systems to update their displayed content. (LOC-1100)\n- Fixed `EditorPropertyDriver.UnregisterProperty` incorrectly calling the `RegisterProperty` method. ([LOC-1195](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1195))\n- Fixed an exception that could occur when pulling from a google sheet using API key and it was missing data. ([LOC-1206](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1206))\n- Fixed an issue where the `LocalizedString` would remain subscribed to a persistent variable `ValueChanged` event after all `StringChanged` subscribers have been removed. ([LOC-1213](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1213))\n- Fixed an issue where the gameobject localizer would try to load assets whilst entering playmode.\n- Fixed InvalidOperationException being thrown when using a PersistentVariable as a serialized field. ([LOC-1188](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1188))\n- Localization addressable analyzers are now available in Addressables 2.3.1 and above. ([LOC-1193](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1193))\n- Support for the device simulator platform override feature was added so you can localize on different platforms in the editor. (LOC-1184)\n- The LocalizedString binding editor variable name field is now delayed, so it will not trigger an update while it is being edited.\n- Updated to Addressables 1.25.0."
+    "changelog": "### Fixed\n\n- `GameObjectLocalizer.ApplyLocaleVariant` will now throw an exception if a null locale is passed in.\n- Changed TrackChanges so it doesn't stay enabled when the editor is restarted.\n- Fixed a bug where a change update could cause the GameObject localizer to RequestUpdate before it had a valid locale. ([LOC-1231](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1231))\n- Fixed Android building throwing a `DirectoryNotFoundException` when using adaptive icons. ([LOC-1235](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1235))\n- Fixed plurals using the wrong formatter when the locale was using a custom formatter. Locale now implements `IFormatProvider` and will now be passed into the Smart String formatting Info as the `Provider`. ([LOC-1224](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1224))\n- Fixed TreeView obsolete warnings in 6.2 and above.\n- Fixed unmodified assets being marked dirty when reimporting Localization Addressable Group. ([LOC-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1221))\n- Support has been added for localizing the app name on macOS, tvOS and visionOS. The system will use the same values that have been configured for iOS. ([LOC-1219](https://issuetracker.unity3d.com/product/unity/issues/guid/LOC-1219))"
   },
   "upmCi": {
-    "footprint": "42d4cba04bdfde22f6f22cd20a538b13be502f87"
+    "footprint": "df9bab80bd1e79a27141dc9d8abf7f4be6267354"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.localization@1.5/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.localization.git",
     "type": "git",
-    "revision": "e3831f685d52f3591932487a4fb91933b785b9fd"
-  },
-  "samples": [
-    {
-      "displayName": "Creating Locales",
-      "description": "This sample shows how to Locales including custom ones through script.",
-      "path": "Samples~/CreatingLocales"
-    },
-    {
-      "displayName": "Loading Strings",
-      "description": "This sample shows multiple ways to fetch localized strings from the Localization system.",
-      "path": "Samples~/LoadingStrings"
-    },
-    {
-      "displayName": "Language Selection Menu (IMGUI)",
-      "description": "This sample shows how to implement a simple language selection menu using IMGUI. The sample also includes an example of overriding the LocalesProvider in order to provide a custom list of available Locales.",
-      "path": "Samples~/LocaleMenuIMGUI"
-    },
-    {
-      "displayName": "Language Selection Menu (UGUI)",
-      "description": "This sample shows how to implement a simple language selection menu using a UGUI Dropdown.",
-      "dependencies": {
-        "com.unity.ugui": "1.0.0"
-      },
-      "path": "Samples~/LocaleMenuUGUI"
-    },
-    {
-      "displayName": "Smart Strings - Persistent Variables",
-      "description": "These samples show how Persistent Variables can be used in Smart Strings and how custom variables can be created.",
-      "dependencies": {
-        "com.unity.ugui": "1.0.0"
-      },
-      "path": "Samples~/PersistentVariables"
-    },
-    {
-      "displayName": "Preloading Screen",
-      "description": "Preloading is a way to ensure that chosen Localization data is immediately available and does not require additional loading. This sample shows how to implement a loading screen to wait for preloading to complete.",
-      "dependencies": {
-        "com.unity.ugui": "1.0.0"
-      },
-      "path": "Samples~/PreloadingScreen"
-    }
-  ]
+    "revision": "eac1fdf7591607a9ac704795f7ec74222d2bf9b3"
+  }
 }

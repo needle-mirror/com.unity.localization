@@ -26,7 +26,7 @@ The following table lists the supported localization bindings:
 
 You can use the [UI Builder](https://docs.unity3d.com/Manual/UIBuilder.html) to create and fine-tune UI assets and their associated data bindings, including localization data bindings. You can connect to visual element attribute fields or styles. You can also address mismatched data types smoothly by creating your own [converters](https://docs.unity3d.com/2023.3/Documentation/Manual/UIE-runtime-binding-data-type-conversion.html) for data type conversion.
 
-To bind an element's field to a localized value in UI Builder, do the following: 
+To bind an element's field to a localized value in UI Builder, do the following:
 
 1. In the Inspector panel of an element, right-click on a field and select **Add binding**.
 

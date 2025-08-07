@@ -35,7 +35,7 @@ The Reflection Source can be used to extract an object from a property, field or
 
 <tr>
 <td>My name is {Name} and I am {Age} years old.</td>
-<td> 
+<td>
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-reflection-3a)]
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-reflection-3b)]
@@ -46,7 +46,7 @@ The Reflection Source can be used to extract an object from a property, field or
 
 <tr>
 <td>Mr {name.ToCharArray.0} {surname}</td>
-<td> 
+<td>
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-reflection-4)]
 

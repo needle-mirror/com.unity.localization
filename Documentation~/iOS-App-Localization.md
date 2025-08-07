@@ -1,11 +1,15 @@
-# iOS App Localization
+# Apple(iOS, macOS, tvOS, vision OS) App Localization
 
-The Localization package provides support for localizing values within the iOS `Info.plist` information property list file. When building the iOS player, the Localization values are applied to the project during the post build step.
+The Localization package provides support for localizing values within the xcode `Info.plist` information property list file. When building for iOS, macOS, tvOS or visionOS, the Localization values are applied to the project during the post build step.
 The projects' known regions are populated with the project Locales and an [Info.Plist](https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Introduction/Introduction.html) variant is added for each Locale.
 
-To configure the App localization, add the **iOS/App** Info **Metadata** to the Localization Settings **Metadata**.
+To configure the App localization, add the **Apple/App** Info **Metadata** to the Localization Settings **Metadata**.
 
 ![To configure the App localization, add the iOS/App Info Metadata to the Localization Settings Metadata.](images/iOSAppInfoMetadata.png)
+
+> [!NOTE]
+> You must enable the "Create xcode project" build setting to localize macOS app names.
+> When using a version of Unity before 2022.3, the iOS module must be installed. You should add the define ENABLE_LOCALIZATION_XCODE_SUPPORT to the project.
 
 The following fields can be localized in the App:
 

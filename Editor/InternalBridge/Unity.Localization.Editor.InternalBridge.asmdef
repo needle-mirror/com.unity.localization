@@ -21,6 +21,11 @@
             "name": "Unity",
             "expression": "2021.2",
             "define": "ENABLE_SEARCH"
+        },
+        {
+            "name": "com.unity.modules.uielements",
+            "expression": "1.0.0",
+            "define": "MODULE_UITK"
         }
     ],
     "noEngineReferences": false

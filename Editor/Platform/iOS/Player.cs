@@ -1,4 +1,4 @@
-#if UNITY_IOS || UNITY_IPHONE
+#if ((UNITY_TVOS || UNITY_STANDALONE_OSX || UNITY_VISIONOS) && ENABLE_LOCALIZATION_XCODE_SUPPORT) || (UNITY_IOS || UNITY_IPHONE)
 using System;
 using System.IO;
 using System.Text;
@@ -42,6 +42,37 @@ namespace UnityEditor.Localization.Platform.iOS
             AddLocalizationToXcodeProject(projectDirectory, appInfo);
         }
 
+        public static string GetPBXProjectPath(string buildPath)
+        {
+            #if UNITY_IOS || UNITY_IPHONE || UNITY_TVOS
+            return PBXProject.GetPBXProjectPath(buildPath);
+            #elif UNITY_STANDALONE_OSX || UNITY_VISIONOS
+            var directories = Directory.EnumerateDirectories(buildPath, "*.xcodeproj");
+            const string trampolineVerKey = "UNITY_RUNTIME_VERSION = ";
+            foreach (var dir in directories)
+            {
+                var projectFile = Path.Combine(dir, "project.pbxproj");
+                if (!File.Exists(projectFile))
+                    continue;
+
+                try
+                {
+                    var projectContent = File.ReadAllText(projectFile);
+                    // Check if it's Unity's Trampoline by finding UNITY_TRAMPOLINE_VERSION variable
+                    if (projectContent.Contains(trampolineVerKey))
+                        return projectFile;
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+            }
+
+            Debug.LogWarning($"No Unity Xcode project found in the given path: {buildPath}.\nCreate Xcode project must be enabled to support localizing Mac applications.");
+            #endif
+            return null;
+        }
+
         /// <summary>
         /// Updates the Xcode project file with localized values using <see cref="AppInfo"/>.
         /// </summary>
@@ -52,18 +83,26 @@ namespace UnityEditor.Localization.Platform.iOS
             if (appInfo == null)
                 throw new ArgumentNullException(nameof(appInfo));
 
-            var pbxPath = PBXProject.GetPBXProjectPath(projectDirectory);
+            var pbxPath = GetPBXProjectPath(projectDirectory);
+            if (string.IsNullOrEmpty(pbxPath))
+                return;
             var project = new PBXProject();
             project.ReadFromFile(pbxPath);
             project.ClearKnownRegions(); // Remove the deprecated regions that get added automatically.
 
             var plistDocument = new PlistDocument();
-            var plistPath = Path.Combine(projectDirectory, "Info.plist");
+
+            var pListDir = projectDirectory;
+            #if UNITY_STANDALONE_OSX
+            pListDir = Path.Combine(projectDirectory, PlayerSettings.productName);
+            #endif
+
+            var plistPath = Path.Combine(pListDir, "Info.plist");
             plistDocument.ReadFromFile(plistPath);
 
             // Default language
             // How iOS Determines the Language For Your App - https://developer.apple.com/library/archive/qa/qa1828/_index.html
-            var developmentRegion = string.IsNullOrEmpty(LocalizationSettings.Instance.m_ProjectLocaleIdentifier.Code) ? LocalizationEditorSettings.GetLocales() ? [0]?.Identifier : LocalizationSettings.Instance.m_ProjectLocaleIdentifier;
+            var developmentRegion = string.IsNullOrEmpty(LocalizationSettings.Instance.m_ProjectLocaleIdentifier.Code) ? LocalizationEditorSettings.GetLocales()?[0]?.Identifier : LocalizationSettings.Instance.m_ProjectLocaleIdentifier;
             if (developmentRegion.HasValue)
                 project.SetDevelopmentRegion(developmentRegion.Value.Code);
             plistDocument.root.SetString("CFBundleDevelopmentRegion", "$(DEVELOPMENT_LANGUAGE)");
@@ -79,7 +118,7 @@ namespace UnityEditor.Localization.Platform.iOS
                 bundleLanguages.AddString(code);
 
                 var localeDir = code + ".lproj";
-                var dir = Path.Combine(projectDirectory, localeDir);
+                var dir = Path.Combine(pListDir, localeDir);
                 Directory.CreateDirectory(dir);
 
                 var filePath = Path.Combine(dir, k_InfoFile);

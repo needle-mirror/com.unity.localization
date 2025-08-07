@@ -42,7 +42,7 @@ To combine comparisons, use `&` for AND or `/` for OR.
 
 <tr>
 <td>{Age:cond:&gt;=55?Senior Citizen|&gt;=30?Adult|&gt;=18?Young Adult|&gt;12?Teenager|&gt;2?Child|Baby}</td>
-<td> 
+<td>
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-cond-1)]
 

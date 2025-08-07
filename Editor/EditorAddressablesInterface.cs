@@ -29,7 +29,7 @@ namespace UnityEditor.Localization
         readonly ResourceManager m_ResourceManager = new ResourceManager();
 
         // Addressables is only safe to use in playmode, any other time we use the asset database. (LOC-722)
-        internal bool UseAddressables => (LocalizationSettings.Instance.IsPlayingOverride.HasValue && LocalizationSettings.Instance.IsPlayingOverride.Value) || 
+        internal bool UseAddressables => (LocalizationSettings.Instance.IsPlayingOverride.HasValue && LocalizationSettings.Instance.IsPlayingOverride.Value) ||
                                         (LocalizationSettings.Instance.IsPlayingOrWillChangePlaymode && PlayModeState == PlayModeStateChange.EnteredPlayMode);
 
         internal static PlayModeStateChange PlayModeState => EditorApplication.isPlaying ?

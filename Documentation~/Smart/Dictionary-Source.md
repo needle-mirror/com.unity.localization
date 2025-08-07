@@ -13,7 +13,7 @@ When evaluating an IDictionary, if the Key is not a string, the Dictionary sourc
 
 <tr>
 <td>{SomeKey}</td>
-<td> 
+<td>
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-dict-1)]
 
@@ -22,7 +22,7 @@ When evaluating an IDictionary, if the Key is not a string, the Dictionary sourc
 
 <tr>
 <td>Hello {Name} {Surname}</td>
-<td> 
+<td>
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-dict-2)]
 
@@ -31,7 +31,7 @@ When evaluating an IDictionary, if the Key is not a string, the Dictionary sourc
 
 <tr>
 <td>{Name} {Surname} scored {1:Score} points</td>
-<td> 
+<td>
 
 [!code-cs[](../../DocCodeSamples.Tests/SmartStringSamples.cs#args-dict-3)]
 

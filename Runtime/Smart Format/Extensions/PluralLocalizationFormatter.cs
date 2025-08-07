@@ -107,6 +107,12 @@ namespace UnityEngine.Localization.SmartFormat.Extensions
                 (CustomPluralRuleProvider)provider?.GetFormat(typeof(CustomPluralRuleProvider));
             if (pluralRuleProvider != null) return pluralRuleProvider.GetPluralRule();
 
+            // When using a Locale we want to use the CultureInfo as it doesnt make sense to use a custom formatter for a plural. (LOC-1224)
+            if (provider is Locale locale)
+            {
+                provider = locale.Identifier.CultureInfo;
+            }
+
             // Use the CultureInfo, if provided:
             if (provider is CultureInfo cultureInfo)
             {

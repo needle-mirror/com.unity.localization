@@ -203,7 +203,7 @@ namespace UnityEngine.Localization.Tables
                 }
             }
 
-            // Check table 
+            // Check table
             for (int i = tableMetada.Count - 1; i >= 0; --i)
             {
                 if (tableMetada[i] is TShared tag)

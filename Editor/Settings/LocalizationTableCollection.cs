@@ -655,10 +655,14 @@ namespace UnityEditor.Localization
                 Undo.RecordObjects(new UnityEngine.Object[] { aaSettings, tableEntry.parentGroup }, "Update table");
 
             tableEntry.address = AddressHelper.GetTableAddress(table.TableCollectionName, table.LocaleIdentifier);
-            tableEntry.labels.RemoveWhere(AddressHelper.IsLocaleLabel); // Locale may have changed so clear the old ones.
 
             // Label the locale
             var localeLabel = AddressHelper.FormatAssetLabel(table.LocaleIdentifier);
+
+            // Only update labels if the current locale label has changed
+            if (tableEntry.labels.Any(label => label != localeLabel && AddressHelper.IsLocaleLabel(label)))
+                tableEntry.labels.RemoveWhere(AddressHelper.IsLocaleLabel);
+
             tableEntry.SetLabel(localeLabel, true, true);
         }
 

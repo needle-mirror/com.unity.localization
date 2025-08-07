@@ -115,7 +115,7 @@ namespace UnityEditor.Localization
                 // Create list element
                 var list = m_LocalizedStringProperty.FindPropertyRelative(nameof(LocalizedString.LocalVariablesUXML));
                 var element = list.AddArrayElement();
-                element.managedReferenceValue = new LocalVariable.UxmlSerializedData(); 
+                element.managedReferenceValue = new LocalVariable.UxmlSerializedData();
 
                 // Add variable instance
                 var variable = element.FindPropertyRelative(nameof(LocalVariable.Variable));

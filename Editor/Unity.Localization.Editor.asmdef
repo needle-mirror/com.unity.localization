@@ -84,6 +84,11 @@
             "name": "Unity",
             "expression": "2022",
             "define": "ENABLE_SEARCH_QUERY_BUILDER"
+        },
+        {
+            "name": "Unity",
+            "expression": "2023.3",
+            "define": "ENABLE_LOCALIZATION_XCODE_SUPPORT"
         }
     ],
     "noEngineReferences": false

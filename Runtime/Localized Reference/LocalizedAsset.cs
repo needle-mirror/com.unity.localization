@@ -63,6 +63,16 @@ namespace UnityEngine.Localization
     public partial class LocalizedTmpFont : LocalizedAsset<TMPro.TMP_FontAsset> {}
     #endif
 
+    #if UNITY_2023_2_OR_NEWER || PACKAGE_DOCS_GENERATION
+    /// <summary>
+    /// Provides a <see cref="LocalizedAsset{TObject}"/> that you can use to localize a
+    /// [UnityEngine.TextCore.Text.FontAsset](https://docs.unity3d.com/ScriptReference/TextCore.Text.FontAsset.html),
+    /// the font asset type used by Unity's TextCore text pipeline, such as UI Toolkit text.
+    /// </summary>
+    [Serializable]
+    public partial class LocalizedTextCoreFontAsset : LocalizedAsset<UnityEngine.TextCore.Text.FontAsset> {}
+    #endif
+
     /// <summary>
     /// Provides a <see cref="LocalizedAsset{TObject}"/> which you can use to localize a [Font](https://docs.unity3d.com/ScriptReference/Font.html)/>.
     /// </summary>
@@ -72,6 +82,7 @@ namespace UnityEngine.Localization
     /// <summary>
     /// Base class for all localized assets.
     /// </summary>
+    [Serializable]
     public abstract partial class LocalizedAssetBase : LocalizedReference
     {
         /// <summary>

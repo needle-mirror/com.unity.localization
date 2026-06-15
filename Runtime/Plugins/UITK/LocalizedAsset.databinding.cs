@@ -47,6 +47,9 @@ namespace UnityEngine.Localization
     #endif
 
     [UxmlObject]
+    public partial class LocalizedTextCoreFontAsset { }
+
+    [UxmlObject]
     public partial class LocalizedFont { }
 
     [UxmlObject]

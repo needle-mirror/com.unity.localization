@@ -1,57 +1,66 @@
-#if (((UNITY_TVOS || UNITY_STANDALONE_OSX || UNITY_VISIONOS) && ENABLE_LOCALIZATION_XCODE_SUPPORT) || (UNITY_IOS || UNITY_IPHONE)) && !UNITY_2023_1_OR_NEWER
+#if ((UNITY_TVOS || UNITY_STANDALONE_OSX || UNITY_VISIONOS) && ENABLE_LOCALIZATION_XCODE_SUPPORT) || (UNITY_IOS || UNITY_IPHONE)
 using System;
 using System.Collections;
 using System.Reflection;
 using UnityEditor.iOS.Xcode;
+using Debug = UnityEngine.Debug;
 
 namespace UnityEditor.Localization.Platform.iOS
 {
     /// <summary>
-    /// Provides access to PBXProject internals via reflection.
-    /// TODO: Make this API public in Unity so we dont need to use reflection in the future.
+    /// PBXProject helpers that reach into internal members via reflection.
+    /// <see cref="RemoveLocaleFromVariantGroup"/> and <see cref="IncludeVariantGroupInBuild"/>
+    /// are always available; the four region/locale extension methods at the bottom
+    /// became public on <see cref="PBXProject"/> in Unity 2023.1 and are gated to
+    /// older editors only.
     /// </summary>
     static class PBXProjectExtensions
     {
         readonly static Type s_GUIDList;
+        readonly static Type s_PBXVariantGroupData;
+        readonly static FieldInfo s_ProjectData;
+        readonly static FieldInfo s_PBXObjectGuid;
+        readonly static FieldInfo s_GroupChildren;
+        readonly static FieldInfo s_VariantGroupName;
+        readonly static FieldInfo s_FileRefName;
+        readonly static FieldInfo s_DataFileRefsField;
+        readonly static PropertyInfo s_ProjectVariantGroups;
+        readonly static PropertyInfo s_FileRefsIndexer;
+        readonly static MethodInfo s_VariantGroupsObjects;
+        readonly static MethodInfo s_GUIDListContains;
+        readonly static MethodInfo s_GuidListAdd;
+        readonly static MethodInfo s_GuidListRemove;
+        readonly static MethodInfo s_FileRefsRemoveEntry;
+        readonly static MethodInfo s_ProjectBuildFilesGetForSourceFile;
+        readonly static MethodInfo s_GroupsGetMainGroup;
+
+        #if !UNITY_2023_1_OR_NEWER
         readonly static Type s_PBXBuildFileDat;
         readonly static Type s_PBXElementArray;
         readonly static Type s_PBXElementString;
-        readonly static Type s_PBXVariantGroupData;
-
         readonly static FieldInfo s_DataFileGroups;
-        readonly static FieldInfo s_DataFileRefsField;
         readonly static FieldInfo s_KnownRegionsDict;
-        readonly static FieldInfo s_GroupChildren;
         readonly static FieldInfo s_GroupName;
         readonly static FieldInfo s_GroupPath;
-        readonly static FieldInfo s_PBXObjectGuid;
         readonly static FieldInfo s_PBXElementArrayValues;
-        readonly static FieldInfo s_ProjectData;
         readonly static FieldInfo s_ResourceFiles;
-        readonly static FieldInfo s_VariantGroupName;
-
         readonly static PropertyInfo s_FileRefsPath;
         readonly static PropertyInfo s_ProjectResoruces;
         readonly static PropertyInfo s_ProjectSection;
         readonly static PropertyInfo s_ProjectSectionObjectData;
-        readonly static PropertyInfo s_ProjectVariantGroups;
-
         readonly static MethodInfo s_DataFileRefsFieldObjects;
         readonly static MethodInfo s_FileRefDataCreateFromFile;
         readonly static MethodInfo s_GetPropertiesRaw;
         readonly static MethodInfo s_GroupsObjects;
-        readonly static MethodInfo s_GuidListAdd;
-        readonly static MethodInfo s_GUIDListContains;
         readonly static MethodInfo s_PBXBuildFileDataCreateFromFile;
         readonly static MethodInfo s_ProjectBuildFilesAdd;
         readonly static MethodInfo s_ProjectFileRefsAdd;
-        readonly static MethodInfo s_ProjectBuildFilesGetForSourceFile;
         readonly static MethodInfo s_RawPropertiesValuesAddValue;
         readonly static MethodInfo s_RawPropertiesValuesGetValue;
         readonly static MethodInfo s_ResorucesObjects;
         readonly static MethodInfo s_VariantGroupsAddEntry;
-        readonly static MethodInfo s_VariantGroupsObjects;
         readonly static MethodInfo s_VariantGroupsSetPropertyString;
+        #endif
 
         static PBXProjectExtensions()
         {
@@ -59,59 +68,164 @@ namespace UnityEditor.Localization.Platform.iOS
             const string ns = "UnityEditor.iOS.Xcode.PBX";
             const BindingFlags pv = BindingFlags.Instance | BindingFlags.NonPublic;
 
-            // Types
             s_GUIDList = asm.GetType($"{ns}.GUIDList");
+            s_PBXVariantGroupData = asm.GetType($"{ns}.PBXVariantGroupData");
+            var fileRefData = asm.GetType($"{ns}.PBXFileReferenceData");
+            var pbxObject = asm.GetType($"{ns}.PBXObjectData");
+            var group = asm.GetType($"{ns}.PBXGroupData");
+
+            s_ProjectData = typeof(PBXProject).GetField("m_Data", pv);
+            s_PBXObjectGuid = pbxObject.GetField("guid");
+            s_GroupChildren = group.GetField("children");
+            s_VariantGroupName = s_PBXVariantGroupData.GetField("name");
+            s_FileRefName = fileRefData.GetField("name");
+            s_DataFileRefsField = s_ProjectData.FieldType.GetField("fileRefs", pv);
+            s_ProjectVariantGroups = typeof(PBXProject).GetProperty("variantGroups", pv);
+            s_FileRefsIndexer = s_DataFileRefsField.FieldType.GetProperty("Item", new[] { typeof(string) });
+            s_VariantGroupsObjects = s_ProjectVariantGroups.PropertyType.GetMethod("GetObjects");
+            s_GUIDListContains = s_GUIDList.GetMethod("Contains");
+            s_GuidListAdd = s_GUIDList.GetMethod("AddGUID");
+            s_GuidListRemove = s_GUIDList.GetMethod("RemoveGUID");
+            s_FileRefsRemoveEntry = s_DataFileRefsField.FieldType.GetMethod("RemoveEntry");
+            s_ProjectBuildFilesGetForSourceFile = typeof(PBXProject).GetMethod("BuildFilesGetForSourceFile", pv);
+            s_GroupsGetMainGroup = s_ProjectData.FieldType.GetMethod("GroupsGetMainGroup", pv | BindingFlags.Public);
+
+            #if !UNITY_2023_1_OR_NEWER
             s_PBXBuildFileDat = asm.GetType($"{ns}.PBXBuildFileData");
             s_PBXElementArray = asm.GetType($"{ns}.PBXElementArray");
             s_PBXElementString = asm.GetType($"{ns}.PBXElementString");
-            s_PBXVariantGroupData = asm.GetType($"{ns}.PBXVariantGroupData");
-            var fileRefData = asm.GetType($"{ns}.PBXFileReferenceData");
-            var group = asm.GetType($"{ns}.PBXGroupData");
-            var pbxObject = asm.GetType($"{ns}.PBXObjectData");
             var fileGUIDListBase = asm.GetType($"{ns}.FileGUIDListBase");
             var pBXElementDict = asm.GetType($"{ns}.PBXElementDict");
-            var pBXProjectSection = asm.GetType($"{ns}.PBXProjectSection");
-            UnityEngine.Debug.Log(pBXProjectSection);
 
-            // Fields
-            s_ProjectData = typeof(PBXProject).GetField("m_Data", pv);
-            s_DataFileRefsField = s_ProjectData.FieldType.GetField("fileRefs", pv);
             s_DataFileGroups = s_ProjectData.FieldType.GetField("groups", pv);
             s_ResourceFiles = fileGUIDListBase.GetField("files");
-            s_PBXObjectGuid = pbxObject.GetField("guid");
             s_PBXElementArrayValues = s_PBXElementArray.GetField("values");
-            s_GroupChildren = group.GetField("children");
             s_GroupName = group.GetField("name");
             s_GroupPath = group.GetField("path");
-            s_VariantGroupName = s_PBXVariantGroupData.GetField("name");
 
-            // Methods
             s_GroupsObjects = s_DataFileGroups.FieldType.GetMethod("GetObjects");
             s_DataFileRefsFieldObjects = s_DataFileRefsField.FieldType.GetMethod("GetObjects");
             s_GetPropertiesRaw = pbxObject.GetMethod("GetPropertiesRaw", pv);
-            s_GuidListAdd = s_GUIDList.GetMethod("AddGUID");
-            s_GUIDListContains = s_GUIDList.GetMethod("Contains");
             s_FileRefDataCreateFromFile = fileRefData.GetMethod("CreateFromFile", BindingFlags.Static | BindingFlags.Public);
             s_PBXBuildFileDataCreateFromFile = s_PBXBuildFileDat.GetMethod("CreateFromFile", BindingFlags.Static | BindingFlags.Public, null, new Type[] { typeof(string), typeof(bool), typeof(string) }, null);
             s_ProjectBuildFilesAdd = typeof(PBXProject).GetMethod("BuildFilesAdd", pv);
             s_ProjectFileRefsAdd = typeof(PBXProject).GetMethod("FileRefsAdd", pv);
-            s_ProjectBuildFilesGetForSourceFile = typeof(PBXProject).GetMethod("BuildFilesGetForSourceFile", pv);
 
-            // Properties
             s_FileRefsPath = fileRefData.GetProperty("path");
             s_KnownRegionsDict = pBXElementDict.GetField("m_PrivateValue", pv);
             s_ProjectSection = typeof(PBXProject).GetProperty("project", pv);
             s_ProjectSectionObjectData = s_ProjectSection.PropertyType.GetProperty("project");
             s_ProjectResoruces = typeof(PBXProject).GetProperty("resources", pv);
-            s_ProjectVariantGroups = typeof(PBXProject).GetProperty("variantGroups", pv);
 
             s_RawPropertiesValuesGetValue = s_KnownRegionsDict.FieldType.GetMethod("TryGetValue");
             s_RawPropertiesValuesAddValue = s_KnownRegionsDict.FieldType.GetMethod("Add");
             s_ResorucesObjects = s_ProjectResoruces.PropertyType.GetMethod("GetObjects");
             s_VariantGroupsAddEntry = s_ProjectVariantGroups.PropertyType.GetMethod("AddEntry");
-            s_VariantGroupsObjects = s_ProjectVariantGroups.PropertyType.GetMethod("GetObjects");
             s_VariantGroupsSetPropertyString = group.GetMethod("SetPropertyString", pv);
+            #endif
         }
+
+        /// <summary>
+        /// Removes the locale entry from a <c>PBXVariantGroup</c>, used to strip
+        /// pre-baked entries from the iOS trampoline pbxproj (LOC-1133). Public
+        /// <see cref="PBXProject.RemoveFile"/> can't be used because variant-group
+        /// children aren't tracked in the parent-group map and it would NRE.
+        /// </summary>
+        public static void RemoveLocaleFromVariantGroup(this PBXProject project, string variantGroupName, string localeCode)
+        {
+            try
+            {
+                var variantGroups = s_ProjectVariantGroups.GetValue(project);
+
+                object variantGroup = null;
+                foreach (var vg in s_VariantGroupsObjects.Invoke(variantGroups, null) as ICollection)
+                {
+                    if ((string)s_VariantGroupName.GetValue(vg) == variantGroupName)
+                    {
+                        variantGroup = vg;
+                        break;
+                    }
+                }
+                if (variantGroup == null)
+                    return;
+
+                var children = s_GroupChildren.GetValue(variantGroup);
+                var data = s_ProjectData.GetValue(project);
+                var fileRefs = s_DataFileRefsField.GetValue(data);
+
+                string targetGuid = null;
+                foreach (string childGuid in (IEnumerable)children)
+                {
+                    var fileRef = s_FileRefsIndexer.GetValue(fileRefs, new object[] { childGuid });
+                    if (fileRef == null)
+                        continue;
+                    if ((string)s_FileRefName.GetValue(fileRef) == localeCode)
+                    {
+                        targetGuid = childGuid;
+                        break;
+                    }
+                }
+                if (targetGuid == null)
+                    return;
+
+                // Removing from children stops Xcode looking for the file; the resources
+                // build phase references the variant group, not the child, so it's unaffected.
+                s_GuidListRemove.Invoke(children, new object[] { targetGuid });
+                s_FileRefsRemoveEntry.Invoke(fileRefs, new object[] { targetGuid });
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"Failed to remove '{localeCode}' from {variantGroupName} variant group: {e}");
+            }
+        }
+
+        /// <summary>
+        /// Adds <paramref name="variantGroupName"/> to the project's mainGroup and to the
+        /// main target's resources build phase. <see cref="PBXProject.AddLocaleVariantFile"/>
+        /// only does this when an iOS-trampoline-only <c>CustomTemplate</c> group exists,
+        /// so non-iOS Xcode builds otherwise report "0 Files localized" (UUM-132514).
+        /// </summary>
+        public static void IncludeVariantGroupInBuild(this PBXProject project, string variantGroupName)
+        {
+            try
+            {
+                var data = s_ProjectData.GetValue(project);
+                var variantGroups = s_ProjectVariantGroups.GetValue(project);
+
+                object variantGroup = null;
+                foreach (var vg in s_VariantGroupsObjects.Invoke(variantGroups, null) as ICollection)
+                {
+                    if ((string)s_VariantGroupName.GetValue(vg) == variantGroupName)
+                    {
+                        variantGroup = vg;
+                        break;
+                    }
+                }
+                if (variantGroup == null)
+                    return;
+
+                var groupGuid = (string)s_PBXObjectGuid.GetValue(variantGroup);
+                var mainTarget = project.GetUnityMainTargetGuid();
+
+                var mainGroup = s_GroupsGetMainGroup.Invoke(data, null);
+                var mainGroupChildren = s_GroupChildren.GetValue(mainGroup);
+                if (!(bool)s_GUIDListContains.Invoke(mainGroupChildren, new object[] { groupGuid }))
+                    s_GuidListAdd.Invoke(mainGroupChildren, new object[] { groupGuid });
+
+                if (s_ProjectBuildFilesGetForSourceFile.Invoke(project, new object[] { mainTarget, groupGuid }) == null)
+                {
+                    var resourcesPhase = project.GetResourcesBuildPhaseByTarget(mainTarget);
+                    project.AddFileToBuildSection(mainTarget, resourcesPhase, groupGuid);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"Failed to include {variantGroupName} variant group in the Xcode build: {e}");
+            }
+        }
+
+        #if !UNITY_2023_1_OR_NEWER
+        // Pre-2023.1 reimplementations of PBXProject APIs that became public in 2023.1.
 
         static /* PBXFileReferenceData */ object GetFileRefDataByPath(this PBXProject project, string path)
         {
@@ -275,6 +389,7 @@ namespace UnityEditor.Localization.Platform.iOS
                 s_GuidListAdd.Invoke(groupChildren, new[] { fileRefsGuid });
             }
         }
+        #endif
     }
 }
 #endif

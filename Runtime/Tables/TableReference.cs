@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Serialization;
 
@@ -33,9 +33,9 @@ namespace UnityEngine.Localization.Tables
             Name
         }
 
-        // Cached values to reduce GC
-        static readonly Dictionary<Guid, string> s_GuidToStringCache = new Dictionary<Guid, string>();
-        static readonly Dictionary<string, Guid> s_StringToGuidCache = new Dictionary<string, Guid>();
+        // Cached values to reduce GC. We use ConcurrentDictionary as it can be called from multiple threads when invoked from OnBeforeSerialize.
+        static readonly ConcurrentDictionary<Guid, string> s_GuidToStringCache = new ConcurrentDictionary<Guid, string>();
+        static readonly ConcurrentDictionary<string, Guid> s_StringToGuidCache = new ConcurrentDictionary<string, Guid>();
 
         [SerializeField]
         [FormerlySerializedAs("m_TableName")]
@@ -254,37 +254,41 @@ namespace UnityEngine.Localization.Tables
         }
 
         /// <summary>
-        /// Parse a string that contains uses the <see cref="k_GuidTag"/> tag.
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        internal static Guid GuidFromString(string value)
-        {
-            if (s_StringToGuidCache.TryGetValue(value, out var result))
-                return result;
-
-            if (Guid.TryParse(value.Substring(k_GuidTag.Length, value.Length - k_GuidTag.Length), out var guid))
-            {
-                s_StringToGuidCache[value] = guid;
-                return guid;
-            }
-
-            return Guid.Empty;
-        }
-
-        /// <summary>
         /// Returns a string version of the GUID which works with Addressables, it uses the "N" format(32 digits).
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
         internal static string StringFromGuid(Guid value)
         {
-            if (s_GuidToStringCache.TryGetValue(value, out var guid))
-                return guid.ToString();
+            if (s_GuidToStringCache.TryGetValue(value, out var cached))
+                return cached;
 
             var stringValue = value.ToString("N");
-            s_GuidToStringCache[value] = stringValue;
+            s_GuidToStringCache.TryAdd(value, stringValue);
             return stringValue;
+        }
+
+        /// <summary>
+        /// Parse a string that contains uses the <see cref="k_GuidTag"/> tag.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        internal static Guid GuidFromString(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return Guid.Empty;
+
+            if (s_StringToGuidCache.TryGetValue(value, out var cached))
+                return cached;
+
+            if (Guid.TryParse(value.Substring(k_GuidTag.Length), out var guid))
+            {
+                s_StringToGuidCache.TryAdd(value, guid);
+                return guid;
+            }
+
+            s_StringToGuidCache.TryAdd(value, Guid.Empty);
+            return Guid.Empty;
         }
 
         /// <summary>

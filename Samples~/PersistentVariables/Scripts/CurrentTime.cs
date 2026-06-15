@@ -8,6 +8,7 @@ namespace UnityEngine.Localization.Samples
     /// This is an example of a Global Variable that can return the current time.
     /// </summary>
     [DisplayName("Current Date Time")]
+    [Serializable]
     public class CurrentTime : IVariable
     {
         public object GetSourceValue(ISelectorInfo _) => DateTime.Now;

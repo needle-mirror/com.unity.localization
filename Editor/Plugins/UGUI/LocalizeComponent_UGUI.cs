@@ -1,5 +1,6 @@
 #if PACKAGE_UGUI
 
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Localization;
@@ -43,6 +44,13 @@ namespace UnityEditor.Localization.Plugins.UGUI
             SetupForLocalization(target);
         }
 
+        [MenuItem("CONTEXT/Dropdown/Localize")]
+        static void LocalizeUIDropdown(MenuCommand command)
+        {
+            var target = command.context as Dropdown;
+            SetupForLocalization(target);
+        }
+
         public static MonoBehaviour SetupForLocalization(Text target)
         {
             var comp = Undo.AddComponent(target.gameObject, typeof(LocalizeStringEvent)) as LocalizeStringEvent;
@@ -70,6 +78,23 @@ namespace UnityEditor.Localization.Plugins.UGUI
             var methodDelegate = System.Delegate.CreateDelegate(typeof(UnityAction<Sprite>), target, setTextureMethod) as UnityAction<Sprite>;
             Events.UnityEventTools.AddPersistentListener(comp.OnUpdateAsset, methodDelegate);
             comp.OnUpdateAsset.SetPersistentListenerState(0, UnityEventCallState.EditorAndRuntime);
+            return comp;
+        }
+
+        public static MonoBehaviour SetupForLocalization(Dropdown target)
+        {
+            var comp = Undo.AddComponent(target.gameObject, typeof(LocalizeStringListEvent)) as LocalizeStringListEvent;
+
+            var clearMethod = typeof(Dropdown).GetMethod("ClearOptions");
+            var clearDelegate = System.Delegate.CreateDelegate(typeof(UnityAction), target, clearMethod) as UnityAction;
+            Events.UnityEventTools.AddVoidPersistentListener(comp.OnUpdateList, clearDelegate);
+            comp.OnUpdateList.SetPersistentListenerState(0, UnityEventCallState.EditorAndRuntime);
+
+            var addMethod = typeof(Dropdown).GetMethod("AddOptions", new[] { typeof(List<string>) });
+            var addDelegate = System.Delegate.CreateDelegate(typeof(UnityAction<List<string>>), target, addMethod) as UnityAction<List<string>>;
+            Events.UnityEventTools.AddPersistentListener(comp.OnUpdateList, addDelegate);
+            comp.OnUpdateList.SetPersistentListenerState(1, UnityEventCallState.EditorAndRuntime);
+
             return comp;
         }
     }

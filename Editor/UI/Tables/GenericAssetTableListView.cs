@@ -602,6 +602,7 @@ namespace UnityEditor.Localization.UI
                 CurrentPage = TotalPages;
                 var index = TableCollection.SharedData.Entries.Count - 1;
                 SetSelection(new int[] { index }, TreeViewSelectionOptions.RevealAndFrame);
+                LocalizationEditorSettings.EditorEvents.RaiseTableEntryAdded(TableCollection, TableCollection.SharedData.Entries[index]);
             }
         }
 

@@ -660,9 +660,12 @@ namespace UnityEditor.Localization
             var localeLabel = AddressHelper.FormatAssetLabel(table.LocaleIdentifier);
 
             // Only update labels if the current locale label has changed
-            if (tableEntry.labels.Any(label => label != localeLabel && AddressHelper.IsLocaleLabel(label)))
-                tableEntry.labels.RemoveWhere(AddressHelper.IsLocaleLabel);
-
+            var currentLabels = tableEntry.labels;
+            foreach (var label in currentLabels)
+            {
+                if (label != localeLabel && AddressHelper.IsLocaleLabel(label))
+                    tableEntry.labels.Remove(label);
+            }
             tableEntry.SetLabel(localeLabel, true, true);
         }
 

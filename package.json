@@ -1,7 +1,7 @@
 {
   "name": "com.unity.localization",
   "displayName": "Localization",
-  "version": "1.5.11",
+  "version": "1.5.12",
   "unity": "2019.4",
   "description": "Use the Localization package to easily configure localization settings for your application.\n\nAdd support for multiple languages and regional variants, including:\n\n• String localization: Set different strings to display based on locale. Use the Smart Strings feature to add logic to automatically replace specific strings, such as placeholders and plurals.\n• Asset localization: Use a different asset (such as a texture, model, or audio file) based on a locale.\n• Pseudo-localization: Test how your project will adapt to different localizations at an early stage, before adding your translations.\n• Import and export localization data to XLIFF, CSV and Google Sheets.\n\nAdd localization to your projects using the Localization package to help make your applications more accessible to a wider audience.",
   "keywords": [
@@ -14,19 +14,19 @@
     "com.unity.nuget.newtonsoft-json": "3.0.2"
   },
   "relatedPackages": {
-    "com.unity.localization.tests": "1.5.11"
+    "com.unity.localization.tests": "1.5.12"
   },
   "_upm": {
-    "changelog": "### Fixed\n\n- Removed use of UxmlFactory and UxmlTraits in Unity 6+.\n- Removed use of GetInstanceId from Unity 6.3+."
+    "changelog": "### Fixed\n\n- Added LocalizedTextCoreFontAsset for localizing Textcore FontAssets.\n- Added support for localizing dropdowns across UI Toolkit, UGUI, and TMP. Includes LocalizedStringListEvent support for UGUI and TMP, plus binding UI Toolkit dropdown choices to LocalizedStringList or LocalizedStringGroup.\n- Fixed a possible threading issue when `StringFromGuid` was called from `TableReference.OnBeforeSerialize` which can come from multiple threads. (UUM-139286)\n- Fixed allocations when assigning a value to `IVariable.Value`. ([UUM-137873](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-137873))\n- Fixed an issue with the localization files not being correctly setup when build the xcode project for OSX. ([UUM-132514](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-132514))\n- Fixed iOS Xcode build failing with \"Build input file cannot be found: en.lproj/InfoPlist.strings\" when the iOS App Info metadata was used in a project whose locale set did not include English. (LOC-1133)\n- Fixed not sending the `TableEntryAdded` event when the \"New Entry\" button was clicked in the table editor window. ([UUM-138011](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-138011))\n- Fixed some warnings regarding missing serializable attributes. ([UUM-140407](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-140407))\n- Fixed the Google Sheets extension throwing a cryptic \"RunSynchronously may not be called on a task not bound to a delegate\" error when OAuth needed a fresh sign-in. Authorization now shows a cancelable progress bar while it waits and reports a clear message if it fails or is canceled. ([UUM-144385](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-144385))\n- Removed use of `RemoveWhere` on Addressable labels. This is to support future versions of Addressables which have changed to use an ISet."
   },
   "upmCi": {
-    "footprint": "786bb5ca5c2fc05fceafcec41cef0fde94f9d4f9"
+    "footprint": "dd99fb9ba69a6a93b6615e385bb7e7f5ef889cdf"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.localization@1.5/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.localization.git",
     "type": "git",
-    "revision": "d2711fe1eb1d44d991c39b5e3d85301aa3644a9b"
+    "revision": "a86ef226a9f4ab34d338503cd2368454ebbb4b39"
   },
   "samples": [
     {

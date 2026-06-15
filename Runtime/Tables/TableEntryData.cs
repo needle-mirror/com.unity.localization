@@ -45,16 +45,16 @@ namespace UnityEngine.Localization.Tables
         public TableEntryData() {}
 
         /// <summary>
-        /// TODO: DOC
+        /// Creates a new entry with the specified key id.
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="id">The unique key id for the entry.</param>
         public TableEntryData(long id) => Id = id;
 
         /// <summary>
-        /// TODO: DOC
+        /// Creates a new entry with the specified key id and localized value.
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="localized"></param>
+        /// <param name="id">The unique key id for the entry.</param>
+        /// <param name="localized">The localized value. For string tables, this is the translated string. For asset tables, this is the asset guid.</param>
         public TableEntryData(long id, string localized) : this(id)
         {
             Localized = localized;

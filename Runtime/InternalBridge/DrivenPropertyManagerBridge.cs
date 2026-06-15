@@ -19,8 +19,6 @@ namespace UnityEngine.Localization.Bridge
                 (driver, target, propertyPath);
         }
 
-        // Same as RegisterProperty but produces an error if the property could not be found.
-        //public static void TryRegisterProperty(Object driver, Object target, string propertyPath) => DrivenPropertyManager.TryRegisterProperty(driver, target, propertyPath);
         public static void UnregisterProperty(Object driver, Object target, string propertyPath) => DrivenPropertyManager.UnregisterProperty(driver, target, propertyPath);
         public static void UnregisterProperties(Object driver) => DrivenPropertyManager.UnregisterProperties(driver);
     }

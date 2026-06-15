@@ -1,5 +1,6 @@
 #if ((UNITY_TVOS || UNITY_STANDALONE_OSX || UNITY_VISIONOS) && ENABLE_LOCALIZATION_XCODE_SUPPORT) || (UNITY_IOS || UNITY_IPHONE)
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEditor.iOS.Xcode;
@@ -102,13 +103,23 @@ namespace UnityEditor.Localization.Platform.iOS
 
             // Default language
             // How iOS Determines the Language For Your App - https://developer.apple.com/library/archive/qa/qa1828/_index.html
-            var developmentRegion = string.IsNullOrEmpty(LocalizationSettings.Instance.m_ProjectLocaleIdentifier.Code) ? LocalizationEditorSettings.GetLocales()?[0]?.Identifier : LocalizationSettings.Instance.m_ProjectLocaleIdentifier;
+            var developmentRegion = ResolveDevelopmentRegion();
             if (developmentRegion.HasValue)
-                project.SetDevelopmentRegion(developmentRegion.Value.Code);
+                project.SetDevelopmentRegion(developmentRegion.Value.Code.Replace("-", "_"));
             plistDocument.root.SetString("CFBundleDevelopmentRegion", "$(DEVELOPMENT_LANGUAGE)");
 
             // Inclusion of this key improves performance associated with displaying localized application names.
             plistDocument.root.SetBoolean("LSHasLocalizedDisplayName", true);
+
+            // Build the set of regions we will keep so we can prune any orphan
+            // .lproj entries the trampoline pre-baked but the project does not use.
+            var wantedRegions = new HashSet<string>();
+            foreach (var locale in LocalizationEditorSettings.GetLocales())
+                wantedRegions.Add(locale.Identifier.Code.Replace("-", "_"));
+            if (developmentRegion.HasValue)
+                wantedRegions.Add(developmentRegion.Value.Code.Replace("-", "_"));
+
+            RemoveOrphanInfoPlistVariants(project, wantedRegions);
 
             var bundleLanguages = plistDocument.root.CreateArray("CFBundleLocalizations");
             foreach (var locale in LocalizationEditorSettings.GetLocales())
@@ -122,11 +133,22 @@ namespace UnityEditor.Localization.Platform.iOS
                 Directory.CreateDirectory(dir);
 
                 var filePath = Path.Combine(dir, k_InfoFile);
+                // The pbxproj resolves the variant child's path from SOURCE_ROOT (the
+                // .xcodeproj's parent). On macOS the .lproj folders live inside the
+                // productName subfolder next to Info.plist, so the relative path needs
+                // that prefix or Xcode reports "Build input file cannot be found".
                 var relativePath = Path.Combine(localeDir, k_InfoFile);
+                #if UNITY_STANDALONE_OSX
+                relativePath = Path.Combine(PlayerSettings.productName, relativePath);
+                #endif
 
                 GenerateLocalizedInfoPlistFile(locale, appInfo, plistDocument, filePath);
                 project.AddLocaleVariantFile(k_InfoFile, code, relativePath);
             }
+
+            #if (UNITY_TVOS || UNITY_STANDALONE_OSX || UNITY_VISIONOS) && ENABLE_LOCALIZATION_XCODE_SUPPORT
+            project.IncludeVariantGroupInBuild(k_InfoFile);
+            #endif
 
             // Defaults
             var projectLocale = LocalizationSettings.ProjectLocale;
@@ -205,6 +227,32 @@ namespace UnityEditor.Localization.Platform.iOS
             var table = tableCollection?.GetTable(locale.Identifier) as StringTable;
             var entry = table?.GetEntryFromReference(localizedString.TableEntryReference);
             plistDocument.root.SetString(valueName, entry?.LocalizedValue);
+        }
+
+        static LocaleIdentifier? ResolveDevelopmentRegion()
+        {
+            var locales = LocalizationEditorSettings.GetLocales();
+            if (locales == null || locales.Count == 0)
+                return null;
+
+            var candidate = LocalizationSettings.Instance.m_ProjectLocaleIdentifier;
+            if (!string.IsNullOrEmpty(candidate.Code))
+            {
+                foreach (var locale in locales)
+                {
+                    if (locale.Identifier.Code == candidate.Code)
+                        return candidate;
+                }
+            }
+
+            return locales[0].Identifier;
+        }
+
+        static void RemoveOrphanInfoPlistVariants(PBXProject project, HashSet<string> wantedRegions)
+        {
+            const string region = "en";
+            if (!wantedRegions.Contains(region))
+                project.RemoveLocaleFromVariantGroup(k_InfoFile, region);
         }
     }
 }

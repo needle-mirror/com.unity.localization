@@ -78,6 +78,9 @@ namespace UnityEditor.Localization.Plugins.Google
         // The Google API access application we are requesting.
         static readonly string[] k_Scopes = { SheetsService.Scope.Spreadsheets };
 
+        // Auto cancel the interactive OAuth authorization after this many seconds so the Editor does not lock up.
+        const int k_AuthorizationTimeoutSeconds = 60;
+
         /// <summary>
         /// Used to make sure the access and refresh tokens persist. Uses a FileDataStore by default with "Library/Google/{name}" as the path.
         /// </summary>
@@ -204,19 +207,44 @@ namespace UnityEditor.Localization.Plugins.Google
         /// <returns></returns>
         public UserCredential AuthorizeOAuth()
         {
-            // Prevents Unity locking up if the user canceled the auth request.
-            // Auto cancel after 60 secs
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
-
-            var connectTask = AuthorizeOAuthAsync(cts.Token);
-            if (!connectTask.IsCompleted)
-                connectTask.RunSynchronously();
-
-            if (connectTask.Status == TaskStatus.Faulted)
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(k_AuthorizationTimeoutSeconds)))
             {
-                throw new Exception($"Failed to connect to Google Sheets.\n{connectTask.Exception}");
+                // AuthorizeOAuthAsync reads main-thread-only Unity APIs (this.name) before its first await.
+                var task = AuthorizeOAuthAsync(cts.Token);
+                try
+                {
+                    // Interactive sign-in runs in the background; show a cancelable progress bar while we wait.
+                    // Headless (batch mode / CI / automated tests) has no UI to show or cancel, so just block below.
+                    if (!Application.isBatchMode)
+                    {
+                        var startTime = EditorApplication.timeSinceStartup;
+                        while (!task.IsCompleted)
+                        {
+                            var progress = Mathf.Clamp01((float)((EditorApplication.timeSinceStartup - startTime) / k_AuthorizationTimeoutSeconds));
+                            if (EditorUtility.DisplayCancelableProgressBar("Authorizing with Google", "Complete the sign-in in your browser, then return to Unity.", progress))
+                            {
+                                // Throw rather than break so we don't block on GetResult() while the task is still canceling.
+                                cts.Cancel();
+                                throw new OperationCanceledException();
+                            }
+                            Thread.Sleep(50);
+                        }
+                    }
+                    return task.GetAwaiter().GetResult();
+                }
+                catch (OperationCanceledException)
+                {
+                    throw new Exception("Google Sheets authorization timed out or was canceled. Try the action again and complete the sign-in in your browser.");
+                }
+                catch (Exception e)
+                {
+                    throw new Exception($"Failed to authorize with Google Sheets. Check that the Client Id and Client Secret on the Sheets Service Provider are correct, and complete the authorization in your browser.\n{e.Message}", e);
+                }
+                finally
+                {
+                    EditorUtility.ClearProgressBar();
+                }
             }
-            return connectTask.Result;
         }
 
         /// <summary>
@@ -241,9 +269,11 @@ namespace UnityEditor.Localization.Plugins.Google
 
             // We use the client Id for the user so that we can generate a unique token file and prevent conflicts when using multiple OAuth authentications. (LOC-188)
             var user = m_ClientId;
-            var connectTask = GoogleWebAuthorizationBroker.AuthorizeAsync(secrets, k_Scopes, user, cancellationToken, dataStore);
-            return connectTask;
+            return AuthorizeOAuthAsyncInternal(secrets, user, cancellationToken, dataStore);
         }
+
+        internal virtual Task<UserCredential> AuthorizeOAuthAsyncInternal(ClientSecrets secrets, string user, CancellationToken cancellationToken, IDataStore dataStore) =>
+            GoogleWebAuthorizationBroker.AuthorizeAsync(secrets, k_Scopes, user, cancellationToken, dataStore);
 
         /// <summary>
         /// When calling an API that will access private user data, O Auth 2.0 credentials must be used.

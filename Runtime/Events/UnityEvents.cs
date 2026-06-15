@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine.Events;
 
 namespace UnityEngine.Localization.Events
@@ -28,6 +29,12 @@ namespace UnityEngine.Localization.Events
     /// </summary>
     [Serializable]
     public class UnityEventString : UnityEvent<string> {};
+
+    /// <summary>
+    /// [UnityEvent](https://docs.unity3d.com/ScriptReference/Events.UnityEvent.html) which contains a list of Localized Strings as an argument.
+    /// </summary>
+    [Serializable]
+    public class UnityEventStringList : UnityEvent<List<string>> {}
 
     /// <summary>
     /// [UnityEvent](https://docs.unity3d.com/ScriptReference/Events.UnityEvent.html) which can pass an [Texture](https://docs.unity3d.com/ScriptReference/Texture.html) as an argument.

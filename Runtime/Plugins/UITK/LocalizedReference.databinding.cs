@@ -79,15 +79,20 @@ namespace UnityEngine.Localization
         protected abstract void Cleanup();
 
         internal BindingResult CreateErrorResult(in BindingContext context, VisitReturnCode errorCode, Type sourceType)
+            => CreateErrorResult(context, errorCode, GetType(), sourceType);
+
+        internal static BindingResult CreateErrorResult(in BindingContext context, VisitReturnCode errorCode, Type bindingType, Type sourceType = null)
         {
             var element = context.targetElement;
-            var bindingTypename = TypeUtility.GetTypeDisplayName(GetType());
+            var bindingTypename = TypeUtility.GetTypeDisplayName(bindingType);
             var bindingId = $"{TypeUtility.GetTypeDisplayName(element.GetType())}.{context.bindingId}";
 
             return errorCode switch
             {
                 VisitReturnCode.InvalidPath => new BindingResult(BindingStatus.Failure, $"{bindingTypename}: Binding id `{bindingId}` is either invalid or contains a `null` value."),
-                VisitReturnCode.InvalidCast => new BindingResult(BindingStatus.Failure, $"{bindingTypename}: Invalid conversion from {sourceType} for binding id `{bindingId}`"),
+                VisitReturnCode.InvalidCast => new BindingResult(BindingStatus.Failure, sourceType != null
+                    ? $"{bindingTypename}: Invalid conversion from {sourceType} for binding id `{bindingId}`"
+                    : $"{bindingTypename}: Invalid conversion for binding id `{bindingId}`"),
                 VisitReturnCode.AccessViolation => new BindingResult(BindingStatus.Failure, $"{bindingTypename}: Trying set value for binding id `{bindingId}`, but it is read-only."),
                 _ => throw new ArgumentOutOfRangeException()
             };

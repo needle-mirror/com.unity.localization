@@ -29,8 +29,8 @@ namespace UnityEditor.Localization.UI
 
         const float k_WindowFooterHeight = 150;
 
-        [SerializeField] internal SearchField m_SearchField;
-        [SerializeField] internal LocaleGeneratorListView m_ListView;
+        internal SearchField m_SearchField;
+        internal LocaleGeneratorListView m_ListView;
 
         static List<LocaleIdentifier> GenerateLocaleChoices()
         {

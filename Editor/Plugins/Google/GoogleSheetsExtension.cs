@@ -44,7 +44,7 @@ namespace UnityEditor.Localization.Plugins.Google
         [SerializeReference]
         List<SheetColumn> m_Columns = new List<SheetColumn>();
 
-        [SerializeReference]
+        [SerializeField]
         bool m_RemoveMissingPulledKeys = true;
 
         /// <summary>

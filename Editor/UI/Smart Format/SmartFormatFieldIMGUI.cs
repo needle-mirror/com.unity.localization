@@ -85,7 +85,7 @@ namespace UnityEditor.Localization.UI
         public long KeyId { get; set; }
 
         /// <summary>
-        /// TODO: DOC
+        /// The total height of the field in pixels, including the toolbar and content area. Clamped to at least <see cref="MinHeight"/>.
         /// </summary>
         public float Height { get; private set; }
 

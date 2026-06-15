@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine.Localization.SmartFormat.Core.Extensions;
 
 namespace UnityEngine.Localization.SmartFormat.PersistentVariables
@@ -32,7 +33,7 @@ namespace UnityEngine.Localization.SmartFormat.PersistentVariables
             get => m_Value;
             set
             {
-                if (m_Value != null && m_Value.Equals(value))
+                if (EqualityComparer<T>.Default.Equals(m_Value, value))
                     return;
 
                 m_Value = value;

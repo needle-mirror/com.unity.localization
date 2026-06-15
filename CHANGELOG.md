@@ -2,6 +2,21 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.5.12] - 2026-06-15
+
+### Fixed
+
+- Added LocalizedTextCoreFontAsset for localizing Textcore FontAssets.
+- Added support for localizing dropdowns across UI Toolkit, UGUI, and TMP. Includes LocalizedStringListEvent support for UGUI and TMP, plus binding UI Toolkit dropdown choices to LocalizedStringList or LocalizedStringGroup.
+- Fixed a possible threading issue when `StringFromGuid` was called from `TableReference.OnBeforeSerialize` which can come from multiple threads. (UUM-139286)
+- Fixed allocations when assigning a value to `IVariable.Value`. ([UUM-137873](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-137873))
+- Fixed an issue with the localization files not being correctly setup when build the xcode project for OSX. ([UUM-132514](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-132514))
+- Fixed iOS Xcode build failing with "Build input file cannot be found: en.lproj/InfoPlist.strings" when the iOS App Info metadata was used in a project whose locale set did not include English. (LOC-1133)
+- Fixed not sending the `TableEntryAdded` event when the "New Entry" button was clicked in the table editor window. ([UUM-138011](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-138011))
+- Fixed some warnings regarding missing serializable attributes. ([UUM-140407](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-140407))
+- Fixed the Google Sheets extension throwing a cryptic "RunSynchronously may not be called on a task not bound to a delegate" error when OAuth needed a fresh sign-in. Authorization now shows a cancelable progress bar while it waits and reports a clear message if it fails or is canceled. ([UUM-144385](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-144385))
+- Removed use of `RemoveWhere` on Addressable labels. This is to support future versions of Addressables which have changed to use an ISet.
+
 ## [1.5.11] - 2026-03-18
 
 ### Fixed

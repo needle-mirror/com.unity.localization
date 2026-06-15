@@ -9,6 +9,7 @@ namespace UnityEngine.Localization.Metadata
     /// While it is possible to share any metadata across multiple entries in a table, this will track the entries that
     /// are currently using it providing a quick way to get all the entries.
     /// </summary>
+    [Serializable]
     public abstract class SharedTableEntryMetadata : IMetadata, ISerializationCallbackReceiver
     {
         // Deprecated in favor of m_SharedEntries

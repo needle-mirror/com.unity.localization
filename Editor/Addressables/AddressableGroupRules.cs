@@ -15,6 +15,7 @@ namespace UnityEditor.Localization.Addressables
     /// <para>This example places all English assets into a local group and all other languages into a remote group which could then be downloaded after the game is released.</para>
     /// <code source="../../DocCodeSamples.Tests/GroupResolverExample.cs"/>
     /// </example>
+    [HelpURL("https://docs.unity3d.com/Packages/com.unity.localization@latest/index.html?subfolder=/manual/Addressables.html#addressable-group-rules")]
     public class AddressableGroupRules : ScriptableObject
     {
         const string k_ConfigName = "com.unity.localization.addressable-group-rules";
@@ -161,5 +162,16 @@ namespace UnityEditor.Localization.Addressables
         internal static AddressableAssetEntry AddAssetTableAsset(LocalizationTable table, AddressableAssetSettings aaSettings, bool createUndo) => Instance.AssetTablesResolver.AddToGroup(table, new[] { table.LocaleIdentifier }, aaSettings, createUndo);
         internal static AddressableAssetEntry AddAssetTableSharedAsset(Object asset, AddressableAssetSettings aaSettings, bool createUndo) => Instance.AssetTablesResolver.AddToGroup(asset, null, aaSettings, createUndo);
         internal static AddressableAssetEntry AddAssetToGroup(Object asset, IList<LocaleIdentifier> locales, AddressableAssetSettings aaSettings, bool createUndo) => Instance.AssetResolver.AddToGroup(asset, locales, aaSettings, createUndo);
+
+        internal static bool IsLocalizationGroup(AddressableAssetGroup group, Object asset, AddressableAssetSettings aaSettings, GroupResolver alreadyChecked = null)
+        {
+            if (group == null)
+                return false;
+
+            var rules = Instance;
+            return Check(rules.LocaleResolver) || Check(rules.StringTablesResolver) || Check(rules.AssetTablesResolver) || Check(rules.AssetResolver);
+
+            bool Check(GroupResolver resolver) => resolver != null && !ReferenceEquals(resolver, alreadyChecked) && resolver.IsLocalizationGroup(group, asset, aaSettings);
+        }
     }
 }

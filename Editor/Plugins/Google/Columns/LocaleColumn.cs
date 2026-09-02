@@ -119,18 +119,21 @@ namespace UnityEditor.Localization.Plugins.Google.Columns
 
             entry = m_PullTable.AddEntry(keyEntry.Id, cellValue);
 
-            var comment = entry.GetMetadata<Comment>();
-            if (string.IsNullOrEmpty(cellNote))
+            if (m_IncludeComments)
             {
-                if (comment != null)
-                    entry.RemoveMetadata(comment);
-            }
-            else
-            {
-                if (comment != null)
-                    comment.CommentText = cellNote;
+                var comment = entry.GetMetadata<Comment>();
+                if (string.IsNullOrEmpty(cellNote))
+                {
+                    if (comment != null)
+                        entry.RemoveMetadata(comment);
+                }
                 else
-                    entry.AddMetadata(new Comment() { CommentText = cellNote });
+                {
+                    if (comment != null)
+                        comment.CommentText = cellNote;
+                    else
+                        entry.AddMetadata(new Comment() { CommentText = cellNote });
+                }
             }
         }
     }

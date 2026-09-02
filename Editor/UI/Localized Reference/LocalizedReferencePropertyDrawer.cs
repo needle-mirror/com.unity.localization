@@ -11,19 +11,19 @@ namespace UnityEditor.Localization.UI
     {
         protected static class Styles
         {
-            public static readonly GUIContent addLocale = EditorGUIUtility.TrTextContent("Add Locale", "Add a new Locale.");
-            public static readonly GUIContent addTable = EditorGUIUtility.TrTextContent("Create Table", "Create a new table for the selected locale.");
-            public static readonly GUIContent addTableCollection = EditorGUIUtility.TrTextContent("Create Table Collection", "Create a new table collection for every Locale in the project");
-            public static readonly GUIContent addTableEntry = EditorGUIUtility.TrTextContent("Add Table Entry", "Create a new table entry in the selected table collection.");
-            public static readonly GUIContent defaultArg = EditorGUIUtility.TrTextContent("Default Argument", "The Default Argument will be the argument passed in at index 0 and will be used when no index placeholder is used");
-            public static readonly GUIContent entryName = EditorGUIUtility.TrTextContent("Entry Name", "The name or key of the selected table entry");
-            public static readonly GUIContent useFallback = EditorGUIUtility.TrTextContent("Enable Fallback", "Determines if a Fallback should be used when no value could be found for the Locale");
+            public static readonly GUIContent addLocale = EditorContent.TextContent("Add Locale", "Add a new Locale.");
+            public static readonly GUIContent addTable = EditorContent.TextContent("Create Table", "Create a new table for the selected locale.");
+            public static readonly GUIContent addTableCollection = EditorContent.TextContent("Create Table Collection", "Create a new table collection for every Locale in the project");
+            public static readonly GUIContent addTableEntry = EditorContent.TextContent("Add Table Entry", "Create a new table entry in the selected table collection.");
+            public static readonly GUIContent defaultArg = EditorContent.TextContent("Default Argument", "The Default Argument will be the argument passed in at index 0 and will be used when no index placeholder is used");
+            public static readonly GUIContent entryName = EditorContent.TextContent("Entry Name", "The name or key of the selected table entry");
+            public static readonly GUIContent useFallback = EditorContent.TextContent("Enable Fallback", "Determines if a Fallback should be used when no value could be found for the Locale");
             public static readonly GUIContent noTableSelected = new GUIContent($"None({typeof(TCollection).Name})");
-            public static readonly GUIContent mixedValueContent = EditorGUIUtility.TrTextContent("\u2014", "Mixed Values");
-            public static readonly GUIContent previewArguments = EditorGUIUtility.TrTextContent("Preview Arguments", "Arguments to pass to the string formatter. These are for preview purposes only and are not stored.");
-            public static readonly GUIContent selectedTable = EditorGUIUtility.TrTextContent("Table Collection");
-            public static readonly GUIContent variableName = EditorGUIUtility.TrTextContent("Variable Name");
-            public static readonly GUIContent waitForCompletion = EditorGUIUtility.TrTextContent("Wait For Completion", "Should the operation wait for the localization operation to complete before returning, blocking the main thread, or allow it to finish asyncronously? Please note that this is not supported on WebGL.");
+            public static readonly GUIContent mixedValueContent = EditorContent.TextContent("\u2014", "Mixed Values");
+            public static readonly GUIContent previewArguments = EditorContent.TextContent("Preview Arguments", "Arguments to pass to the string formatter. These are for preview purposes only and are not stored.");
+            public static readonly GUIContent selectedTable = EditorContent.TextContent("Table Collection");
+            public static readonly GUIContent variableName = EditorContent.TextContent("Variable Name");
+            public static readonly GUIContent waitForCompletion = EditorContent.TextContent("Wait For Completion", "Should the operation wait for the localization operation to complete before returning, blocking the main thread, or allow it to finish asyncronously? Please note that this is not supported on WebGL.");
         }
 
         protected static Func<ReadOnlyCollection<TCollection>> GetProjectTableCollections { get; set; }

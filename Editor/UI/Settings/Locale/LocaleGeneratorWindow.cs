@@ -12,14 +12,14 @@ namespace UnityEditor.Localization.UI
     {
         class Texts
         {
-            public GUIContent generateLocalesButton = EditorGUIUtility.TrTextContent("Add Locales");
+            public GUIContent generateLocalesButton = EditorContent.TextContent("Add Locales");
             public const string progressTitle = "Generating Locales";
             public const string saveDialog = "Save locales to folder";
 
             public GUIContent[] toolbarButtons =
             {
-                EditorGUIUtility.TrTextContent("Select All", "Select all visible locales"),
-                EditorGUIUtility.TrTextContent("Deselect All", "Deselect all visible locales")
+                EditorContent.TextContent("Select All", "Select all visible locales"),
+                EditorContent.TextContent("Deselect All", "Deselect all visible locales")
             };
         }
 
@@ -58,7 +58,7 @@ namespace UnityEditor.Localization.UI
         public static void ShowWindow()
         {
             var window = (LocaleGeneratorWindow)GetWindow(typeof(LocaleGeneratorWindow));
-            window.titleContent = EditorGUIUtility.TrTextContent("Add Locale", EditorIcons.Locale);
+            window.titleContent = EditorContent.TextContent("Add Locale", EditorIcons.Locale);
             window.minSize = new Vector2(500, 500);
             window.ShowUtility();
         }
@@ -85,8 +85,8 @@ namespace UnityEditor.Localization.UI
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(s_Texts.generateLocalesButton, GUILayout.Width(180)))
                 {
-                    ExportSelectedLocales(m_ListView.GetSelectedLocales());
-                    Close();
+                    if (ExportSelectedLocales(m_ListView.GetSelectedLocales()))
+                        Close();
                 }
                 EditorGUILayout.EndHorizontal();
             }
@@ -105,11 +105,21 @@ namespace UnityEditor.Localization.UI
             }
         }
 
-        internal static void ExportSelectedLocales(List<LocaleIdentifier> localeIdentifiers)
+        internal static bool ExportSelectedLocales(List<LocaleIdentifier> localeIdentifiers)
         {
             var path = EditorUtility.SaveFolderPanel(Texts.saveDialog, "Assets/", "");
             if (!string.IsNullOrEmpty(path))
+            {
+                if (!path.StartsWith(Application.dataPath, System.StringComparison.InvariantCultureIgnoreCase))
+                {
+                    Debug.LogWarning($"Locales must be saved in the project, can not save to {path}");
+                    return false;
+                }
+
                 ExportSelectedLocales(path, localeIdentifiers);
+                return true;
+            }
+            return false;
         }
 
         internal static void ExportSelectedLocales(string path, List<LocaleIdentifier> selectedIdentifiers)

@@ -25,7 +25,7 @@ namespace UnityEditor.Localization.PropertyVariants
     [CustomPropertyDrawer(typeof(UShortTrackedProperty))]
     class TrackedPropertyDrawer : PropertyDrawer
     {
-        static readonly GUIContent s_AddLabel = EditorGUIUtility.TrTextContent("Add Variant");
+        static readonly GUIContent s_AddLabel = EditorContent.TextContent("Add Variant");
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {

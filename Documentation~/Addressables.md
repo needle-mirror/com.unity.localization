@@ -32,6 +32,7 @@ The Group Resolver uses the following rules to pick a group:
 | **Locale Group Name** | The Locale Group Name is a Smart String that can be used to generate a name specific to the Locale or asset.<br><br>2 arguments are passed into the Smart Format operation:<ul><li>Arg 0: The Locale asset.</li><li>Arg 1: The Asset being added.</li></ul><br>For example, an Audio Clip added to Welsh would with the rule `“{1:{GetType.Name}} Assets - {LocaleName} ({Identifier.Code})”` would use the group `“AudioClip Assets - Welsh (cy)”`. |
 | **Locale Groups**     | You can add a specific group for each Locale in the project. When a Locale exists, this value will be used instead of the Locale Group Name.<br><br>You can also use the same group for multiple Locales, such as for a regional group. If an asset is used by multiple Locales and all of the Locales use the same group, then this value will be used instead of the Shared Group. |
 | **Read Only**         | To mark newly created groups as read only, enable this option. Read only groups can not be modified through the Addressables Group Window. |
+| **Always Move To Localization Group** | By default, an asset that is already in a group the localization system does not manage, such as one you created, is left in that group. Enable this option to always move assets into the localization groups. This option matches the **RespectUserGroups** script property with the opposite meaning. |
 
 ## Locales
 
@@ -58,7 +59,7 @@ The Localization system uses the **Table Address** when loading the table, so do
 
 ## Asset Table Assets
 
-By default, Assets that are part of Asset Tables are stored in a group for the Locale that depends on them, with the name **Localization-Assets-{LocaleName}**. If an asset is used by more than one Locale, it is placed into the **Localization-Assets-Shared** group.
+By default, Assets that are part of Asset Tables are stored in a group for the Locale that depends on them, with the name **Localization-Assets-{LocaleName}**. If an asset is used by more than one Locale, it is placed into the **Localization-Assets-Shared** group. An asset that you have already placed in a group the localization system does not manage stays in your group unless **Always Move To Localization Group** is enabled.
 
 Assets are resolved at runtime via their Guid so it is safe to modify the Address. Assets contain a label for each Locale that depends on them in the form **Locale_{Code}**. The Labels are used to track asset usage in the Editor and are not used in the Player, however removing them may cause assets to be placed into incorrect groups.
 
@@ -81,4 +82,4 @@ There are 3 Localization Analyzers:
 
 - **Check Localization Locales**. This rule checks that all Locales in the project are marked as Addressable, contain the Locale label and are in the group defined by the Addressable Group Rules.
 - **Check Localization String Tables**. This rule checks that the String Tables and their Shared Table Data are contained in the groups defined by Addressable Group Rules, and have the expected Labels and Addresses.
-- **Check Localization Asset Tables**. This rule checks that the Asset Tables and their Shared Table Data are contained in the groups defined by Addressable Group Rules, and have the expected Labels and Addresses. This rule also checks that all assets referenced by the tables are in the expected groups and contain the correct labels.
+- **Check Localization Asset Tables**. This rule checks that the Asset Tables and their Shared Table Data are contained in the groups defined by Addressable Group Rules, and have the expected Labels and Addresses. This rule also checks that all assets referenced by the tables are in the expected groups and contain the correct labels. Assets in groups the localization system does not manage are not reported unless **Always Move To Localization Group** is enabled.

@@ -14,8 +14,8 @@ namespace UnityEditor.Localization.UI
     class StringTableListView : GenericAssetTableListView<StringTable, StringTableTreeViewItem>
     {
         protected static readonly Color k_SelectedColor = new Color(0.37f, 0.41f, 0.7f);
-        static readonly GUIContent k_WordWrap = EditorGUIUtility.TrTextContent("Wordwrap");
-        static readonly GUIContent k_SmartStringIcon = EditorGUIUtility.TrTextContent("{S}", "Smart Formatting enabled");
+        static readonly GUIContent k_WordWrap = EditorContent.TextContent("Wordwrap");
+        static readonly GUIContent k_SmartStringIcon = EditorContent.TextContent("{S}", "Smart Formatting enabled");
 
         const float k_SmartStringIconWidth = 20;
 

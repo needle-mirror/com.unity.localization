@@ -14,9 +14,9 @@ namespace UnityEditor.Localization.UI
     {
         const float k_MetadataLabelWidth = 28;
 
-        static readonly GUIContent k_MissingTableMenuItem = EditorGUIUtility.TrTextContent("Missing Tables");
+        static readonly GUIContent k_MissingTableMenuItem = EditorContent.TextContent("Missing Tables");
 
-        static readonly GUIContent k_MetadataIcon = EditorGUIUtility.TrTextContent(string.Empty, "Edit table metadata", EditorIcons.Metadata);
+        static readonly GUIContent k_MetadataIcon = EditorContent.TextContent(string.Empty, "Edit table metadata", EditorIcons.Metadata);
 
         LocalizationTableCollection TableCollection { get; set; }
 
@@ -38,7 +38,7 @@ namespace UnityEditor.Localization.UI
 
         protected override void AddColumnHeaderContextMenuItems(GenericMenu menu)
         {
-            menu.AddItem(EditorGUIUtility.TrTextContent("Resize to Fit"), false, ResizeToFit);
+            menu.AddItem(EditorContent.TextContent("Resize to Fit"), false, ResizeToFit);
 
             menu.AddSeparator("");
 

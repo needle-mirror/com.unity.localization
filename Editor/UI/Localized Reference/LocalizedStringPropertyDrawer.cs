@@ -143,7 +143,7 @@ namespace UnityEditor.Localization.UI
                 localizedString = property.GetActualObjectForSerializedProperty<LocalizedString>(fieldInfo),
                 variableArguments = new ReorderableListExtended(property.serializedObject, property.FindPropertyRelative("m_LocalVariables"))
                 {
-                    Header = EditorGUIUtility.TrTextContent("Local Variables"),
+                    Header = EditorContent.TextContent("Local Variables"),
                     onAddDropdownCallback = ShowArgumentsAddMenu,
                 }
             };

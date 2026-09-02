@@ -375,38 +375,42 @@ namespace UnityEditor.Localization
                 return;
 
             // Find all the locales that are using the asset using the Addressable labels.
-            var localesUsingAsset = ListPool<LocaleIdentifier>.Get();
-            foreach (var label in assetEntry.labels)
+            using (ListPool<LocaleIdentifier>.Get(out var localesUsingAsset))
             {
-                if (AddressHelper.TryGetLocaleLabelToId(label, out var id))
+                foreach (var label in assetEntry.labels)
                 {
-                    localesUsingAsset.Add(id);
-                }
-            }
-
-            // If no Locales depend on this asset then we can just remove it
-            if (localesUsingAsset.Count == 0)
-            {
-                var oldGroup = assetEntry.parentGroup;
-                settings.RemoveAssetEntry(assetEntry.guid);
-                if (oldGroup.entries.Count == 0)
-                {
-                    if (createUndo)
+                    if (AddressHelper.TryGetLocaleLabelToId(label, out var id))
                     {
-                        // We cant use undo asset deletion so we will leave an empty group instead of deleting it.
-                        Undo.RecordObject(oldGroup, "Remove group");
-                    }
-                    else
-                    {
-                        settings.RemoveGroup(oldGroup);
+                        localesUsingAsset.Add(id);
                     }
                 }
 
-                ListPool<LocaleIdentifier>.Release(localesUsingAsset);
-                return;
-            }
+                // If no Locales depend on this asset then we can just remove it
+                if (localesUsingAsset.Count == 0)
+                {
+                    var oldGroup = assetEntry.parentGroup;
+                    if (AddressableGroupRules.Instance.AssetResolver.ShouldLeaveInUserGroup(oldGroup, assetEntry.MainAsset, settings))
+                        return;
 
-            AddressableGroupRules.AddAssetToGroup(assetEntry.MainAsset, localesUsingAsset, settings, createUndo);
+                    settings.RemoveAssetEntry(assetEntry.guid);
+                    if (oldGroup.entries.Count == 0)
+                    {
+                        if (createUndo)
+                        {
+                            // We cant use undo asset deletion so we will leave an empty group instead of deleting it.
+                            Undo.RecordObject(oldGroup, "Remove group");
+                        }
+                        else
+                        {
+                            settings.RemoveGroup(oldGroup);
+                        }
+                    }
+
+                    return;
+                }
+
+                AddressableGroupRules.AddAssetToGroup(assetEntry.MainAsset, localesUsingAsset, settings, createUndo);
+            }
         }
 
         ///<inheritdoc/>

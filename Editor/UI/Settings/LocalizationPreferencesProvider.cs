@@ -5,7 +5,7 @@ namespace UnityEditor.Localization.UI
 {
     class LocalizationPreferencesProvider : SettingsProvider
     {
-        static readonly GUIContent showGameViewToolbar = EditorGUIUtility.TrTextContent("Locale Game View Menu", "Shows a menu for changing the selected locale in the GameView during playmode.");
+        static readonly GUIContent showGameViewToolbar = EditorContent.TextContent("Locale Game View Menu", "Shows a menu for changing the selected locale in the GameView during playmode.");
         static readonly GUIContent stringPicker = new GUIContent("String Search Picker");
         static readonly GUIContent assetPicker = new GUIContent("Asset Search Picker");
         static readonly GUIContent tableReferenceMthod = new GUIContent("Table Reference Method", "The method that will be used when adding a reference to a table in the editor.");

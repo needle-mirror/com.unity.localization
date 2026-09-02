@@ -56,7 +56,7 @@ namespace UnityEditor.Localization.UI
         public static void ShowWindow()
         {
             s_Instance = GetWindow<LocalizationTablesWindow>(false, null, true);
-            s_Instance.titleContent = EditorGUIUtility.TrTextContent(k_WindowTitle, EditorIcons.TableWindow);
+            s_Instance.titleContent = EditorContent.TextContent(k_WindowTitle, EditorIcons.TableWindow);
             s_Instance.Show();
         }
 
@@ -67,7 +67,7 @@ namespace UnityEditor.Localization.UI
         public static void ShowWindow(LocalizationTableCollection selectedcollection)
         {
             s_Instance = GetWindow<LocalizationTablesWindow>(false, null, true);
-            s_Instance.titleContent = EditorGUIUtility.TrTextContent(k_WindowTitle, EditorIcons.TableWindow);
+            s_Instance.titleContent = EditorContent.TextContent(k_WindowTitle, EditorIcons.TableWindow);
             s_Instance.Show(true);
             s_Instance.EditCollection(selectedcollection);
         }
@@ -80,7 +80,7 @@ namespace UnityEditor.Localization.UI
         public static void ShowWindow(TableReference tableReference, TableEntryReference tableEntryReference)
         {
             s_Instance = GetWindow<LocalizationTablesWindow>(false, null, true);
-            s_Instance.titleContent = EditorGUIUtility.TrTextContent(k_WindowTitle, EditorIcons.TableWindow);
+            s_Instance.titleContent = EditorContent.TextContent(k_WindowTitle, EditorIcons.TableWindow);
             s_Instance.Show();
             s_Instance.EditCollection(tableReference, tableEntryReference);
         }

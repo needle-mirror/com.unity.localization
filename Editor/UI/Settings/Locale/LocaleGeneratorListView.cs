@@ -79,7 +79,7 @@ namespace UnityEditor.Localization.UI
             {
                 new MultiColumnHeaderState.Column()
                 {
-                    headerContent = EditorGUIUtility.TrTextContent("Name"),
+                    headerContent = EditorContent.TextContent("Name"),
                     minWidth = 100,
                     headerTextAlignment = TextAlignment.Center,
                     canSort = true
@@ -87,7 +87,7 @@ namespace UnityEditor.Localization.UI
 
                 new MultiColumnHeaderState.Column()
                 {
-                    headerContent = EditorGUIUtility.TrTextContent("Code"),
+                    headerContent = EditorContent.TextContent("Code"),
                     minWidth = 25,
                     headerTextAlignment = TextAlignment.Center,
                     canSort = true
@@ -112,7 +112,7 @@ namespace UnityEditor.Localization.UI
                 switch ((Column)multiColumnHeader.sortedColumnIndex)
                 {
                     case Column.Name:
-                        m_Items.Sort((x, y) => ascend ? string.Compare(y.displayName, x.displayName) : string.Compare(x.displayName, y.displayName));
+                        m_Items.Sort((x, y) => ascend ? string.Compare(y.identifier.CultureInfo.EnglishName, x.identifier.CultureInfo.EnglishName) : string.Compare(x.identifier.CultureInfo.EnglishName, y.identifier.CultureInfo.EnglishName));
                         break;
                     case Column.Code:
                         m_Items.Sort((x, y) => ascend ? string.Compare(y.identifier.Code, x.identifier.Code) : string.Compare(x.identifier.Code, y.identifier.Code));
@@ -155,11 +155,11 @@ namespace UnityEditor.Localization.UI
                             SelectedCount--;
                     }
                     cellRect.xMin += k_ToggleWidth;
-                    GUI.Label(cellRect, item.identifier.CultureInfo.EnglishName);
+                    EditorGUI.LabelField(cellRect, item.identifier.CultureInfo.EnglishName);
                     break;
 
                 case Column.Code:
-                    GUI.Label(cellRect, item.identifier.Code);
+                    EditorGUI.LabelField(cellRect, item.identifier.Code);
                     break;
             }
         }
@@ -174,7 +174,12 @@ namespace UnityEditor.Localization.UI
                     row.enabled = enable;
             }
 
-            SelectedCount = enable ? GetRows().Count : 0;
+            SelectedCount = 0;
+            foreach(var item in m_Items)
+            {
+                if (!item.inProject && item.enabled)
+                    SelectedCount++;
+            }
         }
 
         public List<LocaleIdentifier> GetSelectedLocales()

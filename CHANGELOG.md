@@ -2,6 +2,28 @@
 
 All notable changes to this package will be documented in this file.
 
+## [1.5.13] - 2026-09-02
+
+### Fixed
+
+- Added HelpURL for Locale asset (UUM-151090). (UUM-151090)
+- Added Icon to Add Custom Locale window (UUM-151163). (UUM-151163)
+- Added tooltip to "Add Custom Locale" button. (UUM-151151). (UUM-151151)
+- Added warning when trying to save a locale outside of the project (UUM-151190). (UUM-151190)
+- Disabled "Create Locale" button in Add custom locale window when name is empty. (UUM-151152). (UUM-151152)
+- Fixed "Add Locales" button not being disabled when all locales that are not in the project are disabled after pressing "Select All". (UUM-151197)
+- Fixed add custom locale wrong warning icon being shown in editor light theme. (UUM-151154). (UUM-151154)
+- Fixed clipping of Locale labels in the Add Locale window. (UUM-151057)
+- Fixed duplicate Locale not being detected in the add custom locale window when its code was only 1 character. (UUM-151160). (UUM-151160)
+- Fixed duplicate name warning not updating in the add custom locale window. (UUM-151153). (UUM-151153)
+- Fixed Google Sheets pull deleting locale Comment metadata when a Locale Column had "Include Comments" disabled. ([UUM-147821](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-147821))
+- Fixed localized assets being removed from Addressables builds when they were assigned to a group the localization system does not manage. (UUM-146067)
+- Fixed long locale names truncating the locale code in the project settings. (UUM-151070). (UUM-151070)
+- Fixed sorting the Localization Tables view changing the serialized Shared Table Data asset. ([UUM-146980](https://issuetracker.unity.com/issues/23384))
+- Improved the duplicate locale warning (UUM-151158). (UUM-151158)
+- Reduces min size of add custom locale window. (UUM-151164). (UUM-151164)
+- Removed "filler text" label from Add Custom Locale window. (UUM-151165). (UUM-151165)
+
 ## [1.5.12] - 2026-06-15
 
 ### Fixed

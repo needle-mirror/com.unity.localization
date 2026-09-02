@@ -14,8 +14,8 @@ namespace UnityEditor.Localization.PropertyVariants
     static class ContextualPropertyMenu
     {
         internal static readonly string k_RemoveVariantLabel = L10n.Tr("Remove Localized Property Variant ({0})");
-        internal static readonly GUIContent k_AddLabel = EditorGUIUtility.TrTextContent("Localize Property");
-        internal static readonly GUIContent k_RemoveLabel = EditorGUIUtility.TrTextContent("Remove Localized Property");
+        internal static readonly GUIContent k_AddLabel = EditorContent.TextContent("Localize Property");
+        internal static readonly GUIContent k_RemoveLabel = EditorContent.TextContent("Remove Localized Property");
 
         static ContextualPropertyMenu() => EditorApplication.contextualPropertyMenu += OnPropertyContextMenu;
 

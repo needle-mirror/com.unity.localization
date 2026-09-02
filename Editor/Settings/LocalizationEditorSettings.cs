@@ -561,6 +561,8 @@ namespace UnityEditor.Localization
             using (new UndoScope("Add Locale", createUndo))
             {
                 var assetEntry = AddressableGroupRules.AddLocaleToGroup(locale, aaSettings, createUndo);
+                if (createUndo && assetEntry.address != locale.LocaleName)
+                    Undo.RecordObjects(new Object[] { aaSettings, assetEntry.parentGroup }, "Add locale");
                 assetEntry.address = locale.LocaleName;
 
                 // Clear the locales cache.

@@ -45,6 +45,10 @@ namespace UnityEditor.Localization.UI.Addressables
             readOnly.bindingPath = "m_MarkEntriesReadOnly";
             root.Add(readOnly);
 
+            var alwaysMove = new Toggle("Always Move To Localization Group") { tooltip = "Move assets into their localization groups even when they are in a group the localization system does not manage, such as one you created. Disabled by default so that your groups are left alone. This is the inverse of the RespectUserGroups script property." };
+            alwaysMove.bindingPath = "m_AlwaysMoveToLocalizationGroup";
+            root.Add(alwaysMove);
+
             return root;
         }
 

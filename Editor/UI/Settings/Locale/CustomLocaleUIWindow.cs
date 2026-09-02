@@ -18,8 +18,8 @@ namespace UnityEditor.Localization.UI
         public static void ShowWindow()
         {
             var window = (CustomLocaleUIWindow)GetWindow(typeof(CustomLocaleUIWindow));
-            window.titleContent = EditorGUIUtility.TrTextContent("Add Custom Locale");
-            window.minSize = new Vector2(500, 500);
+            window.titleContent = EditorContent.TextContent("Add Custom Locale", EditorIcons.Locale);
+            window.minSize = new Vector2(450, 200);
             window.ShowUtility();
         }
 
@@ -32,46 +32,56 @@ namespace UnityEditor.Localization.UI
             asset.CloneTree(m_root);
 
             var localeName = m_root.Q<TextField>("customLocaleUI_localeName");
+            localeName.RegisterValueChangedCallback(evt =>
+            {
+                m_createButton.SetEnabled(!string.IsNullOrEmpty(evt.newValue) && m_helpBox == null);
+            });
+
             var localeIdentifier = m_root.Q<TextField>("customLocaleUI_localeIdentifier");
             localeIdentifier.RegisterValueChangedCallback(evt =>
             {
-                var enableCreateBTN = true;
+                var enableCreateBTN = !string.IsNullOrEmpty(localeName.value);
+                bool enableWarning = false;
                 var cultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
                 var locales = LocalizationEditorSettings.GetLocales();
                 var localeIDName = localeIdentifier.value;
                 foreach (var culture in cultures)
                 {
-                    if (culture.Name == localeIdentifier.value && localeIdentifier.value.Length > 1)
+                    if (culture.Name == localeIdentifier.value && localeIdentifier.value.Length > 0)
                     {
                         enableCreateBTN = false;
-                        localeIDName = culture.ToString();
+                        enableWarning = true;
+                        localeIDName = culture.EnglishName;
                     }
                 }
 
                 for (int i = 0; i < (int)SystemLanguage.Unknown; ++i)
                 {
                     var localeID = new LocaleIdentifier((SystemLanguage)i);
-                    if (localeID.Code == localeIdentifier.value && localeIdentifier.value.Length > 1)
+                    if (localeID.Code == localeIdentifier.value && localeIdentifier.value.Length > 0)
                     {
                         enableCreateBTN = false;
-                        localeIDName = localeID.ToString();
+                        enableWarning = true;
+                        localeIDName = localeID.CultureInfo.EnglishName;
                     }
                 }
 
                 foreach (var availableLocale in locales)
                 {
-                    if (availableLocale.Identifier.Code == localeIdentifier.value && localeIdentifier.value.Length > 1)
+                    if (availableLocale.Identifier.Code == localeIdentifier.value && localeIdentifier.value.Length > 0)
                     {
                         enableCreateBTN = false;
+                        enableWarning = true;
                         localeIDName = availableLocale.name;
                     }
                 }
 
                 m_createButton.SetEnabled(enableCreateBTN);
-                if (!enableCreateBTN)
+                if (enableWarning)
                 {
-                    if (m_helpBox == null)
-                        AddHelpInfo(localeIDName);
+                    if (m_helpBox != null)
+                        m_root.Remove(m_helpBox);
+                    AddHelpInfo(localeIDName);
                 }
                 else
                 {
@@ -83,6 +93,7 @@ namespace UnityEditor.Localization.UI
                 }
             });
             m_createButton = m_root.Q<Button>("customLocaleUI_CreateBTN");
+            m_createButton.SetEnabled(!string.IsNullOrEmpty(localeName.value));
             m_createButton.clickable.clicked += () =>
             {
                 CreateCustomLocale(localeName.value, localeIdentifier.value);
@@ -93,7 +104,14 @@ namespace UnityEditor.Localization.UI
         {
             var path = EditorUtility.SaveFilePanel("Save the locale to folder", "Assets/", $"{localeName} ({localeIdentifier}).asset", "asset");
             if (!string.IsNullOrEmpty(path))
+            {
+                if (!path.StartsWith(Application.dataPath, System.StringComparison.InvariantCultureIgnoreCase))
+                {
+                    Debug.LogWarning($"Locales must be saved in the project, can not save to {path}");
+                    return;
+                }
                 ExportCustomLocales(localeName, localeIdentifier, path);
+            }
         }
 
         internal void ExportCustomLocales(string localeName, string localeIdentifier, string path)
@@ -136,7 +154,9 @@ namespace UnityEditor.Localization.UI
                 }
             };
             m_helpBox.AddToClassList("unity-box");
-            m_helpBox.Add(new Image() { image = EditorGUIUtility.FindTexture("d_console.warnicon"), scaleMode = ScaleMode.ScaleToFit });
+
+            var iconName = EditorGUIUtility.isProSkin ? "d_console.warnicon" : "console.warnicon";
+            m_helpBox.Add(new Image() { image = EditorGUIUtility.FindTexture(iconName), scaleMode = ScaleMode.ScaleToFit });
             m_helpBox.Add(new Label(string.Format(m_warningMessage, localeName)));
             m_root.Add(m_helpBox);
         }

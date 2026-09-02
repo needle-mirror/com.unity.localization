@@ -1,7 +1,7 @@
 {
   "name": "com.unity.localization",
   "displayName": "Localization",
-  "version": "1.5.12",
+  "version": "1.5.13",
   "unity": "2019.4",
   "description": "Use the Localization package to easily configure localization settings for your application.\n\nAdd support for multiple languages and regional variants, including:\n\n• String localization: Set different strings to display based on locale. Use the Smart Strings feature to add logic to automatically replace specific strings, such as placeholders and plurals.\n• Asset localization: Use a different asset (such as a texture, model, or audio file) based on a locale.\n• Pseudo-localization: Test how your project will adapt to different localizations at an early stage, before adding your translations.\n• Import and export localization data to XLIFF, CSV and Google Sheets.\n\nAdd localization to your projects using the Localization package to help make your applications more accessible to a wider audience.",
   "keywords": [
@@ -14,19 +14,19 @@
     "com.unity.nuget.newtonsoft-json": "3.0.2"
   },
   "relatedPackages": {
-    "com.unity.localization.tests": "1.5.12"
+    "com.unity.localization.tests": "1.5.13"
   },
   "_upm": {
-    "changelog": "### Fixed\n\n- Added LocalizedTextCoreFontAsset for localizing Textcore FontAssets.\n- Added support for localizing dropdowns across UI Toolkit, UGUI, and TMP. Includes LocalizedStringListEvent support for UGUI and TMP, plus binding UI Toolkit dropdown choices to LocalizedStringList or LocalizedStringGroup.\n- Fixed a possible threading issue when `StringFromGuid` was called from `TableReference.OnBeforeSerialize` which can come from multiple threads. (UUM-139286)\n- Fixed allocations when assigning a value to `IVariable.Value`. ([UUM-137873](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-137873))\n- Fixed an issue with the localization files not being correctly setup when build the xcode project for OSX. ([UUM-132514](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-132514))\n- Fixed iOS Xcode build failing with \"Build input file cannot be found: en.lproj/InfoPlist.strings\" when the iOS App Info metadata was used in a project whose locale set did not include English. (LOC-1133)\n- Fixed not sending the `TableEntryAdded` event when the \"New Entry\" button was clicked in the table editor window. ([UUM-138011](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-138011))\n- Fixed some warnings regarding missing serializable attributes. ([UUM-140407](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-140407))\n- Fixed the Google Sheets extension throwing a cryptic \"RunSynchronously may not be called on a task not bound to a delegate\" error when OAuth needed a fresh sign-in. Authorization now shows a cancelable progress bar while it waits and reports a clear message if it fails or is canceled. ([UUM-144385](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-144385))\n- Removed use of `RemoveWhere` on Addressable labels. This is to support future versions of Addressables which have changed to use an ISet."
+    "changelog": "### Fixed\n\n- Added HelpURL for Locale asset (UUM-151090). (UUM-151090)\n- Added Icon to Add Custom Locale window (UUM-151163). (UUM-151163)\n- Added tooltip to \"Add Custom Locale\" button. (UUM-151151). (UUM-151151)\n- Added warning when trying to save a locale outside of the project (UUM-151190). (UUM-151190)\n- Disabled \"Create Locale\" button in Add custom locale window when name is empty. (UUM-151152). (UUM-151152)\n- Fixed \"Add Locales\" button not being disabled when all locales that are not in the project are disabled after pressing \"Select All\". (UUM-151197)\n- Fixed add custom locale wrong warning icon being shown in editor light theme. (UUM-151154). (UUM-151154)\n- Fixed clipping of Locale labels in the Add Locale window. (UUM-151057)\n- Fixed duplicate Locale not being detected in the add custom locale window when its code was only 1 character. (UUM-151160). (UUM-151160)\n- Fixed duplicate name warning not updating in the add custom locale window. (UUM-151153). (UUM-151153)\n- Fixed Google Sheets pull deleting locale Comment metadata when a Locale Column had \"Include Comments\" disabled. ([UUM-147821](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-147821))\n- Fixed localized assets being removed from Addressables builds when they were assigned to a group the localization system does not manage. (UUM-146067)\n- Fixed long locale names truncating the locale code in the project settings. (UUM-151070). (UUM-151070)\n- Fixed sorting the Localization Tables view changing the serialized Shared Table Data asset. ([UUM-146980](https://issuetracker.unity.com/issues/23384))\n- Improved the duplicate locale warning (UUM-151158). (UUM-151158)\n- Reduces min size of add custom locale window. (UUM-151164). (UUM-151164)\n- Removed \"filler text\" label from Add Custom Locale window. (UUM-151165). (UUM-151165)"
   },
   "upmCi": {
-    "footprint": "dd99fb9ba69a6a93b6615e385bb7e7f5ef889cdf"
+    "footprint": "89d07dff17f00c415bbc5b4c6d340bef9fadf5d5"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.localization@1.5/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.localization.git",
     "type": "git",
-    "revision": "a86ef226a9f4ab34d338503cd2368454ebbb4b39"
+    "revision": "9751558a58e7fccbecc944e4350ef420920753dc"
   },
   "samples": [
     {

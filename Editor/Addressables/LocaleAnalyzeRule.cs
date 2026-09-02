@@ -45,9 +45,10 @@ namespace UnityEditor.Localization.Addressables
 
                 groups.Add(entry.parentGroup);
 
-                var groupName = AddressableGroupRules.Instance.LocaleResolver.GetExpectedGroupName(new[] { locale.Identifier }, locale, settings);
+                var localeResolver = AddressableGroupRules.Instance.LocaleResolver;
+                var groupName = localeResolver.GetExpectedGroupName(new[] { locale.Identifier }, locale, settings);
 
-                if (entry.parentGroup.Name != groupName)
+                if (entry.parentGroup.Name != groupName && !localeResolver.ShouldLeaveInUserGroup(entry.parentGroup, locale, settings))
                 {
                     Results.Add(new AnalyzeResultWithFixAction
                     {

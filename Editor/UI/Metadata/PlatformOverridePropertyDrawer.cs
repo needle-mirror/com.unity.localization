@@ -18,16 +18,16 @@ namespace UnityEditor.Localization.UI
     {
         class Styles
         {
-            public static readonly GUIContent entry = EditorGUIUtility.TrTextContent("Table Entry");
-            public static readonly GUIContent none = EditorGUIUtility.TrTextContent("None");
-            public static readonly GUIContent reference = EditorGUIUtility.TrTextContent("Reference");
-            public static readonly GUIContent tableCollection = EditorGUIUtility.TrTextContent("Table Collection");
+            public static readonly GUIContent entry = EditorContent.TextContent("Table Entry");
+            public static readonly GUIContent none = EditorContent.TextContent("None");
+            public static readonly GUIContent reference = EditorContent.TextContent("Reference");
+            public static readonly GUIContent tableCollection = EditorContent.TextContent("Table Collection");
         }
 
         LocalizationTableCollection m_Collection;
         Type m_TableType;
 
-        static readonly GUIContent kPlatformOverrides = EditorGUIUtility.TrTextContent("Platform Overrides");
+        static readonly GUIContent kPlatformOverrides = EditorContent.TextContent("Platform Overrides");
         static readonly int[] s_PlatformValues;
 
         static PlatformOverridePropertyDrawer()
@@ -65,7 +65,7 @@ namespace UnityEditor.Localization.UI
             var element = data.m_PlatformOverridesList.serializedProperty.GetArrayElementAtIndex(index);
             var platform = (RuntimePlatform)element.FindPropertyRelative("platform").intValue;
 
-            EditorGUI.LabelField(rect, EditorGUIUtility.TrTempContent(platform.ToString()), EditorStyles.boldLabel);
+            EditorGUI.LabelField(rect, EditorContent.TempContent(platform.ToString()), EditorStyles.boldLabel);
             rect.MoveToNextLine();
 
             var overrideTypeProperty = element.FindPropertyRelative("entryOverrideType");
@@ -221,7 +221,7 @@ namespace UnityEditor.Localization.UI
                 {
                     if (!hashSet.Contains(platform))
                     {
-                        var label = EditorGUIUtility.TrTextContent(((RuntimePlatform)platform).ToString());
+                        var label = EditorContent.TextContent(((RuntimePlatform)platform).ToString());
                         menu.AddItem(label, false, () =>
                         {
                             AddPlatform(platform, data);

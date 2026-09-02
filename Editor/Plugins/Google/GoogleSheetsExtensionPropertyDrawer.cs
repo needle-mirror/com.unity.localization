@@ -33,23 +33,23 @@ namespace UnityEditor.Localization.Plugins.Google
     {
         class Styles
         {
-            public static readonly GUIContent addDefaultColumns = EditorGUIUtility.TrTextContent("Add Default Columns");
-            public static readonly GUIContent addLocalesInSheet = EditorGUIUtility.TrTextContent("Add Project Locales Found In Sheet");
-            public static readonly GUIContent addSheet = EditorGUIUtility.TrTextContent("Add Sheet");
-            public static readonly GUIContent createNewSpredsheet = EditorGUIUtility.TrTextContent("Create New Spreadsheet");
-            public static readonly GUIContent extractColumns = EditorGUIUtility.TrTextContent("Extract Columns From Sheet");
-            public static readonly GUIContent header = EditorGUIUtility.TrTextContent("Google Sheets", EditorIcons.GoogleSheets);
-            public static readonly GUIContent newSheetName = EditorGUIUtility.TrTextContent("Sheet Name");
-            public static readonly GUIContent noSheetsFound = EditorGUIUtility.TrTextContent("No Sheets Could Be Found");
-            public static readonly GUIContent mappedColumns = EditorGUIUtility.TrTextContent("Mapped Columns");
-            public static readonly GUIContent openSpreadsheet = EditorGUIUtility.TrTextContent("Open", "Opens the sheet in an external browser");
-            public static readonly GUIContent push = EditorGUIUtility.TrTextContent("Push");
-            public static readonly GUIContent pull = EditorGUIUtility.TrTextContent("Pull");
-            public static readonly GUIContent pushSelected = EditorGUIUtility.TrTextContent("Push Selected");
-            public static readonly GUIContent pullSelected = EditorGUIUtility.TrTextContent("Pull Selected");
-            public static readonly GUIContent selectSheet = EditorGUIUtility.TrTextContent("Select Sheet");
-            public static readonly GUIContent sheetId = EditorGUIUtility.TrTextContent("Sheet Id", "The Sheet Id from your Google Spreadsheet. In the Spreadsheet’s Google URL, this is at the end of the URL: https://docs.google.com/spreadsheets/d/SpreadhsheetId/edit#gid=sheetId");
-            public static readonly GUIContent spreadSheetId = EditorGUIUtility.TrTextContent("Spreadsheet Id", "The Spreadsheet Id from your Google Spreadsheet. In the Spreadsheet’s Google URL, this is in the middle of the URL: https://docs.google.com/spreadsheets/d/SpreadhsheetId/edit#gid=sheetId");
+            public static readonly GUIContent addDefaultColumns = EditorContent.TextContent("Add Default Columns");
+            public static readonly GUIContent addLocalesInSheet = EditorContent.TextContent("Add Project Locales Found In Sheet");
+            public static readonly GUIContent addSheet = EditorContent.TextContent("Add Sheet");
+            public static readonly GUIContent createNewSpredsheet = EditorContent.TextContent("Create New Spreadsheet");
+            public static readonly GUIContent extractColumns = EditorContent.TextContent("Extract Columns From Sheet");
+            public static readonly GUIContent header = EditorContent.TextContent("Google Sheets", EditorIcons.GoogleSheets);
+            public static readonly GUIContent newSheetName = EditorContent.TextContent("Sheet Name");
+            public static readonly GUIContent noSheetsFound = EditorContent.TextContent("No Sheets Could Be Found");
+            public static readonly GUIContent mappedColumns = EditorContent.TextContent("Mapped Columns");
+            public static readonly GUIContent openSpreadsheet = EditorContent.TextContent("Open", "Opens the sheet in an external browser");
+            public static readonly GUIContent push = EditorContent.TextContent("Push");
+            public static readonly GUIContent pull = EditorContent.TextContent("Pull");
+            public static readonly GUIContent pushSelected = EditorContent.TextContent("Push Selected");
+            public static readonly GUIContent pullSelected = EditorContent.TextContent("Pull Selected");
+            public static readonly GUIContent selectSheet = EditorContent.TextContent("Select Sheet");
+            public static readonly GUIContent sheetId = EditorContent.TextContent("Sheet Id", "The Sheet Id from your Google Spreadsheet. In the Spreadsheet’s Google URL, this is at the end of the URL: https://docs.google.com/spreadsheets/d/SpreadhsheetId/edit#gid=sheetId");
+            public static readonly GUIContent spreadSheetId = EditorContent.TextContent("Spreadsheet Id", "The Spreadsheet Id from your Google Spreadsheet. In the Spreadsheet’s Google URL, this is in the middle of the URL: https://docs.google.com/spreadsheets/d/SpreadhsheetId/edit#gid=sheetId");
         }
 
         /// <summary>

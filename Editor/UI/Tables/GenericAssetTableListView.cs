@@ -37,13 +37,13 @@ namespace UnityEditor.Localization.UI
         const float k_RemoveButtonWidth = 27;
         protected const float k_EntryMenuButtonWidth = 20;
 
-        static readonly GUIContent k_NewEntry = EditorGUIUtility.TrTextContent("New Entry");
-        static readonly GUIContent k_RemoveEntry = EditorGUIUtility.TrIconContent("Toolbar Minus");
+        static readonly GUIContent k_NewEntry = EditorContent.TextContent("New Entry");
+        static readonly GUIContent k_RemoveEntry = EditorContent.IconContent("Toolbar Minus");
         static readonly GUIContent k_PrevPage = new GUIContent(EditorGUIUtility.IconContent("Animation.PrevKey").image as Texture2D);
         static readonly GUIContent k_NextPage = new GUIContent(EditorGUIUtility.IconContent("Animation.NextKey").image as Texture2D);
         static readonly GUIContent k_FirstPage = new GUIContent(EditorGUIUtility.IconContent("Animation.FirstKey").image as Texture2D);
         static readonly GUIContent k_LastPage = new GUIContent(EditorGUIUtility.IconContent("Animation.LastKey").image as Texture2D);
-        static readonly GUIContent k_PageSize = new GUIContent(EditorGUIUtility.TrTextContent("Page Size"));
+        static readonly GUIContent k_PageSize = new GUIContent(EditorContent.TextContent("Page Size"));
         static readonly GUIStyle k_SelectedStyle = "TV Selection";
 
         protected string TableCollectionName => TableCollection.TableCollectionName;
@@ -318,6 +318,8 @@ namespace UnityEditor.Localization.UI
             // Apply Sorting?
             if (multiColumnHeader.sortedColumnIndex >= 0)
             {
+                // Sort a copy so we don't reorder the serialized SharedTableData.
+                sharedEntries = new List<SharedTableData.SharedTableEntry>(sharedEntries);
                 var ascend = multiColumnHeader.IsSortedAscending(multiColumnHeader.sortedColumnIndex);
                 if (multiColumnHeader.sortedColumnIndex == 0)
                     sharedEntries.Sort((a, b) => ascend ? string.Compare(b.Key, a.Key) : string.Compare(a.Key, b.Key));
@@ -665,7 +667,7 @@ namespace UnityEditor.Localization.UI
             }
         }
 
-        protected override bool CanStartDrag(CanStartDragArgs args) => true;
+        protected override bool CanStartDrag(CanStartDragArgs args) => multiColumnHeader.sortedColumnIndex < 0;
 
         protected override void SetupDragAndDrop(SetupDragAndDropArgs args)
         {
@@ -682,6 +684,10 @@ namespace UnityEditor.Localization.UI
 
         protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args)
         {
+            // When sorted, row order no longer matches the serialized order, so a drag would move the wrong entry.
+            if (multiColumnHeader.sortedColumnIndex >= 0)
+                return DragAndDropVisualMode.Rejected;
+
             if (args.dragAndDropPosition == DragAndDropPosition.OutsideItems)
                 return DragAndDropVisualMode.None;
 

@@ -81,7 +81,7 @@ namespace UnityEditor.Localization.Addressables
 
                     // Group Name
                     var groupName = resolver.GetExpectedGroupName(new[] { table.LocaleIdentifier }, table, settings);
-                    if (entry.parentGroup.Name != groupName)
+                    if (entry.parentGroup.Name != groupName && !resolver.ShouldLeaveInUserGroup(entry.parentGroup, table, settings))
                     {
                         Results.Add(new AnalyzeResultWithFixAction
                         {
@@ -148,22 +148,11 @@ namespace UnityEditor.Localization.Addressables
 
                     // Shared Group Name
                     var sharedGroupName = resolver.GetExpectedGroupName(null, table.SharedData, settings);
-                    if (sharedEntry.parentGroup.Name != sharedGroupName)
+                    if (sharedEntry.parentGroup.Name != sharedGroupName && !resolver.ShouldLeaveInUserGroup(sharedEntry.parentGroup, table.SharedData, settings))
                     {
                         Results.Add(new AnalyzeResultWithFixAction
                         {
                             resultName = $"{label}:Incorrect Shared Table Data Group:Expected `{sharedGroupName}` but was `{sharedEntry.parentGroup.Name}`",
-                            severity = MessageType.Warning,
-                            FixAction = () => resolver.AddToGroup(table.SharedData, null, settings, false)
-                        });
-                    }
-
-                    var expectedSharedGroupName = resolver.GetExpectedGroupName(null, table.SharedData, settings);
-                    if (sharedEntry.parentGroup.Name != expectedSharedGroupName)
-                    {
-                        Results.Add(new AnalyzeResultWithFixAction
-                        {
-                            resultName = $"{label}:Incorrect Group:Expected `{expectedSharedGroupName}` but was `{sharedEntry.parentGroup.Name}`",
                             severity = MessageType.Warning,
                             FixAction = () => resolver.AddToGroup(table.SharedData, null, settings, false)
                         });

@@ -13,9 +13,9 @@ namespace UnityEditor.Localization.UI
     {
         class Styles
         {
-            public static readonly GUIContent methods = EditorGUIUtility.TrTextContent("Pseudo-Localization Methods", "The pseudo-localization transformations that will be applied in order(top to bottom).");
-            public static readonly GUIContent preview = EditorGUIUtility.TrTextContent("Pseudo-Localization Preview", "Preview the result of applying the pseudo-localization methods to a sample string.");
-            public static readonly GUIContent sourceLocale = EditorGUIUtility.TrTextContent("Source Locale", "The source locale that will be used when loading the localized strings before they have pseudo-localization applied.");
+            public static readonly GUIContent methods = EditorContent.TextContent("Pseudo-Localization Methods", "The pseudo-localization transformations that will be applied in order(top to bottom).");
+            public static readonly GUIContent preview = EditorContent.TextContent("Pseudo-Localization Preview", "Preview the result of applying the pseudo-localization methods to a sample string.");
+            public static readonly GUIContent sourceLocale = EditorContent.TextContent("Source Locale", "The source locale that will be used when loading the localized strings before they have pseudo-localization applied.");
         }
 
         const string k_PreviewTextPref = "Localization-Pseudo-PreviewText";

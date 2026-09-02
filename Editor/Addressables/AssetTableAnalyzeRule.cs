@@ -66,8 +66,10 @@ namespace UnityEditor.Localization.Addressables
                     }
 
                     // Group name
-                    var expectedGroupName = AddressableGroupRules.Instance.AssetResolver.GetExpectedGroupName(locales, entry.MainAsset, settings);
-                    if (entry.parentGroup.Name != expectedGroupName)
+                    var assetResolver = AddressableGroupRules.Instance.AssetResolver;
+                    var mainAsset = entry.MainAsset;
+                    var expectedGroupName = assetResolver.GetExpectedGroupName(locales, mainAsset, settings);
+                    if (entry.parentGroup.Name != expectedGroupName && !assetResolver.ShouldLeaveInUserGroup(entry.parentGroup, mainAsset, settings))
                     {
                         var copy = locales.ToArray(); // We need to copy as we reuse the list
                         Results.Add(new AnalyzeResultWithFixAction

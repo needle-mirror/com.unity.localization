@@ -8,7 +8,7 @@ namespace UnityEditor.Localization.UI
     [CustomEditor(typeof(LocalizeStringListEvent))]
     class LocalizeStringListEventEditor : UnityEditor.Editor
     {
-        static readonly GUIContent k_SourceLabel = EditorGUIUtility.TrTextContent("Source Type", "Choose between a single delimited entry (List) or a collection of individual entries (Group).");
+        static readonly GUIContent k_SourceLabel = EditorContent.TextContent("Source Type", "Choose between a single delimited entry (List) or a collection of individual entries (Group).");
         static readonly string[] k_SourceOptions = { L10n.Tr("Localized String List"), L10n.Tr("Localized String Group") };
 
         SerializedProperty m_ListReference;

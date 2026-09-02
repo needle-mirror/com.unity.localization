@@ -12,19 +12,19 @@ namespace UnityEditor.Localization.UI
     {
         class Styles
         {
-            public static readonly GUIContent addTable = EditorGUIUtility.TrTextContent("Add", "Add the table to the collection.");
-            public static readonly GUIContent createTable = EditorGUIUtility.TrTextContent("Create", "Create a table for the Locale.");
-            public static readonly GUIContent editCollection = EditorGUIUtility.TrTextContent("Open in Table Editor", "Open the collection for editing in the tables window.");
-            public static readonly GUIContent extensions = EditorGUIUtility.TrTextContent("Extensions");
-            public static readonly GUIContent group = EditorGUIUtility.TrTextContent("Group", "The Group is used to group together collections when displaying them in a menu, such as the Localization Tables Selected Table Collection field.");
-            public static readonly GUIContent looseTables = EditorGUIUtility.TrTextContent("Loose Tables");
-            public static readonly GUIContent looseTablesInfo = EditorGUIUtility.TrTextContent("The following tables do not belong to any collection and share the same Shared Table Data as this collection. They can be added to this collection.");
+            public static readonly GUIContent addTable = EditorContent.TextContent("Add", "Add the table to the collection.");
+            public static readonly GUIContent createTable = EditorContent.TextContent("Create", "Create a table for the Locale.");
+            public static readonly GUIContent editCollection = EditorContent.TextContent("Open in Table Editor", "Open the collection for editing in the tables window.");
+            public static readonly GUIContent extensions = EditorContent.TextContent("Extensions");
+            public static readonly GUIContent group = EditorContent.TextContent("Group", "The Group is used to group together collections when displaying them in a menu, such as the Localization Tables Selected Table Collection field.");
+            public static readonly GUIContent looseTables = EditorContent.TextContent("Loose Tables");
+            public static readonly GUIContent looseTablesInfo = EditorContent.TextContent("The following tables do not belong to any collection and share the same Shared Table Data as this collection. They can be added to this collection.");
             public static readonly string missingSharedTableData = L10n.Tr("This collection is missing its Shared Table Data.");
-            public static readonly GUIContent missingTables = EditorGUIUtility.TrTextContent("Missing Tables");
-            public static readonly GUIContent missingTablesInfo = EditorGUIUtility.TrTextContent("These are tables that are missing for the Locales in the project.");
-            public static readonly GUIContent noExtensions = EditorGUIUtility.TrTextContent("No Available Extensions");
-            public static readonly GUIContent removeTable = EditorGUIUtility.TrTextContent("Remove", "Remove the table from the collection");
-            public static readonly GUIContent tables = EditorGUIUtility.TrTextContent("Tables");
+            public static readonly GUIContent missingTables = EditorContent.TextContent("Missing Tables");
+            public static readonly GUIContent missingTablesInfo = EditorContent.TextContent("These are tables that are missing for the Locales in the project.");
+            public static readonly GUIContent noExtensions = EditorContent.TextContent("No Available Extensions");
+            public static readonly GUIContent removeTable = EditorContent.TextContent("Remove", "Remove the table from the collection");
+            public static readonly GUIContent tables = EditorContent.TextContent("Tables");
         }
 
         LocalizationTableCollection m_Collection;

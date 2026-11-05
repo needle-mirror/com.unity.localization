@@ -18,7 +18,7 @@ namespace UnityEditor.Localization.UI
             public static readonly GUIContent defaultArg = EditorContent.TextContent("Default Argument", "The Default Argument will be the argument passed in at index 0 and will be used when no index placeholder is used");
             public static readonly GUIContent entryName = EditorContent.TextContent("Entry Name", "The name or key of the selected table entry");
             public static readonly GUIContent useFallback = EditorContent.TextContent("Enable Fallback", "Determines if a Fallback should be used when no value could be found for the Locale");
-            public static readonly GUIContent noTableSelected = new GUIContent($"None({typeof(TCollection).Name})");
+            public static readonly GUIContent noTableSelected = new GUIContent($"None ({typeof(TCollection).Name})");
             public static readonly GUIContent mixedValueContent = EditorContent.TextContent("\u2014", "Mixed Values");
             public static readonly GUIContent previewArguments = EditorContent.TextContent("Preview Arguments", "Arguments to pass to the string formatter. These are for preview purposes only and are not stored.");
             public static readonly GUIContent selectedTable = EditorContent.TextContent("Table Collection");

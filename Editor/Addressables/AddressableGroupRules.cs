@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEditor.AddressableAssets.Settings;
+using UnityEditor.Localization;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
@@ -15,7 +17,7 @@ namespace UnityEditor.Localization.Addressables
     /// <para>This example places all English assets into a local group and all other languages into a remote group which could then be downloaded after the game is released.</para>
     /// <code source="../../DocCodeSamples.Tests/GroupResolverExample.cs"/>
     /// </example>
-    [HelpURL("https://docs.unity3d.com/Packages/com.unity.localization@latest/index.html?subfolder=/manual/Addressables.html#addressable-group-rules")]
+    [HelpURL(HelpUrls.Manual + "Addressables.html#addressable-group-rules")]
     public class AddressableGroupRules : ScriptableObject
     {
         const string k_ConfigName = "com.unity.localization.addressable-group-rules";
@@ -24,6 +26,8 @@ namespace UnityEditor.Localization.Addressables
         [SerializeReference] GroupResolver m_StringTablesResolver = new GroupResolver("Localization-String-Tables-{LocaleName}", "Localization-Assets-Shared");
         [SerializeReference] GroupResolver m_AssetTablesResolver = new GroupResolver("Localization-Asset-Tables-{LocaleName}", "Localization-Assets-Shared");
         [SerializeReference] GroupResolver m_AssetResolver = new GroupResolver("Localization-Assets-{LocaleName}", "Localization-Assets-Shared");
+
+        [SerializeField] AddressableAssetGroupTemplate m_GroupTemplate;
 
         static AddressableGroupRules s_Instance;
 
@@ -53,13 +57,66 @@ namespace UnityEditor.Localization.Addressables
             }
         }
 
-        static void CreateAsset(Action<AddressableGroupRules> configureAction)
+        /// <summary>
+        /// Optional Addressables group template used when localization creates new groups.
+        /// When <see langword="null"/>, the default is the project <see cref="AddressableAssetSettings"/> built-in
+        /// <c>Packed Assets</c> group template (see <see cref="AddressableGroupTemplateResolution.PackedAssetsTemplateName"/>).
+        /// </summary>
+        public AddressableAssetGroupTemplate GroupTemplate
         {
+            get => m_GroupTemplate;
+            set
+            {
+                if (ReferenceEquals(m_GroupTemplate, value))
+                    return;
+
+                m_GroupTemplate = value;
+                EditorUtility.SetDirty(this);
+            }
+        }
+
+        /// <summary>
+        /// Returns the template used when creating new Addressable groups: <see cref="GroupTemplate"/> if set, otherwise
+        /// the <c>Packed Assets</c> template from the given <paramref name="settings"/> (if present).
+        /// </summary>
+        /// <param name="settings">Project Addressables settings (required to resolve the default template).</param>
+        /// <returns>Resolved template, or <see langword="null"/> if the default template is not in the project.</returns>
+        internal AddressableAssetGroupTemplate GetEffectiveGroupTemplate(AddressableAssetSettings settings)
+        {
+            if (m_GroupTemplate != null)
+                return m_GroupTemplate;
+            if (settings == null)
+                return null;
+            return AddressableGroupTemplateResolution.FindTemplate(settings, AddressableGroupTemplateResolution.PackedAssetsTemplateName);
+        }
+
+        static AddressableAssetSettings GetOrCreateProjectAddressableSettings()
+        {
+            return LocalizationEditorSettings.Instance.GetAddressableAssetSettings(true);
+        }
+
+
+        static void CreateAsset(Action<AddressableGroupRules> configureAction, string templateName = AddressableGroupTemplateResolution.PackedAssetsTemplateName, Action<AddressableAssetSettings> prepareSettings = null)
+        {
+            // Ask first. Everything below this writes to the project, so cancelling must leave it alone.
             var path = EditorUtility.SaveFilePanelInProject("Create Addressable Group Rules", "Localization Addressable Group Rules.asset", "asset", "");
             if (string.IsNullOrEmpty(path))
                 return;
 
+            var settings = GetOrCreateProjectAddressableSettings();
+            prepareSettings?.Invoke(settings);
+
+            var template = AddressableGroupTemplateResolution.FindTemplate(settings, templateName);
+            if (template == null)
+                Debug.LogWarning(
+                    $"Could not find the Addressable Asset Group Template '{templateName}'. Leaving the " +
+                    "group template unset, so new groups will use the project's default template. " +
+                    $"Create the '{templateName}' template and assign it to these rules to control " +
+                    "their build and load paths.");
+
             var instance = CreateInstance<AddressableGroupRules>();
+
+            instance.GroupTemplate = template;
 
             configureAction?.Invoke(instance);
             AssetDatabase.CreateAsset(instance, path);
@@ -91,6 +148,18 @@ namespace UnityEditor.Localization.Addressables
                 instance.AssetResolver = new GroupResolver("Localization-Assets-{Identifier.Code}", "Localization-Assets-Shared");
             });
         }
+
+#if ADDRESSABLES_CD_SUPPORT
+        [MenuItem("Assets/Create/Localization/Addressable Group Rules (Content Directory)")]
+        static void CreateContentDirectory()
+        {
+            // Create the template if the project has none. Without it these rules would fall back to
+            // Packed Assets, quietly giving a bundled layout instead of the one the menu item promises.
+            // Runs after the save dialog, so cancelling does not leave a template behind.
+            CreateAsset(null, AddressableGroupTemplateResolution.ContentDirectoryTemplateName,
+                settings => MigrateGroupSchemaConverter.EnsureContentDirectoryGroupTemplate(settings));
+        }
+#endif
 
         /// <summary>
         /// Controls which groups Locales are added to.

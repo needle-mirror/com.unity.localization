@@ -381,6 +381,7 @@ namespace UnityEditor.Localization
             Directory.CreateDirectory(relativePath);
 
             var sharedDataPath = Path.Combine(relativePath, AddressHelper.GetSharedTableAddress(tableName) + ".asset");
+            sharedDataPath = AssetDatabase.GenerateUniqueAssetPath(sharedDataPath);
             var sharedTableData = ScriptableObject.CreateInstance<SharedTableData>();
             sharedTableData.TableCollectionName = tableName;
             CreateAsset(sharedTableData, sharedDataPath);
@@ -416,8 +417,8 @@ namespace UnityEditor.Localization
             }
 
             // Save the collection
-            collection.name = tableName;
-            var collectionPath = Path.Combine(relativePath, collection.name + ".asset");
+            var collectionPath = Path.Combine(relativePath, tableName + ".asset");
+            collectionPath = AssetDatabase.GenerateUniqueAssetPath(collectionPath);
             CreateAsset(collection, collectionPath);
 
             AssetDatabase.StopAssetEditing();

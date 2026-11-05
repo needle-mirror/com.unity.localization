@@ -1,10 +1,8 @@
 #if ADDRESSABLES_ANALYZE
 
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor.AddressableAssets.Build;
 using UnityEditor.AddressableAssets.Settings;
-using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 
@@ -13,7 +11,7 @@ namespace UnityEditor.Localization.Addressables
     [InitializeOnLoad]
     class LocaleAnalyzeRule : AnalyzeRuleBase
     {
-        public override string ruleName => "Check Localization Locales";
+        public override string ruleName => "Localization: Check Locales";
 
         static LocaleAnalyzeRule() => AnalyzeSystem.RegisterNewRule<LocaleAnalyzeRule>();
 
@@ -73,25 +71,7 @@ namespace UnityEditor.Localization.Addressables
                 }
             }
 
-            if (groups.Count > 0)
-            {
-                foreach (var g in groups)
-                {
-                    if (g.Schemas.Count == 0 || g.Schemas.All(s => s == null))
-                    {
-                        Results.Add(new AnalyzeResultWithFixAction
-                        {
-                            resultName = $"{g.Name}:Addressables Group Contains No Schemas",
-                            severity = MessageType.Error,
-                            FixAction = () =>
-                            {
-                                g.AddSchema<BundledAssetGroupSchema>();
-                                g.AddSchema<ContentUpdateGroupSchema>();
-                            }
-                        });
-                    }
-                }
-            }
+            AddGroupsWithNoSchemasResults(groups, settings);
         }
     }
 }

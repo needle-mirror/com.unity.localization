@@ -16,6 +16,7 @@ namespace UnityEditor.Localization
     /// <summary>
     /// Contains information on all the tables associated with a table collection name and type.
     /// </summary>
+    [HelpURL(HelpUrls.Manual + "AssetTables.html#asset-table-collection")]
     public class AssetTableCollection : LocalizationTableCollection
     {
         /// <inheritdoc/>

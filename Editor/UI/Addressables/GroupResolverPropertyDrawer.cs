@@ -11,6 +11,11 @@ namespace UnityEditor.Localization.UI.Addressables
     [CustomPropertyDrawer(typeof(GroupResolver))]
     class GroupResolverPropertyDrawer : PropertyDrawer
     {
+        static class Styles
+        {
+            public static readonly GUIContent noLocales = EditorContent.TextContent("The Project Has No Locales");
+        }
+
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new Foldout {value = property.isExpanded, text = property.displayName};
@@ -77,6 +82,11 @@ namespace UnityEditor.Localization.UI.Addressables
 
         static void ShowAddItemMenu(ReorderableList list, int index)
         {
+            BuildAddItemMenu(list, index).ShowAsContext();
+        }
+
+        internal static GenericMenu BuildAddItemMenu(ReorderableList list, int index)
+        {
             var menu = new GenericMenu();
 
             var hashSet = new HashSet<string>();
@@ -107,7 +117,10 @@ namespace UnityEditor.Localization.UI.Addressables
                 }
             }
 
-            menu.ShowAsContext();
+            if (menu.GetItemCount() == 0)
+                menu.AddDisabledItem(Styles.noLocales);
+
+            return menu;
         }
     }
 }

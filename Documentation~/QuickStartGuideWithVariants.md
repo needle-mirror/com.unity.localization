@@ -22,16 +22,16 @@ The Project's Localization Settings is an Asset. To create this Asset, go to **E
 
 A [locale](Locale.md) represents a language and an optional region; they can also contain additional information, such as currency, calendar, and user-added custom data.
 
-To open the Locale Generator window, navigate to the Localization Settings (menu: **Edit > Project Settings > Localization**) and select **Locale Generator**.
+To open the Add Locale window, navigate to the Localization Settings (menu: **Edit > Project Settings > Localization**) and select **Add Locale**.
 
-![Locale Generator button.](images/LocalizationSettings_LocaleGeneratorButton.png)
+![Add Locale button.](images/LocalizationSettings_LocaleGeneratorButton.png)
 
 1. Select the checkbox next to the Locales you want to add.
-2. Select **Generate Locales**.
+2. Select **Add Locales**.
 3. Select where you want to save the Assets to.
 Unity creates an asset file for each locale you select.
 
-![Locale Generator window.](images/Create_Locale_Window.png)
+![Add Locale window.](images/Create_Locale_Window.png)
 
 ## Choose a default Locale
 

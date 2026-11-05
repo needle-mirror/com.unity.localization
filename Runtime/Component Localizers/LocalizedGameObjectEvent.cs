@@ -7,6 +7,7 @@ namespace UnityEngine.Localization.Components
     /// When the Locale is changed the prefab will be instantiated as a child of the gameobject this component is attached to, the instance will then be sent through <see cref="LocalizedAssetEvent{TObject, TReference, TEvent}.OnUpdateAsset"/>.
     /// </summary>
     [AddComponentMenu("Localization/Asset/Localize Prefab Event")]
+    [HelpURL(HelpUrls.Manual + "ComponentLocalizers.html")]
     public class LocalizedGameObjectEvent : LocalizedAssetEvent<GameObject, LocalizedGameObject, UnityEventGameObject>
     {
         GameObject m_Current;

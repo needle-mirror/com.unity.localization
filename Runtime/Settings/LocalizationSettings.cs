@@ -15,6 +15,7 @@ namespace UnityEngine.Localization.Settings
     /// The Localization Settings serves as the central element of the localization system,
     /// offering the primary access point for all player-based localization features.
     /// </remarks>
+    [HelpURL(HelpUrls.Manual + "LocalizationSettings.html")]
     public class LocalizationSettings : ScriptableObject, IReset, IDisposable
     {
         #if UNITY_EDITOR && UNITY_6000_0_OR_NEWER

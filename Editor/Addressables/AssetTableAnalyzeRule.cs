@@ -13,7 +13,7 @@ namespace UnityEditor.Localization.Addressables
     [InitializeOnLoad]
     class AssetTableAnalyzeRule : TableAnalyzeRule<AssetTable>
     {
-        public override string ruleName => "Check Localization Asset Tables";
+        public override string ruleName => "Localization: Check Asset Tables";
 
         static AssetTableAnalyzeRule() => AnalyzeSystem.RegisterNewRule<AssetTableAnalyzeRule>();
 
@@ -93,7 +93,7 @@ namespace UnityEditor.Localization.Addressables
 
                 var entryLabel = $"{label}:{assetTableEntry.Key}";
 
-                var path  = AssetDatabase.GUIDToAssetPath(assetTableEntry.Guid);
+                var path = AssetDatabase.GUIDToAssetPath(assetTableEntry.Guid);
                 var entry = settings.FindAssetEntry(assetTableEntry.Guid);
                 if (entry == null)
                 {

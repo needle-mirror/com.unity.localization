@@ -2,10 +2,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor.AddressableAssets.Build;
 using UnityEditor.AddressableAssets.Settings;
-using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
 
@@ -14,7 +12,7 @@ namespace UnityEditor.Localization.Addressables
     [InitializeOnLoad]
     class StringTableAnalyzeRule : TableAnalyzeRule<StringTable>
     {
-        public override string ruleName => "Check Localization String Tables";
+        public override string ruleName => "Localization: Check String Tables";
 
         static StringTableAnalyzeRule() => AnalyzeSystem.RegisterNewRule<StringTableAnalyzeRule>();
     }
@@ -159,25 +157,7 @@ namespace UnityEditor.Localization.Addressables
                     }
                 }
 
-                if (groups.Count > 0)
-                {
-                    foreach (var g in groups)
-                    {
-                        if (g.Schemas.Count == 0 || g.Schemas.All(s => s == null))
-                        {
-                            Results.Add(new AnalyzeResultWithFixAction
-                            {
-                                resultName = $"{g.Name}:Addressables Group Contains No Schemas",
-                                severity = MessageType.Error,
-                                FixAction = () =>
-                                {
-                                    g.AddSchema<BundledAssetGroupSchema>();
-                                    g.AddSchema<ContentUpdateGroupSchema>();
-                                }
-                            });
-                        }
-                    }
-                }
+                AddGroupsWithNoSchemasResults(groups, settings);
             }
             finally
             {

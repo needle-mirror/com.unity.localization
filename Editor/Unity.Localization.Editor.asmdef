@@ -89,6 +89,11 @@
             "name": "Unity",
             "expression": "2023.3",
             "define": "ENABLE_LOCALIZATION_XCODE_SUPPORT"
+        },
+        {
+            "name": "com.unity.addressables",
+            "expression": "4.0.0",
+            "define": "ADDRESSABLES_CD_SUPPORT"
         }
     ],
     "noEngineReferences": false

@@ -204,7 +204,7 @@ namespace UnityEngine.Localization
     /// <summary>
     /// A Locale represents a language. It supports regional variations and can be configured with an optional fallback Locale via metadata.
     /// </summary>
-    [HelpURL("https://docs.unity3d.com/Packages/com.unity.localization@latest/index.html?subfolder=/manual/Locale.html")]
+    [HelpURL(HelpUrls.Manual + "Locale.html")]
     public class Locale : ScriptableObject, IEquatable<Locale>, IComparable<Locale>, ISerializationCallbackReceiver, IFormatProvider
     {
         [SerializeField]
@@ -472,6 +472,10 @@ namespace UnityEngine.Localization
 
         public void OnBeforeSerialize()
         {
+            // Dont set the name if the reference has been removed (UUM-151523)
+            if (InstanceIdHelper.GetInstanceId(this) == 0)
+                return;
+
             if (string.IsNullOrEmpty(m_LocaleName))
                 m_LocaleName = name;
         }

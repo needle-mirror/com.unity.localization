@@ -1,5 +1,10 @@
 # Upgrade guides
 
+## Upgrade Guide to 1.5.13
+
+- Localization now creates its Addressable groups from an Addressables **Group Template**, resolved from the active **Addressable Group Rules**. When no template is assigned, new groups fall back to your project's **Packed Assets** template. See [Group template](Addressables.md#group-template) for details.
+- On Addressables 4.0.0 and later you can build localized content as content directories instead of AssetBundles. New Analyze rules switch existing Localization groups between the two and change which template new groups use. To switch over to content directories you will need to switch your **Addressable Group Rules** to use the **Content Directory** template and convert any existing AssetBUndle groups. See [Content build analyze rules](Addressable-Content-Build-Analyzers.md).
+
 ## Upgrade Guide to 1.4.2
 
 - This version improves sub-asset support. A new rule has been added to the **Asset Table Addressables Analyzer** that checks if sub-assets are referenced by name and offers to upgrade them. This will help avoid the wrong asset being returned when referencing an asset that contains multiple sub-assets.

@@ -1,6 +1,7 @@
 #if ((UNITY_TVOS || UNITY_STANDALONE_OSX || UNITY_VISIONOS) && ENABLE_LOCALIZATION_XCODE_SUPPORT) || (UNITY_IOS || UNITY_IPHONE)
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
+using UnityEditor.Localization.Platform.Utility;
 using UnityEngine;
 using UnityEngine.Localization.Platform.iOS;
 using UnityEngine.Localization.Settings;
@@ -21,7 +22,7 @@ namespace UnityEditor.Localization.Platform.iOS
             var appInfo = LocalizationSettings.Metadata.GetMetadata<AppInfo>();
             if (appInfo == null)
             {
-                Debug.LogWarning("iOS App Info has not been configured. Please add and configure `iOS App Info` metadata to the Localization Settings in order to correctly support Localization on iOS.");
+                Debug.LogWarning($"Apple App Info has not been configured. Add and configure the `Apple App Info` metadata in the Localization Settings to support Localization on {ApplePlatformName.Get(report.summary.platform)}.");
             }
             else
             {

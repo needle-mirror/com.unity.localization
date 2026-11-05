@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using UnityEngine.Localization.SmartFormat;
 
 namespace UnityEngine.Localization.PropertyVariants.TrackedProperties
@@ -119,8 +120,9 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedProperties
             SetValue(localeIdentifier, convertedValue);
         }
 
-        protected virtual string ConvertToString(TPrimitive value) => Convert.ToString(value);
-        protected virtual TPrimitive ConvertFromString(string value) => (TPrimitive)Convert.ChangeType(value, typeof(TPrimitive));
+        // These strings interoperate with Unity's own, such as PropertyModification values, which are always locale independent.
+        protected virtual string ConvertToString(TPrimitive value) => Convert.ToString(value, CultureInfo.InvariantCulture);
+        protected virtual TPrimitive ConvertFromString(string value) => (TPrimitive)Convert.ChangeType(value, typeof(TPrimitive), CultureInfo.InvariantCulture);
 
         public void OnBeforeSerialize()
         {
@@ -152,12 +154,23 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedProperties
     [Serializable] public class UIntTrackedProperty : TrackedProperty<uint> {}
     [Serializable] public class LongTrackedProperty : TrackedProperty<long> {}
     [Serializable] public class ULongTrackedProperty : TrackedProperty<ulong> {}
-    [Serializable] public class FloatTrackedProperty : TrackedProperty<float> {}
-    [Serializable] public class DoubleTrackedProperty : TrackedProperty<double> {}
     [Serializable] public class ArraySizeTrackedProperty : UIntTrackedProperty {}
 
     // Same as Int but we use a custom property drawer which resolves the Enum type in the inspector.
     [Serializable] public class EnumTrackedProperty : IntTrackedProperty {}
+
+    [Serializable]
+    public class FloatTrackedProperty : TrackedProperty<float>
+    {
+        // "R" so the value survives the round trip on runtimes whose default format is 7 significant digits.
+        protected override string ConvertToString(float value) => value.ToString("R", CultureInfo.InvariantCulture);
+    }
+
+    [Serializable]
+    public class DoubleTrackedProperty : TrackedProperty<double>
+    {
+        protected override string ConvertToString(double value) => value.ToString("R", CultureInfo.InvariantCulture);
+    }
 
     [Serializable]
     public class BoolTrackedProperty : TrackedProperty<bool>
@@ -165,7 +178,7 @@ namespace UnityEngine.Localization.PropertyVariants.TrackedProperties
         protected override bool ConvertFromString(string value)
         {
             // Support bool in the form "0" or "1".
-            if (int.TryParse(value, out var result))
+            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result))
                 return (bool)Convert.ChangeType(result, typeof(bool));
 
             // Support bool in the form "false" or "true".

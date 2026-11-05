@@ -49,15 +49,21 @@ A Pseudo-Locale Asset pulls a value from a [String Table](StringTables.md) and a
 
 To create a new Pseudo-Locale Asset, go to **Assets > Create > Localization > Pseudo-Locale.**
 
-![A default Pseudo-Locale Asset](images/PseudoLocalizationLocale_Inspector.png)
+![The Pseudo-Locale Inspector view.](images/PseudoLocalizationLocale_Inspector.png)
+
+A Pseudo-Locale is a type of [Locale](Locale.md), so most of its properties are the standard Locale properties. Instead of a **Locale Code**, Pseudo-Locales have a **Source Locale** field. The Pseudo-Locale uses the code of whichever Locale you assign to it.
 
 | **Property**                    | **Description** |
 | ------------------------------- | --------------- |
-| **Name**                        | Set the name of this Pseudo-Locale Asset. It’s useful to give it a name that identifies what it does, or which Methods are attached to it.
-| **Source Locale**               | The locale you want to use for pseudo-localization. For example, if you choose English, the Pseudo-Localization system loads the strings from the English String Table, and then pseudo-localizes them.
-| **Code**                        | This field auto-populates with the language code of the selected **Source Locale**.
-| **Metadata**                    | Use the Metadata list to add two type of data: <ul><li>Comment</li><li>Fallback locale</li></ul>
-| **Pseudo-Localization Methods** | Use the **Methods** list to define which methods of pseudo-localization this Pseudo-Locale Asset should apply to your application’s text. By default, the Pseudo-Locale includes the **Accenter**, **Expander** and **Encapsulator**. <br><br>See [Methods](Pseudo-Localization-Methods.md) for a full description of each Method.
+| **Locale Name**                 | The name of the Locale, used when presenting it to the user. See [Locale](Locale.md).
+| **Source Locale**               | The locale you want to use for pseudo-localization. For example, if you choose English, the Pseudo-Localization system loads the strings from the English String Table, and then pseudo-localizes them. <br><br>Choosing a Locale here also sets this asset’s own code, so the **Culture Info** and formatting properties below reflect it.
+| **Culture Info**                | The [Culture Info](https://docs.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo) match found for this Locale’s code. See [Locale](Locale.md).
+| **Use Custom Formatter**        | Enable this to format region specific values with a culture other than the one this Locale’s code provides. See [Locale](Locale.md).
+| **Custom Formatter Code**       | The code to format region specific values with. This is only editable when you enable **Use Custom Formatter**. See [Locale](Locale.md).
+| **Formatting Culture Info**     | The culture used to format region specific values, with a read-only **Currency**, **Date/Time** and **Number** example of its output.
+| **Sort Order**                  | Use the sort order to override where this Pseudo-Locale appears when Locales are sorted in a list. See [Locale](Locale.md).
+| **Metadata**                    | Use the Metadata list to attach additional [Metadata](Metadata.md) to this Pseudo-Locale, such as a Comment or a Fallback Locale. The list offers every metadata type the project allows for a Locale.
+| **Pseudo-Localization Methods** | Use the **Methods** list to define which methods of pseudo-localization this Pseudo-Locale Asset should apply to your application’s text. By default, the Pseudo-Locale includes the **Preserve Tags**, **Expander**, **Accenter**, and **Encapsulator** Methods. <br><br>See [Methods](Pseudo-Localization-Methods.md) for a full description of each Method.
 | **Pseudo-Localization Preview** | This displays a preview of the pseudo-localization settings you have configured. You can edit the text field to see a preview of any text string.
 
 ## Apply it to your Scene at runtime

@@ -315,17 +315,42 @@ namespace UnityEditor.Localization.Addressables
 
         static AddressableAssetGroup CreateNewGroup(string name, bool readOnly, AddressableAssetSettings aaSettings, bool createUndo)
         {
-            if (createUndo)
-                Undo.RecordObject(aaSettings, "Create group");
-            var group = aaSettings.CreateGroup(name, false, readOnly, true, null, typeof(BundledAssetGroupSchema), typeof(ContentUpdateGroupSchema), typeof(LocalizationGroupSchema));
-            var schema = group.GetSchema<BundledAssetGroupSchema>();
+            var rules = AddressableGroupRules.Instance;
+            var template = rules.GetEffectiveGroupTemplate(aaSettings);
 
-            // Don't use hash as it creates very long file names that can cause issues on Windows.
-            schema.BundleNaming = BundledAssetGroupSchema.BundleNamingStyle.NoHash;
+            // One undo step for the settings change and every asset created below.
+            using (new UndoScope("Create group", createUndo))
+            {
+                if (createUndo)
+                    Undo.RecordObject(aaSettings, "Create group");
 
-            if (createUndo)
-                Undo.RegisterCreatedObjectUndo(group, "Create group");
-            return group;
+                // Add the schemas afterwards rather than letting CreateGroup copy them. Copying a schema
+                // instance skips the conflict check that adding one by type runs, so a template holding both
+                // a bundled and a content directory schema would leave two enabled buildable schemas.
+                var group = aaSettings.CreateGroup(name, false, readOnly, true, null);
+
+                AddressableGroupTemplateResolution.AddSchemasFromTemplate(
+                    group, template, AddressableGroupTemplateResolution.PackedAssetsTemplateName,
+                    typeof(BundledAssetGroupSchema), typeof(ContentUpdateGroupSchema));
+
+                // Localization groups always need a LocalizationGroupSchema, template or not.
+                if (group.GetSchema<LocalizationGroupSchema>() == null)
+                    group.AddSchema<LocalizationGroupSchema>();
+
+                // The no-template path already forced NoHash, so only a resolved template is left to check.
+                if (template != null)
+                    UpdateBundleNaming(group, template);
+
+                if (createUndo)
+                {
+                    // Registered once the group is configured, and before its schemas so undo destroys
+                    // them first. Every schema here is new, the group having just been created.
+                    Undo.RegisterCreatedObjectUndo(group, "Create group");
+                    AddressableGroupTemplateResolution.RegisterCreatedSchemasUndo(group, null, "Create group");
+                }
+
+                return group;
+            }
         }
 
         static Object GetMainAsset(Object asset)
@@ -351,6 +376,28 @@ namespace UnityEditor.Localization.Addressables
                 s_TemporaryLocales[identifier] = locale;
             }
             return locale;
+        }
+
+        internal static void UpdateBundleNaming(AddressableAssetGroup group, AddressableAssetGroupTemplate template)
+        {
+            var schema = group.GetSchema<BundledAssetGroupSchema>();
+            if (schema == null)
+                return;
+            // No resolved template: force NoHash (hash-heavy paths can exceed Windows limits). With a template we only warn—adjust the Packed Assets template if needed.
+            if (template == null)
+            {
+                // Don't use hash as it creates very long file names that can cause issues on Windows.
+                schema.BundleNaming = BundledAssetGroupSchema.BundleNamingStyle.NoHash;
+                return;
+            }
+            var naming = schema.BundleNaming;
+            if (naming == BundledAssetGroupSchema.BundleNamingStyle.OnlyHash
+                || naming == BundledAssetGroupSchema.BundleNamingStyle.FileNameHash)
+            {
+                UnityEngine.AddressableAssets.Addressables.LogWarning(
+                    $"Group '{group.Name}' has bundle naming style '{naming}'. This is not recommended as it creates very long file names that can cause issues on Windows. " +
+                    "To fix the problem, change the bundle naming style to 'NoHash' in the 'Packed Assets' template.");
+            }
         }
 
         AddressableAssetEntry GetAssetEntry(Object asset, AddressableAssetSettings aaSettings) => aaSettings.FindAssetEntry(GetAssetGuid(asset));

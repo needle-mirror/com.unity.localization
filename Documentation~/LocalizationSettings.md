@@ -20,18 +20,20 @@ You can also create the settings Asset through the Assets menu. Navigate to **As
 **Available Locales** contains the list of [locales](Locale.md) that the Project supports when built.
 By default, this uses the Addressable system to fetch Locales. However, you can also create a class that implements *ILocalesProvider* to completely customize this.
 
-### Locale Generator window
+Use the buttons below the list to control which Locale assets are Addressable:
 
-To create a Locale, click the **Locale Generator** button in the Available Locales editor.
+- To add every Locale asset in the project, click **Add All**.
+- To remove a Locale, select it in the list and click the remove (**-**) button. The asset stays in the project.
 
-![Locale Generator window.](images/Create_Locale_Window.png)
+### Add Locale window
 
-The Locale Generator provides a set of known Locales that you can select and save to the Project.
+To create a Locale, click the **Add Locale** button in the Available Locales editor.
 
-Use the **Locale Source** field to control the source that Unity generates the list of Locales from. These known locales can be gathered from either the CultureInfo class or the Unity SystemLanguage enum.
+![Add Locale window.](images/Create_Locale_Window.png)
 
-To select a Locale, tick the check box next to its name. Once you have selected the the Locales you want, click the **Create Locales** button. This saves each Locale as an Asset in the Project and marks them as Addressable assets. Locales that are already included in the project will be shown as ticked and disabled.
-Locale assets can be removed or added to Addressables by clicking the **Remove Selected** button to remove or **Add** button or the **Add All** button to add all Locale Assets in the project automatically.
+The Add Locale window provides a set of known Locales that you can select and save to the Project.
+
+To select a Locale, tick the check box next to its name. Once you have selected the Locales you want, click the **Add Locales** button. This saves each Locale as an Asset in the Project and marks them as Addressable assets. Locales that are already included in the project will be shown as ticked and disabled.
 
 ![Unity generates Locales as Asset files in the Project.](images/ProjectView_Generated_Locales.png)
 
@@ -39,7 +41,7 @@ Locale assets can be removed or added to Addressables by clicking the **Remove S
 
 The [Locale Selector](LocaleSelector.md) determines which Locale Unity should use when the application first starts or an active Locale is not selected. For example, you might want to use a default Locale, or attempt to use the Locale that the player is using on their device.
 
-The Localization Settings will query each selector in the list, starting at the top(index 0). If a selector returns null, then it queries the next, until it finds a valid Locale or it reaches the end of the list. This allows you to create fallback behaviors when Unity is selecting which Locale to use.
+The Localization Settings will query each selector in the list, starting at the top (index 0). If a selector returns null, then it queries the next, until it finds a valid Locale or it reaches the end of the list. This allows you to create fallback behaviors when Unity is selecting which Locale to use.
 
 ## Asset Database
 
@@ -100,7 +102,7 @@ The Settings section contains general settings to configure how to parse and for
 
 | **Field** | **Description** |
 | --------- | --------------- |
-| **Format Error Action<br>Parse Error Action** | The error actions determine how Unity reacts when it encounters any errors during parsing(interpreting the string tokens) and formatting(converting parsed tokens into string values).<br><br>The following options are available:<ul><li>**ThrowError**: Throws an exception. This is the default value and recommended for debugging, so that formatting errors can be easily found.</li><li>**OutputErrorInResult**: Includes the error message in formatted string.</li><li>**Ignore**: Ignores errors and tries to output the data anyway.</li><li>**MaintainTokens**: Leaves invalid tokens unmodified in the text.</li></ul>To trace any formatting or parsing errors, subscribe to the corresponding events:<br>`Smart.Default.OnFormattingFailure`<br>`Smart.Default.Parser.OnParsingFailure`<br>These events fire for all errors and error action values. This lets you decide in your code how to deal with errors. |
+| **Format Error Action<br>Parse Error Action** | The error actions determine how Unity reacts when it encounters any errors during parsing (interpreting the string tokens) and formatting (converting parsed tokens into string values).<br><br>The following options are available:<ul><li>**ThrowError**: Throws an exception. This is the default value and recommended for debugging, so that formatting errors can be easily found.</li><li>**OutputErrorInResult**: Includes the error message in formatted string.</li><li>**Ignore**: Ignores errors and tries to output the data anyway.</li><li>**MaintainTokens**: Leaves invalid tokens unmodified in the text.</li></ul>To trace any formatting or parsing errors, subscribe to the corresponding events:<br>`Smart.Default.OnFormattingFailure`<br>`Smart.Default.Parser.OnParsingFailure`<br>These events fire for all errors and error action values. This lets you decide in your code how to deal with errors. |
 | **Case Sensitivity** | Determines whether placeholders are case-sensitive or not. |
 | **Convert Character String Literals** | Literal text is text that is not a placeholder and is not replaced. When enabled literal text is treated as a C# string and [escape sequences](#escape-sequences) are converted, for example **\n** would become a new line and **\t** would be converted into a tab.
 
@@ -131,7 +133,7 @@ The parser is responsible for converting a Smart String into a set of format ite
 
 | **Field** | **Description** |
 | --------- | --------------- |
-| **Opening Brace<br>Closing Brace** | The Opening and Closing braces are used to indicate the start and end of a Format Item. By default the same braces as String.Format are used { }.<br><br>For example:<br>`Some text {0}` |
+| **Opening Brace<br>Closing Brace** | The Opening and Closing braces are used to indicate the start and end of a Format Item. By default these are `{` and `}`, the same braces String.Format uses.<br><br>For example:<br>`Some text {0}` |
 | **Alphanumeric Selectors** | When enabled Unity allows selectors to contain alphabetical selectors in the range a-z and A-Z.<br>For example:<br>`Some text {FormatItem}` |
 | **Allowed Selector Chars** | Contains a list of additional characters that a selector can contain to support additional selector syntaxes such as math. |
 | **Operators** | Contains a list of characters that come between selectors. This can be "." for dot-notation, [ ] for arrays or even math symbols. |

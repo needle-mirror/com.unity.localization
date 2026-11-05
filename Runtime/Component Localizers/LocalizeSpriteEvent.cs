@@ -17,6 +17,7 @@ namespace UnityEngine.Localization.Components
     /// Adding it this way will also automatically configure the Update Asset events to update the [Image](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/script-Image.html).
     /// </remarks>
     [AddComponentMenu("Localization/Asset/Localize Sprite Event")]
+    [HelpURL(HelpUrls.Manual + "ComponentLocalizers.html")]
     public class LocalizeSpriteEvent : LocalizedAssetEvent<Sprite, LocalizedSprite, UnityEventSprite>
     {
     }

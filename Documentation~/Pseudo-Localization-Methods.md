@@ -14,7 +14,7 @@ The following table demonstrates the output of each Method.
 | **Expander**               | `This is an example string. The quick brown fox jumps over the lazy dog.,rAR]/GDcU;"K9X&-l%Nj\` | **Expander** simulates text expansion as the result of localization. This indicates where there is not enough space for languages that have longer strings, and issues where text is likely to clip or truncate.
 | **Mirror**                 | `.god yzal eht revo spmuj xof nworb kciuq ehT .gnirts elpmaxe na si sihT` | **Mirror** reverses the string. You can use this alongside design changes to simulate how the UI might look when showing languages that are right-to-left.
 
-You can also combine Methods. The Pseudo-Localization system applies these Methods one at a time, in the order they appear in the Methods list. For example, the default Pseudo-Locale Asset contains the Accenter, Encapsulator and Expander, which results in the following:
+You can also combine Methods. The Pseudo-Localization system applies these Methods one at a time, in the order they appear in the Methods list. For example, the default Pseudo-Locale Asset contains the Preserve Tags, Expander, Accenter, and Encapsulator Methods, which results in the following:
 
 [Ţĥîš îš åñ éẋåɱþļé šţŕîñĝ· Ţĥé ǫûîçķ ƀŕöŵñ ƒöẋ ĵûɱþš öṽéŕ ţĥé ļåžý ðöĝ·,ŕÅŔ⁆⁄ĜÐçÛ⁏″Ķ⑨Ẋ⅋‐ļ‰Ñĵ∖]
 

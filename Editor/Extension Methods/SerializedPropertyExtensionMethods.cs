@@ -1,3 +1,4 @@
+using System.Globalization;
 using UnityEditor.AddressableAssets.GUI;
 using UnityEngine;
 
@@ -36,18 +37,18 @@ namespace UnityEditor.Localization
                 case "short":
                 case "ushort":
                 case "Enum":
-                    return property.intValue.ToString();
+                    return property.intValue.ToString(CultureInfo.InvariantCulture);
 
                 case "uint":
                 case "long":
                 case "ulong":
-                    return property.longValue.ToString();
+                    return property.longValue.ToString(CultureInfo.InvariantCulture);
 
                 case "float":
-                    return property.floatValue.ToString();
+                    return property.floatValue.ToString("R", CultureInfo.InvariantCulture);
 
                 case "double":
-                    return property.doubleValue.ToString();
+                    return property.doubleValue.ToString("R", CultureInfo.InvariantCulture);
 
                 case "string":
                     return property.stringValue;
@@ -76,24 +77,24 @@ namespace UnityEditor.Localization
                 case "short":
                 case "ushort":
                 case "Enum":
-                    if (int.TryParse(modification.value, out var i))
+                    if (int.TryParse(modification.value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i))
                         property.intValue = i;
                     break;
 
                 case "uint":
                 case "long":
                 case "ulong":
-                    if (long.TryParse(modification.value, out var l))
+                    if (long.TryParse(modification.value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var l))
                         property.longValue = l;
                     break;
 
                 case "float":
-                    if (float.TryParse(modification.value, out var f))
+                    if (float.TryParse(modification.value, NumberStyles.Float, CultureInfo.InvariantCulture, out var f))
                         property.floatValue = f;
                     break;
 
                 case "double":
-                    if (double.TryParse(modification.value, out var d))
+                    if (double.TryParse(modification.value, NumberStyles.Float, CultureInfo.InvariantCulture, out var d))
                         property.doubleValue = d;
                     break;
 

@@ -16,6 +16,7 @@ namespace UnityEngine.Localization.Components
     /// Adding it this way will also automatically configure the Update Asset events to update the [Texture](https://docs.unity3d.com/ScriptReference/Texture.html).
     /// </remarks>
     [AddComponentMenu("Localization/Asset/Localize Texture Event")]
+    [HelpURL(HelpUrls.Manual + "ComponentLocalizers.html")]
     public class LocalizeTextureEvent : LocalizedAssetEvent<Texture, LocalizedTexture, UnityEventTexture>
     {
     }

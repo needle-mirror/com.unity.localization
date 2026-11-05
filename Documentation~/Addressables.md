@@ -15,7 +15,17 @@ Some examples of different rule sets are:
 - Creating Region groups to collate assets from similar regions (Europe, Asia, Latin America).
 - Using a group for each game, when a project contains multiple games.
 
+### Group template
+
+Each rule set can reference a **Group Template** from your project’s Addressables data. Templates are normal assets (for example under **AddressableAssetData/Asset Group Templates**), listed in the Addressables **Asset Group Templates** area—not assets shipped by the Localization package.
+
+When **Group Template** is not set, new groups follow Addressables’ defaults resolved from your settings: typically **Packed Assets**. If you use **Content Directory**–style groups (Addressables 4.0.0 and later), you can assign the project **Content Directory** template. The **Create** menu will contain **Addressable Group Rules (Content Directory)** when your Addressables version enables that workflow.
+
 ![A default rule set.](images/AddressableGroupRules.png)
+
+**Group Template** only applies to creating new groups. There are analyze rules to help convert existing groups between AssetBundles and content directories.
+
+See [Content build analyze rules](Addressable-Content-Build-Analyzers.md).
 
 ### Group Resolver
 
@@ -47,27 +57,27 @@ It is safe to move Locales into different Addressable Groups and to change their
 
 Collections have 2 parts; a Table, and the Shared Table Data.  Each Locale has a table, and all tables in the collection use the same Shared Table Data.
 
-By default, The Shared Table data asset is stored in a group called **Localization-Assets-Shared**. The Table is stored in a group for its Locale with the name structure of **Localization-String-Tables-{LocaleName}** for String Tables or **Localization-Asset-Tables-{LocaleName}** for Asset Tables.
+By default, the Shared Table data asset is stored in a group called **Localization-Assets-Shared**. The Table is stored in a group for its Locale, with the name structure `Localization-String-Tables-{LocaleName}` for String Tables or `Localization-Asset-Tables-{LocaleName}` for Asset Tables.
 
 Shared Table data assets have no special Addressable characteristics, they are resolved through their asset Guid at runtime. It is safe to modify all Addressable properties for the Shared Table data.
 
-Tables contain a Label for the Locale it represents in the form **Locale-{Code}**. If a String Table is marked as Preload then it will also contain the **Preload** label. At runtime, preloading is performed by querying the String Table assets that have both the Preload label and the relevant Locale label. It is safe to add additional Labels, but do not remove or modify the  Locale and Preload labels.
+Tables contain a Label for the Locale it represents in the form `Locale-{Code}`. If a String Table is marked as Preload then it will also contain the **Preload** label. At runtime, preloading is performed by querying the String Table assets that have both the Preload label and the relevant Locale label. It is safe to add additional Labels, but do not remove or modify the Locale and Preload labels.
 
-The Localization system uses the **Table Address** when loading the table, so do not modify the Table Address. Table Addresses are in the form **“{TableName}_{Code}”**
+The Localization system uses the **Table Address** when loading the table, so do not modify the Table Address. Table Addresses are in the form `{TableName}_{Code}`.
 
 ![String Table Addressable group.](images/StringTableGroup.png)
 
 ## Asset Table Assets
 
-By default, Assets that are part of Asset Tables are stored in a group for the Locale that depends on them, with the name **Localization-Assets-{LocaleName}**. If an asset is used by more than one Locale, it is placed into the **Localization-Assets-Shared** group. An asset that you have already placed in a group the localization system does not manage stays in your group unless **Always Move To Localization Group** is enabled.
+By default, Assets that are part of Asset Tables are stored in a group for the Locale that depends on them, with the name `Localization-Assets-{LocaleName}`. If an asset is used by more than one Locale, it is placed into the **Localization-Assets-Shared** group. An asset that you have already placed in a group the localization system does not manage stays in your group unless **Always Move To Localization Group** is enabled.
 
-Assets are resolved at runtime via their Guid so it is safe to modify the Address. Assets contain a label for each Locale that depends on them in the form **Locale_{Code}**. The Labels are used to track asset usage in the Editor and are not used in the Player, however removing them may cause assets to be placed into incorrect groups.
+Assets are resolved at runtime via their Guid so it is safe to modify the Address. Assets contain a label for each Locale that depends on them in the form `Locale-{Code}`. The Labels are used to track asset usage in the Editor and are not used in the Player, however removing them may cause assets to be placed into incorrect groups.
 
 ![English Assets Addressable group.](images/AssetEnglishGroup.png)
 
 ## Legacy Support
 
-Prior to version **0.11.0**, localization assets were stored using different default group rules.The Legacy ruletset can be created In order to maintain this structure, such as when upgrading a project built using a version before 0.11.0 . Create a Legacy rule set by navigating to **Assets > Create > Localization > Addressable Group Rules(Legacy)**.
+Before version **0.11.0**, localization assets were stored using different default group rules. To keep that structure, such as when you upgrade an older project, create a Legacy rule set from **Assets > Create > Localization > Addressable Group Rules (Legacy)**.
 
 ## Addressable Analyzers
 
@@ -83,3 +93,5 @@ There are 3 Localization Analyzers:
 - **Check Localization Locales**. This rule checks that all Locales in the project are marked as Addressable, contain the Locale label and are in the group defined by the Addressable Group Rules.
 - **Check Localization String Tables**. This rule checks that the String Tables and their Shared Table Data are contained in the groups defined by Addressable Group Rules, and have the expected Labels and Addresses.
 - **Check Localization Asset Tables**. This rule checks that the Asset Tables and their Shared Table Data are contained in the groups defined by Addressable Group Rules, and have the expected Labels and Addresses. This rule also checks that all assets referenced by the tables are in the expected groups and contain the correct labels. Assets in groups the localization system does not manage are not reported unless **Always Move To Localization Group** is enabled.
+
+On Addressables 4.0.0 and later, additional rules switch whether your Localization content builds as content directories or AssetBundles. See [Content build analyze rules](Addressable-Content-Build-Analyzers.md).

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Tables;
@@ -14,6 +15,7 @@ namespace UnityEditor.Localization
     /// <summary>
     /// Provides methods for managing multiple <see cref="StringTable"/> in the Editor.
     /// </summary>
+    [HelpURL(HelpUrls.Manual + "StringTables.html#string-table-collection")]
     public class StringTableCollection : LocalizationTableCollection
     {
         /// <inheritdoc/>

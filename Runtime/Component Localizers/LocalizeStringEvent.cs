@@ -31,6 +31,7 @@ namespace UnityEngine.Localization.Components
     /// ![Example results in Game](../manual/images/scripting/LocalizeStringEventExample_GameView.gif)
     /// </example>
     [AddComponentMenu("Localization/Localize String Event")]
+    [HelpURL(HelpUrls.Manual + "ComponentLocalizers.html#localizestringevent")]
     public class LocalizeStringEvent : LocalizedMonoBehaviour
     {
         [SerializeField]

@@ -12,13 +12,13 @@ The Project's Localization Settings is an Asset. To create this Asset, go to **E
 
 Locales represent regions; they determine which language you are localizing your application to, and other localization decisions.
 
-To open the Locale Generator window, navigate to the Localization Settings (menu: **Edit > Project Settings > Localization**) and click the **Locale Generator** button.
+To open the Add Locale window, navigate to the Localization Settings (menu: **Edit > Project Settings > Localization**) and click the **Add Locale** button.
 
-![Locale Generator button.](images/LocalizationSettings_LocaleGeneratorButton.png)
+![Add Locale button.](images/LocalizationSettings_LocaleGeneratorButton.png)
 
-To select a Locale, tick the toggle box next to its name. Tick the checkbox next to the Locale you want to add, then click the **Create Locales** button and select where you want to save the Assets to.
+To select a Locale, tick the toggle box next to its name. Tick the checkbox next to the Locale you want to add, then click the **Add Locales** button and select where you want to save the Assets to.
 
-![Locale Generator window.](images/Create_Locale_Window.png)
+![Add Locale window.](images/Create_Locale_Window.png)
 
 ## 3. Choose a default Locale
 

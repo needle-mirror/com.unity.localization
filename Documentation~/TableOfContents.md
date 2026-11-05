@@ -8,6 +8,7 @@
   * [Quick start guide: 2020.3+](QuickStartGuideWithVariants.md)
 * Reference
   * [Addressables Integration](Addressables.md)
+    * [Content build analyze rules](Addressable-Content-Build-Analyzers.md)
   * [Component Localizers](ComponentLocalizers.md)
   * Extensions
     * [CSV](CSV.md)

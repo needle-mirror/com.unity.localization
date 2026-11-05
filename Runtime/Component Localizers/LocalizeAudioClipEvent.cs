@@ -20,6 +20,7 @@ namespace UnityEngine.Localization.Components
     /// Adding it this way will also automatically configure the Update Asset events to update the [Audio Source](https://docs.unity3d.com/Manual/class-AudioSource.html).
     /// </remarks>
     [AddComponentMenu("Localization/Asset/Localize Audio Clip Event")]
+    [HelpURL(HelpUrls.Manual + "ComponentLocalizers.html")]
     public class LocalizeAudioClipEvent : LocalizedAssetEvent<AudioClip, LocalizedAudioClip, UnityEventAudioClip>
     {
     }
